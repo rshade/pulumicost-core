@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "matchLanguages": ["go"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "go dependencies",
+      "groupSlug": "go-deps"
+    },
+    {
+      "matchLanguages": ["go"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "go major dependencies",
+      "groupSlug": "go-major-deps"
+    }
+  ],
+  "go": {
+    "version": "1.24"
+  },
+  "schedule": ["before 4am on monday"],
+  "timezone": "UTC",
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true
+}

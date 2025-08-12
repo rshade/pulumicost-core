@@ -1,0 +1,47 @@
+version: 2
+rules:
+  - name: "Go 1.24 Compatibility"
+    pattern: "**/*.go"
+    message: |
+      Please ensure this code is compatible with Go 1.24.
+      Consider using the latest Go features and best practices.
+  
+  - name: "Go Module Dependencies"
+    pattern: "go.mod"
+    message: |
+      Please review Go module dependencies for:
+      - Security vulnerabilities
+      - Compatibility with Go 1.24
+      - Latest stable versions
+  
+  - name: "Go Test Coverage"
+    pattern: "**/*_test.go"
+    message: |
+      Please ensure adequate test coverage for new functionality.
+      Consider adding integration tests for complex logic.
+
+  - name: "Documentation"
+    pattern: "**/*.md"
+    message: |
+      Please ensure documentation is clear and up-to-date.
+      Consider adding examples for new features.
+
+  - name: "Error Handling"
+    pattern: "**/*.go"
+    message: |
+      Please ensure proper error handling is implemented.
+      Consider using Go 1.24 error wrapping features.
+
+  - name: "Code Style"
+    pattern: "**/*.go"
+    message: |
+      Please follow Go coding standards and best practices.
+      Consider using `gofmt` and `golint` for code formatting.
+
+settings:
+  language: go
+  go_version: "1.24"
+  enable_auto_review: true
+  enable_auto_merge: false
+  require_tests: true
+  require_documentation: true
