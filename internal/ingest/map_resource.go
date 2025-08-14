@@ -9,7 +9,7 @@ import (
 
 func MapResource(pulumiResource PulumiResource) (engine.ResourceDescriptor, error) {
 	provider := extractProvider(pulumiResource.Type)
-	
+
 	return engine.ResourceDescriptor{
 		Type:       pulumiResource.Type,
 		ID:         pulumiResource.URN,

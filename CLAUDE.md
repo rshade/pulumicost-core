@@ -80,6 +80,92 @@ Key plugin methods:
 - `gopkg.in/yaml.v3` - YAML spec parsing
 - `github.com/rshade/pulumicost-spec` - Protocol definitions (via replace directive to ../pulumicost-spec)
 
+## Project Management
+
+### Cross-Repository Project
+- **GitHub Project**: https://github.com/users/rshade/projects/3
+- **Scope**: Manages issues across three repositories:
+  - `pulumicost-core` (this repository) - CLI tool and plugin host
+  - `pulumicost-spec` - Protocol buffer definitions and specifications  
+  - `pulumicost-plugin` - Plugin implementations and SDK
+
+### Product Manager Responsibilities
+- Keep issues synchronized across all three repositories
+- Manage cross-repo dependencies and coordination
+- Track feature development across the entire ecosystem
+- Ensure consistent issue labeling and milestone alignment
+
+### GitHub CLI Commands for Project Management
+```bash
+# View project overview
+gh project view 3 --owner rshade
+
+# Add issues to project (when creating cross-repo issues)
+gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
+```
+
+### Dependency & Milestone Tracker
+
+**Milestones Created:**
+- `2025-Q1 - Spec v0.1.0 MVP` (Due: Aug 20, 2025) - Protocol definitions
+- `2025-Q1 - Core v0.1.0 MVP` (Due: Sep 6, 2025) - CLI and plugin host
+- `2025-Q1 - Kubecost Plugin v0.1.0 MVP` (Due: Sep 6, 2025) - Plugin implementation
+
+**Critical Path Dependencies:**
+- SPEC-1 → CORE-3 (Plugin Host Bootstrap)  
+- SPEC-1 → PLUG-KC-1 → CORE-5 (Actual Cost Pipeline)
+- SPEC-2 → PLUG-KC-3 → CORE-4 (Projected Cost Pipeline)
+
+**Week 1 (Parallel Work):**
+- Core: CLI Skeleton (#3), Pulumi JSON Ingest (#4)
+- Spec: Freeze proto & schema
+- Plugin: Stub API client, manifest
+
+**Week 2 (Dependencies unlock):**
+- Core: Plugin Host Bootstrap (#2)
+- Plugin: Kubecost API Client + Supports()
+
+**Week 3 (Feature completion):**
+- Core: Projected Cost Pipeline (#5), Actual Cost Pipeline (#6)
+- Plugin: Projected Cost Logic
+
+**Week 4 (Integration):**
+- End-to-end examples and MVP stabilization
+
+## Protocol Integration Status
+
+### ✅ SPEC-1 Completed - Proto Integration
+- **Status**: costsource.proto v0.1.0 is frozen and integrated
+- **Location**: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
+- **Generated SDK**: Available at `github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
+- **Integration**: Core now uses real proto definitions via `internal/proto/adapter.go`
+
+### Proto Integration Details
+- Removed mock proto implementation (`internal/proto/mock.go`) 
+- Created adapter layer (`internal/proto/adapter.go`) to bridge engine expectations with real proto types
+- Updated dependencies: gRPC v1.74.2, protobuf v1.36.7
+- Core engine successfully uses `CostSourceServiceClient` from pulumicost-spec
+
+### Verified Working Commands
+```bash
+# Basic CLI functionality verified
+./bin/pulumicost --help
+./bin/pulumicost cost projected --help
+
+# Projected cost calculation (shows resources but "none" adapter since no plugins)
+./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+
+# Plugin management (correctly reports no plugins installed)
+./bin/pulumicost plugin list
+./bin/pulumicost plugin validate
+```
+
+### Next Steps Unlocked
+With SPEC-1 complete, the following work can now proceed:
+- **CORE-3**: Plugin Host Bootstrap (depends on SPEC-1) 
+- **PLUG-KC-1**: Kubecost API Client (depends on SPEC-1)
+- **CORE-5**: Actual Cost Pipeline (depends on SPEC-1 + PLUG-KC-1)
+
 ## Testing
 
 Use the provided example files:

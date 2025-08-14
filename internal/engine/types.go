@@ -36,10 +36,10 @@ type ProjectedCostRequest struct {
 }
 
 type PricingSpec struct {
-	Provider  string                 `yaml:"provider"`
-	Service   string                 `yaml:"service"`
-	SKU       string                 `yaml:"sku"`
-	Currency  string                 `yaml:"currency"`
-	Pricing   map[string]interface{} `yaml:"pricing"`
-	Metadata  map[string]interface{} `yaml:"metadata,omitempty"`
+	Provider string                 `yaml:"provider"`
+	Service  string                 `yaml:"service"`
+	SKU      string                 `yaml:"sku"`
+	Currency string                 `yaml:"currency"`
+	Pricing  map[string]interface{} `yaml:"pricing"`
+	Metadata map[string]interface{} `yaml:"metadata,omitempty"`
 }

@@ -24,15 +24,15 @@ func NewClient(ctx context.Context, launcher Launcher, binPath string) (*Client,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	api := proto.NewCostSourceClient(conn)
-	
+
 	nameResp, err := api.Name(ctx, &proto.Empty{})
 	if err != nil {
 		closeFn()
 		return nil, fmt.Errorf("getting plugin name: %w", err)
 	}
-	
+
 	return &Client{
 		Name:  nameResp.GetName(),
 		Conn:  conn,

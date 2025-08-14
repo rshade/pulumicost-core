@@ -32,7 +32,7 @@ func renderTable(results []CostResult) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "Resource\tAdapter\tProjected Monthly\tCurrency\tNotes")
 	fmt.Fprintln(w, "--------\t-------\t-----------------\t--------\t-----")
-	
+
 	for _, result := range results {
 		resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
 		if len(resource) > 50 {
@@ -46,7 +46,7 @@ func renderTable(results []CostResult) error {
 			result.Notes,
 		)
 	}
-	
+
 	return w.Flush()
 }
 

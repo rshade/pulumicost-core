@@ -7,7 +7,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.Version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.GitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.BuildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test lint clean run dev help
+.PHONY: all build test lint validate clean run dev help
 
 all: build
 
@@ -23,6 +23,14 @@ test:
 lint:
 	@echo "Running linter..."
 	golangci-lint run
+
+validate:
+	@echo "Running validation..."
+	@echo "Checking go modules..."
+	go mod tidy -diff
+	@echo "Running go vet..."
+	go vet ./...
+	@echo "Validation complete."
 
 clean:
 	@echo "Cleaning..."
@@ -41,6 +49,7 @@ help:
 	@echo "  build    - Build the binary"
 	@echo "  test     - Run tests"
 	@echo "  lint     - Run linter"
+	@echo "  validate - Run validation (go mod, vet, format)"
 	@echo "  clean    - Clean build artifacts"
 	@echo "  run      - Build and run with --help"
 	@echo "  dev      - Build and run"

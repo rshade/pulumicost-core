@@ -19,11 +19,11 @@ func LoadManifest(path string) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var manifest Manifest
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return nil, err
 	}
-	
+
 	return &manifest, nil
 }

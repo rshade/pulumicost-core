@@ -27,10 +27,10 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 
 func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
 	var results []CostResult
-	
+
 	for _, resource := range resources {
 		var resourceResults []CostResult
-		
+
 		for _, client := range e.clients {
 			result, err := e.getProjectedCostFromPlugin(ctx, client, resource)
 			if err != nil {
@@ -40,7 +40,7 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 				resourceResults = append(resourceResults, *result)
 			}
 		}
-		
+
 		if len(resourceResults) == 0 {
 			results = append(results, CostResult{
 				ResourceType: resource.Type,
@@ -55,13 +55,13 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 			results = append(results, resourceResults...)
 		}
 	}
-	
+
 	return results, nil
 }
 
 func (e *Engine) GetActualCost(ctx context.Context, resources []ResourceDescriptor, from, to time.Time) ([]CostResult, error) {
 	var results []CostResult
-	
+
 	for _, resource := range resources {
 		for _, client := range e.clients {
 			result, err := e.getActualCostFromPlugin(ctx, client, resource, from, to)
@@ -74,7 +74,7 @@ func (e *Engine) GetActualCost(ctx context.Context, resources []ResourceDescript
 			}
 		}
 	}
-	
+
 	return results, nil
 }
 
@@ -89,7 +89,7 @@ func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginh
 			},
 		},
 	}
-	
+
 	resp, err := client.API.GetProjectedCost(ctx, req)
 	if err == nil && len(resp.Results) > 0 {
 		result := resp.Results[0]
@@ -104,14 +104,14 @@ func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginh
 			Breakdown:    result.CostBreakdown,
 		}, nil
 	}
-	
+
 	// Fallback to local spec if available
 	if e.loader != nil {
 		specData, err := e.loader.LoadSpec(resource.Provider, extractService(resource.Type), "default")
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if specData != nil {
 			// Type assert the spec data
 			if spec, ok := specData.(*PricingSpec); ok && spec != nil {
@@ -127,7 +127,7 @@ func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginh
 			}
 		}
 	}
-	
+
 	return nil, nil
 }
 
@@ -137,16 +137,16 @@ func (e *Engine) getActualCostFromPlugin(ctx context.Context, client *pluginhost
 		StartTime:   from.Unix(),
 		EndTime:     to.Unix(),
 	}
-	
+
 	resp, err := client.API.GetActualCost(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(resp.Results) == 0 {
 		return nil, nil
 	}
-	
+
 	result := resp.Results[0]
 	return &CostResult{
 		ResourceType: resource.Type,

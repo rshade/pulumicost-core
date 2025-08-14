@@ -40,7 +40,7 @@ func (p *ProcessLauncher) Start(ctx context.Context, path string, args ...string
 	}
 
 	address := fmt.Sprintf("127.0.0.1:%d", port)
-	
+
 	connCtx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 

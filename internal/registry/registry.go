@@ -26,32 +26,32 @@ func NewDefault() *Registry {
 
 func (r *Registry) ListPlugins() ([]PluginInfo, error) {
 	var plugins []PluginInfo
-	
+
 	if _, err := os.Stat(r.root); os.IsNotExist(err) {
 		return plugins, nil
 	}
-	
+
 	entries, err := os.ReadDir(r.root)
 	if err != nil {
 		return nil, fmt.Errorf("reading plugin directory: %w", err)
 	}
-	
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		
+
 		pluginPath := filepath.Join(r.root, entry.Name())
 		versions, err := os.ReadDir(pluginPath)
 		if err != nil {
 			continue
 		}
-		
+
 		for _, version := range versions {
 			if !version.IsDir() {
 				continue
 			}
-			
+
 			versionPath := filepath.Join(pluginPath, version.Name())
 			binPath := r.findBinary(versionPath)
 			if binPath != "" {
@@ -63,7 +63,7 @@ func (r *Registry) ListPlugins() ([]PluginInfo, error) {
 			}
 		}
 	}
-	
+
 	return plugins, nil
 }
 
@@ -72,18 +72,18 @@ func (r *Registry) findBinary(dir string) string {
 	if err != nil {
 		return ""
 	}
-	
+
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		
+
 		path := filepath.Join(dir, entry.Name())
 		info, err := os.Stat(path)
 		if err != nil {
 			continue
 		}
-		
+
 		if runtime.GOOS != "windows" {
 			if info.Mode()&0111 != 0 {
 				return path
@@ -94,7 +94,7 @@ func (r *Registry) findBinary(dir string) string {
 			}
 		}
 	}
-	
+
 	return ""
 }
 
@@ -103,26 +103,26 @@ func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Cli
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	var clients []*pluginhost.Client
 	cleanup := func() {
 		for _, c := range clients {
 			_ = c.Close()
 		}
 	}
-	
+
 	for _, plugin := range plugins {
 		if onlyName != "" && plugin.Name != onlyName {
 			continue
 		}
-		
+
 		client, err := pluginhost.NewClient(ctx, r.launcher, plugin.Path)
 		if err != nil {
 			continue
 		}
 		clients = append(clients, client)
 	}
-	
+
 	return clients, cleanup, nil
 }
 
