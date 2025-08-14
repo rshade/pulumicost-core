@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "op": "create",
+      "urn": "urn:pulumi:test::test-app::aws:ec2/instance:Instance::test-instance",
+      "type": "aws:ec2/instance:Instance",
+      "provider": "urn:pulumi:test::test-app::pulumi:providers:aws::default",
+      "inputs": {
+        "ami": "ami-12345678",
+        "instanceType": "t2.micro"
+      }
+    }
+  ]
+}

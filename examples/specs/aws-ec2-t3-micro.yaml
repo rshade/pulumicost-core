@@ -1,0 +1,17 @@
+provider: aws
+service: ec2
+sku: t3.micro
+currency: USD
+pricing:
+  instanceType: t3.micro
+  onDemandHourly: 0.0104
+  monthlyEstimate: 7.59
+  vcpu: 2
+  memory: 1
+  networkPerformance: "Up to 5 Gigabit"
+  ebsOptimized: true
+metadata:
+  region: us-west-2
+  operatingSystem: linux
+  tenancy: shared
+  preInstalledSoftware: "NA"
