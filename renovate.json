@@ -6,21 +6,19 @@
   ],
   "packageRules": [
     {
-      "matchLanguages": ["go"],
+      "matchManagers": ["gomod"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "go dependencies",
       "groupSlug": "go-deps"
     },
     {
-      "matchLanguages": ["go"],
+      "matchManagers": ["gomod"],
       "matchUpdateTypes": ["major"],
       "groupName": "go major dependencies",
       "groupSlug": "go-major-deps"
     }
   ],
-  "go": {
-    "version": "1.24"
-  },
+  "postUpdateOptions": ["gomodTidy"],
   "schedule": ["before 4am on monday"],
   "timezone": "UTC",
   "automerge": true,

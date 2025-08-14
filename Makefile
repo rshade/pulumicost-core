@@ -22,7 +22,7 @@ test:
 
 lint:
 	@echo "Running linter..."
-	golangci-lint run
+	~/go/bin/golangci-lint run
 
 validate:
 	@echo "Running validation..."
