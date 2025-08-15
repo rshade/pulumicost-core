@@ -13,12 +13,26 @@ import (
 )
 
 func newCostProjectedCmd() *cobra.Command {
-	var planPath, specDir, adapter, output string
+	var planPath, specDir, adapter, output, filter string
 
 	cmd := &cobra.Command{
 		Use:   "projected",
 		Short: "Calculate projected costs from a Pulumi plan",
 		Long:  "Calculate projected costs by analyzing a Pulumi preview JSON output",
+		Example: `  # Basic usage
+  pulumicost cost projected --pulumi-json plan.json
+
+  # Filter resources by type
+  pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
+
+  # Output as JSON
+  pulumicost cost projected --pulumi-json plan.json --output json
+
+  # Use a specific adapter plugin
+  pulumicost cost projected --pulumi-json plan.json --adapter aws-plugin
+
+  # Use custom spec directory
+  pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
 
@@ -61,8 +75,9 @@ func newCostProjectedCmd() *cobra.Command {
 	cmd.Flags().StringVar(&specDir, "spec-dir", "", "Directory containing pricing spec files")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
 	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, or ndjson")
+	cmd.Flags().StringVar(&filter, "filter", "", "Resource filter expressions (e.g., 'type=aws:ec2/instance')")
 
-	cmd.MarkFlagRequired("pulumi-json")
+	_ = cmd.MarkFlagRequired("pulumi-json")
 
 	return cmd
 }
