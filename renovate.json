@@ -2,24 +2,37 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "config:base"
+    "config:recommended"
   ],
   "packageRules": [
     {
-      "matchManagers": ["gomod"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "go dependencies",
       "groupSlug": "go-deps"
     },
     {
-      "matchManagers": ["gomod"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "groupName": "go major dependencies",
       "groupSlug": "go-major-deps"
     }
   ],
-  "postUpdateOptions": ["gomodTidy"],
-  "schedule": ["before 4am on monday"],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  "schedule": [
+    "before 4am on monday"
+  ],
   "timezone": "UTC",
   "automerge": true,
   "automergeType": "pr",
