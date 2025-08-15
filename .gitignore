@@ -12,7 +12,7 @@
 *.test
 
 # Built binaries
-bin/
+bin/*
 
 # Code coverage profiles and other test artifacts
 *.out
@@ -33,3 +33,5 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+Github_Development_Prompt.md
+PR_MESSAGE.md

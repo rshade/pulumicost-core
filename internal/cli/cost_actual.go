@@ -12,12 +12,26 @@ import (
 )
 
 func newCostActualCmd() *cobra.Command {
-	var planPath, adapter, output, fromStr, toStr string
+	var planPath, adapter, output, fromStr, toStr, groupBy string
 
 	cmd := &cobra.Command{
 		Use:   "actual",
 		Short: "Fetch actual historical costs",
 		Long:  "Fetch actual historical costs for resources from cloud provider billing APIs",
+		Example: `  # Get costs for the last 7 days (to defaults to now)
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+
+  # Get costs for a specific date range
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
+
+  # Group costs by resource type
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
+
+  # Output as JSON with grouping by provider
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json --group-by provider
+
+  # Use RFC3339 timestamps
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
 
@@ -30,6 +44,11 @@ func newCostActualCmd() *cobra.Command {
 			resources, err := ingest.MapResources(pulumiResources)
 			if err != nil {
 				return fmt.Errorf("mapping resources: %w", err)
+			}
+
+			// Default to now if --to is not provided
+			if toStr == "" {
+				toStr = time.Now().Format(time.RFC3339)
 			}
 
 			from, to, err := parseTimeRange(fromStr, toStr)
@@ -57,13 +76,13 @@ func newCostActualCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
 	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
-	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (required)")
+	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
 	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, or ndjson")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group results by: resource, type, or provider")
 
-	cmd.MarkFlagRequired("pulumi-json")
-	cmd.MarkFlagRequired("from")
-	cmd.MarkFlagRequired("to")
+	_ = cmd.MarkFlagRequired("pulumi-json")
+	_ = cmd.MarkFlagRequired("from")
 
 	return cmd
 }

@@ -12,11 +12,21 @@ import (
 )
 
 func newPluginValidateCmd() *cobra.Command {
+	var targetPlugin string
+
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate installed plugins",
 		Long:  "Validate that installed plugins can be loaded and respond to basic API calls",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Example: `  # Validate all installed plugins
+  pulumicost plugin validate
+
+  # Validate a specific plugin
+  pulumicost plugin validate --plugin aws-plugin
+
+  # Validate kubecost plugin specifically
+  pulumicost plugin validate --plugin kubecost`,
+		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
 
 			cfg := config.New()
@@ -35,6 +45,20 @@ func newPluginValidateCmd() *cobra.Command {
 			if len(plugins) == 0 {
 				fmt.Println("No plugins found to validate.")
 				return nil
+			}
+
+			// Filter plugins if --plugin flag is specified
+			if targetPlugin != "" {
+				var filtered []registry.PluginInfo
+				for _, p := range plugins {
+					if p.Name == targetPlugin {
+						filtered = append(filtered, p)
+					}
+				}
+				if len(filtered) == 0 {
+					return fmt.Errorf("plugin '%s' not found", targetPlugin)
+				}
+				plugins = filtered
 			}
 
 			fmt.Printf("Validating %d plugin(s)...\n\n", len(plugins))
@@ -61,10 +85,12 @@ func newPluginValidateCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&targetPlugin, "plugin", "", "Validate a specific plugin by name")
+
 	return cmd
 }
 
-func validatePlugin(ctx context.Context, plugin registry.PluginInfo) error {
+func validatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	if _, err := os.Stat(plugin.Path); err != nil {
 		return fmt.Errorf("plugin binary not found: %s", plugin.Path)
 	}
