@@ -79,7 +79,7 @@ func TestPluginListCmdHelp(t *testing.T) {
 
 func TestPluginListCmdExamples(t *testing.T) {
 	cmd := newPluginListCmd()
-	
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost plugin list")

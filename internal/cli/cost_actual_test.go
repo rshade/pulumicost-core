@@ -34,8 +34,8 @@ func TestNewCostActualCmd(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "with all flags",
-			args:        []string{
+			name: "with all flags",
+			args: []string{
 				"--pulumi-json", "test.json",
 				"--from", "2025-01-01",
 				"--to", "2025-01-31",
@@ -47,8 +47,8 @@ func TestNewCostActualCmd(t *testing.T) {
 			errorMsg:    "loading Pulumi plan",
 		},
 		{
-			name:        "with required flags only (to defaults to now)",
-			args:        []string{
+			name: "with required flags only (to defaults to now)",
+			args: []string{
 				"--pulumi-json", "test.json",
 				"--from", "2025-01-01",
 			},
@@ -133,7 +133,7 @@ func TestCostActualCmdHelp(t *testing.T) {
 
 func TestCostActualCmdExamples(t *testing.T) {
 	cmd := newCostActualCmd()
-	
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost cost actual --pulumi-json plan.json --from")

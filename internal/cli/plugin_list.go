@@ -45,7 +45,7 @@ func newPluginListCmd() *cobra.Command {
 			if verbose {
 				fmt.Fprintln(w, "Name\tVersion\tPath\tExecutable")
 				fmt.Fprintln(w, "----\t-------\t----\t----------")
-				
+
 				for _, plugin := range plugins {
 					// Check if plugin is executable
 					execStatus := "No"

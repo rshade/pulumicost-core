@@ -27,8 +27,8 @@ func TestNewCostProjectedCmd(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "with all flags",
-			args:        []string{
+			name: "with all flags",
+			args: []string{
 				"--pulumi-json", "test.json",
 				"--spec-dir", "/tmp/specs",
 				"--adapter", "test-adapter",
@@ -119,7 +119,7 @@ func TestCostProjectedCmdHelp(t *testing.T) {
 
 func TestCostProjectedCmdExamples(t *testing.T) {
 	cmd := newCostProjectedCmd()
-	
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost cost projected --pulumi-json plan.json")

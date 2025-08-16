@@ -22,7 +22,7 @@ test:
 
 lint:
 	@echo "Running linter..."
-	~/go/bin/golangci-lint run
+	~/go/bin/golangci-lint run --allow-parallel-runners
 
 validate:
 	@echo "Running validation..."

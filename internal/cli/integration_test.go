@@ -137,7 +137,7 @@ func TestCLIIntegration(t *testing.T) {
 			cmd := NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
-			
+
 			// Build full args
 			args := []string{tt.command}
 			args = append(args, tt.args...)

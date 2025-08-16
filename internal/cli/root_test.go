@@ -94,7 +94,7 @@ func TestNewRootCmd(t *testing.T) {
 
 func TestRootCmdExamples(t *testing.T) {
 	cmd := NewRootCmd("test-version")
-	
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost cost projected")
@@ -105,30 +105,30 @@ func TestRootCmdExamples(t *testing.T) {
 
 func TestRootCmdStructure(t *testing.T) {
 	cmd := NewRootCmd("test-version")
-	
+
 	// Check that main subcommands exist
 	costCmd, _, err := cmd.Find([]string{"cost"})
 	require.NoError(t, err)
 	assert.NotNil(t, costCmd)
-	
+
 	pluginCmd, _, err := cmd.Find([]string{"plugin"})
 	require.NoError(t, err)
 	assert.NotNil(t, pluginCmd)
-	
+
 	// Check that cost subcommands exist
 	projectedCmd, _, err := cmd.Find([]string{"cost", "projected"})
 	require.NoError(t, err)
 	assert.NotNil(t, projectedCmd)
-	
+
 	actualCmd, _, err := cmd.Find([]string{"cost", "actual"})
 	require.NoError(t, err)
 	assert.NotNil(t, actualCmd)
-	
+
 	// Check that plugin subcommands exist
 	listCmd, _, err := cmd.Find([]string{"plugin", "list"})
 	require.NoError(t, err)
 	assert.NotNil(t, listCmd)
-	
+
 	validateCmd, _, err := cmd.Find([]string{"plugin", "validate"})
 	require.NoError(t, err)
 	assert.NotNil(t, validateCmd)
@@ -136,13 +136,13 @@ func TestRootCmdStructure(t *testing.T) {
 
 func TestRootCmdFlags(t *testing.T) {
 	cmd := NewRootCmd("test-version")
-	
+
 	// Check persistent flags
 	debugFlag := cmd.PersistentFlags().Lookup("debug")
 	assert.NotNil(t, debugFlag)
 	assert.Equal(t, "bool", debugFlag.Value.Type())
 	assert.Equal(t, "false", debugFlag.DefValue)
-	
+
 	// Check version flag is available
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
