@@ -24,7 +24,6 @@ updates:
     ignore:
       # Ignore patch updates for indirect dependencies
       - dependency-name: "*"
-        dependency-type: "indirect"
         update-types: ["version-update:semver-patch"]
 
   # GitHub Actions
