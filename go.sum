@@ -15,8 +15,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rshade/pulumicost-spec v0.0.0-20250815110537-3b485b96fef7 h1:f4uMeOqWzpNEC8e/aUj+9UcvvIKUK6Xm1ZNW11B3N8Y=
-github.com/rshade/pulumicost-spec v0.0.0-20250815110537-3b485b96fef7/go.mod h1:KwbdLjR7LCked1znYGQDoSF2emTRv0DLzaqiMbdk+OQ=
+github.com/rshade/pulumicost-spec v0.0.0-20250816012119-a085bd202e26 h1:Albto7WjupW3MopWZ5fZLgP5LFX1ZiYWzFxSnm453j4=
+github.com/rshade/pulumicost-spec v0.0.0-20250816012119-a085bd202e26/go.mod h1:KwbdLjR7LCked1znYGQDoSF2emTRv0DLzaqiMbdk+OQ=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/spf13/cobra v1.9.1 h1:CXSaggrXdbHK9CF+8ywj8Amf7PBRmPCOJugH954Nnlo=
 github.com/spf13/cobra v1.9.1/go.mod h1:nDyEzZ8ogv936Cinf6g1RU9MRY64Ir93oCnqb9wxYW0=
