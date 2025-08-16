@@ -1,4 +1,4 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
@@ -7,16 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestCLIIntegration tests the full CLI workflow with realistic scenarios
+// TestCLIIntegration tests the full CLI workflow with realistic scenarios.
 func TestCLIIntegration(t *testing.T) {
 	// Create a temporary directory for test files
-	tmpDir, err := os.MkdirTemp("", "pulumicost-integration")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create a mock Pulumi plan file
 	mockPlan := map[string]interface{}{
@@ -50,7 +49,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost projected basic",
 			command: "cost",
 			args:    []string{"projected", "--pulumi-json", planPath},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				// Should not error, even if no plugins are available
 				require.NoError(t, err)
 				// Command should complete successfully
@@ -60,7 +59,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost projected with filter",
 			command: "cost",
 			args:    []string{"projected", "--pulumi-json", planPath, "--filter", "type=aws:ec2/instance"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
 			},
@@ -69,7 +68,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost projected with json output",
 			command: "cost",
 			args:    []string{"projected", "--pulumi-json", planPath, "--output", "json"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Should produce valid output for JSON format
 			},
@@ -78,7 +77,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost actual basic",
 			command: "cost",
 			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				// Should succeed with default 'to' being now
 				require.NoError(t, err)
 				// Command should complete successfully
@@ -88,7 +87,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost actual with date range",
 			command: "cost",
 			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--to", "2025-01-31"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
 			},
@@ -97,7 +96,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "cost actual with group-by",
 			command: "cost",
 			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--group-by", "type"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
 			},
@@ -106,7 +105,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "plugin list",
 			command: "plugin",
 			args:    []string{"list"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should succeed (no error check for specific output since it prints to different streams)
 			},
@@ -115,7 +114,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "plugin list verbose",
 			command: "plugin",
 			args:    []string{"list", "--verbose"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should succeed
 			},
@@ -124,7 +123,7 @@ func TestCLIIntegration(t *testing.T) {
 			name:    "plugin validate",
 			command: "plugin",
 			args:    []string{"validate"},
-			checkOutput: func(t *testing.T, output string, err error) {
+			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should succeed
 			},
@@ -134,29 +133,30 @@ func TestCLIIntegration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := NewRootCmd("test-version")
+			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
-			
+
 			// Build full args
 			args := []string{tt.command}
 			args = append(args, tt.args...)
 			cmd.SetArgs(args)
 
-			err := cmd.Execute()
+			execErr := cmd.Execute()
 
-			if tt.checkOutput != nil {
-				tt.checkOutput(t, buf.String(), err)
-			} else if tt.expectError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+			switch {
+			case tt.checkOutput != nil:
+				tt.checkOutput(t, buf.String(), execErr)
+			case tt.expectError:
+				require.Error(t, execErr)
+			default:
+				require.NoError(t, execErr)
 			}
 		})
 	}
 }
 
-// TestErrorHandlingEdgeCases tests various error conditions and edge cases
+// TestErrorHandlingEdgeCases tests various error conditions and edge cases.
 func TestErrorHandlingEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -222,7 +222,7 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := NewRootCmd("test-version")
+			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -241,7 +241,7 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 	}
 }
 
-// TestDateParsingEdgeCases tests edge cases in date parsing
+// TestDateParsingEdgeCases tests edge cases in date parsing.
 func TestDateParsingEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -300,7 +300,7 @@ func TestDateParsingEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			from, to, err := parseTimeRange(tt.fromDate, tt.toDate)
+			from, to, err := cli.ParseTimeRange(tt.fromDate, tt.toDate)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -317,12 +317,10 @@ func TestDateParsingEdgeCases(t *testing.T) {
 	}
 }
 
-// TestOutputFormats tests different output format validation
+// TestOutputFormats tests different output format validation.
 func TestOutputFormats(t *testing.T) {
 	// Create a temporary plan file
-	tmpDir, err := os.MkdirTemp("", "output-format-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	planPath := filepath.Join(tmpDir, "test-plan.json")
 	planContent := `{
@@ -334,7 +332,7 @@ func TestOutputFormats(t *testing.T) {
 			}
 		]
 	}`
-	err = os.WriteFile(planPath, []byte(planContent), 0644)
+	err := os.WriteFile(planPath, []byte(planContent), 0644)
 	require.NoError(t, err)
 
 	formats := []string{"table", "json", "ndjson"}
@@ -342,38 +340,38 @@ func TestOutputFormats(t *testing.T) {
 	for _, format := range formats {
 		t.Run("projected_output_"+format, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := NewRootCmd("test-version")
+			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs([]string{"cost", "projected", "--pulumi-json", planPath, "--output", format})
 
-			err := cmd.Execute()
-			require.NoError(t, err)
+			execErr := cmd.Execute()
+			require.NoError(t, execErr)
 			// Should succeed
-			require.NoError(t, err)
+			require.NoError(t, execErr)
 		})
 
 		t.Run("actual_output_"+format, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := NewRootCmd("test-version")
+			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
-			cmd.SetArgs([]string{"cost", "actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--output", format})
+			cmd.SetArgs(
+				[]string{"cost", "actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--output", format},
+			)
 
-			err := cmd.Execute()
-			require.NoError(t, err)
+			execErr := cmd.Execute()
+			require.NoError(t, execErr)
 			// Should succeed
-			require.NoError(t, err)
+			require.NoError(t, execErr)
 		})
 	}
 }
 
-// TestFlagCombinations tests various flag combinations
+// TestFlagCombinations tests various flag combinations.
 func TestFlagCombinations(t *testing.T) {
 	// Create a temporary plan file
-	tmpDir, err := os.MkdirTemp("", "flag-combo-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	planPath := filepath.Join(tmpDir, "test-plan.json")
 	planContent := `{
@@ -385,12 +383,12 @@ func TestFlagCombinations(t *testing.T) {
 			}
 		]
 	}`
-	err = os.WriteFile(planPath, []byte(planContent), 0644)
+	err := os.WriteFile(planPath, []byte(planContent), 0644)
 	require.NoError(t, err)
 
 	t.Run("projected_all_flags", func(t *testing.T) {
 		var buf bytes.Buffer
-		cmd := NewRootCmd("test-version")
+		cmd := cli.NewRootCmd("test-version")
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 		cmd.SetArgs([]string{
@@ -401,13 +399,13 @@ func TestFlagCombinations(t *testing.T) {
 			"--adapter", "test-adapter",
 		})
 
-		err := cmd.Execute()
-		require.NoError(t, err)
+		execErr := cmd.Execute()
+		require.NoError(t, execErr)
 	})
 
 	t.Run("actual_all_flags", func(t *testing.T) {
 		var buf bytes.Buffer
-		cmd := NewRootCmd("test-version")
+		cmd := cli.NewRootCmd("test-version")
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 		cmd.SetArgs([]string{
@@ -420,13 +418,13 @@ func TestFlagCombinations(t *testing.T) {
 			"--adapter", "test-adapter",
 		})
 
-		err := cmd.Execute()
-		require.NoError(t, err)
+		execErr := cmd.Execute()
+		require.NoError(t, execErr)
 	})
 
 	t.Run("global_debug_flag", func(t *testing.T) {
 		var buf bytes.Buffer
-		cmd := NewRootCmd("test-version")
+		cmd := cli.NewRootCmd("test-version")
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 		cmd.SetArgs([]string{
@@ -435,7 +433,7 @@ func TestFlagCombinations(t *testing.T) {
 			"--pulumi-json", planPath,
 		})
 
-		err := cmd.Execute()
-		require.NoError(t, err)
+		execErr := cmd.Execute()
+		require.NoError(t, execErr)
 	})
 }

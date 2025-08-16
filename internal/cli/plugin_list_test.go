@@ -1,9 +1,10 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +35,7 @@ func TestNewPluginListCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := newPluginListCmd()
+			cmd := cli.NewPluginListCmd()
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -51,7 +52,7 @@ func TestNewPluginListCmd(t *testing.T) {
 }
 
 func TestPluginListCmdFlags(t *testing.T) {
-	cmd := newPluginListCmd()
+	cmd := cli.NewPluginListCmd()
 
 	// Check verbose flag
 	verboseFlag := cmd.Flags().Lookup("verbose")
@@ -63,7 +64,7 @@ func TestPluginListCmdFlags(t *testing.T) {
 
 func TestPluginListCmdHelp(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := newPluginListCmd()
+	cmd := cli.NewPluginListCmd()
 	cmd.SetOut(&buf)
 	cmd.SetArgs([]string{"--help"})
 
@@ -78,8 +79,8 @@ func TestPluginListCmdHelp(t *testing.T) {
 }
 
 func TestPluginListCmdExamples(t *testing.T) {
-	cmd := newPluginListCmd()
-	
+	cmd := cli.NewPluginListCmd()
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost plugin list")
@@ -88,7 +89,7 @@ func TestPluginListCmdExamples(t *testing.T) {
 }
 
 func TestPluginListCmdOutput(t *testing.T) {
-	cmd := newPluginListCmd()
+	cmd := cli.NewPluginListCmd()
 
 	// The command should execute without error even when no plugins exist
 	err := cmd.RunE(cmd, []string{})

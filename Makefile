@@ -3,9 +3,9 @@ VERSION?=$(shell git describe --tags --always --dirty)
 COMMIT=$(shell git rev-parse HEAD)
 BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.Version=$(VERSION)' \
-                  -X 'github.com/rshade/pulumicost-core/pkg/version.GitCommit=$(COMMIT)' \
-                  -X 'github.com/rshade/pulumicost-core/pkg/version.BuildDate=$(BUILD_DATE)'"
+LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VERSION)' \
+                  -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
+                  -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
 .PHONY: all build test lint validate clean run dev help
 
@@ -22,7 +22,7 @@ test:
 
 lint:
 	@echo "Running linter..."
-	~/go/bin/golangci-lint run
+	~/go/bin/golangci-lint run --allow-parallel-runners
 
 validate:
 	@echo "Running validation..."

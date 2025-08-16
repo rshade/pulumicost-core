@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newPluginValidateCmd() *cobra.Command {
+func NewPluginValidateCmd() *cobra.Command {
 	var targetPlugin string
 
 	cmd := &cobra.Command{
@@ -26,62 +27,8 @@ func newPluginValidateCmd() *cobra.Command {
 
   # Validate kubecost plugin specifically
   pulumicost plugin validate --plugin kubecost`,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			ctx := context.Background()
-
-			cfg := config.New()
-			if _, err := os.Stat(cfg.PluginDir); os.IsNotExist(err) {
-				fmt.Printf("Plugin directory does not exist: %s\n", cfg.PluginDir)
-				fmt.Println("No plugins to validate.")
-				return nil
-			}
-
-			reg := registry.NewDefault()
-			plugins, err := reg.ListPlugins()
-			if err != nil {
-				return fmt.Errorf("listing plugins: %w", err)
-			}
-
-			if len(plugins) == 0 {
-				fmt.Println("No plugins found to validate.")
-				return nil
-			}
-
-			// Filter plugins if --plugin flag is specified
-			if targetPlugin != "" {
-				var filtered []registry.PluginInfo
-				for _, p := range plugins {
-					if p.Name == targetPlugin {
-						filtered = append(filtered, p)
-					}
-				}
-				if len(filtered) == 0 {
-					return fmt.Errorf("plugin '%s' not found", targetPlugin)
-				}
-				plugins = filtered
-			}
-
-			fmt.Printf("Validating %d plugin(s)...\n\n", len(plugins))
-
-			validCount := 0
-			for _, plugin := range plugins {
-				fmt.Printf("Validating %s v%s... ", plugin.Name, plugin.Version)
-
-				if err := validatePlugin(ctx, plugin); err != nil {
-					fmt.Printf("FAILED: %v\n", err)
-				} else {
-					fmt.Println("OK")
-					validCount++
-				}
-			}
-
-			fmt.Printf("\nValidation complete: %d/%d plugins valid\n", validCount, len(plugins))
-
-			if validCount < len(plugins) {
-				os.Exit(1)
-			}
-
-			return nil
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runPluginValidateCmd(cmd, targetPlugin)
 		},
 	}
 
@@ -90,7 +37,7 @@ func newPluginValidateCmd() *cobra.Command {
 	return cmd
 }
 
-func validatePlugin(_ context.Context, plugin registry.PluginInfo) error {
+func ValidatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	if _, err := os.Stat(plugin.Path); err != nil {
 		return fmt.Errorf("plugin binary not found: %s", plugin.Path)
 	}
@@ -101,18 +48,18 @@ func validatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	}
 
 	if info.IsDir() {
-		return fmt.Errorf("plugin path is a directory, not a binary")
+		return errors.New("plugin path is a directory, not a binary")
 	}
 
 	if info.Mode()&0111 == 0 {
-		return fmt.Errorf("plugin binary is not executable")
+		return errors.New("plugin binary is not executable")
 	}
 
 	manifestPath := filepath.Join(filepath.Dir(plugin.Path), "plugin.manifest.json")
-	if _, err := os.Stat(manifestPath); err == nil {
-		manifest, err := registry.LoadManifest(manifestPath)
-		if err != nil {
-			return fmt.Errorf("invalid manifest: %w", err)
+	if _, statErr := os.Stat(manifestPath); statErr == nil {
+		manifest, loadErr := registry.LoadManifest(manifestPath)
+		if loadErr != nil {
+			return fmt.Errorf("invalid manifest: %w", loadErr)
 		}
 		if manifest.Name != plugin.Name {
 			return fmt.Errorf("manifest name mismatch: expected %s, got %s", plugin.Name, manifest.Name)
@@ -123,4 +70,80 @@ func validatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	}
 
 	return nil
+}
+
+func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
+	ctx := context.Background()
+
+	cfg := config.New()
+	if _, err := os.Stat(cfg.PluginDir); os.IsNotExist(err) {
+		cmd.Printf("Plugin directory does not exist: %s\n", cfg.PluginDir)
+		cmd.Println("No plugins to validate.")
+		return nil
+	}
+
+	reg := registry.NewDefault()
+	plugins, err := reg.ListPlugins()
+	if err != nil {
+		return fmt.Errorf("listing plugins: %w", err)
+	}
+
+	if len(plugins) == 0 {
+		cmd.Println("No plugins found to validate.")
+		return nil
+	}
+
+	plugins, err = filterPlugins(plugins, targetPlugin)
+	if err != nil {
+		return err
+	}
+
+	return runValidation(ctx, cmd, plugins)
+}
+
+func filterPlugins(plugins []registry.PluginInfo, targetPlugin string) ([]registry.PluginInfo, error) {
+	if targetPlugin == "" {
+		return plugins, nil
+	}
+
+	var filtered []registry.PluginInfo
+	for _, p := range plugins {
+		if p.Name == targetPlugin {
+			filtered = append(filtered, p)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("plugin '%s' not found", targetPlugin)
+	}
+	return filtered, nil
+}
+
+func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.PluginInfo) error {
+	cmd.Printf("Validating %d plugin(s)...\n\n", len(plugins))
+
+	validCount := 0
+	for _, plugin := range plugins {
+		if validateSinglePlugin(ctx, cmd, plugin) {
+			validCount++
+		}
+	}
+
+	cmd.Printf("\nValidation complete: %d/%d plugins valid\n", validCount, len(plugins))
+
+	if validCount < len(plugins) {
+		os.Exit(1)
+	}
+	return nil
+}
+
+func validateSinglePlugin(ctx context.Context, cmd *cobra.Command, plugin registry.PluginInfo) bool {
+	cmd.Printf("Validating %s v%s... ", plugin.Name, plugin.Version)
+
+	if err := ValidatePlugin(ctx, plugin); err != nil {
+		cmd.Printf("FAILED: %v\n", err)
+		return false
+	}
+
+	cmd.Println("OK")
+	return true
 }

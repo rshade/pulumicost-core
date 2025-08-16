@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Legacy types for compatibility with existing engine code
+// Empty represents an empty request/response for compatibility with existing engine code.
 type Empty struct{}
 
 type ResourceDescriptor struct {
@@ -35,7 +35,7 @@ type GetProjectedCostResponse struct {
 }
 
 type GetActualCostRequest struct {
-	ResourceIds []string
+	ResourceIDs []string
 	StartTime   int64
 	EndTime     int64
 }
@@ -58,34 +58,46 @@ func (n *NameResponse) GetName() string {
 	return n.Name
 }
 
-// CostSourceClient wraps the generated gRPC client from pulumicost-spec
+// CostSourceClient wraps the generated gRPC client from pulumicost-spec.
 type CostSourceClient interface {
 	Name(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*NameResponse, error)
-	GetProjectedCost(ctx context.Context, in *GetProjectedCostRequest, opts ...grpc.CallOption) (*GetProjectedCostResponse, error)
-	GetActualCost(ctx context.Context, in *GetActualCostRequest, opts ...grpc.CallOption) (*GetActualCostResponse, error)
+	GetProjectedCost(
+		ctx context.Context,
+		in *GetProjectedCostRequest,
+		opts ...grpc.CallOption,
+	) (*GetProjectedCostResponse, error)
+	GetActualCost(
+		ctx context.Context,
+		in *GetActualCostRequest,
+		opts ...grpc.CallOption,
+	) (*GetActualCostResponse, error)
 }
 
-// NewCostSourceClient creates a new cost source client using the real proto client
+// NewCostSourceClient creates a new cost source client using the real proto client.
 func NewCostSourceClient(conn *grpc.ClientConn) CostSourceClient {
 	return &clientAdapter{
 		client: pbc.NewCostSourceServiceClient(conn),
 	}
 }
 
-// clientAdapter adapts the generated client to our internal interface
+// clientAdapter adapts the generated client to our internal interface.
 type clientAdapter struct {
 	client pbc.CostSourceServiceClient
 }
 
-func (c *clientAdapter) Name(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*NameResponse, error) {
+func (c *clientAdapter) Name(ctx context.Context, _ *Empty, opts ...grpc.CallOption) (*NameResponse, error) {
 	resp, err := c.client.Name(ctx, &pbc.NameRequest{}, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return &NameResponse{Name: resp.Name}, nil
+	return &NameResponse{Name: resp.GetName()}, nil
 }
 
-func (c *clientAdapter) GetProjectedCost(ctx context.Context, in *GetProjectedCostRequest, opts ...grpc.CallOption) (*GetProjectedCostResponse, error) {
+func (c *clientAdapter) GetProjectedCost(
+	ctx context.Context,
+	in *GetProjectedCostRequest,
+	opts ...grpc.CallOption,
+) (*GetProjectedCostResponse, error) {
 	// Convert internal request to proto request
 	var results []*CostResult
 
@@ -115,12 +127,12 @@ func (c *clientAdapter) GetProjectedCost(ctx context.Context, in *GetProjectedCo
 		}
 
 		result := &CostResult{
-			Currency:    resp.Currency,
-			MonthlyCost: resp.CostPerMonth,
-			HourlyCost:  resp.UnitPrice, // Assuming hourly for now
-			Notes:       resp.BillingDetail,
+			Currency:    resp.GetCurrency(),
+			MonthlyCost: resp.GetCostPerMonth(),
+			HourlyCost:  resp.GetUnitPrice(), // Assuming hourly for now
+			Notes:       resp.GetBillingDetail(),
 			CostBreakdown: map[string]float64{
-				"unit_price": resp.UnitPrice,
+				"unit_price": resp.GetUnitPrice(),
 			},
 		}
 		results = append(results, result)
@@ -129,11 +141,15 @@ func (c *clientAdapter) GetProjectedCost(ctx context.Context, in *GetProjectedCo
 	return &GetProjectedCostResponse{Results: results}, nil
 }
 
-func (c *clientAdapter) GetActualCost(ctx context.Context, in *GetActualCostRequest, opts ...grpc.CallOption) (*GetActualCostResponse, error) {
+func (c *clientAdapter) GetActualCost(
+	ctx context.Context,
+	in *GetActualCostRequest,
+	opts ...grpc.CallOption,
+) (*GetActualCostResponse, error) {
 	// Convert internal request to proto request
 	var results []*ActualCostResult
 
-	for _, resourceID := range in.ResourceIds {
+	for _, resourceID := range in.ResourceIDs {
 		req := &pbc.GetActualCostRequest{
 			ResourceId: resourceID,
 			Start:      timestamppb.New(time.Unix(in.StartTime, 0)),
@@ -151,10 +167,10 @@ func (c *clientAdapter) GetActualCost(ctx context.Context, in *GetActualCostRequ
 		totalCost := 0.0
 		breakdown := make(map[string]float64)
 
-		for _, result := range resp.Results {
-			totalCost += result.Cost
-			if result.Source != "" {
-				breakdown[result.Source] = result.Cost
+		for _, result := range resp.GetResults() {
+			totalCost += result.GetCost()
+			if result.GetSource() != "" {
+				breakdown[result.GetSource()] = result.GetCost()
 			}
 		}
 

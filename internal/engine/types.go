@@ -12,14 +12,14 @@ type ResourceDescriptor struct {
 }
 
 type CostResult struct {
-	ResourceType string
-	ResourceID   string
-	Adapter      string
-	Currency     string
-	Monthly      float64
-	Hourly       float64
-	Notes        string
-	Breakdown    map[string]float64
+	ResourceType string             `json:"resourceType"`
+	ResourceID   string             `json:"resourceId"`
+	Adapter      string             `json:"adapter"`
+	Currency     string             `json:"currency"`
+	Monthly      float64            `json:"monthly"`
+	Hourly       float64            `json:"hourly"`
+	Notes        string             `json:"notes"`
+	Breakdown    map[string]float64 `json:"breakdown"`
 }
 
 type ActualCostRequest struct {

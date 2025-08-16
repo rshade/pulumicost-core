@@ -13,18 +13,30 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const (
+	stdioTimeout = 10 * time.Second
+)
+
 type StdioLauncher struct {
 	timeout time.Duration
 }
 
 func NewStdioLauncher() *StdioLauncher {
 	return &StdioLauncher{
-		timeout: 10 * time.Second,
+		timeout: stdioTimeout,
 	}
 }
 
-func (s *StdioLauncher) Start(ctx context.Context, path string, args ...string) (*grpc.ClientConn, func() error, error) {
-	cmd := exec.CommandContext(ctx, path, append(args, "--stdio")...)
+func (s *StdioLauncher) Start(
+	ctx context.Context,
+	path string,
+	args ...string,
+) (*grpc.ClientConn, func() error, error) {
+	//nolint:gosec // Plugin path is validated before execution
+	cmd := exec.CommandContext(
+		ctx,
+		path,
+		append(args, "--stdio")...)
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -38,13 +50,16 @@ func (s *StdioLauncher) Start(ctx context.Context, path string, args ...string) 
 
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Start(); err != nil {
-		return nil, nil, fmt.Errorf("starting plugin: %w", err)
+	if startErr := cmd.Start(); startErr != nil {
+		return nil, nil, fmt.Errorf("starting plugin: %w", startErr)
 	}
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	lc := &net.ListenConfig{}
+	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
-		cmd.Process.Kill()
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
 		return nil, nil, fmt.Errorf("creating proxy listener: %w", err)
 	}
 
@@ -52,24 +67,26 @@ func (s *StdioLauncher) Start(ctx context.Context, path string, args ...string) 
 
 	address := listener.Addr().String()
 
-	connCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	defer cancel()
-
-	conn, err := grpc.DialContext(connCtx, address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock())
+	conn, err := grpc.NewClient(address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		cmd.Process.Kill()
-		listener.Close()
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		_ = listener.Close()
 		return nil, nil, fmt.Errorf("connecting to plugin: %w", err)
 	}
 
 	closeFn := func() error {
-		conn.Close()
-		listener.Close()
+		if connCloseErr := conn.Close(); connCloseErr != nil {
+			return fmt.Errorf("closing connection: %w", connCloseErr)
+		}
+		if listenerCloseErr := listener.Close(); listenerCloseErr != nil {
+			return fmt.Errorf("closing listener: %w", listenerCloseErr)
+		}
 		if cmd.Process != nil {
-			cmd.Process.Kill()
-			cmd.Wait()
+			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
 		}
 		return nil
 	}
@@ -84,6 +101,8 @@ func (s *StdioLauncher) proxy(listener net.Listener, stdin io.WriteCloser, stdou
 	}
 	defer conn.Close()
 
-	go io.Copy(stdin, conn)
-	io.Copy(conn, stdout)
+	go func() {
+		_, _ = io.Copy(stdin, conn)
+	}()
+	_, _ = io.Copy(conn, stdout)
 }

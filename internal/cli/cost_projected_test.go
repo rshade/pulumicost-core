@@ -1,9 +1,10 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,8 +28,8 @@ func TestNewCostProjectedCmd(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "with all flags",
-			args:        []string{
+			name: "with all flags",
+			args: []string{
 				"--pulumi-json", "test.json",
 				"--spec-dir", "/tmp/specs",
 				"--adapter", "test-adapter",
@@ -49,7 +50,7 @@ func TestNewCostProjectedCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := newCostProjectedCmd()
+			cmd := cli.NewCostProjectedCmd()
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -69,13 +70,13 @@ func TestNewCostProjectedCmd(t *testing.T) {
 }
 
 func TestCostProjectedCmdFlags(t *testing.T) {
-	cmd := newCostProjectedCmd()
+	cmd := cli.NewCostProjectedCmd()
 
 	// Check required flags
-	pulumiJsonFlag := cmd.Flags().Lookup("pulumi-json")
-	assert.NotNil(t, pulumiJsonFlag)
-	assert.Equal(t, "string", pulumiJsonFlag.Value.Type())
-	assert.Equal(t, "", pulumiJsonFlag.DefValue)
+	pulumiJSONFlag := cmd.Flags().Lookup("pulumi-json")
+	assert.NotNil(t, pulumiJSONFlag)
+	assert.Equal(t, "string", pulumiJSONFlag.Value.Type())
+	assert.Empty(t, pulumiJSONFlag.DefValue)
 
 	// Check optional flags
 	specDirFlag := cmd.Flags().Lookup("spec-dir")
@@ -94,12 +95,12 @@ func TestCostProjectedCmdFlags(t *testing.T) {
 	filterFlag := cmd.Flags().Lookup("filter")
 	assert.NotNil(t, filterFlag)
 	assert.Equal(t, "string", filterFlag.Value.Type())
-	assert.Equal(t, "", filterFlag.DefValue)
+	assert.Empty(t, filterFlag.DefValue)
 }
 
 func TestCostProjectedCmdHelp(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := newCostProjectedCmd()
+	cmd := cli.NewCostProjectedCmd()
 	cmd.SetOut(&buf)
 	cmd.SetArgs([]string{"--help"})
 
@@ -118,8 +119,8 @@ func TestCostProjectedCmdHelp(t *testing.T) {
 }
 
 func TestCostProjectedCmdExamples(t *testing.T) {
-	cmd := newCostProjectedCmd()
-	
+	cmd := cli.NewCostProjectedCmd()
+
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
 	assert.Contains(t, cmd.Example, "pulumicost cost projected --pulumi-json plan.json")

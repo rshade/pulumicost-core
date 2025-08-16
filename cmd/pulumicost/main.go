@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	root := cli.NewRootCmd(version.Version)
+	root := cli.NewRootCmd(version.GetVersion())
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

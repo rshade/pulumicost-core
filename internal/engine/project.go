@@ -29,14 +29,16 @@ func RenderResults(format OutputFormat, results []CostResult) error {
 }
 
 func renderTable(results []CostResult) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	const tabPadding = 2
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
 	fmt.Fprintln(w, "Resource\tAdapter\tProjected Monthly\tCurrency\tNotes")
 	fmt.Fprintln(w, "--------\t-------\t-----------------\t--------\t-----")
 
 	for _, result := range results {
 		resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
-		if len(resource) > 50 {
-			resource = resource[:47] + "..."
+		const maxResourceLen = 50
+		if len(resource) > maxResourceLen {
+			resource = resource[:maxResourceLen-3] + "..."
 		}
 		fmt.Fprintf(w, "%s\t%s\t%.2f\t%s\t%s\n",
 			resource,

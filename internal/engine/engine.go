@@ -2,11 +2,20 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/rshade/pulumicost-core/internal/proto"
+)
+
+const (
+	hoursPerDay = 24
+)
+
+var (
+	ErrNoCostData = errors.New("no cost data available")
 )
 
 type SpecLoader interface {
@@ -59,7 +68,11 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 	return results, nil
 }
 
-func (e *Engine) GetActualCost(ctx context.Context, resources []ResourceDescriptor, from, to time.Time) ([]CostResult, error) {
+func (e *Engine) GetActualCost(
+	ctx context.Context,
+	resources []ResourceDescriptor,
+	from, to time.Time,
+) ([]CostResult, error) {
 	var results []CostResult
 
 	for _, resource := range resources {
@@ -78,7 +91,13 @@ func (e *Engine) GetActualCost(ctx context.Context, resources []ResourceDescript
 	return results, nil
 }
 
-func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginhost.Client, resource ResourceDescriptor) (*CostResult, error) {
+func (e *Engine) getProjectedCostFromPlugin(
+	ctx context.Context,
+	client *pluginhost.Client,
+	resource ResourceDescriptor,
+) (*CostResult, error) {
+	const defaultEstimate = 100.0
+	const hoursPerMonth = 730
 	// Try to get pricing from plugin first
 	req := &proto.GetProjectedCostRequest{
 		Resources: []*proto.ResourceDescriptor{
@@ -107,9 +126,9 @@ func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginh
 
 	// Fallback to local spec if available
 	if e.loader != nil {
-		specData, err := e.loader.LoadSpec(resource.Provider, extractService(resource.Type), "default")
-		if err != nil {
-			return nil, err
+		specData, specErr := e.loader.LoadSpec(resource.Provider, extractService(resource.Type), "default")
+		if specErr != nil {
+			return nil, specErr
 		}
 
 		if specData != nil {
@@ -120,20 +139,25 @@ func (e *Engine) getProjectedCostFromPlugin(ctx context.Context, client *pluginh
 					ResourceID:   resource.ID,
 					Adapter:      "local-spec",
 					Currency:     spec.Currency,
-					Monthly:      100.0, // Default estimate
-					Hourly:       100.0 / 730,
+					Monthly:      defaultEstimate, // Default estimate
+					Hourly:       defaultEstimate / hoursPerMonth,
 					Notes:        "Estimated from local spec",
 				}, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, ErrNoCostData
 }
 
-func (e *Engine) getActualCostFromPlugin(ctx context.Context, client *pluginhost.Client, resource ResourceDescriptor, from, to time.Time) (*CostResult, error) {
+func (e *Engine) getActualCostFromPlugin(
+	ctx context.Context,
+	client *pluginhost.Client,
+	resource ResourceDescriptor,
+	from, to time.Time,
+) (*CostResult, error) {
 	req := &proto.GetActualCostRequest{
-		ResourceIds: []string{resource.ID},
+		ResourceIDs: []string{resource.ID},
 		StartTime:   from.Unix(),
 		EndTime:     to.Unix(),
 	}
@@ -144,7 +168,7 @@ func (e *Engine) getActualCostFromPlugin(ctx context.Context, client *pluginhost
 	}
 
 	if len(resp.Results) == 0 {
-		return nil, nil
+		return nil, ErrNoCostData
 	}
 
 	result := resp.Results[0]
@@ -153,7 +177,7 @@ func (e *Engine) getActualCostFromPlugin(ctx context.Context, client *pluginhost
 		ResourceID:   resource.ID,
 		Adapter:      client.Name,
 		Currency:     result.Currency,
-		Monthly:      result.TotalCost * 30.44 / float64(to.Sub(from).Hours()/24), // Approximate monthly
+		Monthly:      result.TotalCost * 30.44 / float64(to.Sub(from).Hours()/hoursPerDay), // Approximate monthly
 		Hourly:       result.TotalCost / float64(to.Sub(from).Hours()),
 		Notes:        fmt.Sprintf("Actual cost from %s to %s", from.Format("2006-01-02"), to.Format("2006-01-02")),
 		Breakdown:    result.CostBreakdown,
@@ -168,6 +192,6 @@ func convertToProto(properties map[string]interface{}) map[string]string {
 	return result
 }
 
-func extractService(resourceType string) string {
+func extractService(_ string) string {
 	return "default"
 }

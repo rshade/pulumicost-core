@@ -1,11 +1,16 @@
 package spec
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	ErrSpecNotFound = errors.New("spec file not found")
 )
 
 type Loader struct {
@@ -32,14 +37,14 @@ func (l *Loader) LoadSpec(provider, service, sku string) (interface{}, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, nil
+			return nil, ErrSpecNotFound
 		}
 		return nil, fmt.Errorf("reading spec file: %w", err)
 	}
 
 	var spec PricingSpec
-	if err := yaml.Unmarshal(data, &spec); err != nil {
-		return nil, fmt.Errorf("parsing spec YAML: %w", err)
+	if unmarshalErr := yaml.Unmarshal(data, &spec); unmarshalErr != nil {
+		return nil, fmt.Errorf("parsing spec YAML: %w", unmarshalErr)
 	}
 
 	return &spec, nil

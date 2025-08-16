@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCostProjectedCmd() *cobra.Command {
+func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 
 	cmd := &cobra.Command{
@@ -33,7 +33,7 @@ func newCostProjectedCmd() *cobra.Command {
 
   # Use custom spec directory
   pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
 
 			plan, err := ingest.LoadPulumiPlan(planPath)
