@@ -21,8 +21,8 @@ func LoadManifest(path string) (*Manifest, error) {
 	}
 
 	var manifest Manifest
-	if err := json.Unmarshal(data, &manifest); err != nil {
-		return nil, err
+	if unmarshalErr := json.Unmarshal(data, &manifest); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 
 	return &manifest, nil

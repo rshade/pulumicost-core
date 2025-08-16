@@ -356,3 +356,4 @@ Use the provided example files:
 ./bin/pulumicost plugin list
 ./bin/pulumicost plugin validate
 ```
+- Never complete a project without running `make lint`.

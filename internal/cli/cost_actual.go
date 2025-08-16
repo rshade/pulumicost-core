@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCostActualCmd() *cobra.Command {
+func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
 	cmd := &cobra.Command{
@@ -32,7 +33,7 @@ func newCostActualCmd() *cobra.Command {
 
   # Use RFC3339 timestamps
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
 
 			plan, err := ingest.LoadPulumiPlan(planPath)
@@ -51,7 +52,7 @@ func newCostActualCmd() *cobra.Command {
 				toStr = time.Now().Format(time.RFC3339)
 			}
 
-			from, to, err := parseTimeRange(fromStr, toStr)
+			from, to, err := ParseTimeRange(fromStr, toStr)
 			if err != nil {
 				return fmt.Errorf("parsing time range: %w", err)
 			}
@@ -87,25 +88,25 @@ func newCostActualCmd() *cobra.Command {
 	return cmd
 }
 
-func parseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
-	from, err := parseTime(fromStr)
+func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
+	from, err := ParseTime(fromStr)
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("parsing 'from' date: %w", err)
 	}
 
-	to, err := parseTime(toStr)
+	to, err := ParseTime(toStr)
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("parsing 'to' date: %w", err)
 	}
 
 	if to.Before(from) {
-		return time.Time{}, time.Time{}, fmt.Errorf("'to' date must be after 'from' date")
+		return time.Time{}, time.Time{}, errors.New("'to' date must be after 'from' date")
 	}
 
 	return from, to, nil
 }
 
-func parseTime(str string) (time.Time, error) {
+func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
 		time.RFC3339,

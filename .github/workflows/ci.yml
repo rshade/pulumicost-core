@@ -148,7 +148,7 @@ jobs:
           VERSION=$(git describe --tags --always --dirty)
           COMMIT=$(git rev-parse HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          LDFLAGS="-ldflags \"-X 'github.com/rshade/pulumicost-core/pkg/version.Version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.GitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.BuildDate=${BUILD_DATE}'\""
+          LDFLAGS="-ldflags \"-X 'github.com/rshade/pulumicost-core/pkg/version.version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}'\""
           
           BINARY_NAME="pulumicost"
           if [ "${GOOS}" = "windows" ]; then

@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const (
+	minURNParts = 3
+)
+
 type PulumiPlan struct {
 	Steps []PulumiStep `json:"steps"`
 }
@@ -34,8 +38,8 @@ func LoadPulumiPlan(path string) (*PulumiPlan, error) {
 	}
 
 	var plan PulumiPlan
-	if err := json.Unmarshal(data, &plan); err != nil {
-		return nil, fmt.Errorf("parsing plan JSON: %w", err)
+	if unmarshalErr := json.Unmarshal(data, &plan); unmarshalErr != nil {
+		return nil, fmt.Errorf("parsing plan JSON: %w", unmarshalErr)
 	}
 
 	return &plan, nil
@@ -58,7 +62,7 @@ func (p *PulumiPlan) GetResources() []PulumiResource {
 
 func extractProviderFromURN(urn string) string {
 	parts := strings.Split(urn, "::")
-	if len(parts) >= 3 {
+	if len(parts) >= minURNParts {
 		providerParts := strings.Split(parts[2], ":")
 		if len(providerParts) > 0 {
 			return providerParts[0]

@@ -1,24 +1,24 @@
 package spec
 
 import (
-	"fmt"
+	"errors"
 )
 
 func ValidateSpec(spec *PricingSpec) error {
 	if spec.Provider == "" {
-		return fmt.Errorf("provider is required")
+		return errors.New("provider is required")
 	}
 	if spec.Service == "" {
-		return fmt.Errorf("service is required")
+		return errors.New("service is required")
 	}
 	if spec.SKU == "" {
-		return fmt.Errorf("SKU is required")
+		return errors.New("SKU is required")
 	}
 	if spec.Currency == "" {
-		return fmt.Errorf("currency is required")
+		return errors.New("currency is required")
 	}
 	if len(spec.Pricing) == 0 {
-		return fmt.Errorf("pricing information is required")
+		return errors.New("pricing information is required")
 	}
 	return nil
 }

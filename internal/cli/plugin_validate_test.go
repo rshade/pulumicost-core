@@ -1,4 +1,4 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,7 @@ func TestNewPluginValidateCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := newPluginValidateCmd()
+			cmd := cli.NewPluginValidateCmd()
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -55,19 +56,19 @@ func TestNewPluginValidateCmd(t *testing.T) {
 }
 
 func TestPluginValidateCmdFlags(t *testing.T) {
-	cmd := newPluginValidateCmd()
+	cmd := cli.NewPluginValidateCmd()
 
 	// Check plugin flag
 	pluginFlag := cmd.Flags().Lookup("plugin")
 	assert.NotNil(t, pluginFlag)
 	assert.Equal(t, "string", pluginFlag.Value.Type())
-	assert.Equal(t, "", pluginFlag.DefValue)
+	assert.Empty(t, pluginFlag.DefValue)
 	assert.Contains(t, pluginFlag.Usage, "Validate a specific plugin by name")
 }
 
 func TestPluginValidateCmdHelp(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := newPluginValidateCmd()
+	cmd := cli.NewPluginValidateCmd()
 	cmd.SetOut(&buf)
 	cmd.SetArgs([]string{"--help"})
 
@@ -82,7 +83,7 @@ func TestPluginValidateCmdHelp(t *testing.T) {
 }
 
 func TestPluginValidateCmdExamples(t *testing.T) {
-	cmd := newPluginValidateCmd()
+	cmd := cli.NewPluginValidateCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
@@ -94,13 +95,11 @@ func TestPluginValidateCmdExamples(t *testing.T) {
 
 func TestValidatePlugin(t *testing.T) {
 	// Create a temporary directory for testing
-	tmpDir, err := os.MkdirTemp("", "plugin-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create a mock plugin binary
 	pluginPath := filepath.Join(tmpDir, "test-plugin")
-	err = os.WriteFile(pluginPath, []byte("#!/bin/sh\necho test"), 0755)
+	err := os.WriteFile(pluginPath, []byte("#!/bin/sh\necho test"), 0755)
 	require.NoError(t, err)
 
 	// Create a valid manifest
@@ -159,8 +158,8 @@ func TestValidatePlugin(t *testing.T) {
 			setupFunc: func() {
 				// Create non-executable file
 				nonExecPath := filepath.Join(tmpDir, "non-exec")
-				err := os.WriteFile(nonExecPath, []byte("test"), 0644)
-				require.NoError(t, err)
+				writeErr := os.WriteFile(nonExecPath, []byte("test"), 0644)
+				require.NoError(t, writeErr)
 			},
 			expectError: true,
 			errorMsg:    "plugin binary is not executable",
@@ -194,15 +193,15 @@ func TestValidatePlugin(t *testing.T) {
 			}
 
 			ctx := context.Background()
-			err := validatePlugin(ctx, tt.plugin)
+			validateErr := cli.ValidatePlugin(ctx, tt.plugin)
 
 			if tt.expectError {
-				require.Error(t, err)
+				require.Error(t, validateErr)
 				if tt.errorMsg != "" {
-					assert.Contains(t, err.Error(), tt.errorMsg)
+					assert.Contains(t, validateErr.Error(), tt.errorMsg)
 				}
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, validateErr)
 			}
 		})
 	}

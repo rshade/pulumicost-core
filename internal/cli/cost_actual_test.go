@@ -1,10 +1,11 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
 	"testing"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -60,7 +61,7 @@ func TestNewCostActualCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := newCostActualCmd()
+			cmd := cli.NewCostActualCmd()
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -80,12 +81,12 @@ func TestNewCostActualCmd(t *testing.T) {
 }
 
 func TestCostActualCmdFlags(t *testing.T) {
-	cmd := newCostActualCmd()
+	cmd := cli.NewCostActualCmd()
 
 	// Check required flags
-	pulumiJsonFlag := cmd.Flags().Lookup("pulumi-json")
-	assert.NotNil(t, pulumiJsonFlag)
-	assert.Equal(t, "string", pulumiJsonFlag.Value.Type())
+	pulumiJSONFlag := cmd.Flags().Lookup("pulumi-json")
+	assert.NotNil(t, pulumiJSONFlag)
+	assert.Equal(t, "string", pulumiJSONFlag.Value.Type())
 
 	fromFlag := cmd.Flags().Lookup("from")
 	assert.NotNil(t, fromFlag)
@@ -114,7 +115,7 @@ func TestCostActualCmdFlags(t *testing.T) {
 
 func TestCostActualCmdHelp(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := newCostActualCmd()
+	cmd := cli.NewCostActualCmd()
 	cmd.SetOut(&buf)
 	cmd.SetArgs([]string{"--help"})
 
@@ -132,7 +133,7 @@ func TestCostActualCmdHelp(t *testing.T) {
 }
 
 func TestCostActualCmdExamples(t *testing.T) {
-	cmd := newCostActualCmd()
+	cmd := cli.NewCostActualCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
@@ -188,7 +189,7 @@ func TestParseTimeRange(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			from, to, err := parseTimeRange(tt.fromStr, tt.toStr)
+			from, to, err := cli.ParseTimeRange(tt.fromStr, tt.toStr)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -238,7 +239,7 @@ func TestParseTime(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := parseTime(tt.input)
+			result, err := cli.ParseTime(tt.input)
 
 			if tt.expectError {
 				require.Error(t, err)

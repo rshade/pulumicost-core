@@ -29,7 +29,9 @@ func NewClient(ctx context.Context, launcher Launcher, binPath string) (*Client,
 
 	nameResp, err := api.Name(ctx, &proto.Empty{})
 	if err != nil {
-		closeFn()
+		if closeErr := closeFn(); closeErr != nil {
+			return nil, fmt.Errorf("getting plugin name: %w (close error: %w)", err, closeErr)
+		}
 		return nil, fmt.Errorf("getting plugin name: %w", err)
 	}
 

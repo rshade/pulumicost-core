@@ -30,8 +30,8 @@ func NewRootCmd(ver string) *cobra.Command {
 		Short: "Cost calculation commands",
 	}
 	costCmd.AddCommand(
-		newCostProjectedCmd(),
-		newCostActualCmd(),
+		NewCostProjectedCmd(),
+		NewCostActualCmd(),
 	)
 
 	pluginCmd := &cobra.Command{
@@ -39,8 +39,8 @@ func NewRootCmd(ver string) *cobra.Command {
 		Short: "Plugin management commands",
 	}
 	pluginCmd.AddCommand(
-		newPluginValidateCmd(),
-		newPluginListCmd(),
+		NewPluginValidateCmd(),
+		NewPluginListCmd(),
 	)
 
 	cmd.AddCommand(costCmd, pluginCmd)

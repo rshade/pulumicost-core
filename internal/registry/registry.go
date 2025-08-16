@@ -42,8 +42,8 @@ func (r *Registry) ListPlugins() ([]PluginInfo, error) {
 		}
 
 		pluginPath := filepath.Join(r.root, entry.Name())
-		versions, err := os.ReadDir(pluginPath)
-		if err != nil {
+		versions, versionErr := os.ReadDir(pluginPath)
+		if versionErr != nil {
 			continue
 		}
 
@@ -79,8 +79,8 @@ func (r *Registry) findBinary(dir string) string {
 		}
 
 		path := filepath.Join(dir, entry.Name())
-		info, err := os.Stat(path)
-		if err != nil {
+		info, statErr := os.Stat(path)
+		if statErr != nil {
 			continue
 		}
 
@@ -116,8 +116,8 @@ func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Cli
 			continue
 		}
 
-		client, err := pluginhost.NewClient(ctx, r.launcher, plugin.Path)
-		if err != nil {
+		client, clientErr := pluginhost.NewClient(ctx, r.launcher, plugin.Path)
+		if clientErr != nil {
 			continue
 		}
 		clients = append(clients, client)

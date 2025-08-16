@@ -1,10 +1,10 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -73,7 +73,7 @@ func TestNewRootCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			cmd := NewRootCmd("test-version")
+			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(tt.args)
@@ -93,7 +93,7 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestRootCmdExamples(t *testing.T) {
-	cmd := NewRootCmd("test-version")
+	cmd := cli.NewRootCmd("test-version")
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
@@ -104,7 +104,7 @@ func TestRootCmdExamples(t *testing.T) {
 }
 
 func TestRootCmdStructure(t *testing.T) {
-	cmd := NewRootCmd("test-version")
+	cmd := cli.NewRootCmd("test-version")
 
 	// Check that main subcommands exist
 	costCmd, _, err := cmd.Find([]string{"cost"})
@@ -135,7 +135,7 @@ func TestRootCmdStructure(t *testing.T) {
 }
 
 func TestRootCmdFlags(t *testing.T) {
-	cmd := NewRootCmd("test-version")
+	cmd := cli.NewRootCmd("test-version")
 
 	// Check persistent flags
 	debugFlag := cmd.PersistentFlags().Lookup("debug")
@@ -149,5 +149,5 @@ func TestRootCmdFlags(t *testing.T) {
 	cmd.SetArgs([]string{"--version"})
 	err := cmd.Execute()
 	require.NoError(t, err)
-	assert.True(t, strings.Contains(buf.String(), "test-version"))
+	assert.Contains(t, buf.String(), "test-version")
 }
