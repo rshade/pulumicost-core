@@ -7,6 +7,8 @@ import (
 	"github.com/rshade/pulumicost-core/internal/engine"
 )
 
+const unknownProvider = "unknown"
+
 func MapResource(pulumiResource PulumiResource) (engine.ResourceDescriptor, error) {
 	provider := extractProvider(pulumiResource.Type)
 
@@ -20,10 +22,10 @@ func MapResource(pulumiResource PulumiResource) (engine.ResourceDescriptor, erro
 
 func extractProvider(resourceType string) string {
 	parts := strings.Split(resourceType, ":")
-	if len(parts) > 0 {
+	if len(parts) > 0 && parts[0] != "" {
 		return parts[0]
 	}
-	return "unknown"
+	return unknownProvider
 }
 
 func MapResources(resources []PulumiResource) ([]engine.ResourceDescriptor, error) {
