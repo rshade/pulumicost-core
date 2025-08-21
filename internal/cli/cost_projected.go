@@ -47,6 +47,11 @@ func NewCostProjectedCmd() *cobra.Command {
 				return fmt.Errorf("mapping resources: %w", err)
 			}
 
+			// Apply resource filter if specified
+			if filter != "" {
+				resources = engine.FilterResources(resources, filter)
+			}
+
 			if specDir == "" {
 				cfg := config.New()
 				specDir = cfg.SpecDir

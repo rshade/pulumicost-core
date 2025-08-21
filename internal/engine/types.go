@@ -43,3 +43,18 @@ type PricingSpec struct {
 	Pricing  map[string]interface{} `yaml:"pricing"`
 	Metadata map[string]interface{} `yaml:"metadata,omitempty"`
 }
+
+type CostSummary struct {
+	TotalMonthly float64                   `json:"totalMonthly"`
+	TotalHourly  float64                   `json:"totalHourly"`
+	Currency     string                    `json:"currency"`
+	ByProvider   map[string]float64        `json:"byProvider"`
+	ByService    map[string]float64        `json:"byService"`
+	ByAdapter    map[string]float64        `json:"byAdapter"`
+	Resources    []CostResult              `json:"resources"`
+}
+
+type AggregatedResults struct {
+	Summary   CostSummary  `json:"summary"`
+	Resources []CostResult `json:"resources"`
+}
