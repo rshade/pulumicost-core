@@ -357,3 +357,37 @@ Use the provided example files:
 ./bin/pulumicost plugin validate
 ```
 - Never complete a project without running `make lint`.
+
+## Package-Specific Documentation
+
+### internal/cli
+The CLI package implements the Cobra-based command-line interface. Key patterns:
+- Use `RunE` not `Run` for error handling
+- Always use `cmd.Printf()` for output (not `fmt.Printf()`)
+- Defer cleanup functions immediately after obtaining resources
+- Support multiple date formats: "2006-01-02", RFC3339
+- See `internal/cli/CLAUDE.md` for detailed CLI architecture and patterns
+
+### internal/engine
+The engine package orchestrates cost calculations between plugins and specs:
+- Tries plugins first, falls back to local YAML specs
+- Supports three output formats: table, JSON, NDJSON
+- Uses `hoursPerMonth = 730` for monthly calculations
+- Always returns some result, even if placeholder
+- See `internal/engine/CLAUDE.md` for detailed calculation flows
+
+### internal/pluginhost
+The pluginhost package manages plugin communication via gRPC:
+- Two launcher types: ProcessLauncher (TCP) and StdioLauncher (stdin/stdout)
+- 10-second timeout with 100ms retry delays
+- Platform-specific binary detection (Unix permissions vs Windows .exe)
+- Always call `cmd.Wait()` after `Kill()` to prevent zombies
+- See `internal/pluginhost/CLAUDE.md` for detailed plugin lifecycle
+
+### internal/registry
+The registry package handles plugin discovery and lifecycle:
+- Scans `~/.pulumicost/plugins/<name>/<version>/` structure
+- Optional `plugin.manifest.json` validation
+- Graceful handling of missing directories and invalid binaries
+- Platform-specific executable detection
+- See `internal/registry/CLAUDE.md` for detailed discovery patterns
