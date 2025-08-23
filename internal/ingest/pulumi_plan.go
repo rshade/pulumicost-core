@@ -64,9 +64,9 @@ func extractProviderFromURN(urn string) string {
 	parts := strings.Split(urn, "::")
 	if len(parts) >= minURNParts {
 		providerParts := strings.Split(parts[2], ":")
-		if len(providerParts) > 0 {
+		if len(providerParts) > 0 && providerParts[0] != "" {
 			return providerParts[0]
 		}
 	}
-	return "unknown"
+	return unknownProvider
 }
