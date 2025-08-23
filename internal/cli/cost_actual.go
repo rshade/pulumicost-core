@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/engine"
@@ -65,13 +66,34 @@ func NewCostActualCmd() *cobra.Command {
 			defer cleanup()
 
 			eng := engine.New(clients, nil)
-			results, err := eng.GetActualCost(ctx, resources, from, to)
+			
+			// Parse tags from groupBy if it's in tag:key=value format
+			tags := make(map[string]string)
+			actualGroupBy := groupBy
+			if strings.HasPrefix(groupBy, "tag:") && strings.Contains(groupBy, "=") {
+				tagPart := strings.TrimPrefix(groupBy, "tag:")
+				if parts := strings.Split(tagPart, "="); len(parts) == 2 {
+					tags[parts[0]] = parts[1]
+					actualGroupBy = "" // Clear groupBy since we're filtering by tag
+				}
+			}
+			
+			request := engine.ActualCostRequest{
+				Resources: resources,
+				From:      from,
+				To:        to,
+				Adapter:   adapter,
+				GroupBy:   actualGroupBy,
+				Tags:      tags,
+			}
+			
+			results, err := eng.GetActualCostWithOptions(ctx, request)
 			if err != nil {
 				return fmt.Errorf("fetching actual costs: %w", err)
 			}
 
 			outputFormat := engine.OutputFormat(output)
-			return engine.RenderResults(outputFormat, results)
+			return engine.RenderActualCostResults(outputFormat, results)
 		},
 	}
 
@@ -80,7 +102,7 @@ func NewCostActualCmd() *cobra.Command {
 	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
 	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, or ndjson")
-	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group results by: resource, type, or provider")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, or filter by tag:key=value")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 	_ = cmd.MarkFlagRequired("from")
