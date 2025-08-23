@@ -266,7 +266,8 @@ func TestDateParsingEdgeCases(t *testing.T) {
 			name:        "same date",
 			fromDate:    "2025-01-15",
 			toDate:      "2025-01-15",
-			expectError: false,
+			expectError: true,
+			errorMsg:    "'to' date must be after 'from' date",
 		},
 		{
 			name:        "to before from",

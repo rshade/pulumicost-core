@@ -1,233 +1,215 @@
-# pulumicost-core
-PulumiCost Core is the CLI and plugin host for the PulumiCost ecosystem.
-It discovers and runs cost data plugins, parses Pulumi plan output, and calculates projected and actual costs for your infrastructure.
+# PulumiCost Core
 
-This is the Pulumi-agnostic core — it does not require a Pulumi fork, and works against JSON output from pulumi preview --json or pulumi stack export.
+**Cloud cost analysis for Pulumi infrastructure** - Calculate projected and actual infrastructure costs without modifying your Pulumi programs.
 
-## Features
-Plugin-based architecture
-Supports vendor and custom plugins via the PulumiCost Spec costsource.proto gRPC interface.
+PulumiCost Core is a CLI tool that analyzes Pulumi infrastructure definitions to provide accurate cost estimates and historical cost tracking through a flexible plugin-based architecture.
 
-## Projected & Actual costs
+## Key Features
 
-Projected: Uses PricingSpec from local files or plugin APIs.
+- **📊 Projected Costs**: Estimate monthly costs before deploying infrastructure
+- **💰 Actual Costs**: Track historical spending with detailed breakdowns  
+- **🔌 Plugin-Based**: Extensible architecture supporting multiple cost data sources
+- **📈 Advanced Analytics**: Resource grouping, filtering, and aggregation
+- **📱 Multiple Formats**: Table, JSON, and NDJSON output options
+- **🔍 Smart Filtering**: Filter by resource type, tags, or custom expressions
+- **⏰ Time Range Queries**: Flexible date range support for cost analysis
+- **🏗️ No Code Changes**: Works with existing Pulumi projects via JSON output
 
-Actual: Pulls historical costs from vendor APIs (e.g., Kubecost, Flexera, Cloudability).
+## Quick Start
 
-Multiple output formats
-Table, JSON, or newline-delimited JSON (ndjson) for CI pipelines.
+### 1. Installation
 
-No CUR parsing required
-Plugins work with preprocessed or vendor-provided cost APIs, not raw cloud billing exports.
-
-## Installation
+Download the latest release or build from source:
 
 ```bash
-# Clone & build
-git clone https://github.com/yourorg/pulumicost-core
+# Download latest release (coming soon)
+curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
+chmod +x pulumicost
+
+# Or build from source
+git clone https://github.com/rshade/pulumicost-core
 cd pulumicost-core
 make build
-
-# Binary will be in ./bin
 ./bin/pulumicost --help
 ```
 
-## Directory Layout
+### 2. Generate Pulumi Plan
+
+Export your infrastructure plan to JSON:
 
 ```bash
-cmd/pulumicost/        # CLI entrypoint
-internal/cli/          # Cobra commands
-internal/pluginhost/   # gRPC plugin launcher
-internal/registry/     # Plugin registry & manifest parsing
-internal/engine/       # Orchestration logic for actual/projected costs
-internal/spec/         # Spec loader & validation
-internal/ingest/       # Pulumi plan JSON parsing
-pkg/version/           # CLI version info
-examples/              # Sample Pulumi plans & specs
-testdata/              # Unit test fixtures
-```
-
-## Proposed Layout
-
-```bash
-pulumicost-core/
-├─ README.md
-├─ LICENSE
-├─ go.mod
-├─ Makefile
-├─ cmd/
-│  └─ pulumicost/
-│     └─ main.go
-├─ internal/
-│  ├─ cli/
-│  │  ├─ root.go
-│  │  ├─ cost_actual.go
-│  │  ├─ cost_projected.go
-│  │  ├─ plugin_validate.go
-│  │  └─ plugin_list.go
-│  ├─ pluginhost/
-│  │  ├─ host.go
-│  │  ├─ process.go
-│  │  └─ stdio.go
-│  ├─ registry/
-│  │  ├─ registry.go
-│  │  └─ manifest.go
-│  ├─ engine/
-│  │  ├─ engine.go
-│  │  ├─ project.go
-│  │  └─ types.go
-│  ├─ spec/
-│  │  ├─ loader.go
-│  │  └─ validate.go
-│  ├─ ingest/
-│  │  ├─ pulumi_plan.go
-│  │  └─ map_resource.go
-│  ├─ config/
-│  │  └─ config.go
-│  └─ util/
-│     ├─ time.go
-│     └─ json.go
-├─ pkg/
-│  └─ version/
-│     └─ version.go
-├─ examples/
-│  ├─ plans/                       # example outputs of `pulumi preview --json`
-│  │  └─ aws-simple-plan.json
-│  └─ specs/
-│     └─ aws-ec2-t3-micro.yaml
-└─ testdata/
-   ├─ plan.json
-   └─ pricing_spec.yaml
-```
-
-## Key Responsibilities
-
-Key responsibilities
-* CLI: pulumicost cost actual|projected, pulumicost plugin validate|list
-* Plugin host: discover, launch, and talk to gRPC plugins (Kubecost, Cloudability, etc.)
-* Registry: read ~/.pulumicost/plugins/<name>/<version>/<binary> * plugin.manifest.json
-* Spec: load/validate PricingSpec YAML/JSON (optional override)
-* Ingest: parse pulumi preview --json / stack export → []ResourceDescriptor
-* Engine: orchestrate “for each resource → call plugin(s) → aggregate result”
-
-## CLI UX (MVP)
-
-```bash
-# Projected cost from spec/vendor plugins for a Pulumi plan
-pulumicost cost projected --pulumi-json ./plan.json --spec-dir ./specs --output table
-
-# Actual cost for a time window
-pulumicost cost actual --pulumi-json ./plan.json --from 2025-07-01 --to 2025-07-31 --output json
-
-# Validate installed plugins
-pulumicost plugin validate
-
-# List plugins and capabilities
-pulumicost plugin list
-```
-
-## Usage
-
-1. Generate a Pulumi plan
-
-```bash
+cd your-pulumi-project
 pulumi preview --json > plan.json
 ```
 
-2. Compute projected costs
+### 3. Calculate Costs
 
+**Projected Costs** - Estimate costs before deployment:
 ```bash
-pulumicost cost projected \
-  --pulumi-json ./plan.json \
-  --spec-dir ./specs \
-  --output table
+pulumicost cost projected --pulumi-json plan.json
 ```
 
-Example output:
-
+**Actual Costs** - View historical spending (requires plugins):
 ```bash
+# Last 7 days
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+
+# Specific date range  
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
+```
+
+## Example Output
+
+### Projected Cost Analysis
+```bash
+$ pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+
 RESOURCE                          ADAPTER     MONTHLY   CURRENCY  NOTES
-aws:ec2/instance:Instance         aws-spec    7.50      USD       On-demand Linux t3.micro
-aws:s3/bucket:Bucket               aws-spec    2.30      USD       Standard storage 100GB
+aws:ec2/instance:Instance         aws-spec    $7.50     USD       t3.micro Linux on-demand
+aws:s3/bucket:Bucket             none        $0.00     USD       No pricing information available  
+aws:rds/instance:Instance        none        $0.00     USD       No pricing information available
 ```
 
-3. Fetch actual historical costs
-
+### Actual Cost Analysis
 ```bash
-pulumicost cost actual \
-  --pulumi-json ./plan.json \
-  --from 2025-07-01 \
-  --to 2025-07-31 \
-  --adapter kubecost \
-  --output json
+$ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type --output json
+{
+  "summary": {
+    "totalMonthly": 45.67,
+    "currency": "USD",
+    "byProvider": {"aws": 45.67},
+    "byService": {"ec2": 23.45, "s3": 12.22, "rds": 10.00}
+  },
+  "resources": [...]
+}
 ```
 
-## Plugins
+## Core Concepts
 
-PulumiCost plugins are standalone binaries implementing the CostSource gRPC service.
-They are installed under:
+### Resource Analysis Flow
+1. **Export** - Generate Pulumi plan JSON with `pulumi preview --json`
+2. **Parse** - Extract resource definitions and properties  
+3. **Query** - Fetch cost data via plugins or local specifications
+4. **Aggregate** - Calculate totals with grouping and filtering options
+5. **Output** - Present results in table, JSON, or NDJSON format
 
+### Plugin Architecture
+PulumiCost uses plugins to fetch cost data from various sources:
+
+- **Cost Plugins**: Query cloud provider APIs (Kubecost, AWS Cost Explorer, etc.)
+- **Spec Files**: Local YAML/JSON pricing specifications as fallback
+- **Plugin Discovery**: Automatic detection from `~/.pulumicost/plugins/`
+
+## Advanced Usage
+
+### Resource Filtering
 ```bash
-~/.pulumicost/plugins/<name>/<version>/<binary>
-Example:
+# Filter by resource type
+pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
 
-```bash
-~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+# Filter by tag
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
 ```
 
-Listing plugins
+### Cost Aggregation  
+```bash
+# Group by provider
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
 
+# Group by resource type
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
+
+# Group by date for time series
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
+```
+
+### Output Formats
+```bash
+# Table format (default)
+pulumicost cost projected --pulumi-json plan.json --output table
+
+# JSON for API integration
+pulumicost cost projected --pulumi-json plan.json --output json
+
+# NDJSON for streaming/pipeline processing
+pulumicost cost projected --pulumi-json plan.json --output ndjson
+```
+
+## Plugin Management
+
+### List Available Plugins
 ```bash
 pulumicost plugin list
 ```
 
-Validating plugins
-
+### Validate Plugin Installation  
 ```bash
 pulumicost plugin validate
 ```
 
-## Configuration
-CLI flags:
-
---pulumi-json: Path to pulumi preview --json or stack export output
-
---spec-dir: Directory with PricingSpec YAML/JSON files
-
---from, --to: Date range for actual cost (YYYY-MM-DD or RFC3339)
-
---adapter: Restrict to a specific plugin
-
---output: table, json, or ndjson
-
-## Development
-Prerequisites
-Go 1.22+
-
-pulumicost-spec (for proto & types)
-
-cobra
-
-gRPC
-
-### Build
-
-```bash
-make build
+### Plugin Directory Structure
+```
+~/.pulumicost/plugins/
+├── kubecost/
+│   └── 1.0.0/
+│       └── pulumicost-kubecost
+├── aws-plugin/  
+│   └── 0.1.0/
+│       └── pulumicost-aws
 ```
 
-### Run
+## Documentation
 
-```bash
-bin/pulumicost --help
+- [📖 **User Guide**](docs/user-guide.md) - Comprehensive usage guide
+- [🚀 **Installation**](docs/installation.md) - Detailed installation instructions
+- [💰 **Cost Calculations**](docs/cost-calculations.md) - Deep dive into projected vs actual costs
+- [🔌 **Plugin System**](docs/plugin-system.md) - Plugin development and management
+- [🔧 **Troubleshooting**](docs/troubleshooting.md) - Common issues and solutions
+
+## Use Cases
+
+- **💡 Pre-deployment Planning**: Estimate costs before infrastructure changes
+- **📊 Cost Optimization**: Identify expensive resources and right-size instances  
+- **🔍 Cost Attribution**: Track spending by team, environment, or project
+- **📈 Trend Analysis**: Monitor cost changes over time
+- **🚨 Budget Monitoring**: Set up alerts for cost thresholds
+- **📋 Financial Reporting**: Generate cost reports for stakeholders
+
+## Architecture
+
+PulumiCost Core is designed as a plugin-agnostic orchestrator:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Pulumi JSON   │    │  PulumiCost     │    │    Plugins      │
+│     Output      │───▶│     Core        │───▶│  (Kubecost,     │
+│                 │    │                 │    │   AWS, etc.)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │  Cost Analysis  │
+                       │   & Reporting   │
+                       └─────────────────┘
 ```
 
-### Test
+## Contributing
 
-```bash
-make test
-```
+We welcome contributions! See our development documentation:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and guidelines  
+- [CLAUDE.md](CLAUDE.md) - AI assistant development context
+- [Architecture Documentation](internal/) - Internal package documentation
 
 ## License
-Apache-2.0 (recommended for core + spec)
 
+Apache-2.0 - See [LICENSE](LICENSE) for details.
+
+## Related Projects
+
+- [pulumicost-spec](https://github.com/rshade/pulumicost-spec) - Protocol definitions and schemas
+- [pulumicost-plugin-kubecost](https://github.com/rshade/pulumicost-plugin-kubecost) - Kubecost integration plugin
+
+---
+
+**Getting Started**: Try the [examples](examples/) directory for sample Pulumi plans and pricing specifications.
