@@ -70,7 +70,9 @@ func NewCostActualCmd() *cobra.Command {
 				return fmt.Errorf("fetching actual costs: %w", err)
 			}
 
-			outputFormat := engine.OutputFormat(output)
+			// Use configuration-aware output format selection
+			finalOutput := config.GetOutputFormat(output)
+			outputFormat := engine.OutputFormat(finalOutput)
 			return engine.RenderResults(outputFormat, results)
 		},
 	}
