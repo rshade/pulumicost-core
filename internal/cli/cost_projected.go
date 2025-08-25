@@ -71,7 +71,9 @@ func NewCostProjectedCmd() *cobra.Command {
 				return fmt.Errorf("calculating projected costs: %w", err)
 			}
 
-			outputFormat := engine.OutputFormat(output)
+			// Use configuration-aware output format selection
+			finalOutput := config.GetOutputFormat(output)
+			outputFormat := engine.OutputFormat(finalOutput)
 			return engine.RenderResults(outputFormat, results)
 		},
 	}
