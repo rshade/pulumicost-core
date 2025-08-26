@@ -1,0 +1,93 @@
+{
+  "i-1234567890abcdef0": {
+    "resource_id": "i-1234567890abcdef0",
+    "resource_type": "aws_instance",
+    "currency": "USD",
+    "total_cost": 55.23,
+    "start_time": 1640995200,
+    "end_time": 1643673600,
+    "cost_breakdown": [
+      "Instance hours (744h): $30.37",
+      "EBS storage (8GB gp2): $0.92",
+      "Data transfer out: $23.94"
+    ],
+    "region": "us-east-1",
+    "tags": {
+      "Environment": "production",
+      "Name": "WebServer"
+    }
+  },
+  "prod-database": {
+    "resource_id": "prod-database",
+    "resource_type": "aws_rds_instance",
+    "currency": "USD",
+    "total_cost": 42.18,
+    "start_time": 1640995200,
+    "end_time": 1643673600,
+    "cost_breakdown": [
+      "Instance hours (744h): $12.41",
+      "Storage (20GB gp2): $2.30",
+      "Backup storage (5GB): $0.48",
+      "I/O requests: $27.00"
+    ],
+    "region": "us-east-1",
+    "tags": {
+      "Environment": "production",
+      "Name": "ProdDatabase"
+    }
+  },
+  "my-data-bucket-12345": {
+    "resource_id": "my-data-bucket-12345",
+    "resource_type": "aws_s3_bucket",
+    "currency": "USD",
+    "total_cost": 125.67,
+    "start_time": 1640995200,
+    "end_time": 1643673600,
+    "cost_breakdown": [
+      "Storage (500GB Standard): $11.50",
+      "PUT requests (500K): $2.50",
+      "GET requests (2M): $0.80",
+      "Data transfer out: $110.87"
+    ],
+    "region": "us-east-1",
+    "tags": {
+      "Environment": "production",
+      "Name": "DataBucket"
+    }
+  },
+  "api-handler": {
+    "resource_id": "api-handler",
+    "resource_type": "aws_lambda_function",
+    "currency": "USD",
+    "total_cost": 8.45,
+    "start_time": 1640995200,
+    "end_time": 1643673600,
+    "cost_breakdown": [
+      "Requests (5M): $1.00",
+      "Duration (128MB, 200ms avg): $7.45"
+    ],
+    "region": "us-east-1",
+    "tags": {
+      "Environment": "production",
+      "Name": "APIHandler"
+    }
+  },
+  "/aws/lambda/api-handler": {
+    "resource_id": "/aws/lambda/api-handler",
+    "resource_type": "aws_cloudwatch_log_group",
+    "currency": "USD",
+    "total_cost": 2.34,
+    "start_time": 1640995200,
+    "end_time": 1643673600,
+    "cost_breakdown": [
+      "Ingestion (2GB): $1.00",
+      "Storage (30 days, 2GB): $0.06",
+      "Data transfer: $1.28"
+    ],
+    "region": "us-east-1",
+    "tags": {
+      "Environment": "production",
+      "Name": "LambdaLogs"
+    }
+  }
+}
