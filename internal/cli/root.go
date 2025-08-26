@@ -43,7 +43,19 @@ func NewRootCmd(ver string) *cobra.Command {
 		NewPluginListCmd(),
 	)
 
-	cmd.AddCommand(costCmd, pluginCmd)
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Configuration management commands",
+	}
+	configCmd.AddCommand(
+		NewConfigInitCmd(),
+		NewConfigSetCmd(),
+		NewConfigGetCmd(),
+		NewConfigListCmd(),
+		NewConfigValidateCmd(),
+	)
+
+	cmd.AddCommand(costCmd, pluginCmd, configCmd)
 
 	return cmd
 }
