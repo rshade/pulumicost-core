@@ -96,8 +96,7 @@ func TestConfigSetCmd(t *testing.T) {
 			var out bytes.Buffer
 			cmd.SetOut(&out)
 			
-			args := append([]string{"set"}, tt.args...)
-			args = append(args, tt.flags...)
+			args := append(tt.args, tt.flags...)
 			cmd.SetArgs(args)
 			
 			err := cmd.Execute()
@@ -131,7 +130,7 @@ func TestConfigSetCmdInvalid(t *testing.T) {
 			cmd.SetOut(&out)
 			cmd.SetErr(&out)
 			
-			cmd.SetArgs(append([]string{"set"}, tt.args...))
+			cmd.SetArgs(tt.args)
 			
 			err := cmd.Execute()
 			assert.Error(t, err)
@@ -189,8 +188,7 @@ func TestConfigGetCmd(t *testing.T) {
 			var out bytes.Buffer
 			cmd.SetOut(&out)
 			
-			args := append([]string{"get"}, tt.args...)
-			args = append(args, tt.flags...)
+			args := append(tt.args, tt.flags...)
 			cmd.SetArgs(args)
 			
 			err := cmd.Execute()
@@ -211,7 +209,7 @@ func TestConfigGetCmdNonexistent(t *testing.T) {
 	cmd.SetOut(&out)
 	cmd.SetErr(&out)
 	
-	cmd.SetArgs([]string{"get", "nonexistent.key"})
+	cmd.SetArgs([]string{"nonexistent.key"})
 	
 	err := cmd.Execute()
 	assert.Error(t, err)
