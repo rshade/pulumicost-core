@@ -11,22 +11,25 @@ func NewRootCmd(ver string) *cobra.Command {
 		Long:    "PulumiCost: Calculate projected and actual cloud costs via plugins",
 		Version: ver,
 		Example: `  # Calculate projected costs from a Pulumi plan
-  pulumicost cost projected --pulumi-json plan.json
+	  pulumicost cost projected --pulumi-json plan.json
 
-  # Get actual costs for the last 7 days
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+	  # Get actual costs for the last 7 days
+	  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
 
-  # List installed plugins
-  pulumicost plugin list
+	  # List installed plugins
+	  pulumicost plugin list
 
-  # Validate all plugins
-  pulumicost plugin validate
-  
-  # Initialize configuration
-  pulumicost config init
-  
-  # Set configuration values
-  pulumicost config set output.default_format json`,
+	  # Initialize a new plugin project
+	  pulumicost plugin init aws-plugin --author "Your Name" --providers aws
+
+	  # Validate all plugins
+	  pulumicost plugin validate
+
+	  # Initialize configuration
+	  pulumicost config init
+
+	  # Set configuration values
+	  pulumicost config set output.default_format json`,
 	}
 
 	cmd.PersistentFlags().Bool("debug", false, "enable debug logging")
@@ -47,6 +50,7 @@ func NewRootCmd(ver string) *cobra.Command {
 	pluginCmd.AddCommand(
 		NewPluginValidateCmd(),
 		NewPluginListCmd(),
+		NewPluginInitCmd(),
 	)
 
 	configCmd := &cobra.Command{
