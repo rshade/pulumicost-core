@@ -102,6 +102,16 @@ func GetLogFile() string {
 }
 
 func parseIntSafe(s string) (int, error) {
+	// Handle empty string case
+	if s == "" {
+		return 0, nil
+	}
+	
+	// Check for negative numbers (not supported)
+	if strings.HasPrefix(s, "-") {
+		return 0, fmt.Errorf("negative integers not supported: %s", s)
+	}
+	
 	// Implement simple int parsing without importing strconv again
 	result := 0
 	for _, char := range s {
