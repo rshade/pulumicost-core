@@ -2,78 +2,93 @@ package cli
 
 import (
 	"fmt"
-	"strings"
-	
-	"github.com/spf13/cobra"
+
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/spf13/cobra"
 )
 
-// NewConfigGetCmd creates the 'config get' command
 func NewConfigGetCmd() *cobra.Command {
-	var isCredential bool
-	
 	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a configuration value",
-		Long: `Get a configuration value using dot notation.
-
-Configuration keys:
-  output.default_format  - Output format
-  output.precision       - Decimal precision
-  logging.level          - Log level
-  logging.file           - Log file path
-  plugins.<name>.region  - Plugin region setting
-  plugins.<name>.profile - Plugin profile setting
-  
-Use --credential flag to retrieve encrypted credentials.`,
+		Long:  "Gets a configuration value using dot notation from ~/.pulumicost/config.yaml.",
 		Example: `  # Get output format
   pulumicost config get output.default_format
   
-  # Get AWS plugin region
-  pulumicost config get plugins.aws.region
+  # Get output precision
+  pulumicost config get output.precision
   
-  # Get encrypted credential
-  pulumicost config get plugins.aws.access_key --credential`,
+  # Get plugin configuration
+  pulumicost config get plugins.aws.region
+  pulumicost config get plugins.aws
+  
+  # Get all plugins
+  pulumicost config get plugins
+  
+  # Get logging level
+  pulumicost config get logging.level
+  
+  # Decrypt encrypted value
+  pulumicost config get plugins.aws.secret_key --decrypt`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
+			decrypt, _ := cmd.Flags().GetBool("decrypt")
 			
-			cfg, err := config.Load()
-			if err != nil {
-				return fmt.Errorf("loading config: %w", err)
+			cfg := config.New()
+			
+			// Load existing config
+			if err := cfg.Load(); err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
 			}
 			
-			// Handle credential retrieval
-			if isCredential {
-				parts := strings.Split(key, ".")
-				if len(parts) < 3 || parts[0] != "plugins" {
-					return fmt.Errorf("credential key must be in format: plugins.<name>.<key>")
+			// Get the value
+			value, err := cfg.Get(key)
+			if err != nil {
+				return fmt.Errorf("failed to get config value: %w", err)
+			}
+			
+			// Decrypt value if requested and it's a string
+			if decrypt {
+				if strValue, ok := value.(string); ok {
+					decryptedValue, err := cfg.DecryptValue(strValue)
+					if err != nil {
+						return fmt.Errorf("failed to decrypt value: %w", err)
+					}
+					value = decryptedValue
+				} else {
+					return fmt.Errorf("can only decrypt string values")
 				}
-				
-				pluginName := parts[1]
-				credentialKey := strings.Join(parts[2:], ".")
-				
-				value, err := cfg.GetCredential(pluginName, credentialKey)
-				if err != nil {
-					return fmt.Errorf("getting credential: %w", err)
+			}
+			
+			// Format and output the value
+			switch v := value.(type) {
+			case string:
+				cmd.Printf("%s\n", v)
+			case int:
+				cmd.Printf("%d\n", v)
+			case map[string]interface{}:
+				cmd.Printf("%s:\n", key)
+				for subKey, subValue := range v {
+					cmd.Printf("  %s: %v\n", subKey, subValue)
 				}
-				
-				cmd.Println(value)
-			} else {
-				// Handle regular configuration retrieval
-				value, err := cfg.Get(key)
-				if err != nil {
-					return fmt.Errorf("getting config value: %w", err)
+			case map[string]config.PluginConfig:
+				cmd.Printf("%s:\n", key)
+				for pluginName, pluginConfig := range v {
+					cmd.Printf("  %s:\n", pluginName)
+					for configKey, configValue := range pluginConfig.Config {
+						cmd.Printf("    %s: %v\n", configKey, configValue)
+					}
 				}
-				
-				cmd.Printf("%v\n", value)
+			default:
+				cmd.Printf("%v\n", v)
 			}
 			
 			return nil
 		},
 	}
 	
-	cmd.Flags().BoolVar(&isCredential, "credential", false, "Retrieve value as a decrypted credential")
+	cmd.Flags().Bool("decrypt", false, "decrypt the value if it's encrypted")
 	
 	return cmd
 }

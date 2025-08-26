@@ -4,54 +4,103 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefaultConfig(t *testing.T) {
-	cfg := DefaultConfig()
+func TestConfig_NewAndDefaults(t *testing.T) {
+	cfg := New()
 	
 	assert.Equal(t, "table", cfg.Output.DefaultFormat)
 	assert.Equal(t, 2, cfg.Output.Precision)
 	assert.Equal(t, "info", cfg.Logging.Level)
+	assert.NotEmpty(t, cfg.Logging.File)
+	assert.NotNil(t, cfg.Plugins)
 	assert.NotEmpty(t, cfg.PluginDir)
 	assert.NotEmpty(t, cfg.SpecDir)
-	assert.NotEmpty(t, cfg.ConfigDir)
-	assert.NotEmpty(t, cfg.ConfigFile)
 }
 
-func TestConfigSetGet(t *testing.T) {
-	cfg := DefaultConfig()
+func TestConfig_SetGetValues(t *testing.T) {
+	cfg := New()
 	
-	tests := []struct {
-		key      string
-		value    string
-		expected interface{}
-	}{
-		{"output.default_format", "json", "json"},
-		{"output.precision", "4", 4},
-		{"logging.level", "debug", "debug"},
-		{"logging.file", "/tmp/test.log", "/tmp/test.log"},
-		{"plugins.aws.region", "us-west-2", "us-west-2"},
-		{"plugins.aws.profile", "production", "production"},
-		{"plugins.azure.subscription_id", "sub-123", "sub-123"},
-	}
+	// Test output values
+	err := cfg.Set("output.default_format", "json")
+	require.NoError(t, err)
 	
-	for _, tt := range tests {
-		t.Run(tt.key, func(t *testing.T) {
-			err := cfg.Set(tt.key, tt.value)
-			require.NoError(t, err)
-			
-			value, err := cfg.Get(tt.key)
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, value)
-		})
-	}
+	value, err := cfg.Get("output.default_format")
+	require.NoError(t, err)
+	assert.Equal(t, "json", value)
+	
+	err = cfg.Set("output.precision", "4")
+	require.NoError(t, err)
+	
+	value, err = cfg.Get("output.precision")
+	require.NoError(t, err)
+	assert.Equal(t, 4, value)
+	
+	// Test plugin values
+	err = cfg.Set("plugins.aws.region", "us-west-2")
+	require.NoError(t, err)
+	
+	value, err = cfg.Get("plugins.aws.region")
+	require.NoError(t, err)
+	assert.Equal(t, "us-west-2", value)
+	
+	// Test logging values
+	err = cfg.Set("logging.level", "debug")
+	require.NoError(t, err)
+	
+	value, err = cfg.Get("logging.level")
+	require.NoError(t, err)
+	assert.Equal(t, "debug", value)
 }
 
-func TestConfigValidation(t *testing.T) {
-	cfg := DefaultConfig()
+func TestConfig_SetErrors(t *testing.T) {
+	cfg := New()
+	
+	// Invalid section
+	err := cfg.Set("invalid.key", "value")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown configuration section")
+	
+	// Invalid output key
+	err = cfg.Set("output.invalid", "value")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown output setting")
+	
+	// Invalid precision value
+	err = cfg.Set("output.precision", "invalid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "precision must be a number")
+	
+	// Invalid plugin key format
+	err = cfg.Set("plugins.aws", "value")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "plugin key must be in format")
+}
+
+func TestConfig_GetErrors(t *testing.T) {
+	cfg := New()
+	
+	// Unknown section
+	_, err := cfg.Get("invalid.key")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown configuration section")
+	
+	// Unknown output key
+	_, err = cfg.Get("output.invalid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown output setting")
+	
+	// Unknown plugin
+	_, err = cfg.Get("plugins.nonexistent.key")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "plugin not found")
+}
+
+func TestConfig_Validation(t *testing.T) {
+	cfg := New()
 	
 	// Valid configuration should pass
 	err := cfg.Validate()
@@ -63,207 +112,168 @@ func TestConfigValidation(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid output format")
 	
-	// Reset to valid
+	// Reset and test invalid precision
 	cfg.Output.DefaultFormat = "table"
-	
-	// Invalid precision
 	cfg.Output.Precision = -1
 	err = cfg.Validate()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "precision must be between 0 and 10")
+	assert.Contains(t, err.Error(), "invalid precision")
 	
-	cfg.Output.Precision = 11
-	err = cfg.Validate()
-	assert.Error(t, err)
-	
-	// Reset to valid
+	// Reset and test invalid log level
 	cfg.Output.Precision = 2
-	
-	// Invalid log level
 	cfg.Logging.Level = "invalid"
 	err = cfg.Validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid log level")
 }
 
-func TestConfigSaveLoad(t *testing.T) {
-	tempDir := t.TempDir()
-	configFile := filepath.Join(tempDir, "config.yaml")
+func TestConfig_EncryptDecrypt(t *testing.T) {
+	cfg := New()
 	
-	cfg := DefaultConfig()
-	cfg.ConfigFile = configFile
-	cfg.ConfigDir = tempDir
-	cfg.Output.DefaultFormat = "json"
-	cfg.Output.Precision = 4
-	cfg.Logging.Level = "debug"
+	original := "secret-value-123"
 	
-	// Set plugin configuration
-	err := cfg.Set("plugins.aws.region", "us-west-2")
+	encrypted, err := cfg.EncryptValue(original)
 	require.NoError(t, err)
+	assert.NotEqual(t, original, encrypted)
+	assert.NotEmpty(t, encrypted)
+	
+	decrypted, err := cfg.DecryptValue(encrypted)
+	require.NoError(t, err)
+	assert.Equal(t, original, decrypted)
+}
+
+func TestConfig_EncryptDecryptErrors(t *testing.T) {
+	cfg := New()
+	
+	// Invalid base64 for decryption
+	_, err := cfg.DecryptValue("invalid-base64")
+	assert.Error(t, err)
+	
+	// Invalid encrypted data (too short)
+	_, err = cfg.DecryptValue("dGVzdA==") // "test" in base64, too short for GCM
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ciphertext too short")
+}
+
+func TestConfig_SaveLoad(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "pulumicost-config-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+	
+	cfg := &Config{
+		Output: OutputConfig{
+			DefaultFormat: "json",
+			Precision:     4,
+		},
+		Plugins: map[string]PluginConfig{
+			"aws": {Config: map[string]interface{}{"region": "us-west-2"}},
+		},
+		Logging: LoggingConfig{
+			Level: "debug",
+			File:  "/tmp/test.log",
+		},
+		configPath: filepath.Join(tmpDir, "config.yaml"),
+		encKey:     deriveKey(),
+	}
 	
 	// Save configuration
 	err = cfg.Save()
 	require.NoError(t, err)
 	
 	// Load configuration
-	newCfg := DefaultConfig()
-	newCfg.ConfigFile = configFile
-	err = newCfg.LoadFromFile(configFile)
+	cfg2 := &Config{
+		configPath: cfg.configPath,
+		encKey:     deriveKey(),
+	}
+	err = cfg2.Load()
 	require.NoError(t, err)
 	
-	// Verify loaded values
-	assert.Equal(t, "json", newCfg.Output.DefaultFormat)
-	assert.Equal(t, 4, newCfg.Output.Precision)
-	assert.Equal(t, "debug", newCfg.Logging.Level)
+	assert.Equal(t, cfg.Output.DefaultFormat, cfg2.Output.DefaultFormat)
+	assert.Equal(t, cfg.Output.Precision, cfg2.Output.Precision)
+	assert.Equal(t, cfg.Logging.Level, cfg2.Logging.Level)
+	assert.Equal(t, cfg.Logging.File, cfg2.Logging.File)
+	assert.Equal(t, len(cfg.Plugins), len(cfg2.Plugins))
 	
-	// Verify plugin configuration
-	awsConfig, exists := newCfg.Plugins["aws"]
+	awsConfig, exists := cfg2.Plugins["aws"]
 	assert.True(t, exists)
-	assert.Equal(t, "us-west-2", awsConfig.Region)
+	assert.Equal(t, "us-west-2", awsConfig.Config["region"])
 }
 
-func TestCredentialEncryption(t *testing.T) {
-	cfg := DefaultConfig()
+func TestConfig_List(t *testing.T) {
+	cfg := New()
+	cfg.Set("plugins.aws.region", "us-west-2")
+	cfg.Set("output.default_format", "json")
 	
-	pluginName := "aws"
-	credKey := "access_key"
-	credValue := "AKIAIOSFODNN7EXAMPLE"
+	list := cfg.List()
 	
-	// Set encrypted credential
-	err := cfg.SetCredential(pluginName, credKey, credValue)
-	require.NoError(t, err)
+	assert.Contains(t, list, "output")
+	assert.Contains(t, list, "plugins")
+	assert.Contains(t, list, "logging")
 	
-	// Retrieve and verify credential
-	retrieved, err := cfg.GetCredential(pluginName, credKey)
-	require.NoError(t, err)
-	assert.Equal(t, credValue, retrieved)
-	
-	// Verify the stored value is encrypted (different from original)
-	storedValue := cfg.Plugins[pluginName].Credentials[credKey]
-	assert.NotEqual(t, credValue, storedValue)
-	assert.NotEmpty(t, storedValue)
+	output := list["output"].(OutputConfig)
+	assert.Equal(t, "json", output.DefaultFormat)
 }
 
-func TestEnvOverrides(t *testing.T) {
+func TestConfig_PluginMethods(t *testing.T) {
+	cfg := New()
+	
+	// Test GetPluginConfig for non-existent plugin
+	config, err := cfg.GetPluginConfig("nonexistent")
+	require.NoError(t, err)
+	assert.Empty(t, config)
+	
+	// Test SetPluginConfig
+	pluginConfig := map[string]interface{}{
+		"region":  "us-east-1",
+		"profile": "production",
+	}
+	cfg.SetPluginConfig("aws", pluginConfig)
+	
+	// Test GetPluginConfig for existing plugin
+	retrievedConfig, err := cfg.GetPluginConfig("aws")
+	require.NoError(t, err)
+	assert.Equal(t, pluginConfig, retrievedConfig)
+}
+
+func TestConfig_EnvironmentOverrides(t *testing.T) {
 	// Set environment variables
 	os.Setenv("PULUMICOST_OUTPUT_FORMAT", "json")
 	os.Setenv("PULUMICOST_OUTPUT_PRECISION", "5")
 	os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-	os.Setenv("PULUMICOST_LOG_FILE", "/tmp/override.log")
+	os.Setenv("PULUMICOST_LOG_FILE", "/tmp/custom.log")
+	os.Setenv("PULUMICOST_PLUGIN_AWS_REGION", "eu-west-1")
+	os.Setenv("PULUMICOST_PLUGIN_AWS_PROFILE", "test")
+	
 	defer func() {
 		os.Unsetenv("PULUMICOST_OUTPUT_FORMAT")
 		os.Unsetenv("PULUMICOST_OUTPUT_PRECISION")
 		os.Unsetenv("PULUMICOST_LOG_LEVEL")
 		os.Unsetenv("PULUMICOST_LOG_FILE")
+		os.Unsetenv("PULUMICOST_PLUGIN_AWS_REGION")
+		os.Unsetenv("PULUMICOST_PLUGIN_AWS_PROFILE")
 	}()
 	
-	cfg := DefaultConfig()
-	cfg.applyEnvOverrides()
+	cfg := New()
 	
 	assert.Equal(t, "json", cfg.Output.DefaultFormat)
 	assert.Equal(t, 5, cfg.Output.Precision)
 	assert.Equal(t, "debug", cfg.Logging.Level)
-	assert.Equal(t, "/tmp/override.log", cfg.Logging.File)
+	assert.Equal(t, "/tmp/custom.log", cfg.Logging.File)
+	
+	awsConfig, exists := cfg.Plugins["aws"]
+	assert.True(t, exists)
+	assert.Equal(t, "eu-west-1", awsConfig.Config["region"])
+	assert.Equal(t, "test", awsConfig.Config["profile"])
 }
 
-func TestListAll(t *testing.T) {
-	cfg := DefaultConfig()
-	cfg.Output.DefaultFormat = "json"
-	cfg.Output.Precision = 3
+func TestConfig_BackwardCompatibility(t *testing.T) {
+	cfg := New()
 	
-	// Add plugin configuration
-	err := cfg.Set("plugins.aws.region", "us-east-1")
-	require.NoError(t, err)
+	// Test legacy methods still work
+	assert.NotEmpty(t, cfg.PluginDir)
+	assert.NotEmpty(t, cfg.SpecDir)
 	
-	// Add credential
-	err = cfg.SetCredential("aws", "access_key", "secret")
-	require.NoError(t, err)
-	
-	configMap := cfg.ListAll()
-	
-	assert.Equal(t, "json", configMap["output.default_format"])
-	assert.Equal(t, 3, configMap["output.precision"])
-	assert.Equal(t, "us-east-1", configMap["plugins.aws.region"])
-	assert.Equal(t, "<encrypted>", configMap["plugins.aws.credentials.access_key"])
-}
-
-func TestSetInvalidKeys(t *testing.T) {
-	cfg := DefaultConfig()
-	
-	tests := []struct {
-		key   string
-		value string
-	}{
-		{"invalid", "value"},
-		{"output.invalid", "value"},
-		{"logging.invalid", "value"},
-		{"output.default_format", "invalid"},
-		{"output.precision", "invalid"},
-		{"output.precision", "-1"},
-		{"output.precision", "11"},
-		{"logging.level", "invalid"},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.key+"="+tt.value, func(t *testing.T) {
-			err := cfg.Set(tt.key, tt.value)
-			assert.Error(t, err)
-		})
-	}
-}
-
-func TestGetNonexistentKeys(t *testing.T) {
-	cfg := DefaultConfig()
-	
-	tests := []string{
-		"invalid",
-		"output.invalid", 
-		"logging.invalid",
-		"plugins.nonexistent.setting",
-	}
-	
-	for _, key := range tests {
-		t.Run(key, func(t *testing.T) {
-			_, err := cfg.Get(key)
-			assert.Error(t, err)
-		})
-	}
-}
-
-func TestInitConfig(t *testing.T) {
-	// Override default config path for testing
-	originalHome := os.Getenv("HOME")
-	tempDir := t.TempDir()
-	os.Setenv("HOME", tempDir)
-	defer os.Setenv("HOME", originalHome)
-	
-	err := InitConfig()
-	assert.NoError(t, err)
-	
-	// Verify config file was created
-	cfg := DefaultConfig()
-	_, err = os.Stat(cfg.ConfigFile)
-	assert.NoError(t, err)
-	
-	// Test that init fails if config already exists
-	err = InitConfig()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "already exists")
-}
-
-func TestPluginCustomSettings(t *testing.T) {
-	cfg := DefaultConfig()
-	
-	// Set custom plugin setting
-	err := cfg.Set("plugins.custom.endpoint", "https://api.example.com")
-	require.NoError(t, err)
-	
-	// Verify it's stored in Settings
-	pluginConfig := cfg.Plugins["custom"]
-	assert.Equal(t, "https://api.example.com", pluginConfig.Settings["endpoint"])
-	
-	// Verify we can retrieve it
-	value, err := cfg.Get("plugins.custom.endpoint")
-	require.NoError(t, err)
-	assert.Equal(t, "https://api.example.com", value)
+	pluginPath := cfg.PluginPath("test-plugin", "1.0.0")
+	assert.Contains(t, pluginPath, "test-plugin")
+	assert.Contains(t, pluginPath, "1.0.0")
 }

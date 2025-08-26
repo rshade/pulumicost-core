@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,60 +16,55 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config represents the complete PulumiCost configuration
+// Config represents the complete configuration structure
 type Config struct {
 	// Legacy fields for backward compatibility
-	PluginDir string `yaml:"-"`
-	SpecDir   string `yaml:"-"`
+	PluginDir string `yaml:"-" json:"-"`
+	SpecDir   string `yaml:"-" json:"-"`
 	
-	// Configuration file fields
-	Output  OutputConfig            `yaml:"output"`
-	Plugins map[string]PluginConfig `yaml:"plugins"`
-	Logging LoggingConfig           `yaml:"logging"`
+	// New comprehensive configuration
+	Output  OutputConfig          `yaml:"output" json:"output"`
+	Plugins map[string]PluginConfig `yaml:"plugins" json:"plugins"`
+	Logging LoggingConfig         `yaml:"logging" json:"logging"`
 	
 	// Internal fields
-	ConfigDir  string `yaml:"-"`
-	ConfigFile string `yaml:"-"`
+	configPath string
+	encKey     []byte
 }
 
-// OutputConfig contains output formatting preferences
+// OutputConfig defines output formatting preferences
 type OutputConfig struct {
-	DefaultFormat string `yaml:"default_format"`
-	Precision     int    `yaml:"precision"`
+	DefaultFormat string `yaml:"default_format" json:"default_format"`
+	Precision     int    `yaml:"precision" json:"precision"`
 }
 
-// PluginConfig contains plugin-specific configuration
+// PluginConfig defines plugin-specific configuration
 type PluginConfig struct {
-	// Common cloud provider fields
-	Region         string            `yaml:"region,omitempty"`
-	Profile        string            `yaml:"profile,omitempty"`
-	SubscriptionID string            `yaml:"subscription_id,omitempty"`
-	TenantID       string            `yaml:"tenant_id,omitempty"`
-	
-	// Encrypted credential fields
-	Credentials map[string]string `yaml:"credentials,omitempty"`
-	
-	// Custom plugin settings
-	Settings map[string]interface{} `yaml:"settings,omitempty"`
+	Config map[string]interface{} `yaml:",inline" json:",inline"`
 }
 
-// LoggingConfig contains logging configuration
+// LoggingConfig defines logging preferences
 type LoggingConfig struct {
-	Level string `yaml:"level"`
-	File  string `yaml:"file"`
+	Level string `yaml:"level" json:"level"`
+	File  string `yaml:"file" json:"file"`
 }
 
-// DefaultConfig returns a Config with sensible defaults
-func DefaultConfig() *Config {
+// EncryptedValue represents an encrypted configuration value
+type EncryptedValue struct {
+	Data string `yaml:"data" json:"data"`
+}
+
+// New creates a new configuration with defaults
+func New() *Config {
 	homeDir, _ := os.UserHomeDir()
-	configDir := filepath.Join(homeDir, ".pulumicost")
+	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
 	
-	return &Config{
+	cfg := &Config{
 		// Legacy fields
-		PluginDir: filepath.Join(configDir, "plugins"),
-		SpecDir:   filepath.Join(configDir, "specs"),
+		PluginDir: filepath.Join(pulumicostDir, "plugins"),
+		SpecDir:   filepath.Join(pulumicostDir, "specs"),
 		
-		// Configuration fields
+		// New configuration
 		Output: OutputConfig{
 			DefaultFormat: "table",
 			Precision:     2,
@@ -77,145 +72,274 @@ func DefaultConfig() *Config {
 		Plugins: make(map[string]PluginConfig),
 		Logging: LoggingConfig{
 			Level: "info",
-			File:  filepath.Join(configDir, "logs", "pulumicost.log"),
+			File:  filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
 		},
 		
-		// Internal fields
-		ConfigDir:  configDir,
-		ConfigFile: filepath.Join(configDir, "config.yaml"),
+		configPath: filepath.Join(pulumicostDir, "config.yaml"),
+		encKey:     deriveKey(),
 	}
-}
-
-// New creates a Config with defaults - maintains backward compatibility
-func New() *Config {
-	return DefaultConfig()
-}
-
-// PluginPath returns the path for a specific plugin version
-func (c *Config) PluginPath(name, version string) string {
-	return filepath.Join(c.PluginDir, name, version)
-}
-
-// Load loads configuration from the config file with environment variable overrides
-func Load() (*Config, error) {
-	config := DefaultConfig()
 	
-	// Load from config file if it exists
-	if _, err := os.Stat(config.ConfigFile); err == nil {
-		if err := config.LoadFromFile(config.ConfigFile); err != nil {
-			return nil, fmt.Errorf("loading config file: %w", err)
-		}
+	// Load from file if exists
+	if err := cfg.Load(); err != nil && !os.IsNotExist(err) {
+		// Log error but continue with defaults
+		fmt.Fprintf(os.Stderr, "Warning: Failed to load config: %v\n", err)
 	}
 	
 	// Apply environment variable overrides
-	config.applyEnvOverrides()
+	cfg.applyEnvOverrides()
 	
-	return config, nil
+	return cfg
 }
 
-// LoadFromFile loads configuration from a YAML file
-func (c *Config) LoadFromFile(path string) error {
-	data, err := os.ReadFile(path)
+// Load loads configuration from the config file
+func (c *Config) Load() error {
+	data, err := os.ReadFile(c.configPath)
 	if err != nil {
-		return fmt.Errorf("reading config file: %w", err)
+		return err
 	}
 	
-	if err := yaml.Unmarshal(data, c); err != nil {
-		return fmt.Errorf("parsing config YAML: %w", err)
-	}
-	
-	return nil
+	return yaml.Unmarshal(data, c)
 }
 
-// Save saves the configuration to the config file
+// Save saves the current configuration to the config file
 func (c *Config) Save() error {
-	// Ensure config directory exists
-	if err := os.MkdirAll(c.ConfigDir, 0755); err != nil {
-		return fmt.Errorf("creating config directory: %w", err)
-	}
-	
-	// Ensure logs directory exists
-	logsDir := filepath.Dir(c.Logging.File)
-	if err := os.MkdirAll(logsDir, 0755); err != nil {
-		return fmt.Errorf("creating logs directory: %w", err)
+	// Ensure directory exists
+	if err := os.MkdirAll(filepath.Dir(c.configPath), 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 	
 	data, err := yaml.Marshal(c)
 	if err != nil {
-		return fmt.Errorf("marshaling config to YAML: %w", err)
+		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 	
-	if err := os.WriteFile(c.ConfigFile, data, 0600); err != nil {
-		return fmt.Errorf("writing config file: %w", err)
-	}
-	
-	return nil
+	return os.WriteFile(c.configPath, data, 0600)
 }
 
-// applyEnvOverrides applies environment variable overrides
-func (c *Config) applyEnvOverrides() {
-	// Output format override
-	if format := os.Getenv("PULUMICOST_OUTPUT_FORMAT"); format != "" {
-		c.Output.DefaultFormat = format
-	}
-	
-	// Output precision override
-	if precisionStr := os.Getenv("PULUMICOST_OUTPUT_PRECISION"); precisionStr != "" {
-		if precision, err := strconv.Atoi(precisionStr); err == nil {
-			c.Output.Precision = precision
-		}
-	}
-	
-	// Logging level override
-	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
-		c.Logging.Level = level
-	}
-	
-	// Logging file override
-	if file := os.Getenv("PULUMICOST_LOG_FILE"); file != "" {
-		c.Logging.File = file
-	}
-}
-
-// Set sets a configuration value using dot notation (e.g., "output.default_format")
+// Set sets a configuration value using dot notation
 func (c *Config) Set(key, value string) error {
 	parts := strings.Split(key, ".")
-	if len(parts) == 0 {
-		return fmt.Errorf("invalid key format: %s", key)
+	if len(parts) < 1 {
+		return fmt.Errorf("invalid key format")
 	}
 	
 	switch parts[0] {
 	case "output":
 		return c.setOutputValue(parts[1:], value)
-	case "logging":
-		return c.setLoggingValue(parts[1:], value)
 	case "plugins":
 		return c.setPluginValue(parts[1:], value)
+	case "logging":
+		return c.setLoggingValue(parts[1:], value)
 	default:
-		return fmt.Errorf("unknown config section: %s", parts[0])
+		return fmt.Errorf("unknown configuration section: %s", parts[0])
 	}
 }
 
+// Get gets a configuration value using dot notation
+func (c *Config) Get(key string) (interface{}, error) {
+	parts := strings.Split(key, ".")
+	if len(parts) < 1 {
+		return nil, fmt.Errorf("invalid key format")
+	}
+	
+	switch parts[0] {
+	case "output":
+		return c.getOutputValue(parts[1:])
+	case "plugins":
+		return c.getPluginValue(parts[1:])
+	case "logging":
+		return c.getLoggingValue(parts[1:])
+	default:
+		return nil, fmt.Errorf("unknown configuration section: %s", parts[0])
+	}
+}
+
+// List returns all configuration as a map
+func (c *Config) List() map[string]interface{} {
+	return map[string]interface{}{
+		"output":  c.Output,
+		"plugins": c.Plugins,
+		"logging": c.Logging,
+	}
+}
+
+// Validate validates the configuration
+func (c *Config) Validate() error {
+	// Validate output format
+	validFormats := []string{"table", "json", "ndjson"}
+	valid := false
+	for _, format := range validFormats {
+		if c.Output.DefaultFormat == format {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return fmt.Errorf("invalid output format: %s (must be one of: %v)", c.Output.DefaultFormat, validFormats)
+	}
+	
+	// Validate precision
+	if c.Output.Precision < 0 || c.Output.Precision > 10 {
+		return fmt.Errorf("invalid precision: %d (must be between 0 and 10)", c.Output.Precision)
+	}
+	
+	// Validate logging level
+	validLevels := []string{"debug", "info", "warn", "error"}
+	valid = false
+	for _, level := range validLevels {
+		if c.Logging.Level == level {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return fmt.Errorf("invalid log level: %s (must be one of: %v)", c.Logging.Level, validLevels)
+	}
+	
+	return nil
+}
+
+// EncryptValue encrypts a sensitive value
+func (c *Config) EncryptValue(value string) (string, error) {
+	block, err := aes.NewCipher(c.encKey)
+	if err != nil {
+		return "", err
+	}
+	
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = rand.Read(nonce); err != nil {
+		return "", err
+	}
+	
+	ciphertext := gcm.Seal(nonce, nonce, []byte(value), nil)
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// DecryptValue decrypts a sensitive value
+func (c *Config) DecryptValue(encryptedValue string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(encryptedValue)
+	if err != nil {
+		return "", err
+	}
+	
+	block, err := aes.NewCipher(c.encKey)
+	if err != nil {
+		return "", err
+	}
+	
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	
+	nonceSize := gcm.NonceSize()
+	if len(data) < nonceSize {
+		return "", fmt.Errorf("ciphertext too short")
+	}
+	
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+	
+	return string(plaintext), nil
+}
+
+// PluginPath returns the path for a specific plugin version (backward compatibility)
+func (c *Config) PluginPath(name, version string) string {
+	return filepath.Join(c.PluginDir, name, version)
+}
+
+// GetPluginConfig returns configuration for a specific plugin
+func (c *Config) GetPluginConfig(pluginName string) (map[string]interface{}, error) {
+	if plugin, exists := c.Plugins[pluginName]; exists {
+		return plugin.Config, nil
+	}
+	return make(map[string]interface{}), nil
+}
+
+// SetPluginConfig sets configuration for a specific plugin
+func (c *Config) SetPluginConfig(pluginName string, config map[string]interface{}) {
+	if c.Plugins == nil {
+		c.Plugins = make(map[string]PluginConfig)
+	}
+	c.Plugins[pluginName] = PluginConfig{Config: config}
+}
+
+// applyEnvOverrides applies environment variable overrides
+func (c *Config) applyEnvOverrides() {
+	// Output overrides
+	if format := os.Getenv("PULUMICOST_OUTPUT_FORMAT"); format != "" {
+		c.Output.DefaultFormat = format
+	}
+	if precision := os.Getenv("PULUMICOST_OUTPUT_PRECISION"); precision != "" {
+		if p, err := strconv.Atoi(precision); err == nil {
+			c.Output.Precision = p
+		}
+	}
+	
+	// Logging overrides
+	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
+		c.Logging.Level = level
+	}
+	if logFile := os.Getenv("PULUMICOST_LOG_FILE"); logFile != "" {
+		c.Logging.File = logFile
+	}
+	
+	// Plugin overrides (PULUMICOST_PLUGIN_<NAME>_<KEY>=value)
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, "PULUMICOST_PLUGIN_") {
+			parts := strings.SplitN(env, "=", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			
+			key := parts[0]
+			value := parts[1]
+			
+			// Extract plugin name and config key
+			keyParts := strings.Split(strings.TrimPrefix(key, "PULUMICOST_PLUGIN_"), "_")
+			if len(keyParts) < 2 {
+				continue
+			}
+			
+			pluginName := strings.ToLower(keyParts[0])
+			configKey := strings.ToLower(strings.Join(keyParts[1:], "_"))
+			
+			if c.Plugins == nil {
+				c.Plugins = make(map[string]PluginConfig)
+			}
+			
+			if _, exists := c.Plugins[pluginName]; !exists {
+				c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
+			}
+			
+			c.Plugins[pluginName].Config[configKey] = value
+		}
+	}
+}
+
+// Helper methods for setting values
 func (c *Config) setOutputValue(parts []string, value string) error {
 	if len(parts) != 1 {
-		return fmt.Errorf("invalid output key format")
+		return fmt.Errorf("invalid output key")
 	}
 	
 	switch parts[0] {
 	case "default_format":
-		if !isValidOutputFormat(value) {
-			return fmt.Errorf("invalid output format: %s (valid: table, json, ndjson)", value)
-		}
 		c.Output.DefaultFormat = value
 	case "precision":
-		precision, err := strconv.Atoi(value)
+		p, err := strconv.Atoi(value)
 		if err != nil {
-			return fmt.Errorf("invalid precision value: %s", value)
+			return fmt.Errorf("precision must be a number: %w", err)
 		}
-		if precision < 0 || precision > 10 {
-			return fmt.Errorf("precision must be between 0 and 10")
-		}
-		c.Output.Precision = precision
+		c.Output.Precision = p
 	default:
 		return fmt.Errorf("unknown output setting: %s", parts[0])
 	}
@@ -223,16 +347,33 @@ func (c *Config) setOutputValue(parts []string, value string) error {
 	return nil
 }
 
+func (c *Config) setPluginValue(parts []string, value string) error {
+	if len(parts) < 2 {
+		return fmt.Errorf("plugin key must be in format plugins.<name>.<key>")
+	}
+	
+	pluginName := parts[0]
+	configKey := strings.Join(parts[1:], ".")
+	
+	if c.Plugins == nil {
+		c.Plugins = make(map[string]PluginConfig)
+	}
+	
+	if _, exists := c.Plugins[pluginName]; !exists {
+		c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
+	}
+	
+	c.Plugins[pluginName].Config[configKey] = value
+	return nil
+}
+
 func (c *Config) setLoggingValue(parts []string, value string) error {
 	if len(parts) != 1 {
-		return fmt.Errorf("invalid logging key format")
+		return fmt.Errorf("invalid logging key")
 	}
 	
 	switch parts[0] {
 	case "level":
-		if !isValidLogLevel(value) {
-			return fmt.Errorf("invalid log level: %s (valid: debug, info, warn, error)", value)
-		}
 		c.Logging.Level = value
 	case "file":
 		c.Logging.File = value
@@ -243,69 +384,10 @@ func (c *Config) setLoggingValue(parts []string, value string) error {
 	return nil
 }
 
-func (c *Config) setPluginValue(parts []string, value string) error {
-	if len(parts) < 2 {
-		return fmt.Errorf("invalid plugin key format (expected plugins.name.setting)")
-	}
-	
-	pluginName := parts[0]
-	setting := parts[1]
-	
-	if c.Plugins == nil {
-		c.Plugins = make(map[string]PluginConfig)
-	}
-	
-	pluginConfig, exists := c.Plugins[pluginName]
-	if !exists {
-		pluginConfig = PluginConfig{
-			Credentials: make(map[string]string),
-			Settings:    make(map[string]interface{}),
-		}
-	}
-	
-	switch setting {
-	case "region":
-		pluginConfig.Region = value
-	case "profile":
-		pluginConfig.Profile = value
-	case "subscription_id":
-		pluginConfig.SubscriptionID = value
-	case "tenant_id":
-		pluginConfig.TenantID = value
-	default:
-		// Store in custom settings
-		if pluginConfig.Settings == nil {
-			pluginConfig.Settings = make(map[string]interface{})
-		}
-		pluginConfig.Settings[setting] = value
-	}
-	
-	c.Plugins[pluginName] = pluginConfig
-	return nil
-}
-
-// Get retrieves a configuration value using dot notation
-func (c *Config) Get(key string) (interface{}, error) {
-	parts := strings.Split(key, ".")
-	if len(parts) == 0 {
-		return nil, fmt.Errorf("invalid key format: %s", key)
-	}
-	
-	switch parts[0] {
-	case "output":
-		return c.getOutputValue(parts[1:])
-	case "logging":
-		return c.getLoggingValue(parts[1:])
-	case "plugins":
-		return c.getPluginValue(parts[1:])
-	default:
-		return nil, fmt.Errorf("unknown config section: %s", parts[0])
-	}
-}
-
+// Helper methods for getting values
 func (c *Config) getOutputValue(parts []string) (interface{}, error) {
 	if len(parts) != 1 {
-		return nil, fmt.Errorf("invalid output key format")
+		return nil, fmt.Errorf("invalid output key")
 	}
 	
 	switch parts[0] {
@@ -318,9 +400,33 @@ func (c *Config) getOutputValue(parts []string) (interface{}, error) {
 	}
 }
 
+func (c *Config) getPluginValue(parts []string) (interface{}, error) {
+	if len(parts) < 1 {
+		return c.Plugins, nil
+	}
+	
+	pluginName := parts[0]
+	plugin, exists := c.Plugins[pluginName]
+	if !exists {
+		return nil, fmt.Errorf("plugin not found: %s", pluginName)
+	}
+	
+	if len(parts) == 1 {
+		return plugin.Config, nil
+	}
+	
+	configKey := strings.Join(parts[1:], ".")
+	value, exists := plugin.Config[configKey]
+	if !exists {
+		return nil, fmt.Errorf("config key not found: %s", configKey)
+	}
+	
+	return value, nil
+}
+
 func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	if len(parts) != 1 {
-		return nil, fmt.Errorf("invalid logging key format")
+		return nil, fmt.Errorf("invalid logging key")
 	}
 	
 	switch parts[0] {
@@ -333,241 +439,16 @@ func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	}
 }
 
-func (c *Config) getPluginValue(parts []string) (interface{}, error) {
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid plugin key format (expected plugins.name.setting)")
+// deriveKey derives an encryption key from machine-specific data
+func deriveKey() []byte {
+	// Use hostname + user as seed for machine-specific key
+	hostname, _ := os.Hostname()
+	user := os.Getenv("USER")
+	if user == "" {
+		user = os.Getenv("USERNAME") // Windows
 	}
 	
-	pluginName := parts[0]
-	setting := parts[1]
-	
-	pluginConfig, exists := c.Plugins[pluginName]
-	if !exists {
-		return nil, fmt.Errorf("plugin %s not configured", pluginName)
-	}
-	
-	switch setting {
-	case "region":
-		return pluginConfig.Region, nil
-	case "profile":
-		return pluginConfig.Profile, nil
-	case "subscription_id":
-		return pluginConfig.SubscriptionID, nil
-	case "tenant_id":
-		return pluginConfig.TenantID, nil
-	default:
-		if pluginConfig.Settings != nil {
-			if value, exists := pluginConfig.Settings[setting]; exists {
-				return value, nil
-			}
-		}
-		return nil, fmt.Errorf("setting %s not found for plugin %s", setting, pluginName)
-	}
-}
-
-// Validate validates the configuration
-func (c *Config) Validate() error {
-	if !isValidOutputFormat(c.Output.DefaultFormat) {
-		return fmt.Errorf("invalid output format: %s", c.Output.DefaultFormat)
-	}
-	
-	if c.Output.Precision < 0 || c.Output.Precision > 10 {
-		return fmt.Errorf("precision must be between 0 and 10")
-	}
-	
-	if !isValidLogLevel(c.Logging.Level) {
-		return fmt.Errorf("invalid log level: %s", c.Logging.Level)
-	}
-	
-	return nil
-}
-
-func isValidOutputFormat(format string) bool {
-	return format == "table" || format == "json" || format == "ndjson"
-}
-
-func isValidLogLevel(level string) bool {
-	return level == "debug" || level == "info" || level == "warn" || level == "error"
-}
-
-// Credential management with encryption
-
-// SetCredential sets an encrypted credential for a plugin
-func (c *Config) SetCredential(pluginName, key, value string) error {
-	if c.Plugins == nil {
-		c.Plugins = make(map[string]PluginConfig)
-	}
-	
-	pluginConfig, exists := c.Plugins[pluginName]
-	if !exists {
-		pluginConfig = PluginConfig{
-			Credentials: make(map[string]string),
-			Settings:    make(map[string]interface{}),
-		}
-	}
-	
-	if pluginConfig.Credentials == nil {
-		pluginConfig.Credentials = make(map[string]string)
-	}
-	
-	// Encrypt the credential value
-	encrypted, err := c.encryptValue(value)
-	if err != nil {
-		return fmt.Errorf("encrypting credential: %w", err)
-	}
-	
-	pluginConfig.Credentials[key] = encrypted
-	c.Plugins[pluginName] = pluginConfig
-	
-	return nil
-}
-
-// GetCredential retrieves and decrypts a credential for a plugin
-func (c *Config) GetCredential(pluginName, key string) (string, error) {
-	pluginConfig, exists := c.Plugins[pluginName]
-	if !exists {
-		return "", fmt.Errorf("plugin %s not configured", pluginName)
-	}
-	
-	encrypted, exists := pluginConfig.Credentials[key]
-	if !exists {
-		return "", fmt.Errorf("credential %s not found for plugin %s", key, pluginName)
-	}
-	
-	// Decrypt the credential value
-	decrypted, err := c.decryptValue(encrypted)
-	if err != nil {
-		return "", fmt.Errorf("decrypting credential: %w", err)
-	}
-	
-	return decrypted, nil
-}
-
-// encryptValue encrypts a value using AES-GCM
-func (c *Config) encryptValue(value string) (string, error) {
-	key := c.getEncryptionKey()
-	
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("creating cipher: %w", err)
-	}
-	
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("creating GCM: %w", err)
-	}
-	
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", fmt.Errorf("generating nonce: %w", err)
-	}
-	
-	ciphertext := gcm.Seal(nonce, nonce, []byte(value), nil)
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
-
-// decryptValue decrypts a value using AES-GCM
-func (c *Config) decryptValue(encrypted string) (string, error) {
-	key := c.getEncryptionKey()
-	
-	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
-	if err != nil {
-		return "", fmt.Errorf("decoding base64: %w", err)
-	}
-	
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("creating cipher: %w", err)
-	}
-	
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("creating GCM: %w", err)
-	}
-	
-	nonceSize := gcm.NonceSize()
-	if len(ciphertext) < nonceSize {
-		return "", fmt.Errorf("ciphertext too short")
-	}
-	
-	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return "", fmt.Errorf("decrypting: %w", err)
-	}
-	
-	return string(plaintext), nil
-}
-
-// getEncryptionKey generates or retrieves the encryption key
-func (c *Config) getEncryptionKey() []byte {
-	// Use a deterministic key based on config directory path and machine ID
-	// In production, this should use a more secure key management system
-	source := c.ConfigDir + getMachineID()
-	hash := sha256.Sum256([]byte(source))
+	seed := fmt.Sprintf("%s-%s", hostname, user)
+	hash := sha256.Sum256([]byte(seed))
 	return hash[:]
-}
-
-// getMachineID returns a machine-specific identifier
-func getMachineID() string {
-	// Try to get a machine-specific ID from various sources
-	if hostname, err := os.Hostname(); err == nil {
-		return hostname
-	}
-	
-	// Fallback to a constant (not secure, but works for demo)
-	return "pulumicost-default-key"
-}
-
-// ListAll returns all configuration as a map for display
-func (c *Config) ListAll() map[string]interface{} {
-	result := make(map[string]interface{})
-	
-	// Output settings
-	result["output.default_format"] = c.Output.DefaultFormat
-	result["output.precision"] = c.Output.Precision
-	
-	// Logging settings
-	result["logging.level"] = c.Logging.Level
-	result["logging.file"] = c.Logging.File
-	
-	// Plugin settings (excluding encrypted credentials)
-	for pluginName, pluginConfig := range c.Plugins {
-		if pluginConfig.Region != "" {
-			result[fmt.Sprintf("plugins.%s.region", pluginName)] = pluginConfig.Region
-		}
-		if pluginConfig.Profile != "" {
-			result[fmt.Sprintf("plugins.%s.profile", pluginName)] = pluginConfig.Profile
-		}
-		if pluginConfig.SubscriptionID != "" {
-			result[fmt.Sprintf("plugins.%s.subscription_id", pluginName)] = pluginConfig.SubscriptionID
-		}
-		if pluginConfig.TenantID != "" {
-			result[fmt.Sprintf("plugins.%s.tenant_id", pluginName)] = pluginConfig.TenantID
-		}
-		
-		// Custom settings
-		for key, value := range pluginConfig.Settings {
-			result[fmt.Sprintf("plugins.%s.%s", pluginName, key)] = value
-		}
-		
-		// Show credential keys (but not values)
-		for key := range pluginConfig.Credentials {
-			result[fmt.Sprintf("plugins.%s.credentials.%s", pluginName, key)] = "<encrypted>"
-		}
-	}
-	
-	return result
-}
-
-// InitConfig creates a default configuration file
-func InitConfig() error {
-	config := DefaultConfig()
-	
-	// Check if config file already exists
-	if _, err := os.Stat(config.ConfigFile); err == nil {
-		return fmt.Errorf("configuration file already exists: %s", config.ConfigFile)
-	}
-	
-	return config.Save()
 }

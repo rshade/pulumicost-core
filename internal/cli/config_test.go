@@ -1,4 +1,4 @@
-package cli_test
+package cli
 
 import (
 	"bytes"
@@ -7,310 +7,384 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/config"
 )
 
-func TestConfigInitCmd(t *testing.T) {
-	tempDir := t.TempDir()
+func setupTestConfig(t *testing.T) (string, func()) {
+	tmpDir, err := os.MkdirTemp("", "pulumicost-cli-test")
+	require.NoError(t, err)
+	
+	// Mock home directory for testing
 	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-	defer os.Setenv("HOME", originalHome)
+	testHome := tmpDir
+	os.Setenv("HOME", testHome)
 	
-	cmd := cli.NewConfigInitCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
+	cleanup := func() {
+		os.Setenv("HOME", originalHome)
+		os.RemoveAll(tmpDir)
+		config.GlobalConfig = nil
+	}
 	
+	return testHome, cleanup
+}
+
+func TestConfigInitCmd(t *testing.T) {
+	testHome, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	cmd := NewConfigInitCmd()
+	cmd.SetOutput(os.Stdout)
+	
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test successful init
 	err := cmd.Execute()
 	require.NoError(t, err)
 	
-	// Verify config file was created
-	cfg := config.DefaultConfig()
-	_, err = os.Stat(cfg.ConfigFile)
+	// Check that config file was created
+	configPath := filepath.Join(testHome, ".pulumicost", "config.yaml")
+	_, err = os.Stat(configPath)
 	assert.NoError(t, err)
 	
-	// Verify output message
-	output := out.String()
-	assert.Contains(t, output, "Configuration initialized at")
+	// Check output message
+	assert.Contains(t, output.String(), "Configuration initialized successfully")
 }
 
-func TestConfigInitCmdAlreadyExists(t *testing.T) {
-	tempDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-	defer os.Setenv("HOME", originalHome)
+func TestConfigInitCmdForce(t *testing.T) {
+	testHome, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	// Create config file first
-	err := config.InitConfig()
+	// Create existing config
+	cfg := config.New()
+	err := cfg.Save()
 	require.NoError(t, err)
 	
-	cmd := cli.NewConfigInitCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
+	cmd := NewConfigInitCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
+	// Test without force flag should fail
 	err = cmd.Execute()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "already exists")
+	
+	// Test with force flag should succeed
+	output.Reset()
+	cmd.SetArgs([]string{"--force"})
+	err = cmd.Execute()
+	assert.NoError(t, err)
+	assert.Contains(t, output.String(), "Configuration initialized successfully")
 }
 
 func TestConfigSetCmd(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	tests := []struct {
-		name  string
-		args  []string
-		flags []string
-		want  string
-	}{
-		{
-			name: "set output format",
-			args: []string{"output.default_format", "json"},
-			want: "Configuration output.default_format set to json",
-		},
-		{
-			name: "set precision",
-			args: []string{"output.precision", "4"},
-			want: "Configuration output.precision set to 4",
-		},
-		{
-			name: "set plugin region",
-			args: []string{"plugins.aws.region", "us-west-2"},
-			want: "Configuration plugins.aws.region set to us-west-2",
-		},
-		{
-			name:  "set credential",
-			args:  []string{"plugins.aws.access_key", "AKIATEST"},
-			flags: []string{"--credential"},
-			want:  "Credential access_key set for plugin aws (encrypted)",
-		},
-	}
+	cmd := NewConfigSetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cmd := cli.NewConfigSetCmd()
-			var out bytes.Buffer
-			cmd.SetOut(&out)
-			
-			args := append(tt.args, tt.flags...)
-			cmd.SetArgs(args)
-			
-			err := cmd.Execute()
-			require.NoError(t, err)
-			
-			output := out.String()
-			assert.Contains(t, output, tt.want)
-		})
-	}
+	// Test setting output format
+	cmd.SetArgs([]string{"output.default_format", "json"})
+	err := cmd.Execute()
+	require.NoError(t, err)
+	assert.Contains(t, output.String(), "Configuration updated: output.default_format = json")
+	
+	// Verify the value was set
+	cfg := config.GetGlobalConfig()
+	value, err := cfg.Get("output.default_format")
+	require.NoError(t, err)
+	assert.Equal(t, "json", value)
 }
 
-func TestConfigSetCmdInvalid(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+func TestConfigSetCmdWithEncryption(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	tests := []struct {
-		name string
-		args []string
-	}{
-		{"invalid key", []string{"invalid.key", "value"}},
-		{"invalid output format", []string{"output.default_format", "invalid"}},
-		{"invalid precision", []string{"output.precision", "invalid"}},
-		{"precision out of range", []string{"output.precision", "11"}},
-		{"invalid log level", []string{"logging.level", "invalid"}},
-	}
+	cmd := NewConfigSetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cmd := cli.NewConfigSetCmd()
-			var out bytes.Buffer
-			cmd.SetOut(&out)
-			cmd.SetErr(&out)
-			
-			cmd.SetArgs(tt.args)
-			
-			err := cmd.Execute()
-			assert.Error(t, err)
-		})
-	}
+	// Test setting encrypted value
+	cmd.SetArgs([]string{"plugins.aws.secret_key", "my-secret", "--encrypt"})
+	err := cmd.Execute()
+	require.NoError(t, err)
+	assert.Contains(t, output.String(), "Value encrypted before storage")
+	assert.Contains(t, output.String(), "Configuration updated")
+	
+	// Verify the value was encrypted
+	cfg := config.GetGlobalConfig()
+	value, err := cfg.Get("plugins.aws.secret_key")
+	require.NoError(t, err)
+	assert.NotEqual(t, "my-secret", value) // Should be encrypted
+	assert.IsType(t, "", value)           // Should be string
+}
+
+func TestConfigSetCmdErrors(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	cmd := NewConfigSetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test invalid key
+	cmd.SetArgs([]string{"invalid.key", "value"})
+	err := cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown configuration section")
+	
+	// Test invalid precision value
+	cmd.SetArgs([]string{"output.precision", "invalid"})
+	err = cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "precision must be a number")
 }
 
 func TestConfigGetCmd(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	// Set up some test data
-	cfg, err := config.Load()
+	// Set up some config values
+	cfg := config.GetGlobalConfig()
+	cfg.Set("output.default_format", "json")
+	cfg.Set("plugins.aws.region", "us-west-2")
+	
+	cmd := NewConfigGetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test getting simple value
+	cmd.SetArgs([]string{"output.default_format"})
+	err := cmd.Execute()
 	require.NoError(t, err)
+	assert.Equal(t, "json\n", output.String())
 	
-	err = cfg.Set("output.default_format", "json")
+	// Test getting plugin value
+	output.Reset()
+	cmd.SetArgs([]string{"plugins.aws.region"})
+	err = cmd.Execute()
 	require.NoError(t, err)
-	
-	err = cfg.Set("plugins.aws.region", "us-east-1")
-	require.NoError(t, err)
-	
-	err = cfg.SetCredential("aws", "access_key", "AKIATEST")
-	require.NoError(t, err)
-	
-	err = cfg.Save()
-	require.NoError(t, err)
-	
-	tests := []struct {
-		name  string
-		args  []string
-		flags []string
-		want  string
-	}{
-		{
-			name: "get output format",
-			args: []string{"output.default_format"},
-			want: "json",
-		},
-		{
-			name: "get plugin region",
-			args: []string{"plugins.aws.region"},
-			want: "us-east-1",
-		},
-		{
-			name:  "get credential",
-			args:  []string{"plugins.aws.access_key"},
-			flags: []string{"--credential"},
-			want:  "AKIATEST",
-		},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cmd := cli.NewConfigGetCmd()
-			var out bytes.Buffer
-			cmd.SetOut(&out)
-			
-			args := append(tt.args, tt.flags...)
-			cmd.SetArgs(args)
-			
-			err := cmd.Execute()
-			require.NoError(t, err)
-			
-			output := strings.TrimSpace(out.String())
-			assert.Equal(t, tt.want, output)
-		})
-	}
+	assert.Equal(t, "us-west-2\n", output.String())
 }
 
-func TestConfigGetCmdNonexistent(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+func TestConfigGetCmdWithDecryption(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	cmd := cli.NewConfigGetCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
+	// Set up encrypted value
+	cfg := config.GetGlobalConfig()
+	encrypted, err := cfg.EncryptValue("secret-value")
+	require.NoError(t, err)
+	cfg.Set("plugins.aws.secret_key", encrypted)
 	
-	cmd.SetArgs([]string{"nonexistent.key"})
+	cmd := NewConfigGetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
+	// Test getting encrypted value without decryption
+	cmd.SetArgs([]string{"plugins.aws.secret_key"})
+	err = cmd.Execute()
+	require.NoError(t, err)
+	assert.Contains(t, output.String(), encrypted) // Should show encrypted value
+	assert.NotContains(t, output.String(), "secret-value")
+	
+	// Test getting encrypted value with decryption
+	output.Reset()
+	cmd.SetArgs([]string{"plugins.aws.secret_key", "--decrypt"})
+	err = cmd.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, "secret-value\n", output.String())
+}
+
+func TestConfigGetCmdErrors(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	cmd := NewConfigGetCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test invalid key
+	cmd.SetArgs([]string{"invalid.key"})
 	err := cmd.Execute()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "unknown config section")
+	assert.Contains(t, err.Error(), "unknown configuration section")
+	
+	// Test non-existent plugin
+	cmd.SetArgs([]string{"plugins.nonexistent.key"})
+	err = cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "plugin not found")
 }
 
 func TestConfigListCmd(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	// Set up some test data
-	cfg, err := config.Load()
-	require.NoError(t, err)
+	// Set up some config values
+	cfg := config.GetGlobalConfig()
+	cfg.Set("output.default_format", "json")
+	cfg.Set("plugins.aws.region", "us-west-2")
 	
-	err = cfg.Set("output.default_format", "json")
-	require.NoError(t, err)
+	cmd := NewConfigListCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
-	err = cfg.Set("plugins.aws.region", "us-east-1")
-	require.NoError(t, err)
-	
-	err = cfg.Save()
-	require.NoError(t, err)
-	
-	cmd := cli.NewConfigListCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	
-	err = cmd.Execute()
-	require.NoError(t, err)
-	
-	output := out.String()
-	assert.Contains(t, output, "output.default_format")
-	assert.Contains(t, output, "json")
-	assert.Contains(t, output, "plugins.aws.region")
-	assert.Contains(t, output, "us-east-1")
-}
-
-func TestConfigListCmdEmpty(t *testing.T) {
-	tempDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-	defer os.Setenv("HOME", originalHome)
-	
-	// No config file exists
-	cmd := cli.NewConfigListCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	
+	// Test YAML output (default)
 	err := cmd.Execute()
 	require.NoError(t, err)
 	
-	output := out.String()
-	assert.Contains(t, output, "No configuration found")
+	yamlOutput := output.String()
+	assert.Contains(t, yamlOutput, "output:")
+	assert.Contains(t, yamlOutput, "default_format: json")
+	assert.Contains(t, yamlOutput, "plugins:")
+	assert.Contains(t, yamlOutput, "aws:")
+	assert.Contains(t, yamlOutput, "region: us-west-2")
+	
+	// Test JSON output
+	output.Reset()
+	cmd.SetArgs([]string{"--format", "json"})
+	err = cmd.Execute()
+	require.NoError(t, err)
+	
+	jsonOutput := output.String()
+	assert.Contains(t, jsonOutput, "\"output\":")
+	assert.Contains(t, jsonOutput, "\"default_format\": \"json\"")
+	assert.Contains(t, jsonOutput, "\"plugins\":")
+}
+
+func TestConfigListCmdErrors(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	cmd := NewConfigListCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test invalid format
+	cmd.SetArgs([]string{"--format", "invalid"})
+	err := cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported format")
 }
 
 func TestConfigValidateCmd(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	cmd := cli.NewConfigValidateCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
+	cmd := NewConfigValidateCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
 	
+	// Test valid configuration
 	err := cmd.Execute()
 	require.NoError(t, err)
+	assert.Contains(t, output.String(), "✅ Configuration is valid")
 	
-	output := out.String()
-	assert.Contains(t, output, "✅ Configuration is valid")
+	// Test with verbose flag
+	output.Reset()
+	cmd.SetArgs([]string{"--verbose"})
+	err = cmd.Execute()
+	require.NoError(t, err)
+	
+	verboseOutput := output.String()
+	assert.Contains(t, verboseOutput, "✅ Configuration is valid")
+	assert.Contains(t, verboseOutput, "Configuration details:")
+	assert.Contains(t, verboseOutput, "Output format:")
+	assert.Contains(t, verboseOutput, "Logging level:")
 }
 
-func TestConfigValidateCmdInvalid(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfig(t, tempDir)
+func TestConfigValidateCmdErrors(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
 	
-	// Create invalid config
-	cfg, err := config.Load()
-	require.NoError(t, err)
-	
+	// Set invalid configuration
+	cfg := config.GetGlobalConfig()
 	cfg.Output.DefaultFormat = "invalid"
-	err = cfg.Save()
+	
+	cmd := NewConfigValidateCmd()
+	var output bytes.Buffer
+	cmd.SetOutput(&output)
+	
+	// Test invalid configuration
+	err := cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid output format")
+}
+
+func TestConfigCommandsIntegration(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	var output bytes.Buffer
+	
+	// Test full workflow: init -> set -> get -> validate -> list
+	
+	// 1. Initialize config
+	initCmd := NewConfigInitCmd()
+	initCmd.SetOutput(&output)
+	err := initCmd.Execute()
 	require.NoError(t, err)
 	
-	cmd := cli.NewConfigValidateCmd()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
+	// 2. Set some values
+	setCmd := NewConfigSetCmd()
+	setCmd.SetOutput(&output)
+	setCmd.SetArgs([]string{"output.default_format", "json"})
+	err = setCmd.Execute()
+	require.NoError(t, err)
 	
-	err = cmd.Execute()
+	setCmd2 := NewConfigSetCmd()
+	setCmd2.SetOutput(&output)
+	setCmd2.SetArgs([]string{"plugins.aws.region", "eu-west-1"})
+	err = setCmd2.Execute()
+	require.NoError(t, err)
+	
+	// 3. Get values to verify
+	getCmd := NewConfigGetCmd()
+	output.Reset()
+	getCmd.SetOutput(&output)
+	getCmd.SetArgs([]string{"output.default_format"})
+	err = getCmd.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, "json\n", output.String())
+	
+	// 4. Validate configuration
+	validateCmd := NewConfigValidateCmd()
+	output.Reset()
+	validateCmd.SetOutput(&output)
+	err = validateCmd.Execute()
+	require.NoError(t, err)
+	assert.Contains(t, output.String(), "✅ Configuration is valid")
+	
+	// 5. List all configuration
+	listCmd := NewConfigListCmd()
+	output.Reset()
+	listCmd.SetOutput(&output)
+	err = listCmd.Execute()
+	require.NoError(t, err)
+	
+	listOutput := output.String()
+	assert.Contains(t, listOutput, "default_format: json")
+	assert.Contains(t, listOutput, "region: eu-west-1")
+}
+
+func TestConfigCmdWrongArgs(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+	
+	// Test set command with wrong number of args
+	setCmd := NewConfigSetCmd()
+	setCmd.SetArgs([]string{"only-one-arg"})
+	err := setCmd.Execute()
 	assert.Error(t, err)
 	
-	output := out.String()
-	assert.Contains(t, output, "❌ Configuration validation failed")
-}
-
-// setupTestConfig creates a test configuration directory
-func setupTestConfig(t *testing.T, tempDir string) {
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-	t.Cleanup(func() { os.Setenv("HOME", originalHome) })
-	
-	// Initialize config
-	err := config.InitConfig()
-	require.NoError(t, err)
+	// Test get command with wrong number of args
+	getCmd := NewConfigGetCmd()
+	getCmd.SetArgs([]string{})
+	err = getCmd.Execute()
+	assert.Error(t, err)
 }
