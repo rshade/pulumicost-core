@@ -20,7 +20,10 @@ func NewRootCmd(ver string) *cobra.Command {
   pulumicost plugin list
 
   # Validate all plugins
-  pulumicost plugin validate`,
+  pulumicost plugin validate
+
+  # Initialize a new plugin project
+  pulumicost plugin init aws-plugin --author "Your Name" --providers aws`,
 	}
 
 	cmd.PersistentFlags().Bool("debug", false, "enable debug logging")
@@ -41,6 +44,7 @@ func NewRootCmd(ver string) *cobra.Command {
 	pluginCmd.AddCommand(
 		NewPluginValidateCmd(),
 		NewPluginListCmd(),
+		NewPluginInitCmd(),
 	)
 
 	cmd.AddCommand(costCmd, pluginCmd)
