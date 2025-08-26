@@ -1,0 +1,37 @@
+provider: aws
+service: rds
+sku: db.t3.micro
+currency: USD
+hourly_cost: 0.017
+monthly_cost: 12.41
+region: us-east-1
+description: "RDS MySQL db.t3.micro instance"
+specifications:
+  vcpu: 2
+  memory_gb: 1
+  network_performance: "Up to 2085 Megabit"
+  storage_type: "gp2"
+  max_iops: 3000
+pricing_details:
+  single_az:
+    hourly: 0.017
+    monthly: 12.41
+  multi_az:
+    hourly: 0.034
+    monthly: 24.82
+  reserved_1yr:
+    upfront: 0
+    hourly: 0.011
+    monthly: 8.03
+  reserved_3yr:
+    upfront: 0
+    hourly: 0.008
+    monthly: 5.84
+storage_pricing:
+  gp2_per_gb_month: 0.115
+  gp3_per_gb_month: 0.092
+  provisioned_iops_per_iops_month: 0.10
+backup_pricing:
+  per_gb_month: 0.095
+notes: "Burstable Performance instances for RDS MySQL engine"
+last_updated: "2024-01-15T10:30:00Z"
