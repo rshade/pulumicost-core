@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	hoursPerDay = 24
+	hoursPerDay   = 24
+	hoursPerMonth = 730
 )
 
 var (
@@ -53,6 +54,15 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 		}
 
 		if len(resourceResults) == 0 {
+			// Single spec fallback per resource
+			if e.loader != nil {
+				if specRes := e.getProjectedCostFromSpec(resource); specRes != nil {
+					results = append(results, *specRes)
+					continue
+				}
+			}
+			
+			// Final fallback: no cost data available
 			results = append(results, CostResult{
 				ResourceType: resource.Type,
 				ResourceID:   resource.ID,
@@ -98,8 +108,6 @@ func (e *Engine) getProjectedCostFromPlugin(
 	client *pluginhost.Client,
 	resource ResourceDescriptor,
 ) (*CostResult, error) {
-	const defaultEstimate = 100.0
-	const hoursPerMonth = 730
 	// Try to get pricing from plugin first
 	req := &proto.GetProjectedCostRequest{
 		Resources: []*proto.ResourceDescriptor{
@@ -126,18 +134,10 @@ func (e *Engine) getProjectedCostFromPlugin(
 		}, nil
 	}
 
-	// Fallback to local spec if available
-	if e.loader != nil {
-		if result := e.getProjectedCostFromSpec(resource); result != nil {
-			return result, nil
-		}
-	}
-
 	return nil, ErrNoCostData
 }
 
 func (e *Engine) getProjectedCostFromSpec(resource ResourceDescriptor) *CostResult {
-	const hoursPerMonth = 730
 
 	// Extract service and SKU from resource type
 	service := extractService(resource.Type)
@@ -145,7 +145,6 @@ func (e *Engine) getProjectedCostFromSpec(resource ResourceDescriptor) *CostResu
 
 	// Try multiple fallback patterns for spec loading
 	var spec *PricingSpec
-	var specErr error
 
 	// 1. Try provider-service-sku pattern first
 	if sku != "" {
@@ -286,7 +285,6 @@ func extractSKU(resource ResourceDescriptor) string {
 }
 
 func calculateCostsFromSpec(spec *PricingSpec, resource ResourceDescriptor) (monthly, hourly float64) {
-	const hoursPerMonth = 730
 
 	// Try to extract cost information from spec pricing
 	if spec.Pricing != nil {
