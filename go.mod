@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	github.com/rshade/pulumicost-spec v0.0.0-20250821220349-241cb099672f
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.7
 	gopkg.in/yaml.v3 v3.0.1
