@@ -22,7 +22,8 @@ The `internal/engine` package is the core orchestration layer for PulumiCost, re
 
 3. **Output Rendering** (`project.go`)
    - Multi-format output: table, JSON, NDJSON
-   - Tabwriter-based table formatting with column truncation
+   - Enhanced table format with cost summaries and breakdowns
+   - Aggregated JSON with totals by provider, service, and adapter
    - Streaming NDJSON for large result sets
 
 ### Data Flow Architecture
@@ -54,8 +55,15 @@ go test ./internal/cli/... -run TestCLIIntegration
 ### Projected Cost Flow
 
 1. **Plugin First**: Query each plugin client via `GetProjectedCost` gRPC call
-2. **Fallback to Spec**: If no plugin responds, use local YAML pricing spec
-3. **Default Values**: If no spec available, return "none" adapter with zero cost
+2. **Smart Spec Fallback**: Multi-level fallback pattern:
+   - Try `provider-service-sku` pattern (e.g., `aws-ec2-t3.micro`)
+   - Fallback to `provider-service-default` pattern (e.g., `aws-ec2-default`)
+   - Try common SKUs: `standard`, `basic`, `default`
+3. **Intelligent Cost Calculation**: Extract costs from spec pricing data:
+   - Direct monthly estimates (`monthlyEstimate`)
+   - Hourly rates (`onDemandHourly`, `hourlyRate`)
+   - Storage calculations with size multipliers (`pricePerGBMonth`)
+   - Fallback estimates based on resource type
 4. **Multi-Plugin Support**: Collect results from all responding plugins
 
 ### Actual Cost Flow  
@@ -78,16 +86,18 @@ monthlyConversion = 30.44    // Average days per month
 
 ### Table Format
 
-- Uses `text/tabwriter` for aligned columns
-- Truncates long resource names (>50 chars) with "..."
-- Headers: Resource, Adapter, Projected Monthly, Currency, Notes
-- Column padding: 2 spaces between columns
+- Enhanced layout with cost summary sections
+- Summary: Total monthly/hourly costs and resource count
+- Breakdowns: By provider, service, and adapter
+- Resource details: Individual resource costs and notes
+- Truncates long resource names (>40 chars) with "..."
 
 ### JSON Format
 
+- Aggregated results with summary and resource details
+- Includes totals by provider, service, and adapter
+- Full cost breakdown and analysis
 - Pretty-printed JSON with 2-space indentation
-- Full array of CostResult objects
-- Includes all fields: breakdown, metadata, etc.
 
 ### NDJSON Format
 
@@ -184,6 +194,106 @@ results, err := engine.GetProjectedCost(ctx, resources)
 engine.RenderResults(engine.OutputJSON, results)    // JSON
 engine.RenderResults(engine.OutputTable, results)   // Table  
 engine.RenderResults(engine.OutputNDJSON, results)  // NDJSON
+```
+
+## New Features (Issue #5 Implementation)
+
+### Enhanced Spec Fallback System
+
+The engine now implements intelligent spec loading with multiple fallback patterns:
+
+```go
+// 1. Try exact SKU match: aws-ec2-t3.micro.yaml
+// 2. Try service default: aws-ec2-default.yaml  
+// 3. Try common patterns: aws-ec2-standard.yaml, aws-ec2-basic.yaml
+func (e *Engine) getProjectedCostFromSpec(resource ResourceDescriptor) *CostResult
+```
+
+### SKU and Service Extraction
+
+Smart extraction of resource characteristics for spec lookup:
+
+```go
+func extractService(resourceType string) string    // "aws:ec2:Instance" → "ec2"
+func extractSKU(resource ResourceDescriptor) string // Properties or type → "t3.micro"
+```
+
+### Cost Calculation from Specs
+
+Flexible cost calculation supporting multiple pricing models:
+
+```go
+func calculateCostsFromSpec(spec *PricingSpec, resource ResourceDescriptor) (monthly, hourly float64)
+```
+
+Supports:
+- Direct monthly estimates (`monthlyEstimate: 7.59`)
+- Hourly rates (`onDemandHourly: 0.0104`)
+- Storage pricing with size multipliers (`pricePerGBMonth: 0.10`)
+- Intelligent fallbacks by resource type (compute: $20, database: $50, storage: $5)
+
+### Cost Aggregation and Analysis
+
+New aggregation system for comprehensive cost analysis:
+
+```go
+type CostSummary struct {
+    TotalMonthly float64                   // Total monthly cost across all resources
+    TotalHourly  float64                   // Total hourly cost across all resources
+    Currency     string                    // Currency for all costs
+    ByProvider   map[string]float64        // Costs grouped by cloud provider
+    ByService    map[string]float64        // Costs grouped by service (ec2, rds, etc.)
+    ByAdapter    map[string]float64        // Costs grouped by data source
+}
+
+func AggregateResults(results []CostResult) *AggregatedResults
+```
+
+### Resource Filtering
+
+Flexible filtering system supporting multiple criteria:
+
+```go
+func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDescriptor
+```
+
+Filter patterns:
+- `provider=aws` - Filter by cloud provider
+- `type=ec2` - Filter by service type
+- `service=rds` - Filter by extracted service
+- `instanceType=t3.micro` - Filter by any resource property
+- `id=i-123` - Filter by resource ID
+
+### Enhanced Output Formatting
+
+Improved table output with comprehensive summaries:
+
+```text
+COST SUMMARY
+============
+Total Monthly Cost:    57.59 USD
+Total Hourly Cost:     0.0788 USD
+Total Resources:       3
+
+BY PROVIDER
+-----------
+aws:        57.59 USD
+
+BY SERVICE  
+----------
+ec2:        7.59 USD
+rds:        50.00 USD
+
+BY ADAPTER
+----------
+local-spec: 57.59 USD
+
+RESOURCE DETAILS
+================
+Resource                     Adapter     Monthly  Hourly   Currency  Notes
+--------                     -------     -------  ------   --------  -----
+aws:ec2:Instance/i-123       local-spec  7.59     0.0104   USD       Calculated from local spec
+aws:rds:Instance/db-456      local-spec  50.00    0.0685   USD       Calculated from local spec
 ```
 
 This package acts as the central coordinating layer, making it critical for understanding the overall cost calculation flow in PulumiCost.
