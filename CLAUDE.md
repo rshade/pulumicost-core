@@ -420,7 +420,65 @@ gh workflow validate .github/workflows/ci.yml
 
 ## Testing
 
-Use the provided example files:
+### Comprehensive Testing Framework
+
+The project includes a comprehensive testing framework organized in the `/test` directory:
+
+```
+/test
+├── unit/              # Unit tests by package (engine, config, spec)
+├── integration/       # Cross-component tests (plugin communication, e2e)
+├── fixtures/          # Test data (plans, specs, configs, responses)
+├── mocks/             # Mock implementations (plugin server)
+└── benchmarks/        # Performance tests
+```
+
+**Test Categories:**
+- **Unit Tests** (80% coverage target): Individual component logic
+- **Integration Tests**: Plugin communication, CLI workflows
+- **End-to-End Tests**: Complete CLI workflows with real binaries
+- **Performance Tests**: Benchmarks for cost calculations
+- **Mock Tests**: Configurable plugin server for testing
+
+**Running Tests:**
+```bash
+# All tests (including existing + new framework)
+make test
+
+# New testing framework only
+go test ./test/...
+
+# Specific categories
+go test ./test/unit/...           # Unit tests
+go test ./test/integration/...     # Integration tests
+go test ./test/benchmarks/...      # Performance benchmarks
+go test ./test/mocks/plugin/...    # Mock plugin tests
+
+# With coverage
+go test -coverprofile=coverage.out ./test/...
+go tool cover -html=coverage.out
+
+# With race detection
+go test -race ./test/...
+```
+
+**Test Fixtures Available:**
+- AWS, Azure, GCP Pulumi plans (`test/fixtures/plans/`)
+- Pricing specifications (`test/fixtures/specs/`)
+- Mock API responses (`test/fixtures/responses/`)
+- Configuration examples (`test/fixtures/configs/`)
+
+**Mock Plugin Server:**
+The testing framework includes a configurable gRPC plugin server for testing plugin communication:
+```go
+mockPlugin := plugin.NewMockPlugin("test-plugin")
+mockPlugin.SetProjectedCostResponse("aws_instance", customResponse)
+mockPlugin.SetError("GetActualCost", simulatedError)
+```
+
+### Manual Testing Commands
+
+Use the provided example files for manual testing:
 ```bash
 # Projected cost calculation
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
@@ -441,7 +499,28 @@ Use the provided example files:
 ./bin/pulumicost plugin list
 ./bin/pulumicost plugin validate
 ```
-- Never complete a project without running `make lint`.
+
+### Test Requirements
+- **Unit tests**: Must achieve 80% coverage minimum
+- **Critical paths**: Must achieve 95% coverage
+- **All error paths**: Must be tested
+- **Performance regressions**: Must be detected via benchmarks
+- **Integration scenarios**: Must include plugin communication flows
+- **End-to-end workflows**: Must test complete CLI usage
+
+### CI/CD Integration
+
+The existing CI/CD pipeline automatically runs all tests including the new framework:
+- Unit tests with coverage reporting
+- Integration tests with timeout handling  
+- Linting and security scanning
+- Cross-platform build verification
+
+**Never complete a project without running:**
+```bash
+make test    # Run all tests
+make lint    # Run linting
+```
 
 ## Package-Specific Documentation
 
