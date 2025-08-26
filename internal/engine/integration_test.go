@@ -14,9 +14,7 @@ import (
 
 func TestProjectedCostIntegration(t *testing.T) {
 	// Create temporary directory for specs
-	tempDir, err := os.MkdirTemp("", "pulumicost-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	// Create test spec file
 	specContent := `provider: aws
@@ -36,9 +34,9 @@ metadata:
   operatingSystem: linux
   tenancy: shared
 `
-	
+
 	specPath := filepath.Join(tempDir, "aws-ec2-t3.micro.yaml")
-	err = os.WriteFile(specPath, []byte(specContent), 0644)
+	err := os.WriteFile(specPath, []byte(specContent), 0644)
 	require.NoError(t, err)
 
 	// Create loader and engine
@@ -78,7 +76,7 @@ metadata:
 	assert.Equal(t, "i-123456789", ec2Result.ResourceID)
 	assert.Equal(t, "local-spec", ec2Result.Adapter)
 	assert.Equal(t, "USD", ec2Result.Currency)
-	assert.Equal(t, 7.59, ec2Result.Monthly)
+	assert.InDelta(t, 7.59, ec2Result.Monthly, 0.01)
 	assert.InDelta(t, 0.0104, ec2Result.Hourly, 0.001)
 
 	// Check second result (should use fallback)
@@ -146,12 +144,12 @@ func TestFilteringIntegration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			filtered := engine.FilterResources(resources, tt.filter)
-			
+
 			var actualIDs []string
 			for _, r := range filtered {
 				actualIDs = append(actualIDs, r.ID)
 			}
-			
+
 			assert.ElementsMatch(t, tt.expected, actualIDs)
 		})
 	}
@@ -196,21 +194,21 @@ func TestAggregationIntegration(t *testing.T) {
 	aggregated := engine.AggregateResults(results)
 
 	// Test totals
-	assert.Equal(t, 102.77, aggregated.Summary.TotalMonthly)
+	assert.InDelta(t, 102.77, aggregated.Summary.TotalMonthly, 0.01)
 	assert.InDelta(t, 0.1402, aggregated.Summary.TotalHourly, 0.001)
 
 	// Test provider aggregation
-	assert.Equal(t, 72.77, aggregated.Summary.ByProvider["aws"])
-	assert.Equal(t, 30.0, aggregated.Summary.ByProvider["azure"])
+	assert.InDelta(t, 72.77, aggregated.Summary.ByProvider["aws"], 0.01)
+	assert.InDelta(t, 30.0, aggregated.Summary.ByProvider["azure"], 0.01)
 
 	// Test service aggregation
-	assert.Equal(t, 22.77, aggregated.Summary.ByService["ec2"])
-	assert.Equal(t, 50.0, aggregated.Summary.ByService["rds"])
-	assert.Equal(t, 30.0, aggregated.Summary.ByService["compute"])
+	assert.InDelta(t, 22.77, aggregated.Summary.ByService["ec2"], 0.01)
+	assert.InDelta(t, 50.0, aggregated.Summary.ByService["rds"], 0.01)
+	assert.InDelta(t, 30.0, aggregated.Summary.ByService["compute"], 0.01)
 
 	// Test adapter aggregation
-	assert.Equal(t, 22.77, aggregated.Summary.ByAdapter["aws-plugin"])
-	assert.Equal(t, 80.0, aggregated.Summary.ByAdapter["local-spec"])
+	assert.InDelta(t, 22.77, aggregated.Summary.ByAdapter["aws-plugin"], 0.01)
+	assert.InDelta(t, 80.0, aggregated.Summary.ByAdapter["local-spec"], 0.01)
 
 	// Test resource preservation
 	assert.Len(t, aggregated.Resources, 4)
@@ -219,9 +217,7 @@ func TestAggregationIntegration(t *testing.T) {
 
 func TestSpecFallbackIntegration(t *testing.T) {
 	// Create temporary directory for specs
-	tempDir, err := os.MkdirTemp("", "pulumicost-fallback-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	// Create multiple spec files to test fallback pattern
 	specs := map[string]string{
@@ -243,7 +239,7 @@ pricing:
 
 	for filename, content := range specs {
 		specPath := filepath.Join(tempDir, filename)
-		err = os.WriteFile(specPath, []byte(content), 0644)
+		err := os.WriteFile(specPath, []byte(content), 0644)
 		require.NoError(t, err)
 	}
 
@@ -261,7 +257,7 @@ pricing:
 			},
 		},
 		{
-			Type:     "aws:rds:Instance", 
+			Type:     "aws:rds:Instance",
 			ID:       "db-standard",
 			Provider: "aws",
 			Properties: map[string]interface{}{
@@ -274,13 +270,13 @@ pricing:
 	require.NoError(t, err)
 	require.Len(t, results, 2)
 
-	// First should use aws-ec2-default.yaml 
+	// First should use aws-ec2-default.yaml
 	ec2Result := results[0]
 	assert.Equal(t, "local-spec", ec2Result.Adapter)
-	assert.Equal(t, 0.05*730, ec2Result.Monthly)
+	assert.InDelta(t, 0.05*730, ec2Result.Monthly, 0.01)
 
 	// Second should use aws-rds-standard.yaml (fallback to common SKU)
 	rdsResult := results[1]
 	assert.Equal(t, "local-spec", rdsResult.Adapter)
-	assert.Equal(t, 25.0, rdsResult.Monthly)
+	assert.InDelta(t, 25.0, rdsResult.Monthly, 0.01)
 }

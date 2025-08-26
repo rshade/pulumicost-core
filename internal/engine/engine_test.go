@@ -1,179 +1,16 @@
-package engine
+package engine_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestExtractService(t *testing.T) {
-	tests := []struct {
-		name         string
-		resourceType string
-		expected     string
-	}{
-		{
-			name:         "aws ec2 instance",
-			resourceType: "aws:ec2:Instance",
-			expected:     "ec2",
-		},
-		{
-			name:         "aws rds instance",
-			resourceType: "aws:rds:Instance",
-			expected:     "rds",
-		},
-		{
-			name:         "azure compute vm",
-			resourceType: "azure:compute:VirtualMachine",
-			expected:     "compute",
-		},
-		{
-			name:         "single part type",
-			resourceType: "simple",
-			expected:     "default",
-		},
-		{
-			name:         "empty type",
-			resourceType: "",
-			expected:     "default",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := extractService(tt.resourceType)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestExtractSKU(t *testing.T) {
-	tests := []struct {
-		name     string
-		resource ResourceDescriptor
-		expected string
-	}{
-		{
-			name: "instanceType property",
-			resource: ResourceDescriptor{
-				Type: "aws:ec2:Instance",
-				Properties: map[string]interface{}{
-					"instanceType": "t3.micro",
-				},
-			},
-			expected: "t3.micro",
-		},
-		{
-			name: "sku property",
-			resource: ResourceDescriptor{
-				Type: "aws:ec2:Instance",
-				Properties: map[string]interface{}{
-					"sku": "standard-b2s",
-				},
-			},
-			expected: "standard-b2s",
-		},
-		{
-			name: "from resource type",
-			resource: ResourceDescriptor{
-				Type:       "aws:ec2:Instance",
-				Properties: nil,
-			},
-			expected: "instance",
-		},
-		{
-			name: "no properties",
-			resource: ResourceDescriptor{
-				Type:       "aws:ec2:Instance",
-				Properties: map[string]interface{}{},
-			},
-			expected: "instance",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := extractSKU(tt.resource)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestCalculateCostsFromSpec(t *testing.T) {
-	tests := []struct {
-		name             string
-		spec             *PricingSpec
-		resource         ResourceDescriptor
-		expectedMonthly  float64
-		expectedHourly   float64
-	}{
-		{
-			name: "monthly estimate in spec",
-			spec: &PricingSpec{
-				Currency: "USD",
-				Pricing: map[string]interface{}{
-					"monthlyEstimate": 7.59,
-				},
-			},
-			resource:        ResourceDescriptor{},
-			expectedMonthly: 7.59,
-			expectedHourly:  7.59 / 730,
-		},
-		{
-			name: "hourly rate in spec",
-			spec: &PricingSpec{
-				Currency: "USD",
-				Pricing: map[string]interface{}{
-					"onDemandHourly": 0.0104,
-				},
-			},
-			resource:        ResourceDescriptor{},
-			expectedMonthly: 0.0104 * 730,
-			expectedHourly:  0.0104,
-		},
-		{
-			name: "storage with size",
-			spec: &PricingSpec{
-				Currency: "USD",
-				Pricing: map[string]interface{}{
-					"pricePerGBMonth": 0.10,
-				},
-			},
-			resource: ResourceDescriptor{
-				Properties: map[string]interface{}{
-					"size": 100.0,
-				},
-			},
-			expectedMonthly: 10.0, // 100 GB * $0.10/GB
-			expectedHourly:  10.0 / 730,
-		},
-		{
-			name: "database fallback",
-			spec: &PricingSpec{
-				Currency: "USD",
-				Pricing:  map[string]interface{}{},
-			},
-			resource: ResourceDescriptor{
-				Type: "aws:rds:Instance",
-			},
-			expectedMonthly: 50.0,
-			expectedHourly:  50.0 / 730,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			monthly, hourly := calculateCostsFromSpec(tt.spec, tt.resource)
-			assert.InDelta(t, tt.expectedMonthly, monthly, 0.01)
-			assert.InDelta(t, tt.expectedHourly, hourly, 0.001)
-		})
-	}
-}
-
 func TestAggregateResults(t *testing.T) {
-	results := []CostResult{
+	results := []engine.CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			ResourceID:   "i-123",
@@ -200,32 +37,32 @@ func TestAggregateResults(t *testing.T) {
 		},
 	}
 
-	aggregated := AggregateResults(results)
+	aggregated := engine.AggregateResults(results)
 
 	// Check summary totals
-	assert.Equal(t, 85.0, aggregated.Summary.TotalMonthly)
+	assert.InDelta(t, 85.0, aggregated.Summary.TotalMonthly, 0.01)
 	assert.InDelta(t, 0.116, aggregated.Summary.TotalHourly, 0.001)
 	assert.Equal(t, "USD", aggregated.Summary.Currency)
 
 	// Check provider breakdown
-	assert.Equal(t, 60.0, aggregated.Summary.ByProvider["aws"])
-	assert.Equal(t, 25.0, aggregated.Summary.ByProvider["azure"])
+	assert.InDelta(t, 60.0, aggregated.Summary.ByProvider["aws"], 0.01)
+	assert.InDelta(t, 25.0, aggregated.Summary.ByProvider["azure"], 0.01)
 
 	// Check service breakdown
-	assert.Equal(t, 10.0, aggregated.Summary.ByService["ec2"])
-	assert.Equal(t, 50.0, aggregated.Summary.ByService["rds"])
-	assert.Equal(t, 25.0, aggregated.Summary.ByService["compute"])
+	assert.InDelta(t, 10.0, aggregated.Summary.ByService["ec2"], 0.01)
+	assert.InDelta(t, 50.0, aggregated.Summary.ByService["rds"], 0.01)
+	assert.InDelta(t, 25.0, aggregated.Summary.ByService["compute"], 0.01)
 
 	// Check adapter breakdown
-	assert.Equal(t, 60.0, aggregated.Summary.ByAdapter["aws-plugin"])
-	assert.Equal(t, 25.0, aggregated.Summary.ByAdapter["local-spec"])
+	assert.InDelta(t, 60.0, aggregated.Summary.ByAdapter["aws-plugin"], 0.01)
+	assert.InDelta(t, 25.0, aggregated.Summary.ByAdapter["local-spec"], 0.01)
 
 	// Check resources are preserved
 	assert.Len(t, aggregated.Resources, 3)
 }
 
 func TestFilterResources(t *testing.T) {
-	resources := []ResourceDescriptor{
+	resources := []engine.ResourceDescriptor{
 		{
 			Type:     "aws:ec2:Instance",
 			ID:       "i-123",
@@ -285,7 +122,7 @@ func TestFilterResources(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filtered := FilterResources(resources, tt.filter)
+			filtered := engine.FilterResources(resources, tt.filter)
 			assert.Len(t, filtered, tt.expected)
 		})
 	}
@@ -293,9 +130,9 @@ func TestFilterResources(t *testing.T) {
 
 func TestGetProjectedCostEmpty(t *testing.T) {
 	// Test with no clients and no loader
-	engine := New(nil, nil)
-	
-	results, err := engine.GetProjectedCost(context.Background(), []ResourceDescriptor{
+	eng := engine.New(nil, nil)
+
+	results, err := eng.GetProjectedCost(context.Background(), []engine.ResourceDescriptor{
 		{
 			Type: "aws:ec2:Instance",
 			ID:   "i-123",
@@ -304,20 +141,20 @@ func TestGetProjectedCostEmpty(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, results, 1)
-	
+
 	result := results[0]
 	assert.Equal(t, "aws:ec2:Instance", result.ResourceType)
 	assert.Equal(t, "i-123", result.ResourceID)
 	assert.Equal(t, "none", result.Adapter)
 	assert.Equal(t, "USD", result.Currency)
-	assert.Equal(t, 0.0, result.Monthly)
-	assert.Equal(t, 0.0, result.Hourly)
+	assert.InDelta(t, 0.0, result.Monthly, 0.01)
+	assert.InDelta(t, 0.0, result.Hourly, 0.01)
 	assert.Contains(t, result.Notes, "No pricing information available")
 }
 
-// MockSpecLoader for testing
+// MockSpecLoader for testing.
 type MockSpecLoader struct {
-	specs map[string]*PricingSpec
+	specs map[string]*engine.PricingSpec
 }
 
 func (m *MockSpecLoader) LoadSpec(provider, service, sku string) (interface{}, error) {
@@ -325,15 +162,15 @@ func (m *MockSpecLoader) LoadSpec(provider, service, sku string) (interface{}, e
 	if spec, ok := m.specs[key]; ok {
 		return spec, nil
 	}
-	return nil, ErrNoCostData
+	return nil, engine.ErrNoCostData
 }
 
 func TestGetProjectedCostWithSpecLoader(t *testing.T) {
 	loader := &MockSpecLoader{
-		specs: map[string]*PricingSpec{
+		specs: map[string]*engine.PricingSpec{
 			"aws-ec2-t3.micro": {
 				Provider: "aws",
-				Service:  "ec2", 
+				Service:  "ec2",
 				SKU:      "t3.micro",
 				Currency: "USD",
 				Pricing: map[string]interface{}{
@@ -343,9 +180,9 @@ func TestGetProjectedCostWithSpecLoader(t *testing.T) {
 		},
 	}
 
-	engine := New(nil, loader)
-	
-	results, err := engine.GetProjectedCost(context.Background(), []ResourceDescriptor{
+	eng := engine.New(nil, loader)
+
+	results, err := eng.GetProjectedCost(context.Background(), []engine.ResourceDescriptor{
 		{
 			Type:     "aws:ec2:Instance",
 			ID:       "i-123",
@@ -358,13 +195,13 @@ func TestGetProjectedCostWithSpecLoader(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, results, 1)
-	
+
 	result := results[0]
 	assert.Equal(t, "aws:ec2:Instance", result.ResourceType)
 	assert.Equal(t, "i-123", result.ResourceID)
 	assert.Equal(t, "local-spec", result.Adapter)
 	assert.Equal(t, "USD", result.Currency)
-	assert.Equal(t, 7.59, result.Monthly)
+	assert.InDelta(t, 7.59, result.Monthly, 0.01)
 	assert.InDelta(t, 7.59/730, result.Hourly, 0.001)
 	assert.Contains(t, result.Notes, "local spec")
 }

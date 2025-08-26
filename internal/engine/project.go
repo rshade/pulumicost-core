@@ -34,7 +34,7 @@ func RenderResults(format OutputFormat, results []CostResult) error {
 func renderTable(aggregated *AggregatedResults) error {
 	const tabPadding = 2
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
-	
+
 	// Print summary first
 	fmt.Fprintf(w, "COST SUMMARY\n")
 	fmt.Fprintf(w, "============\n")
