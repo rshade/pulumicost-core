@@ -2,6 +2,8 @@ package engine
 
 import (
 	"time"
+
+	"github.com/rshade/pulumicost-core/internal/spec"
 )
 
 type ResourceDescriptor struct {
@@ -35,11 +37,20 @@ type ProjectedCostRequest struct {
 	Adapter   string
 }
 
-type PricingSpec struct {
-	Provider string                 `yaml:"provider"`
-	Service  string                 `yaml:"service"`
-	SKU      string                 `yaml:"sku"`
-	Currency string                 `yaml:"currency"`
-	Pricing  map[string]interface{} `yaml:"pricing"`
-	Metadata map[string]interface{} `yaml:"metadata,omitempty"`
+// PricingSpec is an alias to the PricingSpec from the spec package to ensure type consistency.
+type PricingSpec = spec.PricingSpec
+
+type CostSummary struct {
+	TotalMonthly float64            `json:"totalMonthly"`
+	TotalHourly  float64            `json:"totalHourly"`
+	Currency     string             `json:"currency"`
+	ByProvider   map[string]float64 `json:"byProvider"`
+	ByService    map[string]float64 `json:"byService"`
+	ByAdapter    map[string]float64 `json:"byAdapter"`
+	Resources    []CostResult       `json:"resources"`
+}
+
+type AggregatedResults struct {
+	Summary   CostSummary  `json:"summary"`
+	Resources []CostResult `json:"resources"`
 }
