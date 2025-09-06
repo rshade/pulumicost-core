@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
-	
-	"github.com/spf13/cobra"
+
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // NewConfigValidateCmd creates the 'config validate' command
