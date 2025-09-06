@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/rshade/pulumicost-core/internal/ingest"
 	"github.com/rshade/pulumicost-core/internal/registry"
@@ -70,7 +71,9 @@ func NewCostActualCmd() *cobra.Command {
 				return fmt.Errorf("fetching actual costs: %w", err)
 			}
 
-			outputFormat := engine.OutputFormat(output)
+			// Use configuration-aware output format selection
+			finalOutput := config.GetOutputFormat(output)
+			outputFormat := engine.OutputFormat(finalOutput)
 			return engine.RenderResults(outputFormat, results)
 		},
 	}
