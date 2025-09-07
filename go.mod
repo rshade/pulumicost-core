@@ -1,9 +1,9 @@
 module github.com/rshade/pulumicost-core
 
-go 1.24.5
+go 1.24.6
 
 require (
-	github.com/rshade/pulumicost-spec 1130a006c5c8
+	github.com/rshade/pulumicost-spec v0.0.0-20250901122830-1130a006c5c8
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.75.0
