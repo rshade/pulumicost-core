@@ -1,32 +1,23 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func setupTestConfig(t *testing.T) (string, func()) {
-	tmpDir, err := os.MkdirTemp("", "pulumicost-cli-test")
-	require.NoError(t, err)
-	
-	// Mock home directory for testing
-	originalHome := os.Getenv("HOME")
-	testHome := tmpDir
-	os.Setenv("HOME", testHome)
-	
-	cleanup := func() {
-		os.Setenv("HOME", originalHome)
-		os.RemoveAll(tmpDir)
-		config.GlobalConfig = nil
-	}
-	
+	t.Helper()
+	testHome := t.TempDir()
+	t.Setenv("HOME", testHome)
+	// If a reset helper exists, call it here; otherwise noop.
+	cleanup := func() {}
 	return testHome, cleanup
 }
 
@@ -34,7 +25,7 @@ func TestConfigInitCmd(t *testing.T) {
 	testHome, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigInitCmd()
+	cmd := cli.NewConfigInitCmd()
 	cmd.SetOutput(os.Stdout)
 	
 	var output bytes.Buffer
@@ -54,7 +45,7 @@ func TestConfigInitCmd(t *testing.T) {
 }
 
 func TestConfigInitCmdForce(t *testing.T) {
-	testHome, cleanup := setupTestConfig(t)
+	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
 	// Create existing config
@@ -62,7 +53,7 @@ func TestConfigInitCmdForce(t *testing.T) {
 	err := cfg.Save()
 	require.NoError(t, err)
 	
-	cmd := NewConfigInitCmd()
+	cmd := cli.NewConfigInitCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -83,7 +74,7 @@ func TestConfigSetCmd(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigSetCmd()
+	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -94,7 +85,8 @@ func TestConfigSetCmd(t *testing.T) {
 	assert.Contains(t, output.String(), "Configuration updated: output.default_format = json")
 	
 	// Verify the value was set
-	cfg := config.GetGlobalConfig()
+	cfg := config.New()
+	require.NoError(t, cfg.Load())
 	value, err := cfg.Get("output.default_format")
 	require.NoError(t, err)
 	assert.Equal(t, "json", value)
@@ -104,7 +96,7 @@ func TestConfigSetCmdWithEncryption(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigSetCmd()
+	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -116,7 +108,8 @@ func TestConfigSetCmdWithEncryption(t *testing.T) {
 	assert.Contains(t, output.String(), "Configuration updated")
 	
 	// Verify the value was encrypted
-	cfg := config.GetGlobalConfig()
+	cfg := config.New()
+	require.NoError(t, cfg.Load())
 	value, err := cfg.Get("plugins.aws.secret_key")
 	require.NoError(t, err)
 	assert.NotEqual(t, "my-secret", value) // Should be encrypted
@@ -127,7 +120,7 @@ func TestConfigSetCmdErrors(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigSetCmd()
+	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -149,11 +142,12 @@ func TestConfigGetCmd(t *testing.T) {
 	defer cleanup()
 	
 	// Set up some config values
-	cfg := config.GetGlobalConfig()
-	cfg.Set("output.default_format", "json")
-	cfg.Set("plugins.aws.region", "us-west-2")
+	cfg := config.New()
+	require.NoError(t, cfg.Set("output.default_format", "json"))
+	require.NoError(t, cfg.Set("plugins.aws.region", "us-west-2"))
+	require.NoError(t, cfg.Save())
 	
-	cmd := NewConfigGetCmd()
+	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -176,12 +170,13 @@ func TestConfigGetCmdWithDecryption(t *testing.T) {
 	defer cleanup()
 	
 	// Set up encrypted value
-	cfg := config.GetGlobalConfig()
+	cfg := config.New()
 	encrypted, err := cfg.EncryptValue("secret-value")
 	require.NoError(t, err)
-	cfg.Set("plugins.aws.secret_key", encrypted)
+	require.NoError(t, cfg.Set("plugins.aws.secret_key", encrypted))
+	require.NoError(t, cfg.Save())
 	
-	cmd := NewConfigGetCmd()
+	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -204,7 +199,11 @@ func TestConfigGetCmdErrors(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigGetCmd()
+	// Create initial config file
+	cfg := config.New()
+	require.NoError(t, cfg.Save())
+	
+	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -226,11 +225,12 @@ func TestConfigListCmd(t *testing.T) {
 	defer cleanup()
 	
 	// Set up some config values
-	cfg := config.GetGlobalConfig()
-	cfg.Set("output.default_format", "json")
-	cfg.Set("plugins.aws.region", "us-west-2")
+	cfg := config.New()
+	require.NoError(t, cfg.Set("output.default_format", "json"))
+	require.NoError(t, cfg.Set("plugins.aws.region", "us-west-2"))
+	require.NoError(t, cfg.Save())
 	
-	cmd := NewConfigListCmd()
+	cmd := cli.NewConfigListCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -261,7 +261,11 @@ func TestConfigListCmdErrors(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigListCmd()
+	// Create initial config file
+	cfg := config.New()
+	require.NoError(t, cfg.Save())
+	
+	cmd := cli.NewConfigListCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -276,7 +280,11 @@ func TestConfigValidateCmd(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 	
-	cmd := NewConfigValidateCmd()
+	// Create initial config file
+	cfg := config.New()
+	require.NoError(t, cfg.Save())
+	
+	cmd := cli.NewConfigValidateCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -303,10 +311,14 @@ func TestConfigValidateCmdErrors(t *testing.T) {
 	defer cleanup()
 	
 	// Set invalid configuration
-	cfg := config.GetGlobalConfig()
+	cfg := config.New()
+	// Ensure file exists with current defaults first.
+	require.NoError(t, cfg.Save())
+	// Reload, mutate, and save invalid field.
 	cfg.Output.DefaultFormat = "invalid"
+	require.NoError(t, cfg.Save())
 	
-	cmd := NewConfigValidateCmd()
+	cmd := cli.NewConfigValidateCmd()
 	var output bytes.Buffer
 	cmd.SetOutput(&output)
 	
@@ -325,26 +337,26 @@ func TestConfigCommandsIntegration(t *testing.T) {
 	// Test full workflow: init -> set -> get -> validate -> list
 	
 	// 1. Initialize config
-	initCmd := NewConfigInitCmd()
+	initCmd := cli.NewConfigInitCmd()
 	initCmd.SetOutput(&output)
 	err := initCmd.Execute()
 	require.NoError(t, err)
 	
 	// 2. Set some values
-	setCmd := NewConfigSetCmd()
+	setCmd := cli.NewConfigSetCmd()
 	setCmd.SetOutput(&output)
 	setCmd.SetArgs([]string{"output.default_format", "json"})
 	err = setCmd.Execute()
 	require.NoError(t, err)
 	
-	setCmd2 := NewConfigSetCmd()
+	setCmd2 := cli.NewConfigSetCmd()
 	setCmd2.SetOutput(&output)
 	setCmd2.SetArgs([]string{"plugins.aws.region", "eu-west-1"})
 	err = setCmd2.Execute()
 	require.NoError(t, err)
 	
 	// 3. Get values to verify
-	getCmd := NewConfigGetCmd()
+	getCmd := cli.NewConfigGetCmd()
 	output.Reset()
 	getCmd.SetOutput(&output)
 	getCmd.SetArgs([]string{"output.default_format"})
@@ -353,7 +365,7 @@ func TestConfigCommandsIntegration(t *testing.T) {
 	assert.Equal(t, "json\n", output.String())
 	
 	// 4. Validate configuration
-	validateCmd := NewConfigValidateCmd()
+	validateCmd := cli.NewConfigValidateCmd()
 	output.Reset()
 	validateCmd.SetOutput(&output)
 	err = validateCmd.Execute()
@@ -361,7 +373,7 @@ func TestConfigCommandsIntegration(t *testing.T) {
 	assert.Contains(t, output.String(), "✅ Configuration is valid")
 	
 	// 5. List all configuration
-	listCmd := NewConfigListCmd()
+	listCmd := cli.NewConfigListCmd()
 	output.Reset()
 	listCmd.SetOutput(&output)
 	err = listCmd.Execute()
@@ -377,13 +389,13 @@ func TestConfigCmdWrongArgs(t *testing.T) {
 	defer cleanup()
 	
 	// Test set command with wrong number of args
-	setCmd := NewConfigSetCmd()
+	setCmd := cli.NewConfigSetCmd()
 	setCmd.SetArgs([]string{"only-one-arg"})
 	err := setCmd.Execute()
 	assert.Error(t, err)
 	
 	// Test get command with wrong number of args
-	getCmd := NewConfigGetCmd()
+	getCmd := cli.NewConfigGetCmd()
 	getCmd.SetArgs([]string{})
 	err = getCmd.Execute()
 	assert.Error(t, err)

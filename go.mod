@@ -6,7 +6,7 @@ require (
 	github.com/rshade/pulumicost-spec v0.0.0-20250901122830-1130a006c5c8
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.31.0
+	golang.org/x/crypto v0.41.0
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.8
 	gopkg.in/yaml.v3 v3.0.1

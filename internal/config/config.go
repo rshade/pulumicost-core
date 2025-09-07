@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +18,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config represents the complete configuration structure
+// Config represents the complete configuration structure.
 type Config struct {
 	// Legacy fields for backward compatibility
 	PluginDir string `yaml:"-" json:"-"`
@@ -52,7 +51,7 @@ type LoggingConfig struct {
 	File  string `yaml:"file" json:"file"`
 }
 
-// EncryptedValue represents an encrypted configuration value
+// EncryptedValue represents an encrypted configuration value.
 type EncryptedValue struct {
 	Data string `yaml:"data" json:"data"`
 }
@@ -114,7 +113,7 @@ func (c *Config) Load() error {
 // Save saves the current configuration to the config file
 func (c *Config) Save() error {
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(c.configPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(c.configPath), 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 	
@@ -216,7 +215,7 @@ func (c *Config) Validate() error {
 		logDir := filepath.Dir(c.Logging.File)
 		if _, err := os.Stat(logDir); err != nil && os.IsNotExist(err) {
 			// Try to create the directory
-			if err := os.MkdirAll(logDir, 0755); err != nil {
+			if err := os.MkdirAll(logDir, 0700); err != nil {
 				return fmt.Errorf("cannot create log directory %s: %w", logDir, err)
 			}
 		}
@@ -560,8 +559,12 @@ func loadOrCreateSalt(keyFilePath string) []byte {
 		copy(salt, hash[:])
 	} else {
 		// Save the randomly generated salt for future use
-		os.MkdirAll(filepath.Dir(keyFilePath), 0700)
-		os.WriteFile(keyFilePath, salt, 0600)
+		if err := os.MkdirAll(filepath.Dir(keyFilePath), 0700); err != nil {
+			// Best-effort: log to stderr but continue using in-memory salt.
+			fmt.Fprintf(os.Stderr, "warning: failed to create key dir: %v\n", err)
+		} else if err := os.WriteFile(keyFilePath, salt, 0600); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to persist key salt: %v\n", err)
+		}
 	}
 	
 	return salt
