@@ -26,10 +26,9 @@ func TestConfigInitCmd(t *testing.T) {
 	defer cleanup()
 	
 	cmd := cli.NewConfigInitCmd()
-	cmd.SetOutput(os.Stdout)
-	
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test successful init
 	err := cmd.Execute()
@@ -55,7 +54,8 @@ func TestConfigInitCmdForce(t *testing.T) {
 	
 	cmd := cli.NewConfigInitCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test without force flag should fail
 	err = cmd.Execute()
@@ -76,7 +76,8 @@ func TestConfigSetCmd(t *testing.T) {
 	
 	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test setting output format
 	cmd.SetArgs([]string{"output.default_format", "json"})
@@ -98,7 +99,8 @@ func TestConfigSetCmdWithEncryption(t *testing.T) {
 	
 	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test setting encrypted value
 	cmd.SetArgs([]string{"plugins.aws.secret_key", "my-secret", "--encrypt"})
@@ -122,7 +124,8 @@ func TestConfigSetCmdErrors(t *testing.T) {
 	
 	cmd := cli.NewConfigSetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test invalid key
 	cmd.SetArgs([]string{"invalid.key", "value"})
@@ -149,7 +152,8 @@ func TestConfigGetCmd(t *testing.T) {
 	
 	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test getting simple value
 	cmd.SetArgs([]string{"output.default_format"})
@@ -178,7 +182,8 @@ func TestConfigGetCmdWithDecryption(t *testing.T) {
 	
 	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test getting encrypted value without decryption
 	cmd.SetArgs([]string{"plugins.aws.secret_key"})
@@ -205,7 +210,8 @@ func TestConfigGetCmdErrors(t *testing.T) {
 	
 	cmd := cli.NewConfigGetCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test invalid key
 	cmd.SetArgs([]string{"invalid.key"})
@@ -232,7 +238,8 @@ func TestConfigListCmd(t *testing.T) {
 	
 	cmd := cli.NewConfigListCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test YAML output (default)
 	err := cmd.Execute()
@@ -267,7 +274,8 @@ func TestConfigListCmdErrors(t *testing.T) {
 	
 	cmd := cli.NewConfigListCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test invalid format
 	cmd.SetArgs([]string{"--format", "invalid"})
@@ -286,7 +294,8 @@ func TestConfigValidateCmd(t *testing.T) {
 	
 	cmd := cli.NewConfigValidateCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test valid configuration
 	err := cmd.Execute()
@@ -320,7 +329,8 @@ func TestConfigValidateCmdErrors(t *testing.T) {
 	
 	cmd := cli.NewConfigValidateCmd()
 	var output bytes.Buffer
-	cmd.SetOutput(&output)
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
 	
 	// Test invalid configuration
 	err := cmd.Execute()

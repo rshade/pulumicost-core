@@ -8,6 +8,7 @@ import (
 )
 
 func NewConfigGetCmd() *cobra.Command {
+	var decrypt bool
 	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a configuration value",
@@ -33,21 +34,20 @@ func NewConfigGetCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
-			decrypt, _ := cmd.Flags().GetBool("decrypt")
-			
+
 			cfg := config.New()
-			
+
 			// Load existing config
 			if err := cfg.Load(); err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
-			
+
 			// Get the value
 			value, err := cfg.Get(key)
 			if err != nil {
 				return fmt.Errorf("failed to get config value: %w", err)
 			}
-			
+
 			// Decrypt value if requested and it's a string
 			if decrypt {
 				if strValue, ok := value.(string); ok {
@@ -60,16 +60,16 @@ func NewConfigGetCmd() *cobra.Command {
 					return fmt.Errorf("can only decrypt string values")
 				}
 			}
-			
+
 			// Format and output the value
 			formatAndPrintValue(cmd, key, value)
-			
+
 			return nil
 		},
 	}
-	
-	cmd.Flags().Bool("decrypt", false, "decrypt the value if it's encrypted")
-	
+
+	cmd.Flags().BoolVar(&decrypt, "decrypt", false, "decrypt the value if it's encrypted")
+
 	return cmd
 }
 

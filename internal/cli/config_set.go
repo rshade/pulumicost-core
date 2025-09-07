@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/spf13/cobra"
 )
 
 func NewConfigSetCmd() *cobra.Command {
+	var encrypt bool
 	cmd := &cobra.Command{
 		Use:   "set <key> <value>",
 		Short: "Set a configuration value",
@@ -32,14 +32,8 @@ func NewConfigSetCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]
-			encrypt, _ := cmd.Flags().GetBool("encrypt")
 			
 			cfg := config.New()
-			
-			// Load existing config if it exists
-			if err := cfg.Load(); err != nil && !strings.Contains(err.Error(), "no such file or directory") {
-				return fmt.Errorf("failed to load config: %w", err)
-			}
 			
 			var displayValue string
 			
@@ -77,7 +71,7 @@ func NewConfigSetCmd() *cobra.Command {
 		},
 	}
 	
-	cmd.Flags().Bool("encrypt", false, "encrypt the value before storing (for sensitive data)")
+	cmd.Flags().BoolVar(&encrypt, "encrypt", false, "encrypt the value before storing (for sensitive data)")
 	
 	return cmd
 }
