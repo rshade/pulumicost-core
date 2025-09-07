@@ -250,15 +250,29 @@ Triggered on version tags (v*):
 ### Commands for Local Development
 
 ```bash
-# Run CI checks locally
-make test        # Unit tests
+# Basic development workflow
+make build       # Build binary
+make test        # Run all unit tests  
 make lint        # Code linting
 make validate    # Go vet and formatting checks
-make build       # Build binary
+make dev         # Build and run binary without args
+make run         # Build and run with --help
+make clean       # Remove build artifacts
+
+# Single package testing
+go test -v ./internal/cli/...           # Test only CLI package
+go test -v ./internal/engine/...        # Test only engine package  
+go test -run TestSpecificFunction ./... # Run specific test function
 
 # Coverage analysis
 go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out  # View in browser
+go tool cover -func=coverage.out | grep total  # Check total coverage
+
+# Development testing with examples
+./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/pulumicost plugin list
+./bin/pulumicost plugin validate
 ```
 
 ### Release Process
@@ -346,6 +360,7 @@ GOOS=linux GOARCH=amd64 make build
 
 # Validate workflow syntax
 gh workflow validate .github/workflows/ci.yml
+
 ```
 
 ## Testing
