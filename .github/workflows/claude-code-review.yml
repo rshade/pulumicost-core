@@ -48,6 +48,13 @@ jobs:
             - Performance considerations
             - Security concerns
             - Test coverage
+            - **GitHub Actions workflow configuration issues** (invalid parameters, missing permissions, syntax errors)
+            
+            **IMPORTANT**: If this PR modifies any `.github/workflows/*.yml` files, pay special attention to:
+            - Valid action inputs and parameters (check against action documentation)
+            - Required permissions (especially `id-token: write` for OIDC)
+            - Workflow syntax and structure
+            - Environment variable passing and configuration
             
             Be constructive and helpful in your feedback.
 

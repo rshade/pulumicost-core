@@ -25,6 +25,7 @@ jobs:
       issues: write
       actions: read
       checks: read
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -222,6 +223,6 @@ jobs:
 
             **Remember**: This is about systematically FIXING all review issues from CodeRabbit, Claude Review, and Copilot while maintaining code quality and not introducing new problems. Use the think tool frequently and work methodically through each issue.
 
-          claude_env: |
-            PR_NUMBER: ${{ github.event.issue.number }}
-            GITHUB_REPOSITORY: ${{ github.repository }}
+          claude_args: |
+            --env PR_NUMBER=${{ github.event.issue.number }}
+            --env GITHUB_REPOSITORY=${{ github.repository }}
