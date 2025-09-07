@@ -62,27 +62,7 @@ func NewConfigGetCmd() *cobra.Command {
 			}
 			
 			// Format and output the value
-			switch v := value.(type) {
-			case string:
-				cmd.Printf("%s\n", v)
-			case int:
-				cmd.Printf("%d\n", v)
-			case map[string]interface{}:
-				cmd.Printf("%s:\n", key)
-				for subKey, subValue := range v {
-					cmd.Printf("  %s: %v\n", subKey, subValue)
-				}
-			case map[string]config.PluginConfig:
-				cmd.Printf("%s:\n", key)
-				for pluginName, pluginConfig := range v {
-					cmd.Printf("  %s:\n", pluginName)
-					for configKey, configValue := range pluginConfig.Config {
-						cmd.Printf("    %s: %v\n", configKey, configValue)
-					}
-				}
-			default:
-				cmd.Printf("%v\n", v)
-			}
+			formatAndPrintValue(cmd, key, value)
 			
 			return nil
 		},
@@ -91,4 +71,29 @@ func NewConfigGetCmd() *cobra.Command {
 	cmd.Flags().Bool("decrypt", false, "decrypt the value if it's encrypted")
 	
 	return cmd
+}
+
+// formatAndPrintValue formats and prints configuration values based on their type
+func formatAndPrintValue(cmd *cobra.Command, key string, value interface{}) {
+	switch v := value.(type) {
+	case string:
+		cmd.Printf("%s\n", v)
+	case int:
+		cmd.Printf("%d\n", v)
+	case map[string]interface{}:
+		cmd.Printf("%s:\n", key)
+		for subKey, subValue := range v {
+			cmd.Printf("  %s: %v\n", subKey, subValue)
+		}
+	case map[string]config.PluginConfig:
+		cmd.Printf("%s:\n", key)
+		for pluginName, pluginConfig := range v {
+			cmd.Printf("  %s:\n", pluginName)
+			for configKey, configValue := range pluginConfig.Config {
+				cmd.Printf("    %s: %v\n", configKey, configValue)
+			}
+		}
+	default:
+		cmd.Printf("%v\n", v)
+	}
 }

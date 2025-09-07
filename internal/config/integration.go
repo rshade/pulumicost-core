@@ -3,21 +3,23 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 // GlobalConfig holds the global configuration instance
 var GlobalConfig *Config
+var globalConfigOnce sync.Once
 
 // InitGlobalConfig initializes the global configuration
 func InitGlobalConfig() {
-	GlobalConfig = New()
+	globalConfigOnce.Do(func() {
+		GlobalConfig = New()
+	})
 }
 
 // GetGlobalConfig returns the global configuration, initializing it if needed
 func GetGlobalConfig() *Config {
-	if GlobalConfig == nil {
-		InitGlobalConfig()
-	}
+	InitGlobalConfig()
 	return GlobalConfig
 }
 

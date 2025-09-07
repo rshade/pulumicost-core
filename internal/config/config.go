@@ -8,11 +8,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
+	"golang.org/x/crypto/pbkdf2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -80,9 +83,16 @@ func New() *Config {
 	}
 	
 	// Load from file if exists
-	if err := cfg.Load(); err != nil && !os.IsNotExist(err) {
-		// Log error but continue with defaults
-		fmt.Fprintf(os.Stderr, "Warning: Failed to load config: %v\n", err)
+	if err := cfg.Load(); err != nil {
+		if os.IsNotExist(err) {
+			// Config file doesn't exist - this is fine, use defaults
+		} else if os.IsPermission(err) {
+			// Permission error - warn but continue
+			fmt.Fprintf(os.Stderr, "Warning: Permission denied reading config file: %v\n", err)
+		} else {
+			// Likely a corrupted config file - warn about potential data corruption
+			fmt.Fprintf(os.Stderr, "Warning: Config file may be corrupted, using defaults: %v\n", err)
+		}
 	}
 	
 	// Apply environment variable overrides
@@ -196,6 +206,56 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid log level: %s (must be one of: %v)", c.Logging.Level, validLevels)
 	}
 	
+	// Validate logging file path (if specified)
+	if c.Logging.File != "" {
+		if !filepath.IsAbs(c.Logging.File) {
+			return fmt.Errorf("log file path must be absolute: %s", c.Logging.File)
+		}
+		
+		// Check if parent directory is accessible
+		logDir := filepath.Dir(c.Logging.File)
+		if _, err := os.Stat(logDir); err != nil && os.IsNotExist(err) {
+			// Try to create the directory
+			if err := os.MkdirAll(logDir, 0755); err != nil {
+				return fmt.Errorf("cannot create log directory %s: %w", logDir, err)
+			}
+		}
+	}
+	
+	// Validate plugin configurations
+	if err := c.validatePluginConfigurations(); err != nil {
+		return fmt.Errorf("plugin configuration validation failed: %w", err)
+	}
+	
+	return nil
+}
+
+// validatePluginConfigurations validates plugin-specific configurations
+func (c *Config) validatePluginConfigurations() error {
+	for pluginName, pluginConfig := range c.Plugins {
+		// Validate plugin name (must be valid identifier)
+		if pluginName == "" {
+			return fmt.Errorf("plugin name cannot be empty")
+		}
+		
+		// Check for suspicious characters that might cause issues
+		for _, char := range pluginName {
+			if !((char >= 'a' && char <= 'z') || 
+				 (char >= 'A' && char <= 'Z') || 
+				 (char >= '0' && char <= '9') || 
+				 char == '-' || char == '_') {
+				return fmt.Errorf("plugin name contains invalid character: %s", pluginName)
+			}
+		}
+		
+		// Validate plugin configuration keys
+		for configKey := range pluginConfig.Config {
+			if configKey == "" {
+				return fmt.Errorf("plugin %s has empty configuration key", pluginName)
+			}
+		}
+	}
+	
 	return nil
 }
 
@@ -293,35 +353,45 @@ func (c *Config) applyEnvOverrides() {
 	}
 	
 	// Plugin overrides (PULUMICOST_PLUGIN_<NAME>_<KEY>=value)
+	// More efficient: only scan environment variables that start with our prefix
+	c.scanPluginEnvironmentVars()
+}
+
+// scanPluginEnvironmentVars efficiently scans for plugin-specific environment variables
+func (c *Config) scanPluginEnvironmentVars() {
+	const pluginPrefix = "PULUMICOST_PLUGIN_"
+	
 	for _, env := range os.Environ() {
-		if strings.HasPrefix(env, "PULUMICOST_PLUGIN_") {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) != 2 {
-				continue
-			}
-			
-			key := parts[0]
-			value := parts[1]
-			
-			// Extract plugin name and config key
-			keyParts := strings.Split(strings.TrimPrefix(key, "PULUMICOST_PLUGIN_"), "_")
-			if len(keyParts) < 2 {
-				continue
-			}
-			
-			pluginName := strings.ToLower(keyParts[0])
-			configKey := strings.ToLower(strings.Join(keyParts[1:], "_"))
-			
-			if c.Plugins == nil {
-				c.Plugins = make(map[string]PluginConfig)
-			}
-			
-			if _, exists := c.Plugins[pluginName]; !exists {
-				c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
-			}
-			
-			c.Plugins[pluginName].Config[configKey] = value
+		if !strings.HasPrefix(env, pluginPrefix) {
+			continue
 		}
+		
+		parts := strings.SplitN(env, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		
+		key := parts[0]
+		value := parts[1]
+		
+		// Extract plugin name and config key
+		keyParts := strings.Split(strings.TrimPrefix(key, pluginPrefix), "_")
+		if len(keyParts) < 2 {
+			continue
+		}
+		
+		pluginName := strings.ToLower(keyParts[0])
+		configKey := strings.ToLower(strings.Join(keyParts[1:], "_"))
+		
+		if c.Plugins == nil {
+			c.Plugins = make(map[string]PluginConfig)
+		}
+		
+		if _, exists := c.Plugins[pluginName]; !exists {
+			c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
+		}
+		
+		c.Plugins[pluginName].Config[configKey] = value
 	}
 }
 
@@ -439,16 +509,77 @@ func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	}
 }
 
-// deriveKey derives an encryption key from machine-specific data
+// deriveKey derives an encryption key from machine-specific data with proper entropy
 func deriveKey() []byte {
-	// Use hostname + user as seed for machine-specific key
-	hostname, _ := os.Hostname()
-	user := os.Getenv("USER")
-	if user == "" {
-		user = os.Getenv("USERNAME") // Windows
+	homeDir, _ := os.UserHomeDir()
+	keyFilePath := filepath.Join(homeDir, ".pulumicost", ".keydata")
+	
+	// Try to load existing salt from file
+	salt := loadOrCreateSalt(keyFilePath)
+	
+	// Gather machine-specific entropy
+	var entropy strings.Builder
+	
+	// Basic identifiers (less predictable than previous version)
+	if hostname, err := os.Hostname(); err == nil {
+		entropy.WriteString(hostname)
 	}
 	
-	seed := fmt.Sprintf("%s-%s", hostname, user)
-	hash := sha256.Sum256([]byte(seed))
-	return hash[:]
+	if user := getUserIdentifier(); user != "" {
+		entropy.WriteString(user)
+	}
+	
+	// Add OS and architecture information
+	entropy.WriteString(runtime.GOOS)
+	entropy.WriteString(runtime.GOARCH)
+	
+	// Add home directory path as additional entropy
+	entropy.WriteString(homeDir)
+	
+	// Use PBKDF2 with high iteration count for key derivation
+	key := pbkdf2.Key([]byte(entropy.String()), salt, 100000, 32, sha256.New)
+	return key
+}
+
+// loadOrCreateSalt loads an existing salt or creates a new one
+func loadOrCreateSalt(keyFilePath string) []byte {
+	// Try to read existing salt
+	if data, err := os.ReadFile(keyFilePath); err == nil && len(data) >= 32 {
+		return data[:32] // Use first 32 bytes as salt
+	}
+	
+	// Create new random salt
+	salt := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
+		// Fallback to deterministic salt if random generation fails
+		// This maintains backward compatibility but is less secure
+		hostname, _ := os.Hostname()
+		user := getUserIdentifier()
+		fallbackSeed := fmt.Sprintf("%s-%s-fallback", hostname, user)
+		hash := sha256.Sum256([]byte(fallbackSeed))
+		copy(salt, hash[:])
+	} else {
+		// Save the randomly generated salt for future use
+		os.MkdirAll(filepath.Dir(keyFilePath), 0700)
+		os.WriteFile(keyFilePath, salt, 0600)
+	}
+	
+	return salt
+}
+
+// getUserIdentifier gets a user identifier across platforms
+func getUserIdentifier() string {
+	// Try different environment variables for cross-platform compatibility
+	for _, envVar := range []string{"USER", "USERNAME", "LOGNAME"} {
+		if user := os.Getenv(envVar); user != "" {
+			return user
+		}
+	}
+	
+	// Fallback to user home directory path
+	if homeDir, err := os.UserHomeDir(); err == nil {
+		return filepath.Base(homeDir)
+	}
+	
+	return "unknown"
 }

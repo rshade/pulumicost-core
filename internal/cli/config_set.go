@@ -41,6 +41,8 @@ func NewConfigSetCmd() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 			
+			var displayValue string
+			
 			// Encrypt value if requested
 			if encrypt {
 				encryptedValue, err := cfg.EncryptValue(value)
@@ -48,7 +50,10 @@ func NewConfigSetCmd() *cobra.Command {
 					return fmt.Errorf("failed to encrypt value: %w", err)
 				}
 				value = encryptedValue
+				displayValue = "[encrypted]"
 				cmd.Printf("Value encrypted before storage\n")
+			} else {
+				displayValue = value
 			}
 			
 			// Set the value
@@ -66,7 +71,7 @@ func NewConfigSetCmd() *cobra.Command {
 				return fmt.Errorf("failed to save config: %w", err)
 			}
 			
-			cmd.Printf("Configuration updated: %s = %s\n", key, value)
+			cmd.Printf("Configuration updated: %s = %s\n", key, displayValue)
 			
 			return nil
 		},
