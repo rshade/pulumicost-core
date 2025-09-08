@@ -17,6 +17,12 @@ func InitGlobalConfig() {
 	})
 }
 
+// ResetGlobalConfigForTest resets the global config for testing purposes
+func ResetGlobalConfigForTest() {
+	GlobalConfig = nil
+	globalConfigOnce = sync.Once{}
+}
+
 // GetGlobalConfig returns the global configuration, initializing it if needed
 func GetGlobalConfig() *Config {
 	InitGlobalConfig()
@@ -59,7 +65,7 @@ func EnsureConfigDir() error {
 	if err != nil {
 		return err
 	}
-	
+
 	configDir := filepath.Join(homeDir, ".pulumicost")
 	return os.MkdirAll(configDir, 0755)
 }

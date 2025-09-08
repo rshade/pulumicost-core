@@ -32,11 +32,11 @@ func NewConfigSetCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]
-			
+
 			cfg := config.New()
-			
+
 			var displayValue string
-			
+
 			// Encrypt value if requested
 			if encrypt {
 				encryptedValue, err := cfg.EncryptValue(value)
@@ -49,29 +49,29 @@ func NewConfigSetCmd() *cobra.Command {
 			} else {
 				displayValue = value
 			}
-			
+
 			// Set the value
 			if err := cfg.Set(key, value); err != nil {
 				return fmt.Errorf("failed to set config value: %w", err)
 			}
-			
+
 			// Validate the configuration
 			if err := cfg.Validate(); err != nil {
 				return fmt.Errorf("configuration validation failed: %w", err)
 			}
-			
+
 			// Save the configuration
 			if err := cfg.Save(); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)
 			}
-			
+
 			cmd.Printf("Configuration updated: %s = %s\n", key, displayValue)
-			
+
 			return nil
 		},
 	}
-	
+
 	cmd.Flags().BoolVar(&encrypt, "encrypt", false, "encrypt the value before storing (for sensitive data)")
-	
+
 	return cmd
 }

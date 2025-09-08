@@ -36,3 +36,6 @@ go.work.sum
 Github_Development_Prompt.md
 PR_MESSAGE.md
 CodeRabbitPrompt.md
+
+# MCP Configuration files (keep local)
+.mcp*.json

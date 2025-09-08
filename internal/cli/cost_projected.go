@@ -81,7 +81,7 @@ func NewCostProjectedCmd() *cobra.Command {
 	cmd.Flags().StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
 	cmd.Flags().StringVar(&specDir, "spec-dir", "", "Directory containing pricing spec files")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
-	
+
 	// Use configuration default if no output format specified
 	defaultFormat := config.GetDefaultOutputFormat()
 	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
