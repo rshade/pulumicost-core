@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rshade/pulumicost-core/internal/config"
@@ -18,14 +19,13 @@ func NewConfigInitCmd() *cobra.Command {
   
   # Create default configuration, overwriting existing
   pulumicost config init --force`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfg := config.New()
 
 			// Check if config already exists and force isn't set
 			if !force {
 				if err := cfg.Load(); err == nil {
-					return fmt.Errorf("configuration file already exists, use --force to overwrite")
+					return errors.New("configuration file already exists, use --force to overwrite")
 				}
 			}
 

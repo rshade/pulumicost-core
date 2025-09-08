@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/spf13/cobra"
@@ -35,12 +37,8 @@ func NewConfigGetCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 
+			// config.New() already loads from disk and applies env overrides
 			cfg := config.New()
-
-			// Load existing config
-			if err := cfg.Load(); err != nil {
-				return fmt.Errorf("failed to load config: %w", err)
-			}
 
 			// Get the value
 			value, err := cfg.Get(key)
@@ -51,13 +49,13 @@ func NewConfigGetCmd() *cobra.Command {
 			// Decrypt value if requested and it's a string
 			if decrypt {
 				if strValue, ok := value.(string); ok {
-					decryptedValue, err := cfg.DecryptValue(strValue)
-					if err != nil {
-						return fmt.Errorf("failed to decrypt value: %w", err)
+					decryptedValue, decryptErr := cfg.DecryptValue(strValue)
+					if decryptErr != nil {
+						return fmt.Errorf("failed to decrypt value: %w", decryptErr)
 					}
 					value = decryptedValue
 				} else {
-					return fmt.Errorf("can only decrypt string values")
+					return errors.New("can only decrypt string values")
 				}
 			}
 
@@ -73,7 +71,7 @@ func NewConfigGetCmd() *cobra.Command {
 	return cmd
 }
 
-// formatAndPrintValue formats and prints configuration values based on their type
+// formatAndPrintValue formats and prints configuration values based on their type.
 func formatAndPrintValue(cmd *cobra.Command, key string, value interface{}) {
 	switch v := value.(type) {
 	case string:
@@ -82,15 +80,34 @@ func formatAndPrintValue(cmd *cobra.Command, key string, value interface{}) {
 		cmd.Printf("%d\n", v)
 	case map[string]interface{}:
 		cmd.Printf("%s:\n", key)
-		for subKey, subValue := range v {
-			cmd.Printf("  %s: %v\n", subKey, subValue)
+		// Sort keys for deterministic output
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, subKey := range keys {
+			cmd.Printf("  %s: %v\n", subKey, v[subKey])
 		}
 	case map[string]config.PluginConfig:
 		cmd.Printf("%s:\n", key)
-		for pluginName, pluginConfig := range v {
+		// Sort plugin names for deterministic output
+		pluginNames := make([]string, 0, len(v))
+		for name := range v {
+			pluginNames = append(pluginNames, name)
+		}
+		sort.Strings(pluginNames)
+		for _, pluginName := range pluginNames {
+			pluginConfig := v[pluginName]
 			cmd.Printf("  %s:\n", pluginName)
-			for configKey, configValue := range pluginConfig.Config {
-				cmd.Printf("    %s: %v\n", configKey, configValue)
+			// Sort config keys for deterministic output
+			configKeys := make([]string, 0, len(pluginConfig.Config))
+			for k := range pluginConfig.Config {
+				configKeys = append(configKeys, k)
+			}
+			sort.Strings(configKeys)
+			for _, configKey := range configKeys {
+				cmd.Printf("    %s: %v\n", configKey, pluginConfig.Config[configKey])
 			}
 		}
 	default:

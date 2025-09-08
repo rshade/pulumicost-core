@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,120 +19,125 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	defaultPrecision     = 2
+	envKeySeparatorCount = 2
+	minPluginKeyParts    = 2
+	pbkdf2Iterations     = 100000
+	saltLength           = 32
+	masterKeySize        = 32
+)
+
 // Config represents the complete configuration structure.
 type Config struct {
 	// Legacy fields for backward compatibility
 	PluginDir string `yaml:"-" json:"-"`
 	SpecDir   string `yaml:"-" json:"-"`
-	
+
 	// New comprehensive configuration
-	Output  OutputConfig          `yaml:"output" json:"output"`
+	Output  OutputConfig            `yaml:"output"  json:"output"`
 	Plugins map[string]PluginConfig `yaml:"plugins" json:"plugins"`
-	Logging LoggingConfig         `yaml:"logging" json:"logging"`
-	
+	Logging LoggingConfig           `yaml:"logging" json:"logging"`
+
 	// Internal fields
 	configPath string
 	encKey     []byte
 }
 
-// OutputConfig defines output formatting preferences
+// OutputConfig defines output formatting preferences.
 type OutputConfig struct {
 	DefaultFormat string `yaml:"default_format" json:"default_format"`
-	Precision     int    `yaml:"precision" json:"precision"`
+	Precision     int    `yaml:"precision"      json:"precision"`
 }
 
-// PluginConfig defines plugin-specific configuration
+// PluginConfig defines plugin-specific configuration.
 type PluginConfig struct {
 	Config map[string]interface{} `yaml:",inline" json:",inline"`
 }
 
-// LoggingConfig defines logging preferences
+// LoggingConfig defines logging preferences.
 type LoggingConfig struct {
 	Level string `yaml:"level" json:"level"`
-	File  string `yaml:"file" json:"file"`
+	File  string `yaml:"file"  json:"file"`
 }
 
-// EncryptedValue represents an encrypted configuration value.
-type EncryptedValue struct {
-	Data string `yaml:"data" json:"data"`
-}
-
-// New creates a new configuration with defaults
+// New creates a new configuration with defaults.
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	
+
 	cfg := &Config{
 		// Legacy fields
 		PluginDir: filepath.Join(pulumicostDir, "plugins"),
 		SpecDir:   filepath.Join(pulumicostDir, "specs"),
-		
+
 		// New configuration
 		Output: OutputConfig{
 			DefaultFormat: "table",
-			Precision:     2,
+			Precision:     defaultPrecision,
 		},
 		Plugins: make(map[string]PluginConfig),
 		Logging: LoggingConfig{
 			Level: "info",
 			File:  filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
 		},
-		
+
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
 		encKey:     deriveKey(),
 	}
-	
+
 	// Load from file if exists
 	if err := cfg.Load(); err != nil {
-		if os.IsNotExist(err) {
+		switch {
+		case os.IsNotExist(err):
 			// Config file doesn't exist - this is fine, use defaults
-		} else if os.IsPermission(err) {
+		case os.IsPermission(err):
 			// Permission error - warn but continue
 			fmt.Fprintf(os.Stderr, "Warning: Permission denied reading config file: %v\n", err)
-		} else {
+		default:
 			// Likely a corrupted config file - warn about potential data corruption
 			fmt.Fprintf(os.Stderr, "Warning: Config file may be corrupted, using defaults: %v\n", err)
 		}
 	}
-	
+
 	// Apply environment variable overrides
 	cfg.applyEnvOverrides()
-	
+
 	return cfg
 }
 
-// Load loads configuration from the config file
+// Load loads configuration from the config file.
 func (c *Config) Load() error {
 	data, err := os.ReadFile(c.configPath)
 	if err != nil {
 		return err
 	}
-	
+
 	return yaml.Unmarshal(data, c)
 }
 
-// Save saves the current configuration to the config file
+// Save saves the current configuration to the config file.
 func (c *Config) Save() error {
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(c.configPath), 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	return os.WriteFile(c.configPath, data, 0600)
 }
 
-// Set sets a configuration value using dot notation
+// Set sets a configuration value using dot notation.
 func (c *Config) Set(key, value string) error {
 	parts := strings.Split(key, ".")
 	if len(parts) < 1 {
-		return fmt.Errorf("invalid key format")
+		return errors.New("invalid key format")
 	}
-	
+
 	switch parts[0] {
 	case "output":
 		return c.setOutputValue(parts[1:], value)
@@ -144,13 +150,13 @@ func (c *Config) Set(key, value string) error {
 	}
 }
 
-// Get gets a configuration value using dot notation
+// Get gets a configuration value using dot notation.
 func (c *Config) Get(key string) (interface{}, error) {
 	parts := strings.Split(key, ".")
 	if len(parts) < 1 {
-		return nil, fmt.Errorf("invalid key format")
+		return nil, errors.New("invalid key format")
 	}
-	
+
 	switch parts[0] {
 	case "output":
 		return c.getOutputValue(parts[1:])
@@ -163,7 +169,7 @@ func (c *Config) Get(key string) (interface{}, error) {
 	}
 }
 
-// List returns all configuration as a map
+// List returns all configuration as a map.
 func (c *Config) List() map[string]interface{} {
 	return map[string]interface{}{
 		"output":  c.Output,
@@ -172,7 +178,7 @@ func (c *Config) List() map[string]interface{} {
 	}
 }
 
-// Validate validates the configuration
+// Validate validates the configuration.
 func (c *Config) Validate() error {
 	// Validate output format
 	validFormats := []string{"table", "json", "ndjson"}
@@ -186,12 +192,12 @@ func (c *Config) Validate() error {
 	if !valid {
 		return fmt.Errorf("invalid output format: %s (must be one of: %v)", c.Output.DefaultFormat, validFormats)
 	}
-	
+
 	// Validate precision
 	if c.Output.Precision < 0 || c.Output.Precision > 10 {
 		return fmt.Errorf("invalid precision: %d (must be between 0 and 10)", c.Output.Precision)
 	}
-	
+
 	// Validate logging level
 	validLevels := []string{"debug", "info", "warn", "error"}
 	valid = false
@@ -204,49 +210,49 @@ func (c *Config) Validate() error {
 	if !valid {
 		return fmt.Errorf("invalid log level: %s (must be one of: %v)", c.Logging.Level, validLevels)
 	}
-	
+
 	// Validate logging file path (if specified)
 	if c.Logging.File != "" {
 		if !filepath.IsAbs(c.Logging.File) {
 			return fmt.Errorf("log file path must be absolute: %s", c.Logging.File)
 		}
-		
+
 		// Check if parent directory is accessible
 		logDir := filepath.Dir(c.Logging.File)
-		if _, err := os.Stat(logDir); err != nil && os.IsNotExist(err) {
+		if _, statErr := os.Stat(logDir); statErr != nil && os.IsNotExist(statErr) {
 			// Try to create the directory
-			if err := os.MkdirAll(logDir, 0700); err != nil {
-				return fmt.Errorf("cannot create log directory %s: %w", logDir, err)
+			if mkdirErr := os.MkdirAll(logDir, 0700); mkdirErr != nil {
+				return fmt.Errorf("cannot create log directory %s: %w", logDir, mkdirErr)
 			}
 		}
 	}
-	
+
 	// Validate plugin configurations
 	if err := c.validatePluginConfigurations(); err != nil {
 		return fmt.Errorf("plugin configuration validation failed: %w", err)
 	}
-	
+
 	return nil
 }
 
-// validatePluginConfigurations validates plugin-specific configurations
+// validatePluginConfigurations validates plugin-specific configurations.
 func (c *Config) validatePluginConfigurations() error {
 	for pluginName, pluginConfig := range c.Plugins {
 		// Validate plugin name (must be valid identifier)
 		if pluginName == "" {
-			return fmt.Errorf("plugin name cannot be empty")
+			return errors.New("plugin name cannot be empty")
 		}
-		
+
 		// Check for suspicious characters that might cause issues
 		for _, char := range pluginName {
-			if !((char >= 'a' && char <= 'z') || 
-				 (char >= 'A' && char <= 'Z') || 
-				 (char >= '0' && char <= '9') || 
-				 char == '-' || char == '_') {
+			if (char < 'a' || char > 'z') &&
+				(char < 'A' || char > 'Z') &&
+				(char < '0' || char > '9') &&
+				char != '-' && char != '_' {
 				return fmt.Errorf("plugin name contains invalid character: %s", pluginName)
 			}
 		}
-		
+
 		// Validate plugin configuration keys
 		for configKey := range pluginConfig.Config {
 			if configKey == "" {
@@ -254,68 +260,68 @@ func (c *Config) validatePluginConfigurations() error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
-// EncryptValue encrypts a sensitive value
+// EncryptValue encrypts a sensitive value.
 func (c *Config) EncryptValue(value string) (string, error) {
 	block, err := aes.NewCipher(c.encKey)
 	if err != nil {
 		return "", err
 	}
-	
+
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return "", err
 	}
-	
+
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = rand.Read(nonce); err != nil {
 		return "", err
 	}
-	
+
 	ciphertext := gcm.Seal(nonce, nonce, []byte(value), nil)
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// DecryptValue decrypts a sensitive value
+// DecryptValue decrypts a sensitive value.
 func (c *Config) DecryptValue(encryptedValue string) (string, error) {
 	data, err := base64.StdEncoding.DecodeString(encryptedValue)
 	if err != nil {
 		return "", err
 	}
-	
+
 	block, err := aes.NewCipher(c.encKey)
 	if err != nil {
 		return "", err
 	}
-	
+
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return "", err
 	}
-	
+
 	nonceSize := gcm.NonceSize()
 	if len(data) < nonceSize {
-		return "", fmt.Errorf("ciphertext too short")
+		return "", errors.New("ciphertext too short")
 	}
-	
+
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(plaintext), nil
 }
 
-// PluginPath returns the path for a specific plugin version (backward compatibility)
+// PluginPath returns the path for a specific plugin version (backward compatibility).
 func (c *Config) PluginPath(name, version string) string {
 	return filepath.Join(c.PluginDir, name, version)
 }
 
-// GetPluginConfig returns configuration for a specific plugin
+// GetPluginConfig returns configuration for a specific plugin.
 func (c *Config) GetPluginConfig(pluginName string) (map[string]interface{}, error) {
 	if plugin, exists := c.Plugins[pluginName]; exists {
 		return plugin.Config, nil
@@ -323,7 +329,7 @@ func (c *Config) GetPluginConfig(pluginName string) (map[string]interface{}, err
 	return make(map[string]interface{}), nil
 }
 
-// SetPluginConfig sets configuration for a specific plugin
+// SetPluginConfig sets configuration for a specific plugin.
 func (c *Config) SetPluginConfig(pluginName string, config map[string]interface{}) {
 	if c.Plugins == nil {
 		c.Plugins = make(map[string]PluginConfig)
@@ -331,7 +337,7 @@ func (c *Config) SetPluginConfig(pluginName string, config map[string]interface{
 	c.Plugins[pluginName] = PluginConfig{Config: config}
 }
 
-// applyEnvOverrides applies environment variable overrides
+// applyEnvOverrides applies environment variable overrides.
 func (c *Config) applyEnvOverrides() {
 	// Output overrides
 	if format := os.Getenv("PULUMICOST_OUTPUT_FORMAT"); format != "" {
@@ -342,7 +348,7 @@ func (c *Config) applyEnvOverrides() {
 			c.Output.Precision = p
 		}
 	}
-	
+
 	// Logging overrides
 	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
 		c.Logging.Level = level
@@ -350,56 +356,56 @@ func (c *Config) applyEnvOverrides() {
 	if logFile := os.Getenv("PULUMICOST_LOG_FILE"); logFile != "" {
 		c.Logging.File = logFile
 	}
-	
+
 	// Plugin overrides (PULUMICOST_PLUGIN_<NAME>_<KEY>=value)
 	// More efficient: only scan environment variables that start with our prefix
 	c.scanPluginEnvironmentVars()
 }
 
-// scanPluginEnvironmentVars efficiently scans for plugin-specific environment variables
+// scanPluginEnvironmentVars efficiently scans for plugin-specific environment variables.
 func (c *Config) scanPluginEnvironmentVars() {
 	const pluginPrefix = "PULUMICOST_PLUGIN_"
-	
+
 	for _, env := range os.Environ() {
 		if !strings.HasPrefix(env, pluginPrefix) {
 			continue
 		}
-		
-		parts := strings.SplitN(env, "=", 2)
-		if len(parts) != 2 {
+
+		parts := strings.SplitN(env, "=", envKeySeparatorCount)
+		if len(parts) != envKeySeparatorCount {
 			continue
 		}
-		
+
 		key := parts[0]
 		value := parts[1]
-		
+
 		// Extract plugin name and config key
 		keyParts := strings.Split(strings.TrimPrefix(key, pluginPrefix), "_")
-		if len(keyParts) < 2 {
+		if len(keyParts) < minPluginKeyParts {
 			continue
 		}
-		
+
 		pluginName := strings.ToLower(keyParts[0])
 		configKey := strings.ToLower(strings.Join(keyParts[1:], "_"))
-		
+
 		if c.Plugins == nil {
 			c.Plugins = make(map[string]PluginConfig)
 		}
-		
+
 		if _, exists := c.Plugins[pluginName]; !exists {
 			c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
 		}
-		
+
 		c.Plugins[pluginName].Config[configKey] = value
 	}
 }
 
-// Helper methods for setting values
+// Helper methods for setting values.
 func (c *Config) setOutputValue(parts []string, value string) error {
 	if len(parts) != 1 {
-		return fmt.Errorf("invalid output key")
+		return errors.New("invalid output key")
 	}
-	
+
 	switch parts[0] {
 	case "default_format":
 		c.Output.DefaultFormat = value
@@ -412,35 +418,35 @@ func (c *Config) setOutputValue(parts []string, value string) error {
 	default:
 		return fmt.Errorf("unknown output setting: %s", parts[0])
 	}
-	
+
 	return nil
 }
 
 func (c *Config) setPluginValue(parts []string, value string) error {
-	if len(parts) < 2 {
-		return fmt.Errorf("plugin key must be in format plugins.<name>.<key>")
+	if len(parts) < minPluginKeyParts {
+		return errors.New("plugin key must be in format plugins.<name>.<key>")
 	}
-	
+
 	pluginName := parts[0]
 	configKey := strings.Join(parts[1:], ".")
-	
+
 	if c.Plugins == nil {
 		c.Plugins = make(map[string]PluginConfig)
 	}
-	
+
 	if _, exists := c.Plugins[pluginName]; !exists {
 		c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
 	}
-	
+
 	c.Plugins[pluginName].Config[configKey] = value
 	return nil
 }
 
 func (c *Config) setLoggingValue(parts []string, value string) error {
 	if len(parts) != 1 {
-		return fmt.Errorf("invalid logging key")
+		return errors.New("invalid logging key")
 	}
-	
+
 	switch parts[0] {
 	case "level":
 		c.Logging.Level = value
@@ -449,16 +455,16 @@ func (c *Config) setLoggingValue(parts []string, value string) error {
 	default:
 		return fmt.Errorf("unknown logging setting: %s", parts[0])
 	}
-	
+
 	return nil
 }
 
-// Helper methods for getting values
+// Helper methods for getting values.
 func (c *Config) getOutputValue(parts []string) (interface{}, error) {
 	if len(parts) != 1 {
-		return nil, fmt.Errorf("invalid output key")
+		return nil, errors.New("invalid output key")
 	}
-	
+
 	switch parts[0] {
 	case "default_format":
 		return c.Output.DefaultFormat, nil
@@ -473,31 +479,31 @@ func (c *Config) getPluginValue(parts []string) (interface{}, error) {
 	if len(parts) < 1 {
 		return c.Plugins, nil
 	}
-	
+
 	pluginName := parts[0]
 	plugin, exists := c.Plugins[pluginName]
 	if !exists {
 		return nil, fmt.Errorf("plugin not found: %s", pluginName)
 	}
-	
+
 	if len(parts) == 1 {
 		return plugin.Config, nil
 	}
-	
+
 	configKey := strings.Join(parts[1:], ".")
 	value, exists := plugin.Config[configKey]
 	if !exists {
 		return nil, fmt.Errorf("config key not found: %s", configKey)
 	}
-	
+
 	return value, nil
 }
 
 func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	if len(parts) != 1 {
-		return nil, fmt.Errorf("invalid logging key")
+		return nil, errors.New("invalid logging key")
 	}
-	
+
 	switch parts[0] {
 	case "level":
 		return c.Logging.Level, nil
@@ -508,47 +514,70 @@ func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	}
 }
 
-// deriveKey derives an encryption key from machine-specific data with proper entropy
+// deriveKey derives an encryption key from machine-specific data with proper entropy.
 func deriveKey() []byte {
 	homeDir, _ := os.UserHomeDir()
-	keyFilePath := filepath.Join(homeDir, ".pulumicost", ".keydata")
-	
-	// Try to load existing salt from file
-	salt := loadOrCreateSalt(keyFilePath)
-	
-	// Gather machine-specific entropy
-	var entropy strings.Builder
-	
-	// Basic identifiers (less predictable than previous version)
-	if hostname, err := os.Hostname(); err == nil {
-		entropy.WriteString(hostname)
+	masterKeyPath := filepath.Join(homeDir, ".pulumicost", ".masterkey")
+
+	// First try to load or create a master key (secure approach)
+	if key, err := loadOrCreateMasterKey(masterKeyPath); err == nil {
+		return key
 	}
-	
+
+	// LAST-RESORT fallback: retain legacy PBKDF2 path for compatibility,
+	// but warn loudly. Consider removing this fallback in a future release.
+	fmt.Fprintln(os.Stderr, "warning: falling back to weak derived key; unable to persist master key")
+
+	keyFilePath := filepath.Join(homeDir, ".pulumicost", ".keydata")
+	salt := loadOrCreateSalt(keyFilePath)
+
+	// Simplified entropy gathering for fallback
+	var entropy strings.Builder
+	entropy.WriteString(runtime.GOOS)
+	entropy.WriteString(runtime.GOARCH)
+	entropy.WriteString(homeDir)
 	if user := getUserIdentifier(); user != "" {
 		entropy.WriteString(user)
 	}
-	
-	// Add OS and architecture information
-	entropy.WriteString(runtime.GOOS)
-	entropy.WriteString(runtime.GOARCH)
-	
-	// Add home directory path as additional entropy
-	entropy.WriteString(homeDir)
-	
-	// Use PBKDF2 with high iteration count for key derivation
-	key := pbkdf2.Key([]byte(entropy.String()), salt, 100000, 32, sha256.New)
-	return key
+
+	return pbkdf2.Key([]byte(entropy.String()), salt, pbkdf2Iterations, saltLength, sha256.New)
 }
 
-// loadOrCreateSalt loads an existing salt or creates a new one
+// loadOrCreateMasterKey stores/loads a random 32-byte key with strict perms.
+func loadOrCreateMasterKey(path string) ([]byte, error) {
+	// Try to read existing master key
+	if data, err := os.ReadFile(path); err == nil && len(data) == masterKeySize {
+		return data, nil
+	}
+
+	// Generate new random master key
+	key := make([]byte, masterKeySize)
+	if _, err := io.ReadFull(rand.Reader, key); err != nil {
+		return nil, fmt.Errorf("generate master key: %w", err)
+	}
+
+	// Create directory with strict permissions
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return nil, fmt.Errorf("mkdir master key dir: %w", err)
+	}
+
+	// Write master key with strict permissions
+	if err := os.WriteFile(path, key, 0600); err != nil {
+		return nil, fmt.Errorf("write master key: %w", err)
+	}
+
+	return key, nil
+}
+
+// loadOrCreateSalt loads an existing salt or creates a new one.
 func loadOrCreateSalt(keyFilePath string) []byte {
 	// Try to read existing salt
 	if data, err := os.ReadFile(keyFilePath); err == nil && len(data) >= 32 {
 		return data[:32] // Use first 32 bytes as salt
 	}
-	
+
 	// Create new random salt
-	salt := make([]byte, 32)
+	salt := make([]byte, saltLength)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		// Fallback to deterministic salt if random generation fails
 		// This maintains backward compatibility but is less secure
@@ -559,18 +588,30 @@ func loadOrCreateSalt(keyFilePath string) []byte {
 		copy(salt, hash[:])
 	} else {
 		// Save the randomly generated salt for future use
-		if err := os.MkdirAll(filepath.Dir(keyFilePath), 0700); err != nil {
+		if mkdirErr := os.MkdirAll(filepath.Dir(keyFilePath), 0700); mkdirErr != nil {
 			// Best-effort: log to stderr but continue using in-memory salt.
-			fmt.Fprintf(os.Stderr, "warning: failed to create key dir: %v\n", err)
-		} else if err := os.WriteFile(keyFilePath, salt, 0600); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: failed to persist key salt: %v\n", err)
+			fmt.Fprintf(os.Stderr, "warning: failed to create key dir: %v\n", mkdirErr)
+		} else if writeErr := os.WriteFile(keyFilePath, salt, 0600); writeErr != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to persist key salt: %v\n", writeErr)
 		}
 	}
-	
+
 	return salt
 }
 
-// getUserIdentifier gets a user identifier across platforms
+// GetOutputFormat returns the output format to use, preferring user choice over config default.
+func GetOutputFormat(userChoice string) string {
+	// If user provided a format, use it
+	if userChoice != "" {
+		return userChoice
+	}
+
+	// Try to get default from configuration (use singleton to avoid side effects)
+	cfg := GetGlobalConfig()
+	return cfg.Output.DefaultFormat
+}
+
+// getUserIdentifier gets a user identifier across platforms.
 func getUserIdentifier() string {
 	// Try different environment variables for cross-platform compatibility
 	for _, envVar := range []string{"USER", "USERNAME", "LOGNAME"} {
@@ -578,11 +619,11 @@ func getUserIdentifier() string {
 			return user
 		}
 	}
-	
+
 	// Fallback to user home directory path
 	if homeDir, err := os.UserHomeDir(); err == nil {
 		return filepath.Base(homeDir)
 	}
-	
+
 	return "unknown"
 }

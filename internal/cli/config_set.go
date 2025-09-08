@@ -28,15 +28,15 @@ func NewConfigSetCmd() *cobra.Command {
   
   # Set encrypted credential (sensitive values)
   pulumicost config set plugins.aws.secret_key "mysecret" --encrypt`,
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2), //nolint:mnd // Exactly 2 args: key and value
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]
-			
+
 			cfg := config.New()
-			
+
 			var displayValue string
-			
+
 			// Encrypt value if requested
 			if encrypt {
 				encryptedValue, err := cfg.EncryptValue(value)
@@ -45,33 +45,33 @@ func NewConfigSetCmd() *cobra.Command {
 				}
 				value = encryptedValue
 				displayValue = "[encrypted]"
-				cmd.Printf("Value encrypted before storage\n")
+				fmt.Fprintln(cmd.ErrOrStderr(), "Value encrypted before storage")
 			} else {
 				displayValue = value
 			}
-			
+
 			// Set the value
 			if err := cfg.Set(key, value); err != nil {
 				return fmt.Errorf("failed to set config value: %w", err)
 			}
-			
+
 			// Validate the configuration
 			if err := cfg.Validate(); err != nil {
 				return fmt.Errorf("configuration validation failed: %w", err)
 			}
-			
+
 			// Save the configuration
 			if err := cfg.Save(); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)
 			}
-			
+
 			cmd.Printf("Configuration updated: %s = %s\n", key, displayValue)
-			
+
 			return nil
 		},
 	}
-	
+
 	cmd.Flags().BoolVar(&encrypt, "encrypt", false, "encrypt the value before storing (for sensitive data)")
-	
+
 	return cmd
 }

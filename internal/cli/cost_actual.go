@@ -108,11 +108,12 @@ func NewCostActualCmd() *cobra.Command {
 	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
 	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
-	
+
 	// Use configuration default if no output format specified
 	defaultFormat := config.GetDefaultOutputFormat()
 	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
-	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, or filter by tag:key=value")
+	cmd.Flags().
+		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, or filter by tag:key=value")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 	_ = cmd.MarkFlagRequired("from")
@@ -142,7 +143,6 @@ func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
 		time.RFC3339,
-		"2006-01-02T15:04:05Z",
 	}
 
 	for _, layout := range layouts {

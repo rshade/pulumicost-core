@@ -6,67 +6,76 @@ import (
 	"sync"
 )
 
-// GlobalConfig holds the global configuration instance
-var GlobalConfig *Config
-var globalConfigOnce sync.Once
+// GlobalConfig holds the global configuration instance.
+var GlobalConfig *Config       //nolint:gochecknoglobals // Singleton pattern for configuration
+var globalConfigOnce sync.Once //nolint:gochecknoglobals // Singleton pattern for configuration
 
-// InitGlobalConfig initializes the global configuration
+// InitGlobalConfig initializes the global configuration.
 func InitGlobalConfig() {
 	globalConfigOnce.Do(func() {
 		GlobalConfig = New()
 	})
 }
 
-// GetGlobalConfig returns the global configuration, initializing it if needed
+// ResetGlobalConfigForTest resets the global config for testing purposes.
+func ResetGlobalConfigForTest() {
+	GlobalConfig = nil
+	globalConfigOnce = sync.Once{}
+}
+
+// GetGlobalConfig returns the global configuration, initializing it if needed.
 func GetGlobalConfig() *Config {
 	InitGlobalConfig()
 	return GlobalConfig
 }
 
-// GetDefaultOutputFormat returns the configured default output format
+// GetDefaultOutputFormat returns the configured default output format.
 func GetDefaultOutputFormat() string {
 	cfg := GetGlobalConfig()
 	return cfg.Output.DefaultFormat
 }
 
-// GetOutputPrecision returns the configured output precision
+// GetOutputPrecision returns the configured output precision.
 func GetOutputPrecision() int {
 	cfg := GetGlobalConfig()
 	return cfg.Output.Precision
 }
 
-// GetLogLevel returns the configured log level
+// GetLogLevel returns the configured log level.
 func GetLogLevel() string {
 	cfg := GetGlobalConfig()
 	return cfg.Logging.Level
 }
 
-// GetLogFile returns the configured log file path
+// GetLogFile returns the configured log file path.
 func GetLogFile() string {
 	cfg := GetGlobalConfig()
 	return cfg.Logging.File
 }
 
-// GetPluginConfiguration returns configuration for a specific plugin
+// GetPluginConfiguration returns configuration for a specific plugin.
 func GetPluginConfiguration(pluginName string) (map[string]interface{}, error) {
 	cfg := GetGlobalConfig()
 	return cfg.GetPluginConfig(pluginName)
 }
 
-// EnsureConfigDir ensures the pulumicost configuration directory exists
+// EnsureConfigDir ensures the pulumicost configuration directory exists.
 func EnsureConfigDir() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	
+
 	configDir := filepath.Join(homeDir, ".pulumicost")
-	return os.MkdirAll(configDir, 0755)
+	return os.MkdirAll(configDir, 0700)
 }
 
-// EnsureLogDir ensures the pulumicost log directory exists
+// EnsureLogDir ensures the pulumicost log directory exists.
 func EnsureLogDir() error {
 	cfg := GetGlobalConfig()
+	if cfg.Logging.File == "" {
+		return nil
+	}
 	logDir := filepath.Dir(cfg.Logging.File)
-	return os.MkdirAll(logDir, 0755)
+	return os.MkdirAll(logDir, 0700)
 }

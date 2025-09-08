@@ -20,14 +20,9 @@ func NewConfigListCmd() *cobra.Command {
   
   # List configuration in JSON format
   pulumicost config list --format json`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			// config.New() already loads from disk and applies env overrides
 			cfg := config.New()
-
-			// Load existing config
-			if err := cfg.Load(); err != nil {
-				return fmt.Errorf("failed to load config: %w", err)
-			}
 
 			// Get all configuration
 			allConfig := cfg.List()
@@ -46,7 +41,7 @@ func NewConfigListCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to marshal config to YAML: %w", err)
 				}
-				cmd.Printf("%s", yamlData)
+				cmd.Printf("%s\n", yamlData)
 
 			default:
 				return fmt.Errorf("unsupported format: %s (supported: json, yaml, yml)", format)
