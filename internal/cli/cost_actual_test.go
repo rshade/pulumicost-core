@@ -110,7 +110,7 @@ func TestCostActualCmdFlags(t *testing.T) {
 	groupByFlag := cmd.Flags().Lookup("group-by")
 	assert.NotNil(t, groupByFlag)
 	assert.Equal(t, "string", groupByFlag.Value.Type())
-	assert.Contains(t, groupByFlag.Usage, "resource, type, or provider")
+	assert.Contains(t, groupByFlag.Usage, "resource, type, provider")
 }
 
 func TestCostActualCmdHelp(t *testing.T) {

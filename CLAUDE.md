@@ -29,6 +29,11 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
    - Orchestrates between plugins and local pricing specs
    - Handles resource mapping and cost aggregation  
    - Supports multiple output formats (table, JSON, NDJSON)
+   - **Actual Cost Pipeline**: Advanced cost querying with time ranges, filtering, and grouping
+     - `GetActualCostWithOptions()` - Flexible actual cost queries with filtering
+     - Tag-based filtering using `tag:key=value` syntax
+     - Grouping by resource, type, provider, or date dimensions
+     - Daily and monthly cost aggregation
 
 3. **Plugin Host System** (`internal/pluginhost/`) - gRPC plugin management:
    - `Client` - Wraps plugin gRPC connections
@@ -160,11 +165,29 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
 ./bin/pulumicost plugin validate
 ```
 
+### ✅ CORE-5 Completed - Actual Cost Pipeline
+- **Status**: Comprehensive actual cost pipeline implemented with advanced features
+- **Implementation**: PR #36 - Added cost aggregation, filtering, and grouping capabilities
+- **Key Features**:
+  - Time range queries with flexible date parsing ("2006-01-02", RFC3339)
+  - Resource filtering by tags/metadata with `tag:key=value` syntax
+  - Cost aggregation with daily/monthly breakdowns
+  - Grouping by resource, type, provider, or date dimensions
+  - Multiple output formats (table, JSON, NDJSON)
+  - Comprehensive cost reporting with actual vs projected comparisons
+
+### Architecture Changes
+- **New Engine Method**: `GetActualCostWithOptions()` with flexible querying
+- **Enhanced Data Structures**: `ActualCostRequest` with advanced filtering options
+- **Tag Matching**: `matchesTags()` helper for resource filtering
+- **Cost Aggregation**: Daily/monthly cost breakdown logic
+- **Output Enhancement**: Rich table formatting for actual cost results
+
 ### Next Steps Unlocked
-With SPEC-1 complete, the following work can now proceed:
+With SPEC-1 and CORE-5 complete, the following work can now proceed:
 - **CORE-3**: Plugin Host Bootstrap (depends on SPEC-1) 
 - **PLUG-KC-1**: Kubecost API Client (depends on SPEC-1)
-- **CORE-5**: Actual Cost Pipeline (depends on SPEC-1 + PLUG-KC-1)
+- Integration testing with actual plugins
 
 ## CI/CD Pipeline
 
@@ -271,6 +294,9 @@ go tool cover -func=coverage.out | grep total  # Check total coverage
 
 # Development testing with examples
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/pulumicost cost actual --start-date 2024-01-01 --end-date 2024-01-31
+./bin/pulumicost cost actual --group-by resource --filter "tag:env=prod"
+./bin/pulumicost cost actual --output json --start-date 2024-01-01T00:00:00Z
 ./bin/pulumicost plugin list
 ./bin/pulumicost plugin validate
 ```
@@ -367,7 +393,17 @@ gh workflow validate .github/workflows/ci.yml
 
 Use the provided example files:
 ```bash
+# Projected cost calculation
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+
+# Actual cost queries with time ranges
+./bin/pulumicost cost actual --start-date 2024-01-01 --end-date 2024-01-31
+
+# Actual cost with filtering and grouping
+./bin/pulumicost cost actual --group-by resource --filter "tag:env=prod" --output table
+./bin/pulumicost cost actual --group-by date --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
+
+# Plugin management
 ./bin/pulumicost plugin list
 ./bin/pulumicost plugin validate
 ```
@@ -389,6 +425,12 @@ The engine package orchestrates cost calculations between plugins and specs:
 - Supports three output formats: table, JSON, NDJSON
 - Uses `hoursPerMonth = 730` for monthly calculations
 - Always returns some result, even if placeholder
+- **Actual Cost Pipeline Features**:
+  - `GetActualCostWithOptions()` - Advanced querying with time ranges and filters
+  - Resource filtering with `matchesTags()` helper for tag-based filtering
+  - Cost aggregation logic for daily/monthly breakdowns
+  - Grouping support (resource, type, provider, date)
+  - Multiple date format parsing ("2006-01-02", RFC3339)
 - See `internal/engine/CLAUDE.md` for detailed calculation flows
 
 ### internal/pluginhost
