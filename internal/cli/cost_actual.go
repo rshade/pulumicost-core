@@ -108,7 +108,10 @@ func NewCostActualCmd() *cobra.Command {
 	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
 	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
-	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, or ndjson")
+
+	// Use configuration default if no output format specified
+	defaultFormat := config.GetDefaultOutputFormat()
+	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().
 		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, or filter by tag:key=value")
 
