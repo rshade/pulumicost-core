@@ -1,28 +1,47 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
+	"errors"
+	"fmt"
+
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/spf13/cobra"
 )
 
-// NewConfigInitCmd creates the 'config init' command
 func NewConfigInitCmd() *cobra.Command {
+	var force bool
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize configuration file with defaults",
-		Long:  "Create a default configuration file at ~/.pulumicost/config.yaml if it doesn't already exist.",
-		Example: `  # Initialize configuration with defaults
-  pulumicost config init`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := config.InitConfig(); err != nil {
-				return err
+		Short: "Initialize configuration file with default values",
+		Long:  "Creates a new configuration file at ~/.pulumicost/config.yaml with default values.",
+		Example: `  # Create default configuration
+  pulumicost config init
+  
+  # Create default configuration, overwriting existing
+  pulumicost config init --force`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cfg := config.New()
+
+			// Check if config already exists and force isn't set
+			if !force {
+				if err := cfg.Load(); err == nil {
+					return errors.New("configuration file already exists, use --force to overwrite")
+				}
 			}
-			
-			cfg := config.DefaultConfig()
-			cmd.Printf("Configuration initialized at %s\n", cfg.ConfigFile)
+
+			// Save the default configuration
+			if err := cfg.Save(); err != nil {
+				return fmt.Errorf("failed to save configuration: %w", err)
+			}
+
+			cmd.Printf("Configuration initialized successfully\n")
+			cmd.Printf("Configuration file: ~/.pulumicost/config.yaml\n")
+
 			return nil
 		},
 	}
-	
+
+	cmd.Flags().BoolVar(&force, "force", false, "overwrite existing configuration file")
+
 	return cmd
 }

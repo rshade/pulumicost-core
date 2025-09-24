@@ -1,79 +1,116 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
-	"strings"
-	
-	"github.com/spf13/cobra"
+	"sort"
+
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/spf13/cobra"
 )
 
-// NewConfigGetCmd creates the 'config get' command
 func NewConfigGetCmd() *cobra.Command {
-	var isCredential bool
-	
+	var decrypt bool
 	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a configuration value",
-		Long: `Get a configuration value using dot notation.
-
-Configuration keys:
-  output.default_format  - Output format
-  output.precision       - Decimal precision
-  logging.level          - Log level
-  logging.file           - Log file path
-  plugins.<name>.region  - Plugin region setting
-  plugins.<name>.profile - Plugin profile setting
-  
-Use --credential flag to retrieve encrypted credentials.`,
+		Long:  "Gets a configuration value using dot notation from ~/.pulumicost/config.yaml.",
 		Example: `  # Get output format
   pulumicost config get output.default_format
   
-  # Get AWS plugin region
-  pulumicost config get plugins.aws.region
+  # Get output precision
+  pulumicost config get output.precision
   
-  # Get encrypted credential
-  pulumicost config get plugins.aws.access_key --credential`,
+  # Get plugin configuration
+  pulumicost config get plugins.aws.region
+  pulumicost config get plugins.aws
+  
+  # Get all plugins
+  pulumicost config get plugins
+  
+  # Get logging level
+  pulumicost config get logging.level
+  
+  # Decrypt encrypted value
+  pulumicost config get plugins.aws.secret_key --decrypt`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
-			
-			cfg, err := config.Load()
+
+			// config.New() already loads from disk and applies env overrides
+			cfg := config.New()
+
+			// Get the value
+			value, err := cfg.Get(key)
 			if err != nil {
-				return fmt.Errorf("loading config: %w", err)
+				return fmt.Errorf("failed to get config value: %w", err)
 			}
-			
-			// Handle credential retrieval
-			if isCredential {
-				parts := strings.Split(key, ".")
-				if len(parts) < 3 || parts[0] != "plugins" {
-					return fmt.Errorf("credential key must be in format: plugins.<name>.<key>")
+
+			// Decrypt value if requested and it's a string
+			if decrypt {
+				if strValue, ok := value.(string); ok {
+					decryptedValue, decryptErr := cfg.DecryptValue(strValue)
+					if decryptErr != nil {
+						return fmt.Errorf("failed to decrypt value: %w", decryptErr)
+					}
+					value = decryptedValue
+				} else {
+					return errors.New("can only decrypt string values")
 				}
-				
-				pluginName := parts[1]
-				credentialKey := strings.Join(parts[2:], ".")
-				
-				value, err := cfg.GetCredential(pluginName, credentialKey)
-				if err != nil {
-					return fmt.Errorf("getting credential: %w", err)
-				}
-				
-				cmd.Println(value)
-			} else {
-				// Handle regular configuration retrieval
-				value, err := cfg.Get(key)
-				if err != nil {
-					return fmt.Errorf("getting config value: %w", err)
-				}
-				
-				cmd.Printf("%v\n", value)
 			}
-			
+
+			// Format and output the value
+			formatAndPrintValue(cmd, key, value)
+
 			return nil
 		},
 	}
-	
-	cmd.Flags().BoolVar(&isCredential, "credential", false, "Retrieve value as a decrypted credential")
-	
+
+	cmd.Flags().BoolVar(&decrypt, "decrypt", false, "decrypt the value if it's encrypted")
+
 	return cmd
+}
+
+// formatAndPrintValue formats and prints configuration values based on their type.
+func formatAndPrintValue(cmd *cobra.Command, key string, value interface{}) {
+	switch v := value.(type) {
+	case string:
+		cmd.Printf("%s\n", v)
+	case int:
+		cmd.Printf("%d\n", v)
+	case map[string]interface{}:
+		cmd.Printf("%s:\n", key)
+		// Sort keys for deterministic output
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, subKey := range keys {
+			cmd.Printf("  %s: %v\n", subKey, v[subKey])
+		}
+	case map[string]config.PluginConfig:
+		cmd.Printf("%s:\n", key)
+		// Sort plugin names for deterministic output
+		pluginNames := make([]string, 0, len(v))
+		for name := range v {
+			pluginNames = append(pluginNames, name)
+		}
+		sort.Strings(pluginNames)
+		for _, pluginName := range pluginNames {
+			pluginConfig := v[pluginName]
+			cmd.Printf("  %s:\n", pluginName)
+			// Sort config keys for deterministic output
+			configKeys := make([]string, 0, len(pluginConfig.Config))
+			for k := range pluginConfig.Config {
+				configKeys = append(configKeys, k)
+			}
+			sort.Strings(configKeys)
+			for _, configKey := range configKeys {
+				cmd.Printf("    %s: %v\n", configKey, pluginConfig.Config[configKey])
+			}
+		}
+	default:
+		cmd.Printf("%v\n", v)
+	}
 }

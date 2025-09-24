@@ -7,46 +7,49 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewConfigValidateCmd creates the 'config validate' command
 func NewConfigValidateCmd() *cobra.Command {
+	var verbose bool
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate configuration file",
-		Long: `Validate the configuration file for syntax and semantic errors.
-
-This command checks:
-- YAML syntax validity
-- Configuration schema compliance
-- Value range validation
-- Required field presence`,
+		Long:  "Validates the configuration file at ~/.pulumicost/config.yaml for syntax and semantic correctness.",
 		Example: `  # Validate current configuration
-  pulumicost config validate`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
-			if err != nil {
-				return fmt.Errorf("loading config: %w", err)
-			}
-			
+  pulumicost config validate
+
+  # Validate and show detailed information
+  pulumicost config validate --verbose`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cfg := config.New()
+
 			// Validate configuration
 			if err := cfg.Validate(); err != nil {
-				cmd.Printf("❌ Configuration validation failed: %v\n", err)
-				return err
+				return fmt.Errorf("configuration validation failed: %w", err)
 			}
-			
-			cmd.Println("✅ Configuration is valid")
-			
-			// Show configuration file location
-			cmd.Printf("Configuration file: %s\n", cfg.ConfigFile)
-			
-			// Show summary of configuration
-			configMap := cfg.ListAll()
-			if len(configMap) > 0 {
-				cmd.Printf("Found %d configuration settings\n", len(configMap))
+
+			cmd.Printf("✅ Configuration is valid\n")
+
+			if verbose {
+				cmd.Printf("\nConfiguration details:\n")
+				cmd.Printf("- Output format: %s\n", cfg.Output.DefaultFormat)
+				cmd.Printf("- Output precision: %d\n", cfg.Output.Precision)
+				cmd.Printf("- Logging level: %s\n", cfg.Logging.Level)
+				cmd.Printf("- Log file: %s\n", cfg.Logging.File)
+
+				if len(cfg.Plugins) > 0 {
+					cmd.Printf("- Configured plugins: %d\n", len(cfg.Plugins))
+					for pluginName := range cfg.Plugins {
+						cmd.Printf("  - %s\n", pluginName)
+					}
+				} else {
+					cmd.Printf("- No plugins configured\n")
+				}
 			}
-			
+
 			return nil
 		},
 	}
-	
+
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "show detailed validation information")
+
 	return cmd
 }

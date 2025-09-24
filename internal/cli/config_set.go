@@ -2,82 +2,76 @@ package cli
 
 import (
 	"fmt"
-	"strings"
-	
-	"github.com/spf13/cobra"
+
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/spf13/cobra"
 )
 
-// NewConfigSetCmd creates the 'config set' command
 func NewConfigSetCmd() *cobra.Command {
-	var isCredential bool
-	
+	var encrypt bool
 	cmd := &cobra.Command{
 		Use:   "set <key> <value>",
 		Short: "Set a configuration value",
-		Long: `Set a configuration value using dot notation.
-
-Configuration keys:
-  output.default_format  - Output format (table, json, ndjson)
-  output.precision       - Decimal precision for numbers (0-10)
-  logging.level          - Log level (debug, info, warn, error)  
-  logging.file           - Log file path
-  plugins.<name>.region  - Plugin region setting
-  plugins.<name>.profile - Plugin profile setting
-  
-Credentials are encrypted and stored securely.`,
-		Example: `  # Set output format to JSON
+		Long:  "Sets a configuration value using dot notation. The configuration will be saved to ~/.pulumicost/config.yaml.",
+		Example: `  # Set output format
   pulumicost config set output.default_format json
   
-  # Set AWS plugin region
-  pulumicost config set plugins.aws.region us-west-2
+  # Set output precision
+  pulumicost config set output.precision 4
   
-  # Set encrypted credential
-  pulumicost config set plugins.aws.access_key AKIA... --credential`,
-		Args: cobra.ExactArgs(2),
+  # Set plugin configuration
+  pulumicost config set plugins.aws.region us-west-2
+  pulumicost config set plugins.aws.profile production
+  
+  # Set logging level
+  pulumicost config set logging.level debug
+  
+  # Set encrypted credential (sensitive values)
+  pulumicost config set plugins.aws.secret_key "mysecret" --encrypt`,
+		Args: cobra.ExactArgs(2), //nolint:mnd // Exactly 2 args: key and value
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]
-			
-			cfg, err := config.Load()
-			if err != nil {
-				return fmt.Errorf("loading config: %w", err)
-			}
-			
-			// Handle credential setting
-			if isCredential {
-				parts := strings.Split(key, ".")
-				if len(parts) < 3 || parts[0] != "plugins" {
-					return fmt.Errorf("credential key must be in format: plugins.<name>.<key>")
+
+			cfg := config.New()
+
+			var displayValue string
+
+			// Encrypt value if requested
+			if encrypt {
+				encryptedValue, err := cfg.EncryptValue(value)
+				if err != nil {
+					return fmt.Errorf("failed to encrypt value: %w", err)
 				}
-				
-				pluginName := parts[1]
-				credentialKey := strings.Join(parts[2:], ".")
-				
-				if err := cfg.SetCredential(pluginName, credentialKey, value); err != nil {
-					return fmt.Errorf("setting credential: %w", err)
-				}
-				
-				cmd.Printf("Credential %s set for plugin %s (encrypted)\n", credentialKey, pluginName)
+				value = encryptedValue
+				displayValue = "[encrypted]"
+				fmt.Fprintln(cmd.ErrOrStderr(), "Value encrypted before storage")
 			} else {
-				// Handle regular configuration setting
-				if err := cfg.Set(key, value); err != nil {
-					return fmt.Errorf("setting config value: %w", err)
-				}
-				
-				cmd.Printf("Configuration %s set to %s\n", key, value)
+				displayValue = value
 			}
-			
-			// Save configuration
+
+			// Set the value
+			if err := cfg.Set(key, value); err != nil {
+				return fmt.Errorf("failed to set config value: %w", err)
+			}
+
+			// Validate the configuration
+			if err := cfg.Validate(); err != nil {
+				return fmt.Errorf("configuration validation failed: %w", err)
+			}
+
+			// Save the configuration
 			if err := cfg.Save(); err != nil {
-				return fmt.Errorf("saving config: %w", err)
+				return fmt.Errorf("failed to save config: %w", err)
 			}
-			
+
+			cmd.Printf("Configuration updated: %s = %s\n", key, displayValue)
+
 			return nil
 		},
 	}
-	
-	cmd.Flags().BoolVar(&isCredential, "credential", false, "Encrypt and store value as a credential")
-	
+
+	cmd.Flags().BoolVar(&encrypt, "encrypt", false, "encrypt the value before storing (for sensitive data)")
+
 	return cmd
 }

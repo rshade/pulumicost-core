@@ -1,212 +1,111 @@
+//nolint:testpackage,usetesting // Test style preferences are acceptable
 package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetOutputFormat(t *testing.T) {
-	// Test CLI flag takes precedence
-	result := GetOutputFormat("json")
-	assert.Equal(t, "json", result)
-	
-	// Test environment variable fallback
-	os.Setenv("PULUMICOST_OUTPUT_FORMAT", "ndjson")
-	defer os.Unsetenv("PULUMICOST_OUTPUT_FORMAT")
-	
-	result = GetOutputFormat("")
-	assert.Equal(t, "ndjson", result)
-	
-	// Test config file fallback
-	os.Unsetenv("PULUMICOST_OUTPUT_FORMAT")
-	tempDir := t.TempDir()
-	setupTestConfigFile(t, tempDir, map[string]interface{}{
-		"output": map[string]interface{}{
-			"default_format": "json",
-		},
-	})
-	
-	result = GetOutputFormat("")
-	assert.Equal(t, "json", result)
+func TestGlobalConfig(t *testing.T) {
+	// Reset global config
+	ResetGlobalConfigForTest()
+
+	// Test GetGlobalConfig initializes if needed
+	cfg := GetGlobalConfig()
+	assert.NotNil(t, cfg)
+	assert.Equal(t, "table", cfg.Output.DefaultFormat)
+
+	// Test that subsequent calls return the same instance
+	cfg2 := GetGlobalConfig()
+	assert.Same(t, cfg, cfg2)
+
+	// Test ResetGlobalConfigForTest resets the instance
+	ResetGlobalConfigForTest()
+	cfg3 := GetGlobalConfig()
+	assert.NotSame(t, cfg, cfg3)
 }
 
-func TestGetOutputPrecision(t *testing.T) {
-	// Test environment variable
-	os.Setenv("PULUMICOST_OUTPUT_PRECISION", "5")
-	defer os.Unsetenv("PULUMICOST_OUTPUT_PRECISION")
-	
-	result := GetOutputPrecision()
-	assert.Equal(t, 5, result)
-	
-	// Test config file fallback
-	os.Unsetenv("PULUMICOST_OUTPUT_PRECISION")
-	tempDir := t.TempDir()
-	setupTestConfigFile(t, tempDir, map[string]interface{}{
-		"output": map[string]interface{}{
-			"precision": 3,
-		},
-	})
-	
-	result = GetOutputPrecision()
-	assert.Equal(t, 3, result)
-}
+func TestConfigGetters(t *testing.T) {
+	// Reset and initialize with test values
+	ResetGlobalConfigForTest()
+	cfg := GetGlobalConfig()
+	cfg.Output.DefaultFormat = "json"
+	cfg.Output.Precision = 4
+	cfg.Logging.Level = "debug"
+	cfg.Logging.File = "/tmp/test.log"
+	cfg.SetPluginConfig("test", map[string]interface{}{"key": "value"})
 
-func TestGetPluginConfig(t *testing.T) {
-	tempDir := t.TempDir()
-	setupTestConfigFile(t, tempDir, map[string]interface{}{
-		"plugins": map[string]interface{}{
-			"aws": map[string]interface{}{
-				"region":  "us-west-2",
-				"profile": "production",
-			},
-		},
-	})
-	
-	// Test existing plugin
-	pluginConfig, err := GetPluginConfig("aws")
+	// Test getter functions
+	assert.Equal(t, "json", GetDefaultOutputFormat())
+	assert.Equal(t, 4, GetOutputPrecision())
+	assert.Equal(t, "debug", GetLogLevel())
+	assert.Equal(t, "/tmp/test.log", GetLogFile())
+
+	pluginConfig, err := GetPluginConfiguration("test")
 	require.NoError(t, err)
-	assert.Equal(t, "us-west-2", pluginConfig.Region)
-	assert.Equal(t, "production", pluginConfig.Profile)
-	
-	// Test non-existing plugin returns empty config
-	pluginConfig, err = GetPluginConfig("nonexistent")
+	assert.Equal(t, "value", pluginConfig["key"])
+
+	// Test non-existent plugin
+	pluginConfig, err = GetPluginConfiguration("nonexistent")
 	require.NoError(t, err)
-	assert.Empty(t, pluginConfig.Region)
-	assert.NotNil(t, pluginConfig.Credentials)
-	assert.NotNil(t, pluginConfig.Settings)
+	assert.Empty(t, pluginConfig)
 }
 
-func TestIsDebugMode(t *testing.T) {
-	// Test environment variable
-	os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-	defer os.Unsetenv("PULUMICOST_LOG_LEVEL")
-	
-	result := IsDebugMode()
-	assert.True(t, result)
-	
-	os.Setenv("PULUMICOST_LOG_LEVEL", "DEBUG")
-	result = IsDebugMode()
-	assert.True(t, result)
-	
-	os.Setenv("PULUMICOST_LOG_LEVEL", "info")
-	result = IsDebugMode()
-	assert.False(t, result)
-	
-	// Test config file fallback
-	os.Unsetenv("PULUMICOST_LOG_LEVEL")
-	tempDir := t.TempDir()
-	setupTestConfigFile(t, tempDir, map[string]interface{}{
-		"logging": map[string]interface{}{
-			"level": "debug",
-		},
-	})
-	
-	result = IsDebugMode()
-	assert.True(t, result)
-}
+func TestEnsureConfigDir(t *testing.T) {
+	// Create a temporary home directory
+	tmpHome := t.TempDir()
 
-func TestGetLogFile(t *testing.T) {
-	// Test environment variable
-	expectedPath := "/tmp/test.log"
-	os.Setenv("PULUMICOST_LOG_FILE", expectedPath)
-	defer os.Unsetenv("PULUMICOST_LOG_FILE")
-	
-	result := GetLogFile()
-	assert.Equal(t, expectedPath, result)
-	
-	// Test config file fallback
-	os.Unsetenv("PULUMICOST_LOG_FILE")
-	tempDir := t.TempDir()
-	configLogPath := "/tmp/config.log"
-	setupTestConfigFile(t, tempDir, map[string]interface{}{
-		"logging": map[string]interface{}{
-			"file": configLogPath,
-		},
-	})
-	
-	result = GetLogFile()
-	assert.Equal(t, configLogPath, result)
-}
+	// Mock home directory
+	t.Setenv("HOME", tmpHome)
 
-func TestParseIntSafe(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected int
-		hasError bool
-	}{
-		{"0", 0, false},
-		{"123", 123, false},
-		{"999", 999, false},
-		{"abc", 0, true},
-		{"12a", 0, true},
-		{"-1", 0, true},
-		{"", 0, false},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			result, err := parseIntSafe(tt.input)
-			if tt.hasError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
-}
-
-// setupTestConfigFile creates a test config file in the temp directory
-func setupTestConfigFile(t *testing.T, tempDir string, configData map[string]interface{}) {
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-	t.Cleanup(func() { os.Setenv("HOME", originalHome) })
-	
-	cfg := DefaultConfig()
-	
-	// Apply test configuration data
-	if output, ok := configData["output"].(map[string]interface{}); ok {
-		if format, ok := output["default_format"].(string); ok {
-			cfg.Output.DefaultFormat = format
-		}
-		if precision, ok := output["precision"].(int); ok {
-			cfg.Output.Precision = precision
-		}
-	}
-	
-	if logging, ok := configData["logging"].(map[string]interface{}); ok {
-		if level, ok := logging["level"].(string); ok {
-			cfg.Logging.Level = level
-		}
-		if file, ok := logging["file"].(string); ok {
-			cfg.Logging.File = file
-		}
-	}
-	
-	if plugins, ok := configData["plugins"].(map[string]interface{}); ok {
-		cfg.Plugins = make(map[string]PluginConfig)
-		for pluginName, pluginData := range plugins {
-			if pluginMap, ok := pluginData.(map[string]interface{}); ok {
-				pluginConfig := PluginConfig{
-					Credentials: make(map[string]string),
-					Settings:    make(map[string]interface{}),
-				}
-				
-				if region, ok := pluginMap["region"].(string); ok {
-					pluginConfig.Region = region
-				}
-				if profile, ok := pluginMap["profile"].(string); ok {
-					pluginConfig.Profile = profile
-				}
-				
-				cfg.Plugins[pluginName] = pluginConfig
-			}
-		}
-	}
-	
-	err := cfg.Save()
+	// Test ensuring config directory
+	err := EnsureConfigDir()
 	require.NoError(t, err)
+
+	configDir := filepath.Join(tmpHome, ".pulumicost")
+	stat, err := os.Stat(configDir)
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+}
+
+func TestEnsureLogDir(t *testing.T) {
+	// Create a temporary directory for logs
+	tmpDir := t.TempDir()
+
+	// Reset global config and set custom log file
+	ResetGlobalConfigForTest()
+	cfg := GetGlobalConfig()
+	cfg.Logging.File = filepath.Join(tmpDir, "logs", "subdir", "test.log")
+
+	// Test ensuring log directory
+	err := EnsureLogDir()
+	require.NoError(t, err)
+
+	logDir := filepath.Join(tmpDir, "logs", "subdir")
+	stat, err := os.Stat(logDir)
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+}
+
+func TestEnsureLogDirError(t *testing.T) {
+	// Reset global config and set invalid log file path
+	ResetGlobalConfigForTest()
+	cfg := GetGlobalConfig()
+
+	// Try to create a log directory in a place we don't have permission
+	// Use a path that's likely to fail (existing file as directory)
+	tmpFile, err := os.CreateTemp("", "test-file")
+	require.NoError(t, err)
+	tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
+
+	cfg.Logging.File = filepath.Join(tmpFile.Name(), "subdir", "test.log")
+
+	// This should fail because tmpFile.Name() is a file, not a directory
+	err = EnsureLogDir()
+	assert.Error(t, err)
 }
