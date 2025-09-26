@@ -12,14 +12,14 @@ import (
 
 // Manifest represents the plugin manifest structure.
 type Manifest struct {
-	Name               string            `yaml:"name" json:"name"`
-	Version            string            `yaml:"version" json:"version"`
-	Description        string            `yaml:"description" json:"description"`
-	Author             string            `yaml:"author" json:"author"`
+	Name               string            `yaml:"name"                json:"name"`
+	Version            string            `yaml:"version"             json:"version"`
+	Description        string            `yaml:"description"         json:"description"`
+	Author             string            `yaml:"author"              json:"author"`
 	SupportedProviders []string          `yaml:"supported_providers" json:"supported_providers"`
-	Protocols          []string          `yaml:"protocols" json:"protocols"`
-	Binary             string            `yaml:"binary" json:"binary"`
-	Metadata           map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	Protocols          []string          `yaml:"protocols"           json:"protocols"`
+	Binary             string            `yaml:"binary"              json:"binary"`
+	Metadata           map[string]string `yaml:"metadata,omitempty"  json:"metadata,omitempty"`
 }
 
 // ValidationError represents a manifest validation error.
@@ -39,7 +39,7 @@ func (errs ValidationErrors) Error() string {
 	if len(errs) == 0 {
 		return "no validation errors"
 	}
-	
+
 	msg := fmt.Sprintf("validation failed with %d error(s):", len(errs))
 	for _, err := range errs {
 		msg += fmt.Sprintf("\n  - %s", err.Error())
@@ -57,7 +57,7 @@ func LoadManifest(path string) (*Manifest, error) {
 
 	var manifest Manifest
 	ext := filepath.Ext(path)
-	
+
 	switch ext {
 	case ".yaml", ".yml":
 		if err := yaml.Unmarshal(data, &manifest); err != nil {
@@ -88,7 +88,7 @@ func (m *Manifest) SaveManifest(path string) error {
 	ext := filepath.Ext(path)
 	var data []byte
 	var err error
-	
+
 	switch ext {
 	case ".yaml", ".yml":
 		data, err = yaml.Marshal(m)
@@ -206,7 +206,7 @@ func CreateDefaultManifest(name, author string, providers []string) *Manifest {
 	}
 }
 
-// Regular expressions for validation
+// Regular expressions for validation.
 var (
 	nameRegex    = regexp.MustCompile(`^[a-z][a-z0-9-]*[a-z0-9]$`)
 	versionRegex = regexp.MustCompile(`^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+)?(\+[a-zA-Z0-9-]+)?$`)

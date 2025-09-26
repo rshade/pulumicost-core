@@ -38,13 +38,13 @@ func (rm *ResourceMatcher) Supports(resource *pbc.ResourceDescriptor) bool {
 			return false
 		}
 	}
-	
+
 	if len(rm.supportedTypes) > 0 {
 		if !rm.supportedTypes[resource.ResourceType] {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -91,7 +91,7 @@ func (cc *CostCalculator) CreateActualCostResponse(
 
 // NotSupportedError returns a standard error for unsupported resources.
 func NotSupportedError(resource *pbc.ResourceDescriptor) error {
-	return fmt.Errorf("resource type %s from provider %s is not supported", 
+	return fmt.Errorf("resource type %s from provider %s is not supported",
 		resource.ResourceType, resource.Provider)
 }
 
@@ -132,11 +132,17 @@ func (bp *BasePlugin) Calculator() *CostCalculator {
 }
 
 // GetProjectedCost provides a default implementation that returns not supported.
-func (bp *BasePlugin) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
+func (bp *BasePlugin) GetProjectedCost(
+	ctx context.Context,
+	req *pbc.GetProjectedCostRequest,
+) (*pbc.GetProjectedCostResponse, error) {
 	return nil, NotSupportedError(req.Resource)
 }
 
 // GetActualCost provides a default implementation that returns no data.
-func (bp *BasePlugin) GetActualCost(ctx context.Context, req *pbc.GetActualCostRequest) (*pbc.GetActualCostResponse, error) {
+func (bp *BasePlugin) GetActualCost(
+	ctx context.Context,
+	req *pbc.GetActualCostRequest,
+) (*pbc.GetActualCostResponse, error) {
 	return nil, NoDataError(req.ResourceId)
 }

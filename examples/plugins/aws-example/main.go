@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
+	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 )
 
 // AWSExamplePlugin demonstrates a basic AWS cost calculation plugin.
@@ -19,10 +19,10 @@ type AWSExamplePlugin struct {
 // NewAWSExamplePlugin creates a new AWS example plugin.
 func NewAWSExamplePlugin() *AWSExamplePlugin {
 	base := pluginsdk.NewBasePlugin("aws-example")
-	
+
 	// Configure supported AWS provider
 	base.Matcher().AddProvider("aws")
-	
+
 	// Add supported resource types
 	base.Matcher().AddResourceType("aws:ec2:Instance")
 	base.Matcher().AddResourceType("aws:s3:Bucket")
@@ -69,7 +69,7 @@ func (p *AWSExamplePlugin) GetActualCost(ctx context.Context, req *pbc.GetActual
 func (p *AWSExamplePlugin) calculateEC2Cost(resource *pbc.ResourceDescriptor) float64 {
 	instanceType := resource.Tags["instanceType"]
 	region := resource.Tags["region"]
-	
+
 	// Default to t3.micro if not specified
 	if instanceType == "" {
 		instanceType = "t3.micro"
@@ -116,7 +116,7 @@ func (p *AWSExamplePlugin) calculateEC2Cost(resource *pbc.ResourceDescriptor) fl
 func (p *AWSExamplePlugin) calculateS3Cost(resource *pbc.ResourceDescriptor) float64 {
 	storageClass := resource.Tags["storageClass"]
 	region := resource.Tags["region"]
-	
+
 	if storageClass == "" {
 		storageClass = "STANDARD"
 	}
@@ -146,7 +146,7 @@ func (p *AWSExamplePlugin) calculateRDSCost(resource *pbc.ResourceDescriptor) fl
 	instanceClass := resource.Tags["instanceClass"]
 	engine := resource.Tags["engine"]
 	region := resource.Tags["region"]
-	
+
 	if instanceClass == "" {
 		instanceClass = "db.t3.micro"
 	}
@@ -173,10 +173,10 @@ func (p *AWSExamplePlugin) calculateRDSCost(resource *pbc.ResourceDescriptor) fl
 
 	// Engine multiplier
 	engineMultipliers := map[string]float64{
-		"mysql":      1.0,
-		"postgres":   1.0,
-		"oracle":     2.0,
-		"sqlserver":  1.5,
+		"mysql":     1.0,
+		"postgres":  1.0,
+		"oracle":    2.0,
+		"sqlserver": 1.5,
 	}
 
 	if multiplier, exists := engineMultipliers[engine]; exists {
