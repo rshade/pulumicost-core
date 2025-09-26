@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The `internal/engine` package is the core orchestration layer for PulumiCost, responsible for coordinating cost calculations between plugins and local pricing specifications, then rendering results in multiple output formats.
 
+**Key Capabilities:**
+- **Multi-Provider Cost Calculation**: Orchestrates cost queries across AWS, Azure, GCP, and other cloud providers
+- **Cross-Provider Aggregation**: Advanced time-based cost aggregation with currency validation and error handling
+- **Plugin Architecture**: gRPC-based plugin system with graceful fallback to local YAML specifications
+- **Flexible Grouping**: Resource-based and time-based grouping strategies for comprehensive cost analysis
+- **Type Safety**: Comprehensive input validation and error handling for reliable cost calculations
+
 ## Architecture
 
 ### Core Components
@@ -15,10 +22,13 @@ The `internal/engine` package is the core orchestration layer for PulumiCost, re
    - Handles both projected and actual cost calculations
    - Implements graceful fallback from plugins to local specs
 
-2. **Types System** (`types.go`)  
+2. **Types System** (`types.go`)
    - `ResourceDescriptor`: Represents cloud resources with type, provider, and properties
    - `CostResult`: Standardized cost output with breakdown, currency, and metadata
    - `PricingSpec`: YAML-based local pricing fallback structure
+   - `CrossProviderAggregation`: Time-based multi-provider cost aggregation structure
+   - `GroupBy`: Type-safe grouping strategies with validation methods
+   - `ActualCostRequest`: Enhanced request structure for complex actual cost queries
 
 3. **Output Rendering** (`project.go`)
    - Multi-format output: table, JSON, NDJSON
@@ -48,6 +58,10 @@ go test ./internal/cli/... -run TestCLIIntegration
 # Run engine functionality through example commands
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 ./bin/pulumicost cost actual --pulumi-json examples/plans/aws-simple-plan.json --from 2025-01-01
+
+# Test cross-provider aggregation features
+./bin/pulumicost cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
+./bin/pulumicost cost actual --group-by monthly --from 2024-01-01
 ```
 
 ## Cost Calculation Strategy
@@ -66,12 +80,35 @@ go test ./internal/cli/... -run TestCLIIntegration
    - Fallback estimates based on resource type
 4. **Multi-Plugin Support**: Collect results from all responding plugins
 
-### Actual Cost Flow  
+### Actual Cost Flow
 
 1. **Plugin Only**: Query plugins via `GetActualCost` gRPC call with time range
 2. **First Success**: Use first plugin that successfully returns data
 3. **Time Calculations**: Convert historical data to monthly/hourly rates
-4. **No Fallback**: Actual costs require live plugin data
+4. **Advanced Features**: Support for filtering, tagging, and grouping
+5. **Cross-Provider Aggregation**: Time-based cost aggregation across multiple providers
+6. **No Fallback**: Actual costs require live plugin data
+
+### Cross-Provider Aggregation Pipeline
+
+**New in v0.2.0**: Comprehensive cross-provider aggregation system supporting:
+
+1. **Input Validation**:
+   - Empty results detection (`ErrEmptyResults`)
+   - Time-based grouping validation (`ErrInvalidGroupBy`)
+   - Currency consistency checks (`ErrMixedCurrencies`)
+   - Date range validation (`ErrInvalidDateRange`)
+
+2. **Cost Processing**:
+   - Intelligent cost calculation (TotalCost vs Monthly with daily conversion)
+   - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
+   - Period formatting (daily: "2006-01-02", monthly: "2006-01")
+
+3. **Aggregation Output**:
+   - Sorted time-period aggregations
+   - Per-provider cost breakdowns
+   - Total costs with consistent currency
+   - Chronological ordering for trend analysis
 
 ### Cost Calculation Constants
 
@@ -119,6 +156,26 @@ monthlyConversion = 30.44    // Average days per month
 - **Multi-Plugin Tolerance**: Continue if some plugins fail
 - **Default Results**: Always return some result, even if placeholder
 
+### Cross-Provider Aggregation Errors
+
+**New Error Types** (introduced in v0.2.0):
+
+```go
+var (
+    ErrNoCostData       = errors.New("no cost data available")
+    ErrMixedCurrencies  = errors.New("mixed currencies not supported in cross-provider aggregation")
+    ErrInvalidGroupBy   = errors.New("invalid groupBy type for cross-provider aggregation")
+    ErrEmptyResults     = errors.New("empty results provided for aggregation")
+    ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
+)
+```
+
+**Error Handling Strategy**:
+- **Early Validation**: Input validation before expensive processing
+- **Specific Errors**: Detailed error messages for debugging and user feedback
+- **Fail-Fast**: Return immediately on validation errors to prevent inconsistent state
+- **Error Context**: Include relevant details (currency pairs, date ranges) in error messages
+
 ## Integration Points
 
 ### Plugin System
@@ -158,23 +215,84 @@ Monthly: result.TotalCost * 30.44 / float64(to.Sub(from).Hours()/hoursPerDay)
 ### Service Extraction
 
 ```go
-// Currently returns "default" - placeholder for future resource type parsing
-func extractService(_ string) string { return "default" }
+// Extracts service from resource type: "aws:ec2:Instance" → "ec2"
+func extractService(resourceType string) string
+```
+
+### Cross-Provider Processing
+
+**Currency Validation**:
+```go
+// Ensures all results use consistent currency (defaults empty to USD)
+func validateCurrencyConsistency(results []CostResult) error
+```
+
+**Time-Based Grouping**:
+```go
+// Groups results by time periods with provider-level aggregation
+func groupResultsByPeriod(results []CostResult, groupBy GroupBy) (map[string]map[string]float64, string)
+```
+
+**Cost Calculation Logic**:
+```go
+// Intelligently selects TotalCost (actual) vs Monthly (projected) with period conversion
+func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64
 ```
 
 ## Cost Result Structure
 
 ```go
 type CostResult struct {
-    ResourceType string             // Cloud resource type (e.g., "aws:ec2/instance:Instance")
+    ResourceType string             // Cloud resource type (e.g., "aws:ec2:Instance")
     ResourceID   string             // Unique resource identifier/URN
     Adapter      string             // Plugin name or "local-spec"/"none"
     Currency     string             // ISO currency code (typically "USD")
     Monthly      float64            // Projected/actual monthly cost
-    Hourly       float64            // Projected/actual hourly cost  
+    Hourly       float64            // Projected/actual hourly cost
     Notes        string             // Human-readable cost details
     Breakdown    map[string]float64 // Detailed cost breakdown by component
+    // Enhanced fields for actual cost support
+    TotalCost    float64            // Actual historical cost for the queried period
+    DailyCosts   []float64          // Daily cost breakdown (for trend analysis)
+    CostPeriod   string             // Human-readable period ("1 day", "2 weeks", "1 month")
+    StartDate    time.Time          // Period start date
+    EndDate      time.Time          // Period end date
 }
+```
+
+## Cross-Provider Aggregation Structure
+
+```go
+type CrossProviderAggregation struct {
+    Period    string             // Time period ("2006-01-02" or "2006-01")
+    Providers map[string]float64 // Provider name → aggregated cost
+    Total     float64            // Sum of all provider costs
+    Currency  string             // Consistent currency (validated)
+}
+```
+
+## GroupBy Type System
+
+```go
+type GroupBy string
+
+// Resource-based grouping
+const (
+    GroupByResource GroupBy = "resource"  // Individual resources
+    GroupByType     GroupBy = "type"      // Resource types
+    GroupByProvider GroupBy = "provider"  // Cloud providers
+)
+
+// Time-based grouping (for cross-provider aggregation)
+const (
+    GroupByDaily    GroupBy = "daily"     // Daily aggregation
+    GroupByMonthly  GroupBy = "monthly"   // Monthly aggregation
+)
+
+// Validation methods
+func (g GroupBy) IsValid() bool                // Validates GroupBy value
+func (g GroupBy) IsTimeBasedGrouping() bool   // Checks if time-based
+func (g GroupBy) String() string              // String representation
 ```
 
 ## Common Usage Patterns
@@ -295,6 +413,81 @@ Resource                     Adapter     Monthly  Hourly   Currency  Notes
 aws:ec2:Instance/i-123       local-spec  7.59     0.0104   USD       Calculated from local spec
 aws:rds:Instance/db-456      local-spec  50.00    0.0685   USD       Calculated from local spec
 ```
+
+## New Features (Cross-Provider Aggregation)
+
+### Enhanced Actual Cost Pipeline
+
+**Advanced Querying** (`GetActualCostWithOptions`):
+```go
+type ActualCostRequest struct {
+    Resources []ResourceDescriptor  // Resources to query
+    From      time.Time            // Start date
+    To        time.Time            // End date
+    Adapter   string               // Specific plugin to use
+    GroupBy   string               // Grouping strategy
+    Tags      map[string]string    // Tag-based filtering
+}
+```
+
+**Features**:
+- **Tag Filtering**: `tag:env=prod`, `tag:team=backend`
+- **Adapter Selection**: Use specific plugins for cost queries
+- **Flexible Grouping**: Resource, type, provider, or time-based
+- **Date Range Validation**: Comprehensive date validation with helpful errors
+
+### Cross-Provider Cost Analysis
+
+**Core Function**:
+```go
+func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]CrossProviderAggregation, error)
+```
+
+**Usage Examples**:
+
+```go
+// Daily cross-provider analysis
+results := []CostResult{
+    {ResourceType: "aws:ec2:Instance", TotalCost: 100.0, Currency: "USD", StartDate: jan1},
+    {ResourceType: "azure:compute:VM", TotalCost: 150.0, Currency: "USD", StartDate: jan1},
+}
+aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
+// Result: [{Period: "2024-01-01", Providers: {"aws": 100.0, "azure": 150.0}, Total: 250.0}]
+
+// Monthly trend analysis
+aggregations, err := CreateCrossProviderAggregation(results, GroupByMonthly)
+// Result: [{Period: "2024-01", Providers: {"aws": 3100.0, "azure": 4650.0}, Total: 7750.0}]
+```
+
+### CLI Integration Examples
+
+```bash
+# Cross-provider daily aggregation
+./bin/pulumicost cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
+
+# Monthly cost trends across providers
+./bin/pulumicost cost actual --group-by monthly --from 2024-01-01 --to 2024-12-31
+
+# Filter by tag (no time-based aggregation)
+./bin/pulumicost cost actual --group-by "tag:env=prod" --from 2024-01-01
+```
+
+### Performance and Best Practices
+
+**Scalability**:
+- Efficient for datasets up to 10,000 cost results
+- Memory usage scales linearly with unique time periods
+- Consider streaming for larger datasets
+
+**Currency Handling**:
+- All results must use the same currency
+- Empty currencies default to USD
+- Mixed currencies return `ErrMixedCurrencies`
+
+**Error Recovery**:
+- Validate inputs early with specific error messages
+- Use time-based grouping only for cross-provider aggregation
+- Check date ranges before expensive processing
 
 This package acts as the central coordinating layer, making it critical for understanding the overall cost calculation flow in PulumiCost.
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 )
 
@@ -39,6 +40,23 @@ func RenderActualCostResults(format OutputFormat, results []CostResult) error {
 		return renderJSONCostResults(results)
 	case OutputNDJSON:
 		return renderNDJSON(results)
+	default:
+		return fmt.Errorf("unsupported output format: %s", format)
+	}
+}
+
+func RenderCrossProviderAggregation(
+	format OutputFormat,
+	aggregations []CrossProviderAggregation,
+	groupBy GroupBy,
+) error {
+	switch format {
+	case OutputTable:
+		return renderCrossProviderTable(aggregations, groupBy)
+	case OutputJSON:
+		return renderJSONCrossProvider(aggregations)
+	case OutputNDJSON:
+		return renderNDJSONCrossProvider(aggregations)
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
@@ -192,4 +210,106 @@ func renderNDJSON(results []CostResult) error {
 		}
 	}
 	return nil
+}
+
+func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy GroupBy) error {
+	if len(aggregations) == 0 {
+		_, err := fmt.Fprintln(os.Stdout, "No cost data available for cross-provider aggregation")
+		return err
+	}
+
+	const tabPadding = 2
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
+
+	// Collect all unique providers
+	providerSet := make(map[string]bool)
+	for _, agg := range aggregations {
+		for provider := range agg.Providers {
+			providerSet[provider] = true
+		}
+	}
+
+	// Create sorted provider list
+	var providers []string
+	for provider := range providerSet {
+		providers = append(providers, provider)
+	}
+	sort.Strings(providers) // Sort alphabetically for consistent ordering
+
+	// Print header
+	if groupBy == GroupByDaily {
+		fmt.Fprintf(w, "Date\tTotal Cost")
+	} else {
+		fmt.Fprintf(w, "Month\tTotal Cost")
+	}
+
+	for _, provider := range providers {
+		fmt.Fprintf(w, "\t%s", provider)
+	}
+	fmt.Fprintf(w, "\n")
+
+	// Print separator
+	if groupBy == GroupByDaily {
+		fmt.Fprintf(w, "----\t----------")
+	} else {
+		fmt.Fprintf(w, "-----\t----------")
+	}
+
+	for range providers {
+		fmt.Fprintf(w, "\t--------")
+	}
+	fmt.Fprintf(w, "\n")
+
+	// Print data rows
+	for _, agg := range aggregations {
+		currencySymbol := getCurrencySymbol(agg.Currency)
+		fmt.Fprintf(w, "%s\t%s%.2f", agg.Period, currencySymbol, agg.Total)
+		for _, provider := range providers {
+			cost := agg.Providers[provider]
+			if cost > 0 {
+				fmt.Fprintf(w, "\t%s%.2f", currencySymbol, cost)
+			} else {
+				fmt.Fprintf(w, "\t%s0.00", currencySymbol)
+			}
+		}
+		fmt.Fprintf(w, "\n")
+	}
+
+	return w.Flush()
+}
+
+func renderJSONCrossProvider(aggregations []CrossProviderAggregation) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(aggregations)
+}
+
+func renderNDJSONCrossProvider(aggregations []CrossProviderAggregation) error {
+	encoder := json.NewEncoder(os.Stdout)
+	for _, agg := range aggregations {
+		if err := encoder.Encode(agg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// getCurrencySymbol returns the appropriate currency symbol for a given currency code.
+func getCurrencySymbol(currency string) string {
+	switch currency {
+	case "USD":
+		return "$"
+	case "EUR":
+		return "€"
+	case "GBP":
+		return "£"
+	case "JPY":
+		return "¥"
+	case "CAD":
+		return "C$"
+	case "AUD":
+		return "A$"
+	default:
+		return currency // Fall back to currency code if symbol is unknown
+	}
 }
