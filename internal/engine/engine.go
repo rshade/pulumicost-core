@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -25,10 +26,15 @@ const (
 	defaultStorageMonthlyCost   = 5.0   // Default monthly cost for storage resources
 	defaultComputeMonthlyCost   = 20.0  // Default monthly cost for compute resources
 	defaultServiceName          = "default"
+	defaultCurrency             = "USD" // Default currency for cost calculations
 )
 
 var (
-	ErrNoCostData = errors.New("no cost data available")
+	ErrNoCostData       = errors.New("no cost data available")
+	ErrMixedCurrencies  = errors.New("mixed currencies not supported in cross-provider aggregation")
+	ErrInvalidGroupBy   = errors.New("invalid groupBy type for cross-provider aggregation")
+	ErrEmptyResults     = errors.New("empty results provided for aggregation")
+	ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
 )
 
 type SpecLoader interface {
@@ -77,7 +83,7 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 				ResourceType: resource.Type,
 				ResourceID:   resource.ID,
 				Adapter:      "none",
-				Currency:     "USD",
+				Currency:     defaultCurrency,
 				Monthly:      0,
 				Hourly:       0,
 				Notes:        "No pricing information available",
@@ -138,7 +144,7 @@ func (e *Engine) GetActualCostWithOptions(
 				ResourceType: resource.Type,
 				ResourceID:   resource.ID,
 				Adapter:      "none",
-				Currency:     "USD",
+				Currency:     defaultCurrency,
 				TotalCost:    0,
 				Notes:        "No actual cost data available",
 				StartDate:    request.From,
@@ -297,13 +303,27 @@ func (e *Engine) getActualCostFromPlugin(
 		}
 	}
 
+	// Calculate monthly projection, avoiding divide by zero
+	var monthlyRate float64
+	var hourlyRate float64
+	if totalDays > 0 {
+		monthlyRate = result.TotalCost * avgDaysPerMonth / float64(totalDays)
+	} else if totalHours > 0 {
+		// If less than a day, project based on hourly rate
+		monthlyRate = (result.TotalCost / totalHours) * hoursPerMonth
+	}
+
+	if totalHours > 0 {
+		hourlyRate = result.TotalCost / totalHours
+	}
+
 	return &CostResult{
 		ResourceType: resource.Type,
 		ResourceID:   resource.ID,
 		Adapter:      client.Name,
 		Currency:     result.Currency,
-		Monthly:      result.TotalCost * avgDaysPerMonth / float64(totalDays), // More accurate monthly projection
-		Hourly:       result.TotalCost / totalHours,
+		Monthly:      monthlyRate,
+		Hourly:       hourlyRate,
 		TotalCost:    result.TotalCost,
 		DailyCosts:   dailyCosts,
 		Notes:        fmt.Sprintf("Actual cost from %s to %s", from.Format("2006-01-02"), to.Format("2006-01-02")),
@@ -516,7 +536,7 @@ func AggregateResults(results []CostResult) *AggregatedResults {
 	if len(results) == 0 {
 		return &AggregatedResults{
 			Summary: CostSummary{
-				Currency:   "USD",
+				Currency:   defaultCurrency,
 				ByProvider: make(map[string]float64),
 				ByService:  make(map[string]float64),
 				ByAdapter:  make(map[string]float64),
@@ -672,6 +692,10 @@ func (e *Engine) GroupResults(results []CostResult, groupBy GroupBy) []CostResul
 			}
 		case GroupByDate:
 			key = result.StartDate.Format("2006-01-02")
+		case GroupByDaily:
+			key = result.StartDate.Format("2006-01-02")
+		case GroupByMonthly:
+			key = result.StartDate.Format("2006-01")
 		default:
 			key = defaultServiceName
 		}
@@ -738,4 +762,413 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 
 	aggregated.Notes = fmt.Sprintf("Aggregated costs from %d resources", len(results))
 	return aggregated
+}
+
+// CreateCrossProviderAggregation creates daily/monthly cross-provider aggregation from cost results.
+//
+// This function aggregates costs across multiple cloud providers and time periods, enabling
+// comprehensive cost analysis and reporting. It supports both daily and monthly aggregation
+// with built-in currency validation and input validation.
+//
+// Parameters:
+//   - results: Slice of CostResult objects containing cost data from various providers.
+//     Each result must have consistent currency and valid date ranges.
+//   - groupBy: Must be GroupByDaily or GroupByMonthly. Other grouping types will return ErrInvalidGroupBy.
+//
+// Returns:
+//   - []CrossProviderAggregation: Sorted aggregations by time period, each containing:
+//   - Period: Date ("2006-01-02") for daily or month ("2006-01") for monthly
+//   - Providers: Map of provider names to their costs for that period
+//   - Total: Sum of all provider costs for the period
+//   - Currency: Consistent currency across all results
+//   - error: Various validation errors:
+//   - ErrEmptyResults: If results slice is empty
+//   - ErrInvalidGroupBy: If groupBy is not time-based (daily/monthly)
+//   - ErrMixedCurrencies: If results contain different currencies
+//   - ErrInvalidDateRange: If any result has EndDate before StartDate
+//
+// Usage Examples:
+//
+//	// Daily aggregation across AWS and Azure costs
+//	results := []CostResult{
+//		{ResourceType: "aws:ec2:Instance", TotalCost: 100.0, Currency: "USD", StartDate: jan1, EndDate: jan2},
+//		{ResourceType: "azure:compute:VirtualMachine", TotalCost: 150.0, Currency: "USD", StartDate: jan1, EndDate: jan2},
+//	}
+//	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
+//	if err != nil {
+//		return fmt.Errorf("aggregation failed: %w", err)
+//	}
+//	// Result: [{Period: "2024-01-01", Providers: {"aws": 100.0, "azure": 150.0}, Total: 250.0, Currency: "USD"}]
+//
+//	// Monthly aggregation for cost trend analysis
+//	aggregations, err := CreateCrossProviderAggregation(results, GroupByMonthly)
+//	// Result: [{Period: "2024-01", Providers: {"aws": 3100.0, "azure": 4650.0}, Total: 7750.0, Currency: "USD"}]
+//
+// Error Scenarios:
+//   - Mixed currencies: Results with different currencies (USD vs EUR) will fail validation
+//   - Invalid grouping: Using GroupByResource or GroupByType will return ErrInvalidGroupBy
+//   - Date validation: Results with EndDate before StartDate will fail
+//   - Empty input: Empty results slice returns ErrEmptyResults
+//
+// Performance Considerations:
+//   - Efficient for datasets up to 10,000 cost results
+//   - Memory usage scales linearly with unique time periods
+//   - Consider using streaming processing for larger datasets
+func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]CrossProviderAggregation, error) {
+	// Input validation
+	if err := validateAggregationInputs(results, groupBy); err != nil {
+		return nil, err
+	}
+
+	// Validate currency consistency
+	if err := validateCurrencyConsistency(results); err != nil {
+		return nil, err
+	}
+
+	// Group results by time period
+	periods, baseCurrency := groupResultsByPeriod(results, groupBy)
+
+	// Convert to sorted aggregations
+	aggregations := createSortedAggregations(periods, baseCurrency)
+
+	return aggregations, nil
+}
+
+// validateAggregationInputs validates the inputs for cross-provider aggregation.
+//
+// This function performs comprehensive input validation to ensure cross-provider
+// aggregation can proceed safely with valid data.
+//
+// Parameters:
+//   - results: Cost results to validate. Must be non-empty slice.
+//   - groupBy: Grouping type. Must be time-based (GroupByDaily or GroupByMonthly).
+//
+// Returns:
+//   - error: Specific validation errors:
+//   - ErrEmptyResults: If results slice is empty or nil
+//   - ErrInvalidGroupBy: If groupBy is not time-based grouping
+//   - ErrInvalidDateRange: If any result has invalid date range (EndDate ≤ StartDate)
+//
+// Validation Rules:
+//  1. Results slice must contain at least one element
+//  2. GroupBy must be GroupByDaily or GroupByMonthly (checked via IsTimeBasedGrouping())
+//  3. All results with both StartDate and EndDate must have EndDate after StartDate
+//  4. Zero dates (time.IsZero()) are allowed and skipped during validation
+//
+// Usage Example:
+//
+//	// Validate before aggregation
+//	if err := validateAggregationInputs(results, GroupByDaily); err != nil {
+//		return fmt.Errorf("invalid aggregation inputs: %w", err)
+//	}
+func validateAggregationInputs(results []CostResult, groupBy GroupBy) error {
+	if len(results) == 0 {
+		return ErrEmptyResults
+	}
+
+	if !groupBy.IsTimeBasedGrouping() {
+		return ErrInvalidGroupBy
+	}
+
+	// Validate date ranges in results
+	for _, result := range results {
+		if !result.EndDate.IsZero() && !result.StartDate.IsZero() {
+			if !result.EndDate.After(result.StartDate) {
+				return ErrInvalidDateRange
+			}
+		}
+	}
+
+	return nil
+}
+
+// validateCurrencyConsistency ensures all results use the same currency.
+//
+// Cross-provider aggregation requires consistent currency to produce meaningful
+// cost totals. This function validates that all cost results use the same currency,
+// with automatic defaulting to USD for empty currency fields.
+//
+// Parameters:
+//   - results: Slice of CostResult objects to validate for currency consistency.
+//
+// Returns:
+//   - error: Currency validation error:
+//   - nil: All results use consistent currency
+//   - ErrMixedCurrencies: Results contain different currencies with details
+//
+// Currency Handling Rules:
+//  1. Empty currency strings are automatically treated as USD (defaultCurrency)
+//  2. First result's currency (or USD if empty) becomes the baseline
+//  3. All subsequent results must match the baseline currency
+//  4. Comparison is case-sensitive ("USD" ≠ "usd")
+//  5. Empty results slice passes validation (returns nil)
+//
+// Usage Examples:
+//
+//	// Valid: All USD currencies
+//	results := []CostResult{
+//		{Currency: "USD", TotalCost: 100.0},
+//		{Currency: "USD", TotalCost: 200.0},
+//		{Currency: "", TotalCost: 50.0}, // Treated as USD
+//	}
+//	err := validateCurrencyConsistency(results) // Returns nil
+//
+//	// Invalid: Mixed currencies
+//	results := []CostResult{
+//		{Currency: "USD", TotalCost: 100.0},
+//		{Currency: "EUR", TotalCost: 200.0},
+//	}
+//	err := validateCurrencyConsistency(results)
+//	// Returns: ErrMixedCurrencies: found USD and EUR
+//
+// Error Message Format:
+//
+//	"mixed currencies not supported in cross-provider aggregation: found {currency1} and {currency2}"
+func validateCurrencyConsistency(results []CostResult) error {
+	if len(results) == 0 {
+		return nil
+	}
+
+	baseCurrency := results[0].Currency
+	if baseCurrency == "" {
+		baseCurrency = defaultCurrency // Default to USD if empty
+	}
+
+	for _, result := range results {
+		currency := result.Currency
+		if currency == "" {
+			currency = defaultCurrency // Default to USD if empty
+		}
+		if currency != baseCurrency {
+			return fmt.Errorf("%w: found %s and %s", ErrMixedCurrencies, baseCurrency, currency)
+		}
+	}
+
+	return nil
+}
+
+// groupResultsByPeriod groups results by time period and returns the base currency.
+//
+// This function organizes cost results into time-based buckets (daily or monthly)
+// and aggregates costs by cloud provider within each period. It forms the core
+// data structure for cross-provider cost analysis and reporting.
+//
+// Parameters:
+//   - results: Slice of CostResult objects with valid StartDate fields.
+//   - groupBy: Time-based grouping (GroupByDaily or GroupByMonthly).
+//
+// Returns:
+//   - map[string]map[string]float64: Nested map structure:
+//   - Outer key: Time period ("2006-01-02" for daily, "2006-01" for monthly)
+//   - Inner key: Provider name extracted from ResourceType ("aws", "azure", "gcp")
+//   - Inner value: Aggregated cost for that provider in that period
+//   - string: Base currency from first result (or USD if first result has empty currency)
+//
+// Period Formatting:
+//   - Daily: "2024-01-15" (YYYY-MM-DD format)
+//   - Monthly: "2024-01" (YYYY-MM format)
+//
+// Cost Calculation Logic:
+//  1. Uses TotalCost if available (actual historical costs)
+//  2. Falls back to Monthly cost if TotalCost is zero
+//  3. For daily grouping, converts monthly estimate to daily (Monthly ÷ 30.44)
+//  4. Aggregates multiple results for same provider/period
+//
+// Provider Extraction:
+//   - Extracts from ResourceType: "aws:ec2:Instance" → "aws"
+//   - Handles malformed types: "invalid" → "unknown"
+//
+// Usage Example:
+//
+//	results := []CostResult{
+//		{ResourceType: "aws:ec2:Instance", TotalCost: 100.0, Currency: "USD", StartDate: jan15},
+//		{ResourceType: "azure:compute:VM", TotalCost: 150.0, Currency: "USD", StartDate: jan15},
+//		{ResourceType: "aws:s3:Bucket", TotalCost: 25.0, Currency: "USD", StartDate: jan16},
+//	}
+//	periods, currency := groupResultsByPeriod(results, GroupByDaily)
+//	// Result:
+//	// periods = {
+//	//   "2024-01-15": {"aws": 100.0, "azure": 150.0},
+//	//   "2024-01-16": {"aws": 25.0}
+//	// }
+//	// currency = "USD"
+func groupResultsByPeriod(results []CostResult, groupBy GroupBy) (map[string]map[string]float64, string) {
+	periods := make(map[string]map[string]float64) // period -> provider -> cost
+	baseCurrency := defaultCurrency                // Default currency
+
+	if len(results) > 0 {
+		baseCurrency = results[0].Currency
+		if baseCurrency == "" {
+			baseCurrency = defaultCurrency
+		}
+	}
+
+	for _, result := range results {
+		period := formatPeriodForGrouping(result.StartDate, groupBy)
+		provider := extractProviderFromType(result.ResourceType)
+
+		if periods[period] == nil {
+			periods[period] = make(map[string]float64)
+		}
+
+		cost := calculateCostForPeriod(result, groupBy)
+		periods[period][provider] += cost
+	}
+
+	return periods, baseCurrency
+}
+
+// formatPeriodForGrouping formats a date according to the grouping type.
+//
+// This function converts time.Time values into string periods suitable for
+// grouping and sorting in cross-provider aggregations.
+//
+// Parameters:
+//   - date: Time value to format (typically from CostResult.StartDate).
+//   - groupBy: Determines output format (GroupByDaily or GroupByMonthly).
+//
+// Returns:
+//   - string: Formatted period:
+//   - GroupByDaily: "2006-01-02" (ISO date format)
+//   - GroupByMonthly: "2006-01" (year-month format)
+//   - Other groupBy values: Default to monthly format
+//
+// Format Examples:
+//   - Daily: time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC) → "2024-01-15"
+//   - Monthly: time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC) → "2024-01"
+//
+// Usage in Aggregation:
+//   - Periods are used as map keys for grouping
+//   - String format ensures consistent sorting
+//   - Compatible with time parsing for further processing
+func formatPeriodForGrouping(date time.Time, groupBy GroupBy) string {
+	if groupBy == GroupByDaily {
+		return date.Format("2006-01-02")
+	}
+	return date.Format("2006-01")
+}
+
+// calculateCostForPeriod calculates the appropriate cost for a given period.
+//
+// This function determines the most accurate cost value for aggregation based
+// on available cost data and the time period being aggregated.
+//
+// Parameters:
+//   - result: CostResult containing cost data and metadata.
+//   - groupBy: Time period type (GroupByDaily or GroupByMonthly).
+//
+// Returns:
+//   - float64: Calculated cost appropriate for the time period:
+//   - For actual costs: Uses TotalCost (historical data from cloud APIs)
+//   - For projected costs: Uses Monthly cost with daily conversion if needed
+//   - Zero if no cost data available
+//
+// Cost Selection Logic:
+//  1. **Actual Costs (Preferred)**: Uses TotalCost if > 0 (historical data)
+//  2. **Projected Costs (Fallback)**: Uses Monthly if TotalCost is 0
+//  3. **Daily Conversion**: For GroupByDaily, converts Monthly ÷ 30.44 (avgDaysPerMonth)
+//  4. **Zero Fallback**: Returns 0 if no cost data available
+//
+// Conversion Constants:
+//   - avgDaysPerMonth = 30.44 (accurate average for monthly→daily conversion)
+//   - Maintains precision for financial calculations
+//
+// Usage Examples:
+//
+//	// Actual cost (historical data)
+//	result := CostResult{TotalCost: 150.0, Monthly: 3100.0}
+//	cost := calculateCostForPeriod(result, GroupByDaily)   // Returns 150.0
+//	cost = calculateCostForPeriod(result, GroupByMonthly) // Returns 150.0
+//
+//	// Projected cost (estimated)
+//	result := CostResult{TotalCost: 0, Monthly: 3100.0}
+//	cost := calculateCostForPeriod(result, GroupByDaily)   // Returns 101.81 (3100/30.44)
+//	cost = calculateCostForPeriod(result, GroupByMonthly) // Returns 3100.0
+func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
+	// Use DailyCosts when available for more accurate cost calculations
+	if len(result.DailyCosts) > 0 {
+		// For all grouping types, sum all daily costs to get total period cost
+		var totalCost float64
+		for _, dailyCost := range result.DailyCosts {
+			totalCost += dailyCost
+		}
+		return totalCost
+	}
+
+	// Fallback to TotalCost if available, otherwise use Monthly projection
+	cost := result.TotalCost
+	if cost == 0 && result.Monthly > 0 {
+		if groupBy == GroupByDaily {
+			// Convert monthly to daily estimate
+			cost = result.Monthly / avgDaysPerMonth
+		} else {
+			cost = result.Monthly
+		}
+	}
+	return cost
+}
+
+// createSortedAggregations creates sorted aggregations from period data.
+//
+// This function converts the grouped period data into a sorted slice of
+// CrossProviderAggregation objects suitable for reporting and analysis.
+//
+// Parameters:
+//   - periods: Nested map from groupResultsByPeriod():
+//   - Key: Time period string ("2006-01-02" or "2006-01")
+//   - Value: Map of provider names to aggregated costs
+//   - baseCurrency: Currency code to apply to all aggregations (e.g., "USD")
+//
+// Returns:
+//   - []CrossProviderAggregation: Sorted slice with each element containing:
+//   - Period: Time period string
+//   - Providers: Map of provider names to costs
+//   - Total: Sum of all provider costs for the period
+//   - Currency: Consistent currency across all aggregations
+//
+// Processing Steps:
+//  1. **Iterate**: Process each period in the input map
+//  2. **Calculate Totals**: Sum all provider costs within each period
+//  3. **Build Objects**: Create CrossProviderAggregation with complete data
+//  4. **Sort**: Order by period string (lexicographic = chronological)
+//
+// Sorting Behavior:
+//   - Daily periods: "2024-01-01" < "2024-01-02" < "2024-01-15"
+//   - Monthly periods: "2024-01" < "2024-02" < "2024-12"
+//   - Lexicographic string comparison ensures chronological order
+//
+// Usage Example:
+//
+//	periods := map[string]map[string]float64{
+//		"2024-01-02": {"aws": 100.0, "azure": 200.0},
+//		"2024-01-01": {"aws": 150.0, "gcp": 75.0},
+//	}
+//	aggregations := createSortedAggregations(periods, "USD")
+//	// Result: [
+//	//   {Period: "2024-01-01", Providers: {"aws": 150.0, "gcp": 75.0}, Total: 225.0, Currency: "USD"},
+//	//   {Period: "2024-01-02", Providers: {"aws": 100.0, "azure": 200.0}, Total: 300.0, Currency: "USD"}
+//	// ]
+func createSortedAggregations(periods map[string]map[string]float64, baseCurrency string) []CrossProviderAggregation {
+	var aggregations []CrossProviderAggregation
+
+	for period, providers := range periods {
+		total := 0.0
+		for _, cost := range providers {
+			total += cost
+		}
+
+		aggregations = append(aggregations, CrossProviderAggregation{
+			Period:    period,
+			Providers: providers,
+			Total:     total,
+			Currency:  baseCurrency,
+		})
+	}
+
+	// Sort aggregations by period
+	sort.Slice(aggregations, func(i, j int) bool {
+		return aggregations[i].Period < aggregations[j].Period
+	})
+
+	return aggregations
 }

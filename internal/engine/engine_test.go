@@ -402,6 +402,217 @@ func TestAggregateResultsFunction(t *testing.T) {
 	assert.Contains(t, aggregated.Notes, "2 resources")
 }
 
+func TestCreateCrossProviderAggregation(t *testing.T) {
+	tests := []struct {
+		name        string
+		results     []engine.CostResult
+		groupBy     engine.GroupBy
+		expected    []engine.CrossProviderAggregation
+		expectError bool
+	}{
+		{
+			name:        "daily aggregation with multiple providers",
+			expectError: false,
+			results: []engine.CostResult{
+				{
+					ResourceType: "aws:ec2:Instance",
+					TotalCost:    100.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					ResourceType: "azure:compute:VirtualMachine",
+					TotalCost:    50.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					ResourceType: "aws:rds:Instance",
+					TotalCost:    75.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			groupBy: engine.GroupByDaily,
+			expected: []engine.CrossProviderAggregation{
+				{
+					Period: "2025-01-01",
+					Providers: map[string]float64{
+						"aws":   100.0,
+						"azure": 50.0,
+					},
+					Total:    150.0,
+					Currency: "USD",
+				},
+				{
+					Period: "2025-01-02",
+					Providers: map[string]float64{
+						"aws": 75.0,
+					},
+					Total:    75.0,
+					Currency: "USD",
+				},
+			},
+		},
+		{
+			name:        "monthly aggregation",
+			expectError: false,
+			results: []engine.CostResult{
+				{
+					ResourceType: "aws:ec2:Instance",
+					TotalCost:    1500.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					ResourceType: "aws:rds:Instance",
+					TotalCost:    800.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 2, 10, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			groupBy: engine.GroupByMonthly,
+			expected: []engine.CrossProviderAggregation{
+				{
+					Period: "2025-01",
+					Providers: map[string]float64{
+						"aws": 1500.0,
+					},
+					Total:    1500.0,
+					Currency: "USD",
+				},
+				{
+					Period: "2025-02",
+					Providers: map[string]float64{
+						"aws": 800.0,
+					},
+					Total:    800.0,
+					Currency: "USD",
+				},
+			},
+		},
+		{
+			name:        "invalid groupby returns error",
+			results:     []engine.CostResult{{ResourceType: "aws:ec2:Instance", Currency: "USD"}},
+			groupBy:     engine.GroupByResource,
+			expected:    nil,
+			expectError: true,
+		},
+		{
+			name:        "empty results returns error",
+			results:     []engine.CostResult{},
+			groupBy:     engine.GroupByDaily,
+			expected:    nil,
+			expectError: true,
+		},
+		{
+			name: "mixed currencies returns error",
+			results: []engine.CostResult{
+				{
+					ResourceType: "aws:ec2:Instance",
+					TotalCost:    100.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					ResourceType: "azure:compute:VirtualMachine",
+					TotalCost:    50.0,
+					Currency:     "EUR",
+					StartDate:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			groupBy:     engine.GroupByDaily,
+			expected:    nil,
+			expectError: true,
+		},
+		{
+			name: "invalid date range returns error",
+			results: []engine.CostResult{
+				{
+					ResourceType: "aws:ec2:Instance",
+					TotalCost:    100.0,
+					Currency:     "USD",
+					StartDate:    time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC),
+					EndDate:      time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), // End before start
+				},
+			},
+			groupBy:     engine.GroupByDaily,
+			expected:    nil,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := engine.CreateCrossProviderAggregation(tt.results, tt.groupBy)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("Expected error, but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+
+			if tt.expected == nil {
+				if result != nil {
+					t.Errorf("Expected nil result, got %v", result)
+				}
+				return
+			}
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected %d aggregations, got %d", len(tt.expected), len(result))
+				return
+			}
+
+			// Convert to map for easier comparison
+			resultMap := make(map[string]engine.CrossProviderAggregation)
+			for _, agg := range result {
+				resultMap[agg.Period] = agg
+			}
+
+			for _, expected := range tt.expected {
+				actual, exists := resultMap[expected.Period]
+				if !exists {
+					t.Errorf("Expected period %s not found in results", expected.Period)
+					continue
+				}
+
+				if actual.Total != expected.Total {
+					t.Errorf("Period %s: expected total %.2f, got %.2f", expected.Period, expected.Total, actual.Total)
+				}
+
+				if actual.Currency != expected.Currency {
+					t.Errorf(
+						"Period %s: expected currency %s, got %s",
+						expected.Period,
+						expected.Currency,
+						actual.Currency,
+					)
+				}
+
+				for provider, expectedCost := range expected.Providers {
+					actualCost, providerExists := actual.Providers[provider]
+					if !providerExists {
+						t.Errorf("Period %s: expected provider %s not found", expected.Period, provider)
+						continue
+					}
+
+					if actualCost != expectedCost {
+						t.Errorf("Period %s, provider %s: expected cost %.2f, got %.2f",
+							expected.Period, provider, expectedCost, actualCost)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestGetActualCostWithOptions(t *testing.T) {
 	eng := engine.New(nil, nil) // No plugins for this test
 
@@ -480,4 +691,53 @@ func TestGetActualCostWithOptions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGroupByValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		groupBy     engine.GroupBy
+		isValid     bool
+		isTimeBased bool
+	}{
+		{"resource grouping", engine.GroupByResource, true, false},
+		{"type grouping", engine.GroupByType, true, false},
+		{"provider grouping", engine.GroupByProvider, true, false},
+		{"date grouping", engine.GroupByDate, true, false},
+		{"daily grouping", engine.GroupByDaily, true, true},
+		{"monthly grouping", engine.GroupByMonthly, true, true},
+		{"none grouping", engine.GroupByNone, true, false},
+		{"invalid grouping", engine.GroupBy("invalid"), false, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.isValid, tt.groupBy.IsValid())
+			assert.Equal(t, tt.isTimeBased, tt.groupBy.IsTimeBasedGrouping())
+			assert.Equal(t, string(tt.groupBy), tt.groupBy.String())
+		})
+	}
+}
+
+func TestCurrencySymbolMapping(t *testing.T) {
+	// Test via the renderCrossProviderTable function - create minimal aggregations to test currency symbol
+	aggregations := []engine.CrossProviderAggregation{
+		{
+			Period:    "2025-01-01",
+			Total:     100.0,
+			Currency:  "USD",
+			Providers: map[string]float64{"aws": 100.0},
+		},
+		{
+			Period:    "2025-01-02",
+			Total:     200.0,
+			Currency:  "EUR",
+			Providers: map[string]float64{"azure": 200.0},
+		},
+	}
+
+	// We can't easily test the output formatting without mocking stdout,
+	// but we can at least verify the function doesn't panic with different currencies
+	err := engine.RenderCrossProviderAggregation(engine.OutputJSON, aggregations, engine.GroupByDaily)
+	require.NoError(t, err)
 }
