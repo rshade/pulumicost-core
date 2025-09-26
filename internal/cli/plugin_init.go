@@ -49,12 +49,13 @@ This command creates a new directory structure for plugin development including:
 	}
 
 	cmd.Flags().StringVar(&opts.Author, "author", "", "Plugin author name (required)")
-	cmd.Flags().StringSliceVar(&opts.Providers, "providers", []string{}, "Supported cloud providers (e.g., aws,azure,gcp)")
+	cmd.Flags().
+		StringSliceVar(&opts.Providers, "providers", []string{}, "Supported cloud providers (e.g., aws,azure,gcp)")
 	cmd.Flags().StringVar(&opts.OutputDir, "output-dir", ".", "Output directory for plugin project")
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "Overwrite existing files if directory exists")
 
-	cmd.MarkFlagRequired("author")
-	cmd.MarkFlagRequired("providers")
+	_ = cmd.MarkFlagRequired("author")
+	_ = cmd.MarkFlagRequired("providers")
 
 	return cmd
 }
@@ -62,7 +63,10 @@ This command creates a new directory structure for plugin development including:
 func runPluginInit(cmd *cobra.Command, opts *PluginInitOptions) error {
 	// Validate plugin name
 	if !isValidPluginName(opts.Name) {
-		return fmt.Errorf("invalid plugin name: %s (must contain only lowercase letters, numbers, and hyphens)", opts.Name)
+		return fmt.Errorf(
+			"invalid plugin name: %s (must contain only lowercase letters, numbers, and hyphens)",
+			opts.Name,
+		)
 	}
 
 	// Validate providers
@@ -217,7 +221,7 @@ func main() {
 		Port:   0, // Let the system choose a port
 	}
 
-	log.Printf("Starting %s plugin...", plugin.Name())
+	log.Printf("Starting %%s plugin...", plugin.Name())
 	if err := pluginsdk.Serve(ctx, config); err != nil {
 		log.Fatalf("Failed to serve plugin: %%v", err)
 	}
@@ -577,20 +581,20 @@ This plugin provides cost calculation capabilities for %s resources in PulumiCos
 ### From Source
 
 1. Clone the repository:
-   ` + "```bash" + `
+   `+"```bash"+`
    git clone <repository-url>
    cd %s
-   ` + "```" + `
+   `+"```"+`
 
 2. Build the plugin:
-   ` + "```bash" + `
+   `+"```bash"+`
    make build
-   ` + "```" + `
+   `+"```"+`
 
 3. Install to local plugin registry:
-   ` + "```bash" + `
+   `+"```bash"+`
    make install
-   ` + "```" + `
+   `+"```"+`
 
 ### Configuration
 
@@ -600,7 +604,7 @@ The plugin may require cloud provider credentials to function properly. See the 
 
 Once installed, the plugin will be automatically discovered by PulumiCost:
 
-` + "```bash" + `
+`+"```bash"+`
 # List installed plugins
 pulumicost plugin list
 
@@ -612,7 +616,7 @@ pulumicost cost projected --pulumi-json plan.json
 
 # Get actual costs
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
-` + "```" + `
+`+"```"+`
 
 ## Development
 
@@ -624,7 +628,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
 
 ### Building
 
-` + "```bash" + `
+`+"```bash"+`
 # Build the plugin
 make build
 
@@ -636,11 +640,11 @@ make lint
 
 # Build with debug info
 make build-debug
-` + "```" + `
+`+"```"+`
 
 ### Project Structure
 
-` + "```" + `
+`+"```"+`
 %s/
 ├── cmd/plugin/main.go          # Plugin entry point
 ├── internal/
@@ -653,15 +657,15 @@ make build-debug
 ├── manifest.yaml            # Plugin manifest
 ├── Makefile                # Build scripts
 └── README.md               # This file
-` + "```" + `
+`+"```"+`
 
 ### Implementation Guide
 
 #### Projected Cost Calculation
 
-Edit ` + "`internal/pricing/calculator.go`" + ` to implement your pricing logic:
+Edit `+"`internal/pricing/calculator.go`"+` to implement your pricing logic:
 
-` + "```go" + `
+`+"```go"+`
 func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
     // 1. Check if resource is supported
     if !c.Matcher().Supports(req.Resource) {
@@ -678,37 +682,37 @@ func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjected
     // 4. Return response
     return c.Calculator().CreateProjectedCostResponse("USD", unitPrice, "description"), nil
 }
-` + "```" + `
+`+"```"+`
 
 #### Actual Cost Retrieval
 
-Edit ` + "`internal/client/client.go`" + ` to implement cloud provider API integration:
+Edit `+"`internal/client/client.go`"+` to implement cloud provider API integration:
 
-` + "```go" + `
+`+"```go"+`
 func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTime, endTime int64) (float64, error) {
     // 1. Call cloud provider billing API
     // 2. Parse response and calculate total cost
     // 3. Return cost value
     return totalCost, nil
 }
-` + "```" + `
+`+"```"+`
 
 ### Testing
 
 The project includes testing utilities from the PulumiCost SDK:
 
-` + "```go" + `
+`+"```go"+`
 func TestPluginName(t *testing.T) {
     plugin := pricing.NewCalculator()
     testPlugin := pluginsdk.NewTestPlugin(t, plugin)
     testPlugin.TestName("%s")
 }
-` + "```" + `
+`+"```"+`
 
 ### Adding Pricing Data
 
-1. Update pricing data structures in ` + "`internal/pricing/data.go`" + `
-2. Implement pricing lookups in ` + "`internal/pricing/calculator.go`" + `
+1. Update pricing data structures in `+"`internal/pricing/data.go`"+`
+2. Implement pricing lookups in `+"`internal/pricing/calculator.go`"+`
 3. Add test cases for new resource types
 
 ### Configuration
@@ -725,7 +729,7 @@ The plugin supports the following configuration options:
 2. Create a feature branch
 3. Make your changes
 4. Add tests
-5. Run ` + "`make lint test`" + `
+5. Run `+"`make lint test`"+`
 6. Submit a pull request
 
 ## License
@@ -836,7 +840,7 @@ func TestEC2InstancePricing(t *testing.T) {
 
 func (g *projectGenerator) writeFile(relativePath, content string) error {
 	fullPath := filepath.Join(g.projectDir, relativePath)
-	
+
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -865,13 +869,13 @@ func isValidPluginName(name string) bool {
 	if len(name) < 2 || len(name) > 50 {
 		return false
 	}
-	
+
 	for _, r := range name {
 		if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-') {
 			return false
 		}
 	}
-	
+
 	// Cannot start or end with hyphen
 	return name[0] != '-' && name[len(name)-1] != '-'
 }

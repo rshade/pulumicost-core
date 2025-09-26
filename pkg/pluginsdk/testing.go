@@ -9,6 +9,7 @@ import (
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // TestServer provides utilities for testing plugins.
@@ -22,7 +23,7 @@ type TestServer struct {
 // NewTestServer creates a test gRPC server for a plugin.
 func NewTestServer(t *testing.T, plugin Plugin) *TestServer {
 	t.Helper()
-	
+
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Failed to listen: %v", err)
@@ -80,6 +81,7 @@ func (ts *TestServer) Close() {
 // TestPlugin provides test utilities for plugin implementations.
 type TestPlugin struct {
 	*testing.T
+
 	server *TestServer
 	client pbc.CostSourceServiceClient
 }
@@ -87,9 +89,9 @@ type TestPlugin struct {
 // NewTestPlugin creates a test environment for a plugin.
 func NewTestPlugin(t *testing.T, plugin Plugin) *TestPlugin {
 	t.Helper()
-	
+
 	server := NewTestServer(t, plugin)
-	
+
 	t.Cleanup(func() {
 		server.Close()
 	})
@@ -104,7 +106,7 @@ func NewTestPlugin(t *testing.T, plugin Plugin) *TestPlugin {
 // TestName tests the plugin's Name method.
 func (tp *TestPlugin) TestName(expectedName string) {
 	tp.Helper()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -119,15 +121,18 @@ func (tp *TestPlugin) TestName(expectedName string) {
 }
 
 // TestProjectedCost tests a projected cost calculation.
-func (tp *TestPlugin) TestProjectedCost(resource *pbc.ResourceDescriptor, expectError bool) *pbc.GetProjectedCostResponse {
+func (tp *TestPlugin) TestProjectedCost(
+	resource *pbc.ResourceDescriptor,
+	expectError bool,
+) *pbc.GetProjectedCostResponse {
 	tp.Helper()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	req := &pbc.GetProjectedCostRequest{Resource: resource}
 	resp, err := tp.client.GetProjectedCost(ctx, req)
-	
+
 	if expectError {
 		if err == nil {
 			tp.Errorf("Expected error for resource %v, but got none", resource)
@@ -151,21 +156,25 @@ func (tp *TestPlugin) TestProjectedCost(resource *pbc.ResourceDescriptor, expect
 }
 
 // TestActualCost tests an actual cost retrieval.
-func (tp *TestPlugin) TestActualCost(resourceID string, startTime, endTime int64, expectError bool) *pbc.GetActualCostResponse {
+func (tp *TestPlugin) TestActualCost(
+	resourceID string,
+	startTime, endTime int64,
+	expectError bool,
+) *pbc.GetActualCostResponse {
 	tp.Helper()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	req := &pbc.GetActualCostRequest{
 		ResourceId: resourceID,
-		Start:      &pbc.Timestamp{Seconds: startTime},
-		End:        &pbc.Timestamp{Seconds: endTime},
+		Start:      timestamppb.New(time.Unix(startTime, 0)),
+		End:        timestamppb.New(time.Unix(endTime, 0)),
 		Tags:       make(map[string]string),
 	}
-	
+
 	resp, err := tp.client.GetActualCost(ctx, req)
-	
+
 	if expectError {
 		if err == nil {
 			tp.Errorf("Expected error for resource ID %s, but got none", resourceID)
@@ -196,7 +205,7 @@ func CreateTestResource(provider, resourceType string, properties map[string]str
 	if properties == nil {
 		properties = make(map[string]string)
 	}
-	
+
 	return &pbc.ResourceDescriptor{
 		Provider:     provider,
 		ResourceType: resourceType,

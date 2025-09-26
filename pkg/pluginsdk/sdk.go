@@ -25,6 +25,7 @@ type Plugin interface {
 // Server wraps a Plugin implementation with a gRPC server.
 type Server struct {
 	pbc.UnimplementedCostSourceServiceServer
+
 	plugin Plugin
 }
 
@@ -39,7 +40,10 @@ func (s *Server) Name(ctx context.Context, req *pbc.NameRequest) (*pbc.NameRespo
 }
 
 // GetProjectedCost implements the gRPC GetProjectedCost method.
-func (s *Server) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
+func (s *Server) GetProjectedCost(
+	ctx context.Context,
+	req *pbc.GetProjectedCostRequest,
+) (*pbc.GetProjectedCostResponse, error) {
 	return s.plugin.GetProjectedCost(ctx, req)
 }
 

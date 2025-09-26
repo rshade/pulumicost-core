@@ -10,11 +10,11 @@ import (
 
 func TestPluginInitCommand(t *testing.T) {
 	cmd := NewPluginInitCmd()
-	
+
 	if cmd.Use != "init <plugin-name>" {
 		t.Errorf("Expected Use 'init <plugin-name>', got %s", cmd.Use)
 	}
-	
+
 	if cmd.Short != "Initialize a new plugin development project" {
 		t.Errorf("Expected short description about initializing plugin project, got %s", cmd.Short)
 	}
@@ -80,7 +80,7 @@ func TestPluginInitValidation(t *testing.T) {
 			}
 
 			err := cmd.RunE(cmd, tc.args)
-			
+
 			if tc.expectErr && err == nil {
 				t.Errorf("Expected error, got none")
 			}
@@ -93,7 +93,7 @@ func TestPluginInitValidation(t *testing.T) {
 
 func TestPluginInitProjectGeneration(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	opts := &PluginInitOptions{
 		Name:      "test-plugin",
 		Author:    "Test Author",
@@ -159,7 +159,7 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 func TestPluginInitForceOverwrite(t *testing.T) {
 	tmpDir := t.TempDir()
 	projectDir := filepath.Join(tmpDir, "test-plugin")
-	
+
 	// Create existing directory
 	err := os.MkdirAll(projectDir, 0755)
 	if err != nil {
