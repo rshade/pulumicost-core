@@ -176,12 +176,38 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
   - Multiple output formats (table, JSON, NDJSON)
   - Comprehensive cost reporting with actual vs projected comparisons
 
+### ✅ CORE-6 Completed - Cross-Provider Aggregation System
+- **Status**: Advanced cross-provider cost aggregation with comprehensive validation
+- **Key Features**:
+  - **Currency Validation**: Ensures consistent currency across all cost results (ErrMixedCurrencies)
+  - **Input Validation**: Comprehensive checks for empty results, invalid date ranges, and grouping types
+  - **Time-Based Aggregation**: Daily and monthly cost aggregation with intelligent cost conversion
+  - **Provider Extraction**: Automatic provider identification from resource types ("aws:ec2:Instance" → "aws")
+  - **Type Safety**: GroupBy validation methods (IsValid(), IsTimeBasedGrouping(), String())
+  - **Error Handling**: Specific error types for different validation failures
+  - **Cost Intelligence**: Prefers actual costs (TotalCost) over projections with automatic daily/monthly conversion
+
 ### Architecture Changes
 - **New Engine Method**: `GetActualCostWithOptions()` with flexible querying
 - **Enhanced Data Structures**: `ActualCostRequest` with advanced filtering options
 - **Tag Matching**: `matchesTags()` helper for resource filtering
 - **Cost Aggregation**: Daily/monthly cost breakdown logic
 - **Output Enhancement**: Rich table formatting for actual cost results
+- **Cross-Provider Functions**: `CreateCrossProviderAggregation()` with comprehensive validation pipeline
+- **Currency System**: Centralized currency validation with defaulting to USD
+- **Time Processing**: Intelligent cost calculation for different time periods
+- **Error Types**: New error constants for specific validation scenarios
+
+**New Error Types for Cross-Provider Aggregation**:
+```go
+var (
+    ErrNoCostData       = errors.New("no cost data available")
+    ErrMixedCurrencies  = errors.New("mixed currencies not supported in cross-provider aggregation")
+    ErrInvalidGroupBy   = errors.New("invalid groupBy type for cross-provider aggregation")
+    ErrEmptyResults     = errors.New("empty results provided for aggregation")
+    ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
+)
+```
 
 ### Next Steps Unlocked
 With SPEC-1 and CORE-5 complete, the following work can now proceed:
@@ -401,7 +427,12 @@ Use the provided example files:
 
 # Actual cost with filtering and grouping
 ./bin/pulumicost cost actual --group-by resource --filter "tag:env=prod" --output table
-./bin/pulumicost cost actual --group-by date --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
+./bin/pulumicost cost actual --group-by daily --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
+
+# Cross-provider aggregation (NEW)
+./bin/pulumicost cost actual --group-by daily --start-date 2024-01-01 --end-date 2024-01-31 --output json
+./bin/pulumicost cost actual --group-by monthly --start-date 2024-01-01 --end-date 2024-12-31 --filter "tag:env=prod"
+./bin/pulumicost cost actual --group-by daily --output table  # Shows cross-provider daily breakdown
 
 # Plugin management
 ./bin/pulumicost plugin list
@@ -431,7 +462,21 @@ The engine package orchestrates cost calculations between plugins and specs:
   - Cost aggregation logic for daily/monthly breakdowns
   - Grouping support (resource, type, provider, date)
   - Multiple date format parsing ("2006-01-02", RFC3339)
+- **Cross-Provider Aggregation Features** (NEW):
+  - `CreateCrossProviderAggregation()` - Time-based multi-provider cost analysis
+  - Currency validation system with `ErrMixedCurrencies` protection
+  - Advanced input validation (empty results, invalid date ranges, grouping types)
+  - GroupBy type safety with `IsValid()`, `IsTimeBasedGrouping()`, `String()` methods
+  - Intelligent cost calculation (actual vs projected with time period conversion)
+  - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
+  - Sorted chronological output for trend analysis
 - See `internal/engine/CLAUDE.md` for detailed calculation flows
+
+**Error Types for Cross-Provider Aggregation**:
+- `ErrMixedCurrencies`: Different currencies detected (USD vs EUR)
+- `ErrInvalidGroupBy`: Non-time-based grouping used for cross-provider aggregation
+- `ErrEmptyResults`: Empty or nil results provided for aggregation
+- `ErrInvalidDateRange`: EndDate before StartDate in cost results
 
 ### internal/pluginhost
 The pluginhost package manages plugin communication via gRPC:
@@ -448,3 +493,49 @@ The registry package handles plugin discovery and lifecycle:
 - Graceful handling of missing directories and invalid binaries
 - Platform-specific executable detection
 - See `internal/registry/CLAUDE.md` for detailed discovery patterns
+
+## CodeRabbit Configuration
+
+### Setup
+
+The repository includes a comprehensive `.coderabbit.yaml` configuration optimized for Go development with the following key settings:
+
+**PR Blocking Configuration:**
+- `fail_commit_status: true` - Blocks PR merging on critical issues
+- `request_changes_workflow: true` - Formally requests changes for issues
+- `profile: assertive` - Uses stricter analysis profile
+
+**Comment Management:**
+- `auto_reply: true` - Enables automatic comment responses
+- `abort_on_close: true` - Stops processing when PR is closed
+- `auto_incremental_review: true` - Reviews new commits automatically
+
+**Go-Specific Settings:**
+- Custom path instructions for `**/*.go` files focusing on Go best practices
+- Enhanced test review instructions for `**/*_test.go` files
+- Enabled golangci-lint, gitleaks, yamllint, and markdownlint
+- Docstring and unit test generation enabled
+
+**Tool Configuration:**
+- `golangci-lint: enabled: true` - Integrates with project's existing linting
+- `markdownlint: enabled: true` - Validates documentation
+- `gitleaks: enabled: true` - Scans for secrets
+- `actionlint: enabled: true` - Validates GitHub Actions
+- `semgrep: enabled: true` - Advanced security analysis
+
+### Usage
+
+CodeRabbit now:
+1. **Blocks PRs** with critical issues by setting commit status to failed
+2. **Updates comments** automatically on new commits
+3. **Resolves outdated comments** when issues are fixed
+4. **Provides detailed Go-specific feedback** on code quality
+5. **Integrates with existing CI/CD** tools and workflows
+
+### Commands
+
+```bash
+@coderabbitai resolve          # Mark all previous comments as resolved
+@coderabbitai configuration    # Show current configuration
+@coderabbitai plan            # Plan code edits for comments
+```
