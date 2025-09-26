@@ -18,6 +18,7 @@ type PluginInitOptions struct {
 	Force     bool
 }
 
+// the generated project into the specified output directory.
 func NewPluginInitCmd() *cobra.Command {
 	var opts PluginInitOptions
 
@@ -60,6 +61,9 @@ This command creates a new directory structure for plugin development including:
 	return cmd
 }
 
+// runPluginInit validates the provided PluginInitOptions, creates the target project directory (honoring the force flag),
+// generates the boilerplate project files, and prints progress and next-step instructions to the command output.
+// It returns an error if validation fails (invalid name or no providers), if the directory cannot be created, or if file generation fails.
 func runPluginInit(cmd *cobra.Command, opts *PluginInitOptions) error {
 	// Validate plugin name
 	if !isValidPluginName(opts.Name) {
@@ -855,6 +859,10 @@ func (g *projectGenerator) writeFile(relativePath, content string) error {
 	return nil
 }
 
+// createProjectDirectory ensures a directory exists at the given path, creating it and any
+// necessary parent directories with 0755 permissions.
+// If the path already exists and force is false, it returns an error indicating the directory
+// already exists. Returns an error on failure to create the directory, or nil on success.
 func createProjectDirectory(path string, force bool) error {
 	if _, err := os.Stat(path); err == nil {
 		if !force {
@@ -865,6 +873,10 @@ func createProjectDirectory(path string, force bool) error {
 	return os.MkdirAll(path, 0755)
 }
 
+// isValidPluginName reports whether the provided name satisfies the plugin naming rules.
+// The name must be between 2 and 50 characters, contain only lowercase letters (`a`–`z`),
+// digits (`0`–`9`) or hyphens (`-`), and must not start or end with a hyphen.
+// It returns true when all conditions are met, false otherwise.
 func isValidPluginName(name string) bool {
 	if len(name) < 2 || len(name) > 50 {
 		return false

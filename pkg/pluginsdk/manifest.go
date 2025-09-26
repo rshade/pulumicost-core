@@ -48,7 +48,8 @@ func (errs ValidationErrors) Error() string {
 }
 
 // LoadManifest loads a plugin manifest from a file path.
-// Supports both YAML and JSON formats based on file extension.
+// LoadManifest reads a plugin manifest from path, decodes it as YAML (.yaml/.yml) or JSON (.json) based on the file extension, validates the manifest, and returns the parsed Manifest.
+// It returns an error if the file cannot be read, if the extension is unsupported, if decoding fails, or if the manifest does not pass validation.
 func LoadManifest(path string) (*Manifest, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -192,7 +193,10 @@ func (m *Manifest) Validate() error {
 	return nil
 }
 
-// CreateDefaultManifest creates a default manifest for a plugin.
+// CreateDefaultManifest creates a Manifest populated with sensible defaults for a new plugin.
+// The Name, Author, and SupportedProviders fields are set from the provided arguments.
+// The returned Manifest uses Version "1.0.0", Description "PulumiCost plugin for <name>",
+// Protocols set to ["grpc"], Binary set to "./bin/pulumicost-plugin-<name>", and an empty Metadata map.
 func CreateDefaultManifest(name, author string, providers []string) *Manifest {
 	return &Manifest{
 		Name:               name,
@@ -212,6 +216,9 @@ var (
 	versionRegex = regexp.MustCompile(`^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+)?(\+[a-zA-Z0-9-]+)?$`)
 )
 
+// isValidName reports whether name is between 2 and 50 characters and matches the package's
+// allowed plugin name pattern (starts with a lowercase letter, contains only lowercase letters,
+// digits, and hyphens, and ends with a lowercase letter or digit).
 func isValidName(name string) bool {
 	if len(name) < 2 || len(name) > 50 {
 		return false
@@ -219,6 +226,7 @@ func isValidName(name string) bool {
 	return nameRegex.MatchString(name)
 }
 
+// isValidVersion reports whether version conforms to the package's semantic versioning pattern (for example "1.0.0") as defined by versionRegex.
 func isValidVersion(version string) bool {
 	return versionRegex.MatchString(version)
 }

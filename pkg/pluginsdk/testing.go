@@ -20,7 +20,7 @@ type TestServer struct {
 	conn     *grpc.ClientConn
 }
 
-// NewTestServer creates a test gRPC server for a plugin.
+// cleaned up and the test is failed.
 func NewTestServer(t *testing.T, plugin Plugin) *TestServer {
 	t.Helper()
 
@@ -86,7 +86,11 @@ type TestPlugin struct {
 	client pbc.CostSourceServiceClient
 }
 
-// NewTestPlugin creates a test environment for a plugin.
+// NewTestPlugin creates a TestPlugin backed by an in-process gRPC TestServer for the
+// provided plugin and registers cleanup to stop the server when the test finishes.
+//
+// The returned TestPlugin contains the testing.T, the created TestServer, and a
+// CostSourceServiceClient connected to that server.
 func NewTestPlugin(t *testing.T, plugin Plugin) *TestPlugin {
 	t.Helper()
 
@@ -200,7 +204,8 @@ func (tp *TestPlugin) TestActualCost(
 	return resp
 }
 
-// CreateTestResource creates a test resource descriptor.
+// CreateTestResource creates a ResourceDescriptor for tests with the given provider and resource type.
+// If properties is nil, an empty tag map is created and assigned to the descriptor's Tags field.
 func CreateTestResource(provider, resourceType string, properties map[string]string) *pbc.ResourceDescriptor {
 	if properties == nil {
 		properties = make(map[string]string)

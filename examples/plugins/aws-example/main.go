@@ -16,7 +16,7 @@ type AWSExamplePlugin struct {
 	*pluginsdk.BasePlugin
 }
 
-// NewAWSExamplePlugin creates a new AWS example plugin.
+// "aws:ec2:Instance", "aws:s3:Bucket", and "aws:rds:Instance".
 func NewAWSExamplePlugin() *AWSExamplePlugin {
 	base := pluginsdk.NewBasePlugin("aws-example")
 
@@ -186,6 +186,8 @@ func (p *AWSExamplePlugin) calculateRDSCost(resource *pbc.ResourceDescriptor) fl
 	return price
 }
 
+// main starts the AWS example plugin, sets up signal-based graceful shutdown, and serves it on an OS-assigned port.
+// It registers handlers for SIGINT and SIGTERM to cancel the server context and exits on serve errors.
 func main() {
 	// Create the plugin implementation
 	plugin := NewAWSExamplePlugin()

@@ -29,7 +29,7 @@ type Server struct {
 	plugin Plugin
 }
 
-// NewServer creates a new gRPC server for a plugin.
+// NewServer creates a Server that exposes the provided Plugin over gRPC.
 func NewServer(plugin Plugin) *Server {
 	return &Server{plugin: plugin}
 }
@@ -58,7 +58,13 @@ type ServeConfig struct {
 	Port   int // If 0, will use PORT env var or random port
 }
 
-// Serve starts the gRPC server for the plugin.
+// Serve starts the gRPC server for the provided plugin and prints the chosen port as PORT=<port> to stdout.
+// 
+// It uses config.Port when > 0; if config.Port is 0 it attempts to parse the PORT environment variable and
+// falls back to an ephemeral port when none is provided. The function registers the plugin's service, begins
+// serving on the selected port, and performs a graceful stop when the context is cancelled.
+// 
+// Returns an error if PORT cannot be parsed, if the listener cannot be created, or if the gRPC server fails to serve.
 func Serve(ctx context.Context, config ServeConfig) error {
 	// Determine port
 	port := config.Port
