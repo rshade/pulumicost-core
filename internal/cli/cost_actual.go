@@ -34,6 +34,12 @@ func NewCostActualCmd() *cobra.Command {
   # Group costs by resource type
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
 
+  # Daily cross-provider aggregation table
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-07 --group-by daily
+
+  # Monthly cross-provider aggregation table
+  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-03-31 --group-by monthly
+
   # Output as JSON with grouping by provider
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json --group-by provider
 
@@ -73,15 +79,7 @@ func NewCostActualCmd() *cobra.Command {
 			eng := engine.New(clients, nil)
 
 			// Parse tags from groupBy if it's in tag:key=value format
-			tags := make(map[string]string)
-			actualGroupBy := groupBy
-			if strings.HasPrefix(groupBy, "tag:") && strings.Contains(groupBy, "=") {
-				tagPart := strings.TrimPrefix(groupBy, "tag:")
-				if parts := strings.Split(tagPart, "="); len(parts) == filterKeyValueParts {
-					tags[parts[0]] = parts[1]
-					actualGroupBy = "" // Clear groupBy since we're filtering by tag
-				}
-			}
+			tags, actualGroupBy := parseTagFilter(groupBy)
 
 			request := engine.ActualCostRequest{
 				Resources: resources,
@@ -100,7 +98,8 @@ func NewCostActualCmd() *cobra.Command {
 			// Use configuration-aware output format selection
 			finalOutput := config.GetOutputFormat(output)
 			outputFormat := engine.OutputFormat(finalOutput)
-			return engine.RenderActualCostResults(outputFormat, results)
+
+			return renderActualCostOutput(outputFormat, results, actualGroupBy)
 		},
 	}
 
@@ -113,7 +112,7 @@ func NewCostActualCmd() *cobra.Command {
 	defaultFormat := config.GetDefaultOutputFormat()
 	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().
-		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, or filter by tag:key=value")
+		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 	_ = cmd.MarkFlagRequired("from")
@@ -153,4 +152,33 @@ func ParseTime(str string) (time.Time, error) {
 	}
 
 	return time.Time{}, fmt.Errorf("unable to parse date: %s (use YYYY-MM-DD or RFC3339)", str)
+}
+
+func parseTagFilter(groupBy string) (map[string]string, string) {
+	tags := make(map[string]string)
+	actualGroupBy := groupBy
+
+	if strings.HasPrefix(groupBy, "tag:") && strings.Contains(groupBy, "=") {
+		tagPart := strings.TrimPrefix(groupBy, "tag:")
+		if parts := strings.Split(tagPart, "="); len(parts) == filterKeyValueParts {
+			tags[parts[0]] = parts[1]
+			actualGroupBy = "" // Clear groupBy since we're filtering by tag
+		}
+	}
+
+	return tags, actualGroupBy
+}
+
+func renderActualCostOutput(outputFormat engine.OutputFormat, results []engine.CostResult, actualGroupBy string) error {
+	// Check if we need cross-provider aggregation
+	groupByType := engine.GroupBy(actualGroupBy)
+	if groupByType.IsTimeBasedGrouping() {
+		aggregations, err := engine.CreateCrossProviderAggregation(results, groupByType)
+		if err != nil {
+			return fmt.Errorf("creating cross-provider aggregation: %w", err)
+		}
+		return engine.RenderCrossProviderAggregation(outputFormat, aggregations, groupByType)
+	}
+
+	return engine.RenderActualCostResults(outputFormat, results)
 }
