@@ -13,7 +13,7 @@ type ResourceMatcher struct {
 	supportedTypes     map[string]bool
 }
 
-// NewResourceMatcher creates a new resource matcher.
+// NewResourceMatcher creates a ResourceMatcher with initialized empty maps for supported providers and supported resource types.
 func NewResourceMatcher() *ResourceMatcher {
 	return &ResourceMatcher{
 		supportedProviders: make(map[string]bool),
@@ -51,7 +51,7 @@ func (rm *ResourceMatcher) Supports(resource *pbc.ResourceDescriptor) bool {
 // CostCalculator provides utilities for cost calculations.
 type CostCalculator struct{}
 
-// NewCostCalculator creates a new cost calculator.
+// NewCostCalculator returns a new CostCalculator for performing cost conversions and creating cost responses.
 func NewCostCalculator() *CostCalculator {
 	return &CostCalculator{}
 }
@@ -89,7 +89,8 @@ func (cc *CostCalculator) CreateActualCostResponse(
 	}
 }
 
-// NotSupportedError returns a standard error for unsupported resources.
+// NotSupportedError returns an error indicating the specified resource type and provider are not supported.
+// The formatted message includes the resource's ResourceType and Provider.
 func NotSupportedError(resource *pbc.ResourceDescriptor) error {
 	return fmt.Errorf("resource type %s from provider %s is not supported",
 		resource.ResourceType, resource.Provider)
@@ -107,7 +108,8 @@ type BasePlugin struct {
 	calc    *CostCalculator
 }
 
-// NewBasePlugin creates a new base plugin with common utilities.
+// NewBasePlugin creates a new BasePlugin with the given name and initializes its
+// ResourceMatcher and CostCalculator for shared plugin functionality.
 func NewBasePlugin(name string) *BasePlugin {
 	return &BasePlugin{
 		name:    name,

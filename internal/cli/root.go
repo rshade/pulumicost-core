@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRootCmd creates the root Cobra command for the pulumicost CLI and configures its subcommands.
+// The returned command has its Version set from ver, a persistent "debug" flag, usage examples, and
+// includes the "cost" subcommands (projected, actual) and the "plugin" subcommands (validate, list, init).
 func NewRootCmd(ver string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pulumicost",
