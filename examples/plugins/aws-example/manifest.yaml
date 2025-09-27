@@ -1,0 +1,10 @@
+name: aws-example
+version: 1.0.0
+description: Example AWS cost calculation plugin for PulumiCost
+author: PulumiCost Team
+supported_providers: [aws]
+protocols: [grpc]
+binary: ./bin/pulumicost-plugin-aws-example
+metadata:
+  repository: https://github.com/rshade/pulumicost-core
+  docs: https://github.com/rshade/pulumicost-core/tree/main/examples/plugins/aws-example
