@@ -1,15 +1,16 @@
-package cli
+package cli_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/spf13/cobra"
 )
 
 func TestPluginInitCommand(t *testing.T) {
-	cmd := NewPluginInitCmd()
+	cmd := cli.NewPluginInitCmd()
 
 	if cmd.Use != "init <plugin-name>" {
 		t.Errorf("Expected Use 'init <plugin-name>', got %s", cmd.Use)
@@ -24,13 +25,13 @@ func TestPluginInitValidation(t *testing.T) {
 	testCases := []struct {
 		name      string
 		args      []string
-		opts      PluginInitOptions
+		opts      cli.PluginInitOptions
 		expectErr bool
 	}{
 		{
 			name: "valid plugin name",
 			args: []string{"aws-plugin"},
-			opts: PluginInitOptions{
+			opts: cli.PluginInitOptions{
 				Author:    "Test Author",
 				Providers: []string{"aws"},
 			},
@@ -39,7 +40,7 @@ func TestPluginInitValidation(t *testing.T) {
 		{
 			name: "invalid plugin name with uppercase",
 			args: []string{"AWS-Plugin"},
-			opts: PluginInitOptions{
+			opts: cli.PluginInitOptions{
 				Author:    "Test Author",
 				Providers: []string{"aws"},
 			},
@@ -48,7 +49,7 @@ func TestPluginInitValidation(t *testing.T) {
 		{
 			name: "invalid plugin name with underscore",
 			args: []string{"aws_plugin"},
-			opts: PluginInitOptions{
+			opts: cli.PluginInitOptions{
 				Author:    "Test Author",
 				Providers: []string{"aws"},
 			},
@@ -57,7 +58,7 @@ func TestPluginInitValidation(t *testing.T) {
 		{
 			name: "empty providers",
 			args: []string{"aws-plugin"},
-			opts: PluginInitOptions{
+			opts: cli.PluginInitOptions{
 				Author:    "Test Author",
 				Providers: []string{},
 			},
@@ -72,14 +73,20 @@ func TestPluginInitValidation(t *testing.T) {
 			tc.opts.Name = tc.args[0]
 			tc.opts.Force = true
 
-			// Create a mock command for testing
-			cmd := &cobra.Command{
-				RunE: func(cmd *cobra.Command, args []string) error {
-					return runPluginInit(cmd, &tc.opts)
-				},
+			// Create command via Cobra and capture output
+			cmd := cli.NewPluginInitCmd()
+			args := []string{
+				tc.args[0],
+				"--author", tc.opts.Author,
+				"--output-dir", tmpDir,
+				"--force",
 			}
+			if len(tc.opts.Providers) > 0 {
+				args = append(args, "--providers", tc.opts.Providers[0])
+			}
+			cmd.SetArgs(args)
 
-			err := cmd.RunE(cmd, tc.args)
+			err := cmd.Execute()
 
 			if tc.expectErr && err == nil {
 				t.Errorf("Expected error, got none")
@@ -94,7 +101,7 @@ func TestPluginInitValidation(t *testing.T) {
 func TestPluginInitProjectGeneration(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	opts := &PluginInitOptions{
+	opts := &cli.PluginInitOptions{
 		Name:      "test-plugin",
 		Author:    "Test Author",
 		Providers: []string{"aws", "azure"},
@@ -103,8 +110,8 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 	}
 
 	cmd := &cobra.Command{
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runPluginInit(cmd, opts)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.RunPluginInit(cmd, opts)
 		},
 	}
 
@@ -115,7 +122,7 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 
 	// Check that project directory was created
 	projectDir := filepath.Join(tmpDir, "test-plugin")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+	if _, statErr := os.Stat(projectDir); os.IsNotExist(statErr) {
 		t.Errorf("Project directory was not created: %s", projectDir)
 	}
 
@@ -134,7 +141,7 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 
 	for _, file := range expectedFiles {
 		fullPath := filepath.Join(projectDir, file)
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		if _, statErr := os.Stat(fullPath); os.IsNotExist(statErr) {
 			t.Errorf("Expected file was not created: %s", file)
 		}
 	}
@@ -150,7 +157,7 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 
 	for _, dir := range expectedDirs {
 		fullPath := filepath.Join(projectDir, dir)
-		if info, err := os.Stat(fullPath); os.IsNotExist(err) || !info.IsDir() {
+		if info, statErr := os.Stat(fullPath); os.IsNotExist(statErr) || !info.IsDir() {
 			t.Errorf("Expected directory was not created: %s", dir)
 		}
 	}
@@ -161,12 +168,12 @@ func TestPluginInitForceOverwrite(t *testing.T) {
 	projectDir := filepath.Join(tmpDir, "test-plugin")
 
 	// Create existing directory
-	err := os.MkdirAll(projectDir, 0755)
+	err := os.MkdirAll(projectDir, 0o750)
 	if err != nil {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}
 
-	opts := &PluginInitOptions{
+	opts := &cli.PluginInitOptions{
 		Name:      "test-plugin",
 		Author:    "Test Author",
 		Providers: []string{"aws"},
@@ -175,8 +182,8 @@ func TestPluginInitForceOverwrite(t *testing.T) {
 	}
 
 	cmd := &cobra.Command{
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runPluginInit(cmd, opts)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.RunPluginInit(cmd, opts)
 		},
 	}
 
@@ -215,7 +222,7 @@ func TestIsValidPluginName(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := isValidPluginName(tc.input)
+			result := cli.IsValidPluginName(tc.input)
 			if result != tc.expected {
 				t.Errorf("isValidPluginName(%q) = %v, expected %v", tc.input, result, tc.expected)
 			}

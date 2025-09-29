@@ -3,6 +3,7 @@ package pluginsdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -35,7 +36,7 @@ func NewServer(plugin Plugin) *Server {
 }
 
 // Name implements the gRPC Name method.
-func (s *Server) Name(ctx context.Context, req *pbc.NameRequest) (*pbc.NameResponse, error) {
+func (s *Server) Name(_ context.Context, _ *pbc.NameRequest) (*pbc.NameResponse, error) {
 	return &pbc.NameResponse{Name: s.plugin.Name()}, nil
 }
 
@@ -58,41 +59,89 @@ type ServeConfig struct {
 	Port   int // If 0, will use PORT env var or random port
 }
 
+func resolvePort(requested int) (int, error) {
+	if requested > 0 {
+		return requested, nil
+	}
+	portEnv := os.Getenv("PORT")
+	if portEnv == "" {
+		return 0, nil
+	}
+	value, err := strconv.Atoi(portEnv)
+	if err != nil {
+		if _, writeErr := fmt.Fprintf(
+			os.Stderr,
+			"Ignoring invalid PORT %q: %v; falling back to ephemeral port\n",
+			portEnv,
+			err,
+		); writeErr != nil {
+			return 0, fmt.Errorf("writing invalid port warning: %w", writeErr)
+		}
+		return 0, nil
+	}
+	return value, nil
+}
+
+func listenOnLoopback(ctx context.Context, port int) (net.Listener, *net.TCPAddr, error) {
+	address := "127.0.0.1:0"
+	if port > 0 {
+		address = net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	}
+	listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", address)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to listen: %w", err)
+	}
+
+	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		closeErr := listener.Close()
+		if closeErr != nil {
+			return nil, nil, errors.Join(
+				errors.New("listener address is not TCP"),
+				fmt.Errorf("closing listener: %w", closeErr),
+			)
+		}
+		return nil, nil, errors.New("listener address is not TCP")
+	}
+
+	return listener, tcpAddr, nil
+}
+
+func announcePort(listener net.Listener, addr *net.TCPAddr) error {
+	if _, err := fmt.Fprintf(os.Stdout, "PORT=%d\n", addr.Port); err != nil {
+		closeErr := listener.Close()
+		if closeErr != nil {
+			return errors.Join(
+				fmt.Errorf("writing port: %w", err),
+				fmt.Errorf("closing listener: %w", closeErr),
+			)
+		}
+		return fmt.Errorf("writing port: %w", err)
+	}
+	return nil
+}
+
 // Serve starts the gRPC server for the provided plugin and prints the chosen port as PORT=<port> to stdout.
-// 
+//
 // It uses config.Port when > 0; if config.Port is 0 it attempts to parse the PORT environment variable and
 // falls back to an ephemeral port when none is provided. The function registers the plugin's service, begins
 // serving on the selected port, and performs a graceful stop when the context is cancelled.
-// 
+//
 // Returns an error if PORT cannot be parsed, if the listener cannot be created, or if the gRPC server fails to serve.
+
 func Serve(ctx context.Context, config ServeConfig) error {
-	// Determine port
-	port := config.Port
-	if port == 0 {
-		if portEnv := os.Getenv("PORT"); portEnv != "" {
-			var err error
-			port, err = strconv.Atoi(portEnv)
-			if err != nil {
-				return fmt.Errorf("invalid PORT environment variable: %w", err)
-			}
-		}
-	}
-
-	// Create listener
-	var listener net.Listener
-	var err error
-	if port > 0 {
-		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
-	} else {
-		listener, err = net.Listen("tcp", ":0")
-	}
+	port, err := resolvePort(config.Port)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %w", err)
+		return err
 	}
 
-	// Print port for plugin host discovery
-	addr := listener.Addr().(*net.TCPAddr)
-	fmt.Printf("PORT=%d\n", addr.Port)
+	listener, tcpAddr, err := listenOnLoopback(ctx, port)
+	if err != nil {
+		return err
+	}
+	if announceErr := announcePort(listener, tcpAddr); announceErr != nil {
+		return announceErr
+	}
 
 	// Create and register server
 	grpcServer := grpc.NewServer()
@@ -106,5 +155,12 @@ func Serve(ctx context.Context, config ServeConfig) error {
 	}()
 
 	// Start serving
-	return grpcServer.Serve(listener)
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return err
+	}
+	return nil
 }

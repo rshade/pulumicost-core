@@ -1,13 +1,15 @@
-package pluginsdk
+package pluginsdk_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
 )
 
 func TestCreateDefaultManifest(t *testing.T) {
-	manifest := CreateDefaultManifest("test-plugin", "Test Author", []string{"aws", "azure"})
+	manifest := pluginsdk.CreateDefaultManifest("test-plugin", "Test Author", []string{"aws", "azure"})
 
 	if manifest.Name != "test-plugin" {
 		t.Errorf("Expected name 'test-plugin', got %s", manifest.Name)
@@ -33,12 +35,12 @@ func TestCreateDefaultManifest(t *testing.T) {
 func TestManifestValidation(t *testing.T) {
 	testCases := []struct {
 		name        string
-		manifest    *Manifest
+		manifest    *pluginsdk.Manifest
 		expectError bool
 	}{
 		{
 			name: "valid manifest",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Name:               "test-plugin",
 				Version:            "1.0.0",
 				Description:        "Test plugin",
@@ -51,7 +53,7 @@ func TestManifestValidation(t *testing.T) {
 		},
 		{
 			name: "missing name",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Version:            "1.0.0",
 				Description:        "Test plugin",
 				Author:             "Test Author",
@@ -63,7 +65,7 @@ func TestManifestValidation(t *testing.T) {
 		},
 		{
 			name: "invalid name",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Name:               "Test_Plugin",
 				Version:            "1.0.0",
 				Description:        "Test plugin",
@@ -76,7 +78,7 @@ func TestManifestValidation(t *testing.T) {
 		},
 		{
 			name: "invalid version",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Name:               "test-plugin",
 				Version:            "1.0",
 				Description:        "Test plugin",
@@ -89,7 +91,7 @@ func TestManifestValidation(t *testing.T) {
 		},
 		{
 			name: "missing providers",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Name:               "test-plugin",
 				Version:            "1.0.0",
 				Description:        "Test plugin",
@@ -102,7 +104,7 @@ func TestManifestValidation(t *testing.T) {
 		},
 		{
 			name: "invalid protocol",
-			manifest: &Manifest{
+			manifest: &pluginsdk.Manifest{
 				Name:               "test-plugin",
 				Version:            "1.0.0",
 				Description:        "Test plugin",
@@ -129,7 +131,7 @@ func TestManifestValidation(t *testing.T) {
 }
 
 func TestManifestSaveLoad(t *testing.T) {
-	manifest := CreateDefaultManifest("test-plugin", "Test Author", []string{"aws"})
+	manifest := pluginsdk.CreateDefaultManifest("test-plugin", "Test Author", []string{"aws"})
 
 	// Test YAML format
 	t.Run("YAML", func(t *testing.T) {
@@ -143,7 +145,7 @@ func TestManifestSaveLoad(t *testing.T) {
 		}
 
 		// Load manifest
-		loaded, err := LoadManifest(yamlPath)
+		loaded, err := pluginsdk.LoadManifest(yamlPath)
 		if err != nil {
 			t.Fatalf("Failed to load YAML manifest: %v", err)
 		}
@@ -166,7 +168,7 @@ func TestManifestSaveLoad(t *testing.T) {
 		}
 
 		// Load manifest
-		loaded, err := LoadManifest(jsonPath)
+		loaded, err := pluginsdk.LoadManifest(jsonPath)
 		if err != nil {
 			t.Fatalf("Failed to load JSON manifest: %v", err)
 		}
@@ -191,7 +193,7 @@ func TestManifestSaveLoad(t *testing.T) {
 
 func TestLoadManifestErrors(t *testing.T) {
 	// Test non-existent file
-	_, err := LoadManifest("non-existent.yaml")
+	_, err := pluginsdk.LoadManifest("non-existent.yaml")
 	if err == nil {
 		t.Errorf("Expected error for non-existent file, got none")
 	}
@@ -199,12 +201,12 @@ func TestLoadManifestErrors(t *testing.T) {
 	// Test invalid YAML
 	tmpDir := t.TempDir()
 	invalidPath := filepath.Join(tmpDir, "invalid.yaml")
-	err = os.WriteFile(invalidPath, []byte("invalid: yaml: content: ["), 0644)
+	err = os.WriteFile(invalidPath, []byte("invalid: yaml: content: ["), 0o600)
 	if err != nil {
 		t.Fatalf("Failed to create invalid YAML file: %v", err)
 	}
 
-	_, err = LoadManifest(invalidPath)
+	_, err = pluginsdk.LoadManifest(invalidPath)
 	if err == nil {
 		t.Errorf("Expected error for invalid YAML, got none")
 	}

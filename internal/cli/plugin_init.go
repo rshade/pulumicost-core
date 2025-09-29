@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,6 +19,199 @@ type PluginInitOptions struct {
 	Force     bool
 }
 
+const (
+	pluginDirPerm  os.FileMode = 0o750
+	pluginFilePerm os.FileMode = 0o640
+)
+
+const pluginReadmeTemplate = `# {{NAME}}
+
+PulumiCost plugin for {{NAME}} cost calculation.
+
+## Overview
+
+This plugin provides cost calculation capabilities for {{PROVIDERS}} resources in PulumiCost. It implements both projected cost estimation and actual cost retrieval functionality.
+
+**Supported Providers:** {{PROVIDERS}}
+
+## Installation
+
+### From Source
+
+1. Clone the repository:
+   {{BASH_BLOCK_START}}
+   git clone <repository-url>
+   cd {{NAME}}
+   {{CODE_BLOCK_END}}
+
+2. Build the plugin:
+   {{BASH_BLOCK_START}}
+   make build
+   {{CODE_BLOCK_END}}
+
+3. Install to local plugin registry:
+   {{BASH_BLOCK_START}}
+   make install
+   {{CODE_BLOCK_END}}
+
+### Configuration
+
+The plugin may require cloud provider credentials to function properly. See the configuration section for details.
+
+## Usage
+
+Once installed, the plugin will be automatically discovered by PulumiCost:
+
+{{BASH_BLOCK_START}}
+# List installed plugins
+pulumicost plugin list
+
+# Validate plugin installation
+pulumicost plugin validate
+
+# Calculate projected costs
+pulumicost cost projected --pulumi-json plan.json
+
+# Get actual costs
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+{{CODE_BLOCK_END}}
+
+## Development
+
+### Prerequisites
+
+- Go 1.21+
+- PulumiCost Core development environment
+- Cloud provider credentials (for actual cost retrieval)
+
+### Building
+
+{{BASH_BLOCK_START}}
+# Build the plugin
+make build
+
+# Run tests
+make test
+
+# Run linters
+make lint
+{{CODE_BLOCK_END}}
+
+### Project Structure
+
+- {{INLINE_CMD_PLUGIN}}: Plugin entry point
+- {{INLINE_INTERNAL_PRICING}}: Pricing logic and calculators
+- {{INLINE_INTERNAL_CLIENT}}: Cloud provider client implementation
+- {{INLINE_EXAMPLES}}: Example usage
+- {{INLINE_BIN}}: Compiled binaries
+
+### Implementing Pricing Logic
+
+Edit {{INLINE_CALCULATOR_FILE}} to implement your pricing logic:
+
+{{GO_BLOCK_START}}
+func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
+    // 1. Check if resource is supported
+    if !c.Matcher().Supports(req.Resource) {
+        return nil, pluginsdk.NotSupportedError(req.Resource)
+    }
+
+    // 2. Extract resource properties
+    resourceType := req.Resource.ResourceType
+    properties := req.Resource.Tags
+
+    // 3. Calculate pricing based on resource type and properties
+    unitPrice := c.calculateResourceCost(resourceType, properties)
+
+    // 4. Return response
+    return c.Calculator().CreateProjectedCostResponse("USD", unitPrice, "description"), nil
+}
+{{CODE_BLOCK_END}}
+
+#### Actual Cost Retrieval
+
+Edit {{INLINE_CLIENT_FILE}} to implement cloud provider API integration:
+
+{{GO_BLOCK_START}}
+func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTime, endTime int64) (float64, error) {
+    // 1. Call cloud provider billing API
+    // 2. Parse response and calculate total cost
+    // 3. Return cost value
+    return totalCost, nil
+}
+{{CODE_BLOCK_END}}
+
+### Testing
+
+The project includes testing utilities from the PulumiCost SDK:
+
+{{GO_BLOCK_START}}
+func TestPluginName(t *testing.T) {
+    plugin := pricing.NewCalculator()
+    testPlugin := pluginsdk.NewTestPlugin(t, plugin)
+    testPlugin.TestName({{QUOTED_NAME}})
+}
+{{CODE_BLOCK_END}}
+
+### Adding Pricing Data
+
+1. Update pricing data structures in {{INLINE_DATA_FILE}}
+2. Implement pricing lookups in {{INLINE_CALCULATOR_FILE}}
+3. Add test cases for new resource types
+
+### Configuration
+
+The plugin supports the following configuration options:
+
+- Environment variables for cloud provider credentials
+- Pricing data files for offline pricing calculations
+- Regional pricing variations
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Run {{INLINE_MAKE_LINT_TEST}}
+6. Submit a pull request
+
+## License
+
+[Add your license information here]
+
+## Support
+
+[Add support contact information here]
+`
+
+func renderReadme(name string, providers []string) string {
+	quotedName := fmt.Sprintf("%q", name)
+	replacements := map[string]string{
+		"{{NAME}}":                    name,
+		"{{PROVIDERS}}":               strings.Join(providers, ", "),
+		"{{QUOTED_NAME}}":             quotedName,
+		"{{BASH_BLOCK_START}}":        "```bash",
+		"{{GO_BLOCK_START}}":          "```go",
+		"{{CODE_BLOCK_END}}":          "```",
+		"{{INLINE_CMD_PLUGIN}}":       "`cmd/plugin`",
+		"{{INLINE_INTERNAL_PRICING}}": "`internal/pricing`",
+		"{{INLINE_INTERNAL_CLIENT}}":  "`internal/client`",
+		"{{INLINE_EXAMPLES}}":         "`examples`",
+		"{{INLINE_BIN}}":              "`bin`",
+		"{{INLINE_CALCULATOR_FILE}}":  "`internal/pricing/calculator.go`",
+		"{{INLINE_CLIENT_FILE}}":      "`internal/client/client.go`",
+		"{{INLINE_DATA_FILE}}":        "`internal/pricing/data.go`",
+		"{{INLINE_MAKE_LINT_TEST}}":   "`make lint test`",
+	}
+	content := pluginReadmeTemplate
+	for token, value := range replacements {
+		content = strings.ReplaceAll(content, token, value)
+	}
+	return content
+}
+
+// NewPluginInitCmd builds the Cobra command that scaffolds a plugin project and writes
 // the generated project into the specified output directory.
 func NewPluginInitCmd() *cobra.Command {
 	var opts PluginInitOptions
@@ -45,7 +239,7 @@ This command creates a new directory structure for plugin development including:
   pulumicost plugin init my-plugin --author "Your Name" --providers aws --output-dir /path/to/plugins`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Name = args[0]
-			return runPluginInit(cmd, &opts)
+			return RunPluginInit(cmd, &opts)
 		},
 	}
 
@@ -61,12 +255,12 @@ This command creates a new directory structure for plugin development including:
 	return cmd
 }
 
-// runPluginInit validates the provided PluginInitOptions, creates the target project directory (honoring the force flag),
+// RunPluginInit validates the provided PluginInitOptions, creates the target project directory (honoring the force flag),
 // generates the boilerplate project files, and prints progress and next-step instructions to the command output.
 // It returns an error if validation fails (invalid name or no providers), if the directory cannot be created, or if file generation fails.
-func runPluginInit(cmd *cobra.Command, opts *PluginInitOptions) error {
+func RunPluginInit(cmd *cobra.Command, opts *PluginInitOptions) error {
 	// Validate plugin name
-	if !isValidPluginName(opts.Name) {
+	if !IsValidPluginName(opts.Name) {
 		return fmt.Errorf(
 			"invalid plugin name: %s (must contain only lowercase letters, numbers, and hyphens)",
 			opts.Name,
@@ -75,7 +269,7 @@ func runPluginInit(cmd *cobra.Command, opts *PluginInitOptions) error {
 
 	// Validate providers
 	if len(opts.Providers) == 0 {
-		return fmt.Errorf("at least one provider must be specified")
+		return errors.New("at least one provider must be specified")
 	}
 
 	// Create project directory
@@ -160,7 +354,7 @@ func (g *projectGenerator) createDirectories() error {
 
 	for _, dir := range dirs {
 		fullDir := filepath.Join(g.projectDir, dir)
-		if err := os.MkdirAll(fullDir, 0755); err != nil {
+		if err := os.MkdirAll(fullDir, pluginDirPerm); err != nil {
 			return fmt.Errorf("creating directory %s: %w", dir, err)
 		}
 	}
@@ -185,7 +379,10 @@ require (
 
 func (g *projectGenerator) generateManifest() error {
 	manifest := pluginsdk.CreateDefaultManifest(g.name, g.author, g.providers)
-	return manifest.SaveManifest(filepath.Join(g.projectDir, "manifest.yaml"))
+	if err := manifest.SaveManifest(filepath.Join(g.projectDir, "manifest.yaml")); err != nil {
+		return err
+	}
+	return manifest.SaveManifest(filepath.Join(g.projectDir, "manifest.json"))
 }
 
 func (g *projectGenerator) generateMainGo() error {
@@ -371,7 +568,7 @@ func SavePricingData(path string, data []PricingData) error {
 	}
 
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, pluginDirPerm); err != nil {
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
@@ -569,182 +766,7 @@ security:
 }
 
 func (g *projectGenerator) generateReadme() error {
-	providersStr := strings.Join(g.providers, ", ")
-	content := fmt.Sprintf(`# %s
-
-PulumiCost plugin for %s cost calculation.
-
-## Overview
-
-This plugin provides cost calculation capabilities for %s resources in PulumiCost. It implements both projected cost estimation and actual cost retrieval functionality.
-
-**Supported Providers:** %s
-
-## Installation
-
-### From Source
-
-1. Clone the repository:
-   `+"```bash"+`
-   git clone <repository-url>
-   cd %s
-   `+"```"+`
-
-2. Build the plugin:
-   `+"```bash"+`
-   make build
-   `+"```"+`
-
-3. Install to local plugin registry:
-   `+"```bash"+`
-   make install
-   `+"```"+`
-
-### Configuration
-
-The plugin may require cloud provider credentials to function properly. See the configuration section for details.
-
-## Usage
-
-Once installed, the plugin will be automatically discovered by PulumiCost:
-
-`+"```bash"+`
-# List installed plugins
-pulumicost plugin list
-
-# Validate plugin installation
-pulumicost plugin validate
-
-# Calculate projected costs
-pulumicost cost projected --pulumi-json plan.json
-
-# Get actual costs
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
-`+"```"+`
-
-## Development
-
-### Prerequisites
-
-- Go 1.21+
-- PulumiCost Core development environment
-- Cloud provider credentials (for actual cost retrieval)
-
-### Building
-
-`+"```bash"+`
-# Build the plugin
-make build
-
-# Run tests
-make test
-
-# Run linters
-make lint
-
-# Build with debug info
-make build-debug
-`+"```"+`
-
-### Project Structure
-
-`+"```"+`
-%s/
-├── cmd/plugin/main.go          # Plugin entry point
-├── internal/
-│   ├── pricing/               # Pricing calculation logic
-│   │   ├── calculator.go      # Main plugin implementation
-│   │   └── data.go           # Pricing data structures
-│   └── client/               # Cloud provider client
-│       └── client.go         # API client implementation
-├── examples/                 # Usage examples and test data
-├── manifest.yaml            # Plugin manifest
-├── Makefile                # Build scripts
-└── README.md               # This file
-`+"```"+`
-
-### Implementation Guide
-
-#### Projected Cost Calculation
-
-Edit `+"`internal/pricing/calculator.go`"+` to implement your pricing logic:
-
-`+"```go"+`
-func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
-    // 1. Check if resource is supported
-    if !c.Matcher().Supports(req.Resource) {
-        return nil, pluginsdk.NotSupportedError(req.Resource)
-    }
-
-    // 2. Extract resource properties
-    resourceType := req.Resource.ResourceType
-    properties := req.Resource.Tags
-
-    // 3. Calculate pricing based on resource type and properties
-    unitPrice := c.calculateResourceCost(resourceType, properties)
-
-    // 4. Return response
-    return c.Calculator().CreateProjectedCostResponse("USD", unitPrice, "description"), nil
-}
-`+"```"+`
-
-#### Actual Cost Retrieval
-
-Edit `+"`internal/client/client.go`"+` to implement cloud provider API integration:
-
-`+"```go"+`
-func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTime, endTime int64) (float64, error) {
-    // 1. Call cloud provider billing API
-    // 2. Parse response and calculate total cost
-    // 3. Return cost value
-    return totalCost, nil
-}
-`+"```"+`
-
-### Testing
-
-The project includes testing utilities from the PulumiCost SDK:
-
-`+"```go"+`
-func TestPluginName(t *testing.T) {
-    plugin := pricing.NewCalculator()
-    testPlugin := pluginsdk.NewTestPlugin(t, plugin)
-    testPlugin.TestName("%s")
-}
-`+"```"+`
-
-### Adding Pricing Data
-
-1. Update pricing data structures in `+"`internal/pricing/data.go`"+`
-2. Implement pricing lookups in `+"`internal/pricing/calculator.go`"+`
-3. Add test cases for new resource types
-
-### Configuration
-
-The plugin supports the following configuration options:
-
-- Environment variables for cloud provider credentials
-- Pricing data files for offline pricing calculations
-- Regional pricing variations
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Run `+"`make lint test`"+`
-6. Submit a pull request
-
-## License
-
-[Add your license information here]
-
-## Support
-
-[Add support contact information here]
-`, g.name, providersStr, providersStr, providersStr, g.name, g.name, g.name)
-
+	content := renderReadme(g.name, g.providers)
 	return g.writeFile("README.md", content)
 }
 
@@ -847,12 +869,12 @@ func (g *projectGenerator) writeFile(relativePath, content string) error {
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, pluginDirPerm); err != nil {
 		return fmt.Errorf("creating directory %s: %w", dir, err)
 	}
 
 	// Write file
-	if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(fullPath, []byte(content), pluginFilePerm); err != nil {
 		return fmt.Errorf("writing file %s: %w", relativePath, err)
 	}
 
@@ -860,7 +882,7 @@ func (g *projectGenerator) writeFile(relativePath, content string) error {
 }
 
 // createProjectDirectory ensures a directory exists at the given path, creating it and any
-// necessary parent directories with 0755 permissions.
+// necessary parent directories with 0o750 permissions.
 // If the path already exists and force is false, it returns an error indicating the directory
 // already exists. Returns an error on failure to create the directory, or nil on success.
 func createProjectDirectory(path string, force bool) error {
@@ -868,22 +890,26 @@ func createProjectDirectory(path string, force bool) error {
 		if !force {
 			return fmt.Errorf("directory already exists: %s (use --force to overwrite)", path)
 		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("checking directory: %w", err)
 	}
 
-	return os.MkdirAll(path, 0755)
+	return os.MkdirAll(path, pluginDirPerm)
 }
 
-// isValidPluginName reports whether the provided name satisfies the plugin naming rules.
+// IsValidPluginName reports whether the provided name satisfies the plugin naming rules.
 // The name must be between 2 and 50 characters, contain only lowercase letters (`a`–`z`),
 // digits (`0`–`9`) or hyphens (`-`), and must not start or end with a hyphen.
 // It returns true when all conditions are met, false otherwise.
-func isValidPluginName(name string) bool {
+func IsValidPluginName(name string) bool {
 	if len(name) < 2 || len(name) > 50 {
 		return false
 	}
 
 	for _, r := range name {
-		if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-') {
+		isLower := r >= 'a' && r <= 'z'
+		isDigit := r >= '0' && r <= '9'
+		if !isLower && !isDigit && r != '-' {
 			return false
 		}
 	}

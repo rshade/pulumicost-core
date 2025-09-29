@@ -1,14 +1,15 @@
-package pluginsdk
+package pluginsdk_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 )
 
 func TestResourceMatcher(t *testing.T) {
-	matcher := NewResourceMatcher()
+	matcher := pluginsdk.NewResourceMatcher()
 
 	// Add supported providers and resource types
 	matcher.AddProvider("aws")
@@ -57,7 +58,7 @@ func TestResourceMatcher(t *testing.T) {
 
 func TestResourceMatcherNoFilters(t *testing.T) {
 	// Empty matcher should support everything
-	matcher := NewResourceMatcher()
+	matcher := pluginsdk.NewResourceMatcher()
 
 	resource := &pbc.ResourceDescriptor{
 		Provider:     "any",
@@ -70,7 +71,7 @@ func TestResourceMatcherNoFilters(t *testing.T) {
 }
 
 func TestCostCalculator(t *testing.T) {
-	calc := NewCostCalculator()
+	calc := pluginsdk.NewCostCalculator()
 
 	// Test hourly to monthly conversion
 	hourly := 0.10
@@ -90,25 +91,25 @@ func TestCostCalculator(t *testing.T) {
 }
 
 func TestCostCalculatorResponses(t *testing.T) {
-	calc := NewCostCalculator()
+	calc := pluginsdk.NewCostCalculator()
 
 	// Test projected cost response
 	resp := calc.CreateProjectedCostResponse("USD", 0.05, "Test billing detail")
 
-	if resp.Currency != "USD" {
-		t.Errorf("Expected currency USD, got %s", resp.Currency)
+	if resp.GetCurrency() != "USD" {
+		t.Errorf("Expected currency USD, got %s", resp.GetCurrency())
 	}
 
-	if resp.UnitPrice != 0.05 {
-		t.Errorf("Expected unit price 0.05, got %f", resp.UnitPrice)
+	if resp.GetUnitPrice() != 0.05 {
+		t.Errorf("Expected unit price 0.05, got %f", resp.GetUnitPrice())
 	}
 
-	if resp.CostPerMonth != 36.5 { // 0.05 * 730
-		t.Errorf("Expected cost per month 36.5, got %f", resp.CostPerMonth)
+	if resp.GetCostPerMonth() != 36.5 { // 0.05 * 730
+		t.Errorf("Expected cost per month 36.5, got %f", resp.GetCostPerMonth())
 	}
 
-	if resp.BillingDetail != "Test billing detail" {
-		t.Errorf("Expected billing detail 'Test billing detail', got %s", resp.BillingDetail)
+	if resp.GetBillingDetail() != "Test billing detail" {
+		t.Errorf("Expected billing detail 'Test billing detail', got %s", resp.GetBillingDetail())
 	}
 
 	// Test actual cost response
@@ -117,12 +118,12 @@ func TestCostCalculatorResponses(t *testing.T) {
 	}
 	actualResp := calc.CreateActualCostResponse(results)
 
-	if len(actualResp.Results) != 1 {
-		t.Errorf("Expected 1 result, got %d", len(actualResp.Results))
+	if len(actualResp.GetResults()) != 1 {
+		t.Errorf("Expected 1 result, got %d", len(actualResp.GetResults()))
 	}
 
-	if actualResp.Results[0].Cost != 10.0 {
-		t.Errorf("Expected cost 10.0, got %f", actualResp.Results[0].Cost)
+	if actualResp.GetResults()[0].GetCost() != 10.0 {
+		t.Errorf("Expected cost 10.0, got %f", actualResp.GetResults()[0].GetCost())
 	}
 }
 
@@ -133,7 +134,7 @@ func TestErrorFunctions(t *testing.T) {
 	}
 
 	// Test NotSupportedError
-	err := NotSupportedError(resource)
+	err := pluginsdk.NotSupportedError(resource)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -144,7 +145,7 @@ func TestErrorFunctions(t *testing.T) {
 	}
 
 	// Test NoDataError
-	err = NoDataError("test-resource-id")
+	err = pluginsdk.NoDataError("test-resource-id")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -156,7 +157,7 @@ func TestErrorFunctions(t *testing.T) {
 }
 
 func TestBasePlugin(t *testing.T) {
-	plugin := NewBasePlugin("test-plugin")
+	plugin := pluginsdk.NewBasePlugin("test-plugin")
 
 	// Test name
 	if plugin.Name() != "test-plugin" {

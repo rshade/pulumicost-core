@@ -2,29 +2,37 @@ package pluginsdk
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"testing"
 	"time"
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const defaultTestTimeout = 5 * time.Second
+
 // TestServer provides utilities for testing plugins.
 type TestServer struct {
+	t        *testing.T
 	server   *grpc.Server
 	listener net.Listener
 	client   pbc.CostSourceServiceClient
 	conn     *grpc.ClientConn
 }
 
-// cleaned up and the test is failed.
+// NewTestServer spins up a temporary gRPC server for a plugin and returns a TestServer
+// wrapper that exposes a typed client and cleanup helpers. The cleanup is registered
+// with the provided testing.T via TestPlugin and reported failures stop the test.
 func NewTestServer(t *testing.T, plugin Plugin) *TestServer {
 	t.Helper()
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Failed to listen: %v", err)
 	}
@@ -34,25 +42,43 @@ func NewTestServer(t *testing.T, plugin Plugin) *TestServer {
 	pbc.RegisterCostSourceServiceServer(server, pluginServer)
 
 	go func() {
-		if err := server.Serve(listener); err != nil {
-			t.Logf("Test server error: %v", err)
+		if serveErr := server.Serve(listener); serveErr != nil && !errors.Is(serveErr, grpc.ErrServerStopped) {
+			var netErr net.Error
+			if errors.As(serveErr, &netErr) && !netErr.Timeout() {
+				t.Logf("test server error: %v", serveErr)
+			}
 		}
 	}()
 
-	// Create client connection
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		listener.Addr().String(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		server.Stop()
-		listener.Close()
-		t.Fatalf("Failed to connect: %v", err)
+		server.GracefulStop()
+		if closeErr := listener.Close(); closeErr != nil {
+			t.Logf("closing listener after dial setup failure: %v", closeErr)
+		}
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	conn.Connect()
+	waitCtx, waitCancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer waitCancel()
+	for state := conn.GetState(); state != connectivity.Ready; state = conn.GetState() {
+		if !conn.WaitForStateChange(waitCtx, state) {
+			server.GracefulStop()
+			if closeErr := listener.Close(); closeErr != nil {
+				t.Logf("closing listener after connect timeout: %v", closeErr)
+			}
+			t.Fatalf("Failed to connect: %v", waitCtx.Err())
+		}
 	}
 
 	client := pbc.NewCostSourceServiceClient(conn)
 
 	return &TestServer{
+		t:        t,
 		server:   server,
 		listener: listener,
 		client:   client,
@@ -67,14 +93,26 @@ func (ts *TestServer) Client() pbc.CostSourceServiceClient {
 
 // Close stops the test server and cleans up resources.
 func (ts *TestServer) Close() {
+	if ts == nil {
+		return
+	}
+	var errs error
 	if ts.conn != nil {
-		ts.conn.Close()
+		if err := ts.conn.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
+			errs = errors.Join(errs, fmt.Errorf("closing client connection: %w", err))
+		}
 	}
 	if ts.server != nil {
-		ts.server.Stop()
+		ts.server.GracefulStop()
 	}
 	if ts.listener != nil {
-		ts.listener.Close()
+		if err := ts.listener.Close(); err != nil {
+			errs = errors.Join(errs, fmt.Errorf("closing listener: %w", err))
+		}
+	}
+	if errs != nil && ts.t != nil {
+		ts.t.Helper()
+		ts.t.Fatalf("failed closing test server: %v", errs)
 	}
 }
 
@@ -111,7 +149,7 @@ func NewTestPlugin(t *testing.T, plugin Plugin) *TestPlugin {
 func (tp *TestPlugin) TestName(expectedName string) {
 	tp.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
 	resp, err := tp.client.Name(ctx, &pbc.NameRequest{})
@@ -119,8 +157,8 @@ func (tp *TestPlugin) TestName(expectedName string) {
 		tp.Fatalf("Name() failed: %v", err)
 	}
 
-	if resp.Name != expectedName {
-		tp.Errorf("Expected name %q, got %q", expectedName, resp.Name)
+	if resp.GetName() != expectedName {
+		tp.Errorf("Expected name %q, got %q", expectedName, resp.GetName())
 	}
 }
 
@@ -131,7 +169,7 @@ func (tp *TestPlugin) TestProjectedCost(
 ) *pbc.GetProjectedCostResponse {
 	tp.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
 	req := &pbc.GetProjectedCostRequest{Resource: resource}
@@ -149,11 +187,11 @@ func (tp *TestPlugin) TestProjectedCost(
 	}
 
 	// Basic validation
-	if resp.Currency == "" {
+	if resp.GetCurrency() == "" {
 		tp.Errorf("Response missing currency")
 	}
-	if resp.UnitPrice < 0 {
-		tp.Errorf("Negative unit price: %f", resp.UnitPrice)
+	if resp.GetUnitPrice() < 0 {
+		tp.Errorf("Negative unit price: %f", resp.GetUnitPrice())
 	}
 
 	return resp
@@ -167,7 +205,7 @@ func (tp *TestPlugin) TestActualCost(
 ) *pbc.GetActualCostResponse {
 	tp.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
 	req := &pbc.GetActualCostRequest{
@@ -191,13 +229,14 @@ func (tp *TestPlugin) TestActualCost(
 	}
 
 	// Basic validation
-	if len(resp.Results) == 0 {
+	results := resp.GetResults()
+	if len(results) == 0 {
 		tp.Errorf("No results returned")
 	}
 
-	for _, result := range resp.Results {
-		if result.Cost < 0 {
-			tp.Errorf("Negative cost in result: %f", result.Cost)
+	for _, result := range results {
+		if result.GetCost() < 0 {
+			tp.Errorf("Negative cost in result: %f", result.GetCost())
 		}
 	}
 

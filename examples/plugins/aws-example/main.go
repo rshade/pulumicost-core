@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -11,12 +12,56 @@ import (
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 )
 
+const (
+	defaultRegion           = "us-east-1"
+	defaultInstanceType     = "t3.micro"
+	defaultS3StorageClass   = "STANDARD"
+	defaultRDSInstanceClass = "db.t3.micro"
+	defaultRDSEngine        = "mysql"
+
+	priceT3Micro   = 0.0104
+	priceT3Small   = 0.0208
+	priceT3Medium  = 0.0416
+	priceT3Large   = 0.0832
+	priceT3XLarge  = 0.1664
+	priceT32XLarge = 0.3328
+	priceM5Large   = 0.096
+	priceM5XLarge  = 0.192
+	priceC5Large   = 0.085
+	priceC5XLarge  = 0.17
+
+	priceS3Standard    = 0.023
+	priceS3StandardIA  = 0.0125
+	priceS3OneZoneIA   = 0.01
+	priceS3Glacier     = 0.004
+	priceS3DeepArchive = 0.00099
+
+	priceRDST3Micro  = 0.017
+	priceRDST3Small  = 0.034
+	priceRDST3Medium = 0.068
+	priceRDSM5Large  = 0.192
+	priceRDSM5XLarge = 0.384
+
+	multiplierNeutral      = 1.0
+	multiplierOracle       = 2.0
+	multiplierSQLServer    = 1.5
+	multiplierRegionUS     = 1.0
+	multiplierRegionEUWest = 1.1
+	multiplierRegionAPSE   = 1.2
+)
+
 // AWSExamplePlugin demonstrates a basic AWS cost calculation plugin.
 type AWSExamplePlugin struct {
 	*pluginsdk.BasePlugin
+
+	ec2Prices            map[string]float64
+	ec2RegionMultipliers map[string]float64
+	s3Prices             map[string]float64
+	rdsPrices            map[string]float64
+	rdsEngineMultipliers map[string]float64
 }
 
-// "aws:ec2:Instance", "aws:s3:Bucket", and "aws:rds:Instance".
+// NewAWSExamplePlugin registers support for aws:ec2:Instance, aws:s3:Bucket, and aws:rds:Instance resources.
 func NewAWSExamplePlugin() *AWSExamplePlugin {
 	base := pluginsdk.NewBasePlugin("aws-example")
 
@@ -30,82 +75,120 @@ func NewAWSExamplePlugin() *AWSExamplePlugin {
 
 	return &AWSExamplePlugin{
 		BasePlugin: base,
+		ec2Prices: map[string]float64{
+			"t3.micro":   priceT3Micro,
+			"t3.small":   priceT3Small,
+			"t3.medium":  priceT3Medium,
+			"t3.large":   priceT3Large,
+			"t3.xlarge":  priceT3XLarge,
+			"t3.2xlarge": priceT32XLarge,
+			"m5.large":   priceM5Large,
+			"m5.xlarge":  priceM5XLarge,
+			"c5.large":   priceC5Large,
+			"c5.xlarge":  priceC5XLarge,
+		},
+		ec2RegionMultipliers: map[string]float64{
+			"us-east-1":      multiplierRegionUS,
+			"us-west-2":      multiplierRegionUS,
+			"eu-west-1":      multiplierRegionEUWest,
+			"ap-southeast-1": multiplierRegionAPSE,
+		},
+		s3Prices: map[string]float64{
+			"STANDARD":     priceS3Standard,
+			"STANDARD_IA":  priceS3StandardIA,
+			"ONEZONE_IA":   priceS3OneZoneIA,
+			"GLACIER":      priceS3Glacier,
+			"DEEP_ARCHIVE": priceS3DeepArchive,
+		},
+		rdsPrices: map[string]float64{
+			"db.t3.micro":  priceRDST3Micro,
+			"db.t3.small":  priceRDST3Small,
+			"db.t3.medium": priceRDST3Medium,
+			"db.m5.large":  priceRDSM5Large,
+			"db.m5.xlarge": priceRDSM5XLarge,
+		},
+		rdsEngineMultipliers: map[string]float64{
+			"mysql":     multiplierNeutral,
+			"postgres":  multiplierNeutral,
+			"oracle":    multiplierOracle,
+			"sqlserver": multiplierSQLServer,
+		},
 	}
 }
 
 // GetProjectedCost calculates projected costs for AWS resources.
-func (p *AWSExamplePlugin) GetProjectedCost(ctx context.Context, req *pbc.GetProjectedCostRequest) (*pbc.GetProjectedCostResponse, error) {
-	if !p.Matcher().Supports(req.Resource) {
-		return nil, pluginsdk.NotSupportedError(req.Resource)
+func (p *AWSExamplePlugin) GetProjectedCost(
+	_ context.Context,
+	req *pbc.GetProjectedCostRequest,
+) (*pbc.GetProjectedCostResponse, error) {
+	if req == nil {
+		return nil, errors.New("GetProjectedCostRequest cannot be nil")
+	}
+	resource := req.GetResource()
+	if resource == nil {
+		return nil, errors.New("resource cannot be nil")
+	}
+	if !p.Matcher().Supports(resource) {
+		return nil, pluginsdk.NotSupportedError(resource)
 	}
 
-	var unitPrice float64
-	var billingDetail string
+	var (
+		unitPrice     float64
+		billingDetail string
+	)
 
-	switch req.Resource.ResourceType {
+	switch resource.GetResourceType() {
 	case "aws:ec2:Instance":
-		unitPrice = p.calculateEC2Cost(req.Resource)
+		unitPrice = p.calculateEC2Cost(resource)
 		billingDetail = "EC2 instance hourly cost"
 	case "aws:s3:Bucket":
-		unitPrice = p.calculateS3Cost(req.Resource)
+		unitPrice = p.calculateS3Cost(resource)
 		billingDetail = "S3 storage monthly cost per GB"
 	case "aws:rds:Instance":
-		unitPrice = p.calculateRDSCost(req.Resource)
+		unitPrice = p.calculateRDSCost(resource)
 		billingDetail = "RDS instance hourly cost"
 	default:
-		return nil, pluginsdk.NotSupportedError(req.Resource)
+		return nil, pluginsdk.NotSupportedError(resource)
 	}
 
 	return p.Calculator().CreateProjectedCostResponse("USD", unitPrice, billingDetail), nil
 }
 
 // GetActualCost retrieves actual historical costs (placeholder implementation).
-func (p *AWSExamplePlugin) GetActualCost(ctx context.Context, req *pbc.GetActualCostRequest) (*pbc.GetActualCostResponse, error) {
+func (p *AWSExamplePlugin) GetActualCost(
+	_ context.Context,
+	req *pbc.GetActualCostRequest,
+) (*pbc.GetActualCostResponse, error) {
+	if req == nil {
+		return nil, errors.New("GetActualCostRequest cannot be nil")
+	}
 	// In a real implementation, this would call AWS Cost Explorer API
-	return nil, pluginsdk.NoDataError(req.ResourceId)
+	return nil, pluginsdk.NoDataError(req.GetResourceId())
 }
 
 // calculateEC2Cost calculates EC2 instance cost based on instance type and region.
 func (p *AWSExamplePlugin) calculateEC2Cost(resource *pbc.ResourceDescriptor) float64 {
-	instanceType := resource.Tags["instanceType"]
-	region := resource.Tags["region"]
+	tags := resource.GetTags()
+	if tags == nil {
+		tags = map[string]string{}
+	}
 
-	// Default to t3.micro if not specified
+	instanceType := tags["instanceType"]
 	if instanceType == "" {
-		instanceType = "t3.micro"
+		instanceType = defaultInstanceType
 	}
+
+	price, hasPrice := p.ec2Prices[instanceType]
+	if !hasPrice {
+		price = priceT3Micro
+	}
+
+	region := tags["region"]
 	if region == "" {
-		region = "us-east-1"
+		region = defaultRegion
 	}
 
-	// Simplified pricing - in reality, this would come from AWS Pricing API
-	basePrices := map[string]float64{
-		"t3.micro":   0.0104,
-		"t3.small":   0.0208,
-		"t3.medium":  0.0416,
-		"t3.large":   0.0832,
-		"t3.xlarge":  0.1664,
-		"t3.2xlarge": 0.3328,
-		"m5.large":   0.096,
-		"m5.xlarge":  0.192,
-		"c5.large":   0.085,
-		"c5.xlarge":  0.17,
-	}
-
-	price, exists := basePrices[instanceType]
-	if !exists {
-		price = 0.0104 // fallback to t3.micro
-	}
-
-	// Apply regional multiplier (simplified)
-	regionalMultiplier := map[string]float64{
-		"us-east-1":      1.0,
-		"us-west-2":      1.0,
-		"eu-west-1":      1.1,
-		"ap-southeast-1": 1.2,
-	}
-
-	if multiplier, exists := regionalMultiplier[region]; exists {
+	if multiplier, hasMultiplier := p.ec2RegionMultipliers[region]; hasMultiplier {
 		price *= multiplier
 	}
 
@@ -114,28 +197,19 @@ func (p *AWSExamplePlugin) calculateEC2Cost(resource *pbc.ResourceDescriptor) fl
 
 // calculateS3Cost calculates S3 storage cost (per GB monthly).
 func (p *AWSExamplePlugin) calculateS3Cost(resource *pbc.ResourceDescriptor) float64 {
-	storageClass := resource.Tags["storageClass"]
-	region := resource.Tags["region"]
+	tags := resource.GetTags()
+	if tags == nil {
+		tags = map[string]string{}
+	}
 
+	storageClass := tags["storageClass"]
 	if storageClass == "" {
-		storageClass = "STANDARD"
-	}
-	if region == "" {
-		region = "us-east-1"
+		storageClass = defaultS3StorageClass
 	}
 
-	// S3 pricing per GB per month
-	storagePrices := map[string]float64{
-		"STANDARD":     0.023,
-		"STANDARD_IA":  0.0125,
-		"ONEZONE_IA":   0.01,
-		"GLACIER":      0.004,
-		"DEEP_ARCHIVE": 0.00099,
-	}
-
-	price, exists := storagePrices[storageClass]
-	if !exists {
-		price = 0.023 // fallback to STANDARD
+	price, hasPrice := p.s3Prices[storageClass]
+	if !hasPrice {
+		price = priceS3Standard
 	}
 
 	return price
@@ -143,43 +217,27 @@ func (p *AWSExamplePlugin) calculateS3Cost(resource *pbc.ResourceDescriptor) flo
 
 // calculateRDSCost calculates RDS instance cost based on instance class and engine.
 func (p *AWSExamplePlugin) calculateRDSCost(resource *pbc.ResourceDescriptor) float64 {
-	instanceClass := resource.Tags["instanceClass"]
-	engine := resource.Tags["engine"]
-	region := resource.Tags["region"]
+	tags := resource.GetTags()
+	if tags == nil {
+		tags = map[string]string{}
+	}
 
+	instanceClass := tags["instanceClass"]
 	if instanceClass == "" {
-		instanceClass = "db.t3.micro"
+		instanceClass = defaultRDSInstanceClass
 	}
+
+	price, hasPrice := p.rdsPrices[instanceClass]
+	if !hasPrice {
+		price = priceRDST3Micro
+	}
+
+	engine := tags["engine"]
 	if engine == "" {
-		engine = "mysql"
-	}
-	if region == "" {
-		region = "us-east-1"
+		engine = defaultRDSEngine
 	}
 
-	// RDS pricing (simplified)
-	basePrices := map[string]float64{
-		"db.t3.micro":  0.017,
-		"db.t3.small":  0.034,
-		"db.t3.medium": 0.068,
-		"db.m5.large":  0.192,
-		"db.m5.xlarge": 0.384,
-	}
-
-	price, exists := basePrices[instanceClass]
-	if !exists {
-		price = 0.017 // fallback to db.t3.micro
-	}
-
-	// Engine multiplier
-	engineMultipliers := map[string]float64{
-		"mysql":     1.0,
-		"postgres":  1.0,
-		"oracle":    2.0,
-		"sqlserver": 1.5,
-	}
-
-	if multiplier, exists := engineMultipliers[engine]; exists {
+	if multiplier, hasMultiplier := p.rdsEngineMultipliers[engine]; hasMultiplier {
 		price *= multiplier
 	}
 
@@ -194,7 +252,6 @@ func main() {
 
 	// Set up context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	// Handle interrupt signals
 	sigChan := make(chan os.Signal, 1)
@@ -213,6 +270,8 @@ func main() {
 
 	log.Printf("Starting %s plugin...", plugin.Name())
 	if err := pluginsdk.Serve(ctx, config); err != nil {
-		log.Fatalf("Failed to serve plugin: %v", err)
+		cancel()
+		log.Printf("Failed to serve plugin: %v", err)
+		os.Exit(1)
 	}
 }

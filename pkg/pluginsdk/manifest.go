@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -61,19 +62,19 @@ func LoadManifest(path string) (*Manifest, error) {
 
 	switch ext {
 	case ".yaml", ".yml":
-		if err := yaml.Unmarshal(data, &manifest); err != nil {
-			return nil, fmt.Errorf("parsing YAML manifest: %w", err)
+		if yamlErr := yaml.Unmarshal(data, &manifest); yamlErr != nil {
+			return nil, fmt.Errorf("parsing YAML manifest: %w", yamlErr)
 		}
 	case ".json":
-		if err := json.Unmarshal(data, &manifest); err != nil {
-			return nil, fmt.Errorf("parsing JSON manifest: %w", err)
+		if jsonErr := json.Unmarshal(data, &manifest); jsonErr != nil {
+			return nil, fmt.Errorf("parsing JSON manifest: %w", jsonErr)
 		}
 	default:
 		return nil, fmt.Errorf("unsupported manifest file extension: %s (supported: .yaml, .yml, .json)", ext)
 	}
 
-	if err := manifest.Validate(); err != nil {
-		return nil, fmt.Errorf("manifest validation failed: %w", err)
+	if validateErr := manifest.Validate(); validateErr != nil {
+		return nil, fmt.Errorf("manifest validation failed: %w", validateErr)
 	}
 
 	return &manifest, nil
@@ -87,6 +88,13 @@ func (m *Manifest) SaveManifest(path string) error {
 	}
 
 	ext := filepath.Ext(path)
+	// Ensure target directory exists
+	if dir := filepath.Dir(path); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o750); err != nil {
+			return fmt.Errorf("creating manifest directory: %w", err)
+		}
+	}
+
 	var data []byte
 	var err error
 
@@ -105,8 +113,8 @@ func (m *Manifest) SaveManifest(path string) error {
 		return fmt.Errorf("unsupported manifest file extension: %s (supported: .yaml, .yml, .json)", ext)
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		return fmt.Errorf("writing manifest file: %w", err)
+	if writeErr := os.WriteFile(path, data, 0o600); writeErr != nil {
+		return fmt.Errorf("writing manifest file: %w", writeErr)
 	}
 
 	return nil
@@ -115,6 +123,12 @@ func (m *Manifest) SaveManifest(path string) error {
 // Validate validates the manifest fields.
 func (m *Manifest) Validate() error {
 	var errors ValidationErrors
+
+	// Normalize
+	m.Name = strings.TrimSpace(m.Name)
+	m.Version = strings.TrimSpace(m.Version)
+	m.Description = strings.TrimSpace(m.Description)
+	m.Author = strings.TrimSpace(m.Author)
 
 	// Required fields
 	if m.Name == "" {
@@ -152,6 +166,11 @@ func (m *Manifest) Validate() error {
 		errors = append(errors, ValidationError{
 			Field:   "author",
 			Message: "author is required",
+		})
+	} else if !isValidAuthor(m.Author) {
+		errors = append(errors, ValidationError{
+			Field:   "author",
+			Message: "author must contain only letters, numbers, spaces, hyphens, and dots",
 		})
 	}
 
@@ -211,9 +230,16 @@ func CreateDefaultManifest(name, author string, providers []string) *Manifest {
 }
 
 // Regular expressions for validation.
+const (
+	semverPattern = `^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)` +
+		`(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?` +
+		`(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`
+)
+
 var (
 	nameRegex    = regexp.MustCompile(`^[a-z][a-z0-9-]*[a-z0-9]$`)
-	versionRegex = regexp.MustCompile(`^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+)?(\+[a-zA-Z0-9-]+)?$`)
+	versionRegex = regexp.MustCompile(semverPattern)
+	authorRegex  = regexp.MustCompile(`^[a-zA-Z0-9\s\-\.]+$`)
 )
 
 // isValidName reports whether name is between 2 and 50 characters and matches the package's
@@ -229,4 +255,9 @@ func isValidName(name string) bool {
 // isValidVersion reports whether version conforms to the package's semantic versioning pattern (for example "1.0.0") as defined by versionRegex.
 func isValidVersion(version string) bool {
 	return versionRegex.MatchString(version)
+}
+
+// isValidAuthor reports whether author contains only allowed characters (letters, numbers, spaces, hyphens, and dots).
+func isValidAuthor(author string) bool {
+	return authorRegex.MatchString(author)
 }

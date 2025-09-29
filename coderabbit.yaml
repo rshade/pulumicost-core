@@ -82,6 +82,14 @@ tools:
   yamllint:
     enabled: true
 
+# Security scanners
+scanners:
+  security:
+    osv:
+      enabled: true
+      go_modules:
+        enabled: true
+
 # Code guidelines
 code_guidelines:
   enabled: true
