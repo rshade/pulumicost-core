@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
     BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") && \
     CGO_ENABLED=0 go build \
-        -ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}'" \
+        -ldflags "-X github.com/rshade/pulumicost-core/pkg/version.version=${VERSION} -X github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT} -X github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}" \
         -o bin/pulumicost ./cmd/pulumicost
 
 # Runtime stage

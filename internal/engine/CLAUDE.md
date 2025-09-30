@@ -222,18 +222,21 @@ func extractService(resourceType string) string
 ### Cross-Provider Processing
 
 **Currency Validation**:
+
 ```go
 // Ensures all results use consistent currency (defaults empty to USD)
 func validateCurrencyConsistency(results []CostResult) error
 ```
 
 **Time-Based Grouping**:
+
 ```go
 // Groups results by time periods with provider-level aggregation
 func groupResultsByPeriod(results []CostResult, groupBy GroupBy) (map[string]map[string]float64, string)
 ```
 
 **Cost Calculation Logic**:
+
 ```go
 // Intelligently selects TotalCost (actual) vs Monthly (projected) with period conversion
 func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64
@@ -419,6 +422,7 @@ aws:rds:Instance/db-456      local-spec  50.00    0.0685   USD       Calculated 
 ### Enhanced Actual Cost Pipeline
 
 **Advanced Querying** (`GetActualCostWithOptions`):
+
 ```go
 type ActualCostRequest struct {
     Resources []ResourceDescriptor  // Resources to query
@@ -431,6 +435,7 @@ type ActualCostRequest struct {
 ```
 
 **Features**:
+
 - **Tag Filtering**: `tag:env=prod`, `tag:team=backend`
 - **Adapter Selection**: Use specific plugins for cost queries
 - **Flexible Grouping**: Resource, type, provider, or time-based
@@ -439,6 +444,7 @@ type ActualCostRequest struct {
 ### Cross-Provider Cost Analysis
 
 **Core Function**:
+
 ```go
 func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]CrossProviderAggregation, error)
 ```
