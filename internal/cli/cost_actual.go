@@ -18,6 +18,18 @@ const (
 	filterKeyValueParts = 2 // For "key=value" pairs
 )
 
+// NewCostActualCmd returns a *cobra.Command that fetches actual historical costs from cloud provider billing APIs.
+// 
+// The command accepts a Pulumi plan JSON and queries provider billing data for the specified time range.
+// Flags:
+//   --pulumi-json (required): path to Pulumi preview JSON output.
+//   --from (required): start date in YYYY-MM-DD or RFC3339 format.
+//   --to: end date in YYYY-MM-DD or RFC3339 format (defaults to now when omitted).
+//   --adapter: restrict queries to a single adapter plugin.
+//   --output: output format ("table", "json", or "ndjson"); defaults follow configuration.
+//   --group-by: grouping mode: "resource", "type", "provider", "date", "daily", "monthly", or a tag filter of the form "tag:key=value".
+// 
+// The returned command performs resource mapping from the Pulumi plan, opens adapter plugins, requests actual costs, and renders results using the selected output format and grouping.
 func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
@@ -138,6 +150,8 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 	return from, to, nil
 }
 
+// ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
+// It returns the parsed time on success, or an error if str does not match either supported format.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
@@ -154,6 +168,9 @@ func ParseTime(str string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("unable to parse date: %s (use YYYY-MM-DD or RFC3339)", str)
 }
 
+// parseTagFilter parses a group-by specifier for a tag filter and returns the parsed tags and the resulting groupBy.
+// If groupBy is of the form "tag:key=value", it returns a map containing {key: value} and an empty actualGroupBy (indicating tag-based filtering).
+// For any other input it returns an empty map and the original groupBy unchanged.
 func parseTagFilter(groupBy string) (map[string]string, string) {
 	tags := make(map[string]string)
 	actualGroupBy := groupBy
@@ -169,6 +186,14 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 	return tags, actualGroupBy
 }
 
+// renderActualCostOutput renders cost output for the provided results using the given output format.
+// If actualGroupBy specifies a time-based grouping (daily, monthly, etc.), it aggregates results across providers before rendering.
+// Otherwise it renders the raw actual cost results as-is.
+// Parameters:
+//   outputFormat - the output format to use when rendering.
+//   results - the list of cost results to render or aggregate.
+//   actualGroupBy - the group-by specifier; may influence whether cross-provider time aggregation is performed.
+// Returns an error if aggregation or rendering fails.
 func renderActualCostOutput(outputFormat engine.OutputFormat, results []engine.CostResult, actualGroupBy string) error {
 	// Check if we need cross-provider aggregation
 	groupByType := engine.GroupBy(actualGroupBy)
