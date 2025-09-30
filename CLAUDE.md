@@ -177,6 +177,7 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
   - Comprehensive cost reporting with actual vs projected comparisons
 
 ### ✅ CORE-6 Completed - Cross-Provider Aggregation System
+
 - **Status**: Advanced cross-provider cost aggregation with comprehensive validation
 - **Key Features**:
   - **Currency Validation**: Ensures consistent currency across all cost results (ErrMixedCurrencies)
@@ -188,6 +189,7 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
   - **Cost Intelligence**: Prefers actual costs (TotalCost) over projections with automatic daily/monthly conversion
 
 ### Architecture Changes
+
 - **New Engine Method**: `GetActualCostWithOptions()` with flexible querying
 - **Enhanced Data Structures**: `ActualCostRequest` with advanced filtering options
 - **Tag Matching**: `matchesTags()` helper for resource filtering
@@ -199,6 +201,7 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
 - **Error Types**: New error constants for specific validation scenarios
 
 **New Error Types for Cross-Provider Aggregation**:
+
 ```go
 var (
     ErrNoCostData       = errors.New("no cost data available")

@@ -124,7 +124,8 @@ type GroupBy string
 // Time-Based Groupings:
 //   - GroupByDaily: Groups by calendar date ("2006-01-02") for daily trends
 //   - GroupByMonthly: Groups by month ("2006-01") for monthly analysis
-//   - GroupByDate: Legacy resource-based date grouping (not time-based aggregation, use GroupByDaily instead)
+//   - GroupByDate: Deprecated legacy date-key grouping (non time-based for cross-provider).
+//     Prefer GroupByDaily for time-based aggregations.
 //
 // Special Values:
 //   - GroupByNone: No grouping (empty string) - returns results as-is
@@ -188,7 +189,7 @@ func (g GroupBy) IsValid() bool {
 // Time-Based GroupBy Values:
 //   - GroupByDaily: Requires daily cost data aggregation
 //   - GroupByMonthly: Requires monthly cost data aggregation
-//   - GroupByDate: Legacy alias for GroupByDaily (deprecated)
+//   - GroupByDate: Deprecated legacy date-key grouping (non time-based for cross-provider)
 //
 // Non-Time-Based GroupBy Values:
 //   - GroupByResource: Groups by resource identity
