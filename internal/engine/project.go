@@ -16,6 +16,11 @@ const (
 	OutputNDJSON OutputFormat = "ndjson"
 )
 
+// RenderResults renders the given cost results using the specified output format.
+// RenderResults aggregates the results for table and JSON summary outputs, emits NDJSON as individual records, and writes the output to stdout.
+// The format parameter selects one of the supported OutputFormat values (OutputTable, OutputJSON, OutputNDJSON).
+// The results parameter is the slice of CostResult to be rendered.
+// It returns an error if rendering fails or if the provided format is unsupported.
 func RenderResults(format OutputFormat, results []CostResult) error {
 	// Aggregate results for enhanced reporting
 	aggregated := AggregateResults(results)
@@ -39,7 +44,14 @@ func RenderResults(format OutputFormat, results []CostResult) error {
 //   - format: the desired OutputFormat (e.g., OutputTable, OutputJSON, OutputNDJSON).
 //   - results: the slice of CostResult values to render.
 //
-// Returns an error if the chosen renderer fails or if the format is unsupported.
+// RenderActualCostResults dispatches actual cost results to the renderer that corresponds
+// to the provided output format.
+//
+// The format parameter selects the output format and must be one of OutputTable,
+// OutputJSON, or OutputNDJSON. The results parameter is the slice of actual cost
+// results to be rendered.
+//
+// It returns an error if the selected renderer fails or if the format is unsupported.
 func RenderActualCostResults(format OutputFormat, results []CostResult) error {
 	switch format {
 	case OutputTable:
@@ -61,7 +73,14 @@ func RenderActualCostResults(format OutputFormat, results []CostResult) error {
 //   - aggregations: slice of cross-provider aggregation records to render.
 //   - groupBy: grouping granularity used for table output (e.g., daily or monthly).
 //
-// Returns an error if the format is unsupported or if the chosen renderer fails.
+// RenderCrossProviderAggregation dispatches cross-provider aggregation data to the renderer
+// corresponding to the given OutputFormat.
+//
+// The `format` parameter selects the output renderer: table, JSON, or NDJSON.
+// `aggregations` is the slice of cross-provider aggregation records to render.
+// `groupBy` controls the temporal grouping used by table renderers (for example, daily vs monthly).
+//
+// It returns an error if the specified format is not supported or if the selected renderer fails.
 func RenderCrossProviderAggregation(
 	format OutputFormat,
 	aggregations []CrossProviderAggregation,
@@ -84,7 +103,12 @@ func RenderCrossProviderAggregation(
 // provider, service, and adapter, and a detailed per-resource table with columns for Resource,
 // Adapter, Monthly, Hourly, Currency, and Notes.
 // The aggregated parameter provides the summary totals, breakdown maps, and the slice of per-resource results to render.
-// It returns any error encountered while writing or flushing the tabulated output to stdout.
+// renderTable writes a tab-separated cost summary and detailed resource table for the
+// provided aggregated results to standard output. It includes total monthly/hourly
+// costs, counts, optional breakdowns by provider, service, and adapter, and a per-
+// resource list with monthly/hourly costs and notes.
+// aggregated is the precomputed aggregation to render.
+// It returns an error if writing to or flushing the tabulated output fails.
 func renderTable(aggregated *AggregatedResults) error {
 	const tabPadding = 2
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
@@ -219,6 +243,11 @@ func renderJSON(aggregated *AggregatedResults) error {
 	return encoder.Encode(aggregated)
 }
 
+// renderJSONCostResults writes the provided cost results as pretty-printed JSON to standard output.
+// 
+// results is the slice of CostResult values to be encoded.
+// 
+// It returns any error encountered while encoding/writing the JSON.
 func renderJSONCostResults(results []CostResult) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
@@ -226,7 +255,11 @@ func renderJSONCostResults(results []CostResult) error {
 }
 
 // renderNDJSON writes each CostResult in results as a separate JSON object on its own line to stdout,
-// producing newline-delimited JSON (NDJSON). It returns any encoding error encountered while writing.
+// renderNDJSON encodes each CostResult in results as a single JSON object per line and writes them to stdout.
+// It produces newline-delimited JSON (NDJSON).
+//
+// The results parameter is the slice of CostResult objects to encode.
+// It returns any encoding error encountered while writing.
 func renderNDJSON(results []CostResult) error {
 	encoder := json.NewEncoder(os.Stdout)
 	for _, result := range results {
@@ -252,7 +285,12 @@ func renderNDJSON(results []CostResult) error {
 //
 // Returns an error if writing to stdout or flushing the table writer fails. If
 // aggregations is empty the function prints a "No cost data available..." message and
-// returns any error produced while printing that message.
+// renderCrossProviderTable prints a tabular cross-provider cost report to stdout.
+// 
+// aggregations is a slice of CrossProviderAggregation describing per-period totals and per-provider breakdowns.
+// groupBy controls the period label used in the table header (e.g., daily uses "Date", otherwise "Month").
+// 
+// It returns an error if writing to stdout or flushing the table writer fails.
 func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy GroupBy) error {
 	if len(aggregations) == 0 {
 		_, err := fmt.Fprintln(os.Stdout, "No cost data available for cross-provider aggregation")
@@ -321,7 +359,8 @@ func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy G
 
 // renderJSONCrossProvider writes the provided cross-provider aggregations to stdout
 // as pretty-printed (indented) JSON.
-// It encodes the `aggregations` slice and returns any encoding error encountered.
+// renderJSONCrossProvider encodes the given cross-provider aggregations as indented JSON to stdout.
+// The provided slice is written as a pretty-printed JSON array; any encoding error is returned.
 func renderJSONCrossProvider(aggregations []CrossProviderAggregation) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
@@ -330,7 +369,8 @@ func renderJSONCrossProvider(aggregations []CrossProviderAggregation) error {
 
 // renderNDJSONCrossProvider writes each CrossProviderAggregation in aggregations to stdout
 // as newline-delimited JSON (NDJSON). It returns the first encoding error encountered, or
-// nil on success.
+// renderNDJSONCrossProvider writes each CrossProviderAggregation as a separate NDJSON object to stdout.
+// It returns an error if encoding any aggregation fails.
 func renderNDJSONCrossProvider(aggregations []CrossProviderAggregation) error {
 	encoder := json.NewEncoder(os.Stdout)
 	for _, agg := range aggregations {
@@ -342,7 +382,9 @@ func renderNDJSONCrossProvider(aggregations []CrossProviderAggregation) error {
 }
 
 // getCurrencySymbol returns the currency symbol for the given ISO currency code.
-// For unknown or unmapped codes it returns the original currency code.
+// getCurrencySymbol returns the currency symbol for common ISO currency codes.
+// It maps "USD" -> "$", "EUR" -> "€", "GBP" -> "£", "JPY" -> "¥", "CAD" -> "C$", and "AUD" -> "A$".
+// For unknown or unmapped codes, it returns the original currency code.
 func getCurrencySymbol(currency string) string {
 	switch currency {
 	case "USD":
