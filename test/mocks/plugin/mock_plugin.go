@@ -176,10 +176,10 @@ func (m *MockPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProjectedC
 		time.Sleep(delay)
 	}
 	
-	// Find response based on first resource type
+	// Find response based on resource type
 	key := "default"
-	if len(req.Resources) > 0 {
-		key = req.Resources[0].Type
+	if req.Resource != nil {
+		key = req.Resource.ResourceType
 	}
 	
 	m.mu.RLock()
@@ -191,19 +191,12 @@ func (m *MockPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProjectedC
 	}
 	
 	// Default response
-	results := make([]*pb.CostResult, len(req.Resources))
-	for i, resource := range req.Resources {
-		results[i] = &pb.CostResult{
-			ResourceType:  resource.Type,
-			Currency:      "USD",
-			MonthlyCost:   10.0, // Default mock cost
-			HourlyCost:    0.014, // ~10/730 hours
-			Notes:         fmt.Sprintf("Mock cost for %s", resource.Type),
-			CostBreakdown: []string{fmt.Sprintf("%s: $10.00/month", resource.Type)},
-		}
-	}
-	
-	return &pb.GetProjectedCostResponse{Results: results}, nil
+	return &pb.GetProjectedCostResponse{
+		Currency:       "USD",
+		CostPerMonth:   10.0, // Default mock cost
+		UnitPrice:      0.014, // ~10/730 hours
+		BillingDetail:  fmt.Sprintf("Mock cost for %s", req.Resource.ResourceType),
+	}, nil
 }
 
 // GetActualCost implements the gRPC service
@@ -220,10 +213,10 @@ func (m *MockPlugin) GetActualCost(ctx context.Context, req *pb.GetActualCostReq
 		time.Sleep(delay)
 	}
 	
-	// Find response based on first resource ID
+	// Find response based on resource ID
 	key := "default"
-	if len(req.ResourceIDs) > 0 {
-		key = req.ResourceIDs[0]
+	if req.ResourceId != "" {
+		key = req.ResourceId
 	}
 	
 	m.mu.RLock()
@@ -235,48 +228,33 @@ func (m *MockPlugin) GetActualCost(ctx context.Context, req *pb.GetActualCostReq
 	}
 	
 	// Default response
-	results := make([]*pb.ActualCostResult, len(req.ResourceIDs))
-	for i, resourceID := range req.ResourceIDs {
-		results[i] = &pb.ActualCostResult{
-			ResourceID:    resourceID,
-			Currency:      "USD",
-			TotalCost:     25.50, // Default mock actual cost
-			StartTime:     req.StartTime,
-			EndTime:       req.EndTime,
-			CostBreakdown: []string{fmt.Sprintf("%s: $25.50 total", resourceID)},
-		}
+	result := &pb.ActualCostResult{
+		Source: req.ResourceId,
+		Cost:   25.50, // Default mock actual cost
 	}
 	
-	return &pb.GetActualCostResponse{Results: results}, nil
+	return &pb.GetActualCostResponse{
+		Results: []*pb.ActualCostResult{result},
+	}, nil
 }
 
 // Helper function to create standard projected cost response
 func CreateProjectedCostResponse(resourceType, currency string, monthlyCost, hourlyCost float64, notes string) *pb.GetProjectedCostResponse {
 	return &pb.GetProjectedCostResponse{
-		Results: []*pb.CostResult{
-			{
-				ResourceType:  resourceType,
-				Currency:      currency,
-				MonthlyCost:   monthlyCost,
-				HourlyCost:    hourlyCost,
-				Notes:         notes,
-				CostBreakdown: []string{fmt.Sprintf("%s: $%.2f/month", resourceType, monthlyCost)},
-			},
-		},
+		Currency:       currency,
+		CostPerMonth:   monthlyCost,
+		UnitPrice:      hourlyCost,
+		BillingDetail:  notes,
 	}
 }
 
 // Helper function to create standard actual cost response
-func CreateActualCostResponse(resourceID, currency string, totalCost float64, startTime, endTime int64) *pb.GetActualCostResponse {
+func CreateActualCostResponse(resourceID, currency string, totalCost float64) *pb.GetActualCostResponse {
 	return &pb.GetActualCostResponse{
 		Results: []*pb.ActualCostResult{
 			{
-				ResourceID:    resourceID,
-				Currency:      currency,
-				TotalCost:     totalCost,
-				StartTime:     startTime,
-				EndTime:       endTime,
-				CostBreakdown: []string{fmt.Sprintf("%s: $%.2f total", resourceID, totalCost)},
+				Source: resourceID,
+				Cost:   totalCost,
 			},
 		},
 	}

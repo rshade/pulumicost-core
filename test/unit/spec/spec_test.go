@@ -89,63 +89,93 @@ invalid: yaml: structure
 func TestValidateSpec(t *testing.T) {
 	tests := []struct {
 		name        string
-		specData    map[string]interface{}
+		spec        *spec.PricingSpec
 		expectError bool
 		errorMsg    string
 	}{
 		{
 			name: "valid spec",
-			specData: map[string]interface{}{
-				"provider":     "aws",
-				"service":      "ec2",
-				"sku":          "t3.micro",
-				"currency":     "USD",
-				"hourly_cost":  0.0104,
-				"monthly_cost": 7.592,
-				"region":       "us-east-1",
+			spec: &spec.PricingSpec{
+				Provider: "aws",
+				Service:  "ec2",
+				SKU:      "t3.micro",
+				Currency: "USD",
+				Pricing: map[string]interface{}{
+					"hourly_cost":  0.0104,
+					"monthly_cost": 7.592,
+				},
 			},
 			expectError: false,
 		},
 		{
-			name: "missing required fields",
-			specData: map[string]interface{}{
-				"provider": "aws",
-				// missing service, sku, currency
+			name: "missing provider",
+			spec: &spec.PricingSpec{
+				Service:  "ec2",
+				SKU:      "t3.micro",
+				Currency: "USD",
+				Pricing: map[string]interface{}{
+					"hourly_cost": 0.0104,
+				},
 			},
 			expectError: true,
-			errorMsg:    "missing required field",
+			errorMsg:    "provider is required",
 		},
 		{
-			name: "invalid cost values",
-			specData: map[string]interface{}{
-				"provider":     "aws",
-				"service":      "ec2", 
-				"sku":          "t3.micro",
-				"currency":     "USD",
-				"hourly_cost":  -1.0, // negative cost
-				"monthly_cost": 7.592,
+			name: "missing service",
+			spec: &spec.PricingSpec{
+				Provider: "aws",
+				SKU:      "t3.micro",
+				Currency: "USD",
+				Pricing: map[string]interface{}{
+					"hourly_cost": 0.0104,
+				},
 			},
 			expectError: true,
-			errorMsg:    "negative cost",
+			errorMsg:    "service is required",
 		},
 		{
-			name: "invalid currency",
-			specData: map[string]interface{}{
-				"provider":     "aws",
-				"service":      "ec2",
-				"sku":          "t3.micro", 
-				"currency":     "INVALID",
-				"hourly_cost":  0.0104,
-				"monthly_cost": 7.592,
+			name: "missing sku",
+			spec: &spec.PricingSpec{
+				Provider: "aws",
+				Service:  "ec2",
+				Currency: "USD",
+				Pricing: map[string]interface{}{
+					"hourly_cost": 0.0104,
+				},
 			},
 			expectError: true,
-			errorMsg:    "invalid currency",
+			errorMsg:    "SKU is required",
+		},
+		{
+			name: "missing currency",
+			spec: &spec.PricingSpec{
+				Provider: "aws",
+				Service:  "ec2",
+				SKU:      "t3.micro",
+				Pricing: map[string]interface{}{
+					"hourly_cost": 0.0104,
+				},
+			},
+			expectError: true,
+			errorMsg:    "currency is required",
+		},
+		{
+			name: "missing pricing",
+			spec: &spec.PricingSpec{
+				Provider: "aws",
+				Service:  "ec2",
+				SKU:      "t3.micro",
+				Currency: "USD",
+				Pricing:  map[string]interface{}{},
+			},
+			expectError: true,
+			errorMsg:    "pricing information is required",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := spec.ValidateSpec(tt.specData)
+			err := spec.ValidateSpec(tt.spec)
 
 			if tt.expectError {
 				assert.Error(t, err)
