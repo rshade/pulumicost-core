@@ -547,7 +547,7 @@ func parseFloatValue(value interface{}) (float64, bool) {
 //
 // If the input slice is empty, AggregateResults returns an AggregatedResults with an
 // AggregateResults aggregates a slice of CostResult into an AggregatedResults summary.
-// 
+//
 // If results is empty, it returns an AggregatedResults with zero totals, empty maps,
 // an empty Resources slice, and Currency set to defaultCurrency. For a non-empty
 // input, totals (TotalMonthly, TotalHourly) are summed across results, ByProvider,
@@ -745,18 +745,19 @@ func (e *Engine) GroupResults(results []CostResult, groupBy GroupBy) []CostResul
 // from the first entry in results, sets ResourceType to groupName, ResourceID to
 // "aggregated-<N>-resources", Adapter to "aggregated", and Notes to indicate the number of
 // AggregateResultsInternal aggregates multiple CostResult entries into a single CostResult that represents the grouped resources.
-// 
+//
 // AggregateResultsInternal sums numeric totals (Monthly, Hourly, TotalCost), merges Breakdown maps by summing values for matching keys,
 // and aligns/sums DailyCosts across results, extending the slice to match the longest daily-cost series. The returned result preserves
 // Currency, StartDate, EndDate, and CostPeriod from the first entry, and sets ResourceType to the provided groupName, ResourceID to
 // "aggregated-N-resources", Adapter to "aggregated", and Notes to indicate the number of aggregated resources.
-// 
+//
 // Parameters:
 //   - results: slice of CostResult entries to aggregate. If empty, an empty CostResult is returned.
 //   - groupName: name to assign to the aggregated ResourceType.
-// 
+//
 // Returns:
-//   The aggregated CostResult combining all provided entries.
+//
+//	The aggregated CostResult combining all provided entries.
 func AggregateResultsInternal(results []CostResult, groupName string) CostResult {
 	if len(results) == 0 {
 		return CostResult{}
@@ -864,6 +865,7 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 //
 // Returns:
 //   - a sorted slice of CrossProviderAggregation entries ordered by period.
+//
 // CreateCrossProviderAggregation groups a slice of CostResult entries by the specified time period
 // and returns cross-provider aggregations for each period sorted by period key.
 //
@@ -937,6 +939,7 @@ func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]Cr
 // Parameters:
 //   - results: slice of CostResult entries to validate.
 //   - groupBy: grouping mode to validate for time-based grouping requirements.
+//
 // Returns:
 //   - nil if all inputs are valid.
 //   - ErrEmptyResults if results is empty.
@@ -1084,10 +1087,10 @@ func validateCurrencyConsistency(results []CostResult) error {
 // grouping each daily cost into either a daily ("YYYY-MM-DD") or monthly ("YYYY-MM") period based on groupBy.
 // The function mutates the provided periods map and creates nested maps as needed.
 // Parameters:
-//  - periods: map keyed by period string to a map of provider -> accumulated cost.
-//  - result: CostResult whose StartDate and DailyCosts define the per-day values to distribute.
-//  - provider: provider identifier used as the key within each period's nested map.
-//  - groupBy: determines whether costs are grouped by day (GroupByDaily) or by month (GroupByMonthly).
+//   - periods: map keyed by period string to a map of provider -> accumulated cost.
+//   - result: CostResult whose StartDate and DailyCosts define the per-day values to distribute.
+//   - provider: provider identifier used as the key within each period's nested map.
+//   - groupBy: determines whether costs are grouped by day (GroupByDaily) or by month (GroupByMonthly).
 func distributeDailyCosts(
 	periods map[string]map[string]float64,
 	result CostResult,
@@ -1120,6 +1123,7 @@ func distributeDailyCosts(
 //
 // Returns:
 //   - periods: map[period]string -> map[provider]string -> total cost for that provider in the period.
+//
 // groupResultsByPeriod groups CostResult entries by the time period indicated by groupBy and aggregates costs per provider for each period.
 // Results that include DailyCosts are distributed across periods by day; otherwise each result's cost is attributed to the period computed from its StartDate.
 // The function returns a map keyed by period string (period -> provider -> aggregated cost) and the base currency used for the aggregation.
@@ -1238,11 +1242,11 @@ func formatPeriodForGrouping(date time.Time, groupBy GroupBy) string {
 // estimate from Monthly (converting to a daily value when groupBy is GroupByDaily).
 //
 // Parameters:
-//  - result: the CostResult containing potential DailyCosts, TotalCost, and Monthly values.
-//  - groupBy: the grouping granularity used to interpret Monthly values (daily vs. monthly).
+//   - result: the CostResult containing potential DailyCosts, TotalCost, and Monthly values.
+//   - groupBy: the grouping granularity used to interpret Monthly values (daily vs. monthly).
 //
 // Returns:
-//  - the cost for the requested period as a float64. Returns 0 if no suitable cost fields are available.
+//   - the cost for the requested period as a float64. Returns 0 if no suitable cost fields are available.
 func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
 	// Use DailyCosts when available for more accurate cost calculations
 	if len(result.DailyCosts) > 0 {
@@ -1314,11 +1318,11 @@ func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
 // as the Currency for every returned aggregation.
 // The returned slice contains one CrossProviderAggregation per period with Providers populated,
 // createSortedAggregations builds a sorted slice of CrossProviderAggregation from a map of periods to provider costs.
-// 
+//
 // The `periods` parameter is a map where each key is a period string (e.g., "2025-10-01" or "2025-10") and the value
 // is a map of provider name to cost for that period. For each period an aggregation is produced with `Total` set to the
 // sum of all provider costs and `Currency` set to `baseCurrency`.
-// 
+//
 // The resulting slice is sorted by the `Period` field in ascending (lexicographic) order. If `periods` is empty, an
 // empty slice is returned.
 func createSortedAggregations(periods map[string]map[string]float64, baseCurrency string) []CrossProviderAggregation {

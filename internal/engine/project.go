@@ -244,9 +244,9 @@ func renderJSON(aggregated *AggregatedResults) error {
 }
 
 // renderJSONCostResults writes the provided cost results as pretty-printed JSON to standard output.
-// 
+//
 // results is the slice of CostResult values to be encoded.
-// 
+//
 // It returns any error encountered while encoding/writing the JSON.
 func renderJSONCostResults(results []CostResult) error {
 	encoder := json.NewEncoder(os.Stdout)
@@ -286,10 +286,10 @@ func renderNDJSON(results []CostResult) error {
 // Returns an error if writing to stdout or flushing the table writer fails. If
 // aggregations is empty the function prints a "No cost data available..." message and
 // renderCrossProviderTable prints a tabular cross-provider cost report to stdout.
-// 
+//
 // aggregations is a slice of CrossProviderAggregation describing per-period totals and per-provider breakdowns.
 // groupBy controls the period label used in the table header (e.g., daily uses "Date", otherwise "Month").
-// 
+//
 // It returns an error if writing to stdout or flushing the table writer fails.
 func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy GroupBy) error {
 	if len(aggregations) == 0 {
