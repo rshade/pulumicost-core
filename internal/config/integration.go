@@ -7,20 +7,30 @@ import (
 )
 
 // GlobalConfig holds the global configuration instance.
-var GlobalConfig *Config       //nolint:gochecknoglobals // Singleton pattern for configuration
-var globalConfigOnce sync.Once //nolint:gochecknoglobals // Singleton pattern for configuration
+var GlobalConfig *Config        //nolint:gochecknoglobals // Singleton pattern for configuration
+var globalConfigMu sync.RWMutex //nolint:gochecknoglobals // Protects globalConfigInit flag
+var globalConfigInit bool       //nolint:gochecknoglobals // Tracks if global config has been initialized
 
 // InitGlobalConfig initializes the global configuration.
 func InitGlobalConfig() {
-	globalConfigOnce.Do(func() {
-		GlobalConfig = New()
-	})
+	globalConfigMu.Lock()
+	defer globalConfigMu.Unlock()
+
+	if globalConfigInit {
+		return
+	}
+
+	GlobalConfig = New()
+	globalConfigInit = true
 }
 
 // ResetGlobalConfigForTest resets the global config for testing purposes.
 func ResetGlobalConfigForTest() {
+	globalConfigMu.Lock()
+	defer globalConfigMu.Unlock()
+
 	GlobalConfig = nil
-	globalConfigOnce = sync.Once{}
+	globalConfigInit = false
 }
 
 // GetGlobalConfig returns the global configuration, initializing it if needed.

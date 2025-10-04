@@ -138,7 +138,7 @@ func NewCostActualCmd() *cobra.Command {
 }
 
 // ParseTimeRange parses the provided from and to date strings into time values and validates that the range is chronological.
-// 
+//
 // ParseTimeRange accepts two date strings, parses each into a time.Time, and ensures the 'to' time is after the 'from' time.
 // It returns the parsed from and to times on success. If either date cannot be parsed or if the 'to' time is not after
 // the 'from' time, an error is returned describing the failure.
