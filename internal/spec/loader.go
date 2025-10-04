@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -67,4 +68,28 @@ func (l *Loader) ListSpecs() ([]string, error) {
 	}
 
 	return specs, nil
+}
+
+// ParseSpecFilename parses a spec filename to extract provider, service, and SKU.
+func ParseSpecFilename(filename string) (provider, service, sku string, valid bool) {
+	// Remove extension
+	ext := filepath.Ext(filename)
+	if ext != ".yaml" && ext != ".yml" {
+		return "", "", "", false
+	}
+	
+	name := filename[:len(filename)-len(ext)]
+	
+	// Split by dash - should be provider-service-sku format
+	parts := strings.Split(name, "-")
+	if len(parts) < 3 {
+		return "", "", "", false
+	}
+	
+	provider = parts[0]
+	service = parts[1]
+	// Join remaining parts as SKU (in case SKU contains dashes)
+	sku = strings.Join(parts[2:], "-")
+	
+	return provider, service, sku, true
 }

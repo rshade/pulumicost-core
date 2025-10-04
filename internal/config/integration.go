@@ -89,3 +89,58 @@ func EnsureLogDir() error {
 	logDir := filepath.Dir(cfg.Logging.File)
 	return os.MkdirAll(logDir, 0700)
 }
+
+// GetConfigDir returns the path to the pulumicost configuration directory.
+func GetConfigDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(homeDir, ".pulumicost"), nil
+}
+
+// GetPluginDir returns the path to the plugins directory.
+func GetPluginDir() (string, error) {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "plugins"), nil
+}
+
+// GetSpecDir returns the path to the specs directory.
+func GetSpecDir() (string, error) {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "specs"), nil
+}
+
+// EnsureSubDirs ensures all standard subdirectories exist.
+func EnsureSubDirs() error {
+	if err := EnsureConfigDir(); err != nil {
+		return err
+	}
+
+	// Create plugins directory
+	pluginDir, err := GetPluginDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(pluginDir, 0700); err != nil {
+		return err
+	}
+
+	// Create specs directory
+	specDir, err := GetSpecDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(specDir, 0700); err != nil {
+		return err
+	}
+
+	// Create logs directory
+	return EnsureLogDir()
+}
