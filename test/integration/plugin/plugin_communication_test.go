@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/proto"
 	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestPluginCommunication_BasicConnection(t *testing.T) {
@@ -26,10 +26,10 @@ func TestPluginCommunication_BasicConnection(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := proto.NewCostSourceClient(conn)
+	client := pb.NewCostSourceServiceClient(conn)
 
 	// Test Name method
-	nameResp, err := client.Name(context.Background(), &proto.Empty{})
+	nameResp, err := client.Name(context.Background(), &pb.NameRequest{})
 	require.NoError(t, err)
 	assert.Equal(t, "test-integration-plugin", nameResp.GetName())
 }
@@ -51,18 +51,16 @@ func TestPluginCommunication_ProjectedCostFlow(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := proto.NewCostSourceClient(conn)
+	client := pb.NewCostSourceServiceClient(conn)
 
 	// Test projected cost calculation
-	req := &proto.GetProjectedCostRequest{
-		Resources: []*proto.ResourceDescriptor{
-			{
-				Type:     "aws_instance",
-				Provider: "aws",
-				Properties: map[string]string{
-					"instance_type": "t3.micro",
-					"region":        "us-east-1",
-				},
+	req := &pb.GetProjectedCostRequest{
+		Resource: &pb.ResourceDescriptor{
+			ResourceType: "aws_instance",
+			Provider:     "aws",
+			Tags: map[string]string{
+				"instance_type": "t3.micro",
+				"region":        "us-east-1",
 			},
 		},
 	}
@@ -95,13 +93,14 @@ func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := proto.NewCostSourceClient(conn)
+	client := pb.NewCostSourceServiceClient(conn)
 
 	// Test actual cost retrieval
-	req := &proto.GetActualCostRequest{
-		ResourceIDs: []string{resourceID},
-		StartTime:   time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC).Unix(),
-		EndTime:     time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC).Unix(),
+	req := &pb.GetActualCostRequest{
+		ResourceId: resourceID,
+		Start:      timestamppb.New(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+		End:        timestamppb.New(time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)),
+		Tags:       make(map[string]string),
 	}
 
 	resp, err := client.GetActualCost(context.Background(), req)
@@ -109,7 +108,7 @@ func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 	require.Len(t, resp.Results, 1)
 
 	result := resp.Results[0]
-	assert.Equal(t, resourceID, result.Source)
+	assert.Equal(t, "mock-source", result.Source)
 	assert.Equal(t, 85.25, result.Cost)
 }
 
@@ -128,13 +127,11 @@ func TestPluginCommunication_ErrorHandling(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := proto.NewCostSourceClient(conn)
+	client := pb.NewCostSourceServiceClient(conn)
 
 	// Test error handling
-	req := &proto.GetProjectedCostRequest{
-		Resources: []*proto.ResourceDescriptor{
-			{Type: "aws_instance", Provider: "aws"},
-		},
+	req := &pb.GetProjectedCostRequest{
+		Resource: &pb.ResourceDescriptor{ResourceType: "aws_instance", Provider: "aws"},
 	}
 
 	_, err = client.GetProjectedCost(context.Background(), req)
@@ -159,16 +156,14 @@ func TestPluginCommunication_Timeout(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := proto.NewCostSourceClient(conn)
+	client := pb.NewCostSourceServiceClient(conn)
 
 	// Test with short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
 
-	req := &proto.GetProjectedCostRequest{
-		Resources: []*proto.ResourceDescriptor{
-			{Type: "aws_instance", Provider: "aws"},
-		},
+	req := &pb.GetProjectedCostRequest{
+		Resource: &pb.ResourceDescriptor{ResourceType: "aws_instance", Provider: "aws"},
 	}
 
 	start := time.Now()
