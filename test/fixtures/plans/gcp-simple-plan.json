@@ -1,0 +1,107 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "google_compute_instance.default",
+          "type": "google_compute_instance",
+          "provider_name": "registry.terraform.io/hashicorp/google",
+          "values": {
+            "name": "myapp-instance",
+            "machine_type": "e2-medium",
+            "zone": "us-central1-a",
+            "project": "my-project-12345",
+            "boot_disk": {
+              "initialize_params": {
+                "image": "debian-cloud/debian-11",
+                "size": 10,
+                "type": "pd-standard"
+              }
+            },
+            "network_interface": {
+              "network": "default",
+              "access_config": {}
+            },
+            "metadata": {
+              "Environment": "production"
+            },
+            "labels": {
+              "environment": "production",
+              "project": "myapp"
+            }
+          }
+        },
+        {
+          "address": "google_storage_bucket.data",
+          "type": "google_storage_bucket",
+          "provider_name": "registry.terraform.io/hashicorp/google",
+          "values": {
+            "name": "myapp-data-bucket-12345",
+            "location": "US",
+            "project": "my-project-12345",
+            "storage_class": "STANDARD",
+            "uniform_bucket_level_access": true,
+            "versioning": {
+              "enabled": true
+            },
+            "lifecycle_rule": [
+              {
+                "action": {
+                  "type": "Delete"
+                },
+                "condition": {
+                  "age": 30
+                }
+              }
+            ],
+            "labels": {
+              "environment": "production",
+              "project": "myapp"
+            }
+          }
+        },
+        {
+          "address": "google_sql_database_instance.main",
+          "type": "google_sql_database_instance",
+          "provider_name": "registry.terraform.io/hashicorp/google",
+          "values": {
+            "name": "myapp-db-instance",
+            "project": "my-project-12345",
+            "region": "us-central1",
+            "database_version": "POSTGRES_13",
+            "settings": {
+              "tier": "db-f1-micro",
+              "availability_type": "ZONAL",
+              "backup_configuration": {
+                "enabled": true,
+                "start_time": "03:00"
+              },
+              "ip_configuration": {
+                "ipv4_enabled": false,
+                "private_network": "projects/my-project-12345/global/networks/default"
+              },
+              "disk_size": 20,
+              "disk_type": "PD_SSD",
+              "user_labels": {
+                "environment": "production",
+                "project": "myapp"
+              }
+            },
+            "deletion_protection": true
+          }
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "google": {
+        "name": "google",
+        "version_constraint": "~> 4.0"
+      }
+    }
+  },
+  "variables": {},
+  "terraform_version": "1.5.0",
+  "format_version": "1.2"
+}
