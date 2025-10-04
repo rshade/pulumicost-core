@@ -1,4 +1,5 @@
-package benchmarks
+// Package benchmarks_test provides performance benchmarks for the pulumicost engine.
+package benchmarks_test
 
 import (
 	"context"
@@ -9,13 +10,14 @@ import (
 	"github.com/rshade/pulumicost-core/internal/engine"
 )
 
-// Benchmark projected cost calculations
+// BenchmarkEngine_GetProjectedCost_Single benchmarks the performance of GetProjectedCost
+// with a single resource to establish baseline performance.
 func BenchmarkEngine_GetProjectedCost_Single(b *testing.B) {
 	eng := engine.New(nil, nil)
 
 	resources := []engine.ResourceDescriptor{
 		{
-			ID:       "i-1234567890abcdef0",
+			ID:       "test-resource",
 			Type:     "aws_instance",
 			Provider: "aws",
 			Properties: map[string]interface{}{
@@ -26,7 +28,7 @@ func BenchmarkEngine_GetProjectedCost_Single(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := eng.GetProjectedCost(context.Background(), resources)
 		if err != nil {
 			b.Fatal(err)
@@ -34,12 +36,14 @@ func BenchmarkEngine_GetProjectedCost_Single(b *testing.B) {
 	}
 }
 
+// BenchmarkEngine_GetProjectedCost_Multiple benchmarks the performance of GetProjectedCost
+// with multiple resources (batch of 10) to evaluate batching performance.
 func BenchmarkEngine_GetProjectedCost_Multiple(b *testing.B) {
 	eng := engine.New(nil, nil)
 
 	// Create 10 resources for batch testing
 	resources := make([]engine.ResourceDescriptor, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		resources[i] = engine.ResourceDescriptor{
 			ID:       fmt.Sprintf("resource-%d", i),
 			Type:     "aws_instance",
@@ -52,7 +56,7 @@ func BenchmarkEngine_GetProjectedCost_Multiple(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := eng.GetProjectedCost(context.Background(), resources)
 		if err != nil {
 			b.Fatal(err)
@@ -60,12 +64,14 @@ func BenchmarkEngine_GetProjectedCost_Multiple(b *testing.B) {
 	}
 }
 
+// BenchmarkEngine_GetProjectedCost_Large benchmarks the performance of GetProjectedCost
+// with a large batch of resources (100) to identify performance at scale.
 func BenchmarkEngine_GetProjectedCost_Large(b *testing.B) {
 	eng := engine.New(nil, nil)
 
 	// Create 100 resources for large batch testing
 	resources := make([]engine.ResourceDescriptor, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		resources[i] = engine.ResourceDescriptor{
 			ID:       fmt.Sprintf("resource-%d", i),
 			Type:     "aws_instance",
@@ -78,7 +84,7 @@ func BenchmarkEngine_GetProjectedCost_Large(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := eng.GetProjectedCost(context.Background(), resources)
 		if err != nil {
 			b.Fatal(err)
@@ -86,7 +92,8 @@ func BenchmarkEngine_GetProjectedCost_Large(b *testing.B) {
 	}
 }
 
-// Benchmark actual cost calculations
+// BenchmarkEngine_GetActualCost_Single benchmarks the performance of GetActualCost
+// with a single resource to establish baseline performance for actual cost queries.
 func BenchmarkEngine_GetActualCost_Single(b *testing.B) {
 	eng := engine.New(nil, nil)
 
@@ -102,7 +109,7 @@ func BenchmarkEngine_GetActualCost_Single(b *testing.B) {
 	to := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := eng.GetActualCost(context.Background(), resources, from, to)
 		if err != nil {
 			b.Fatal(err)
@@ -110,12 +117,14 @@ func BenchmarkEngine_GetActualCost_Single(b *testing.B) {
 	}
 }
 
+// BenchmarkEngine_GetActualCost_Multiple benchmarks the performance of GetActualCost
+// with multiple resources (batch of 10) to evaluate batching for actual cost queries.
 func BenchmarkEngine_GetActualCost_Multiple(b *testing.B) {
 	eng := engine.New(nil, nil)
 
 	// Create 10 resources for batch testing
 	resources := make([]engine.ResourceDescriptor, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		resources[i] = engine.ResourceDescriptor{
 			ID:       fmt.Sprintf("resource-%d", i),
 			Type:     "aws_instance",
@@ -127,7 +136,7 @@ func BenchmarkEngine_GetActualCost_Multiple(b *testing.B) {
 	to := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := eng.GetActualCost(context.Background(), resources, from, to)
 		if err != nil {
 			b.Fatal(err)
@@ -135,12 +144,13 @@ func BenchmarkEngine_GetActualCost_Multiple(b *testing.B) {
 	}
 }
 
-// Memory allocation benchmarks
+// BenchmarkEngine_ResourceDescriptor_Allocation benchmarks the memory allocation performance
+// when creating and initializing batches of ResourceDescriptor structures.
 func BenchmarkEngine_ResourceDescriptor_Allocation(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		resources := make([]engine.ResourceDescriptor, 100)
-		for j := 0; j < 100; j++ {
+		for j := range 100 {
 			resources[j] = engine.ResourceDescriptor{
 				ID:       fmt.Sprintf("resource-%d", j),
 				Type:     "aws_instance",
@@ -160,7 +170,8 @@ func BenchmarkEngine_ResourceDescriptor_Allocation(b *testing.B) {
 	}
 }
 
-// Concurrent access benchmarks
+// BenchmarkEngine_GetProjectedCost_Concurrent benchmarks the thread-safe concurrent
+// performance of GetProjectedCost when accessed by multiple goroutines in parallel.
 func BenchmarkEngine_GetProjectedCost_Concurrent(b *testing.B) {
 	eng := engine.New(nil, nil)
 
@@ -186,7 +197,8 @@ func BenchmarkEngine_GetProjectedCost_Concurrent(b *testing.B) {
 	})
 }
 
-// Context cancellation benchmark
+// BenchmarkEngine_GetProjectedCost_WithTimeout benchmarks the performance of GetProjectedCost
+// when using context timeout to measure cancellation overhead.
 func BenchmarkEngine_GetProjectedCost_WithTimeout(b *testing.B) {
 	eng := engine.New(nil, nil)
 
@@ -199,7 +211,7 @@ func BenchmarkEngine_GetProjectedCost_WithTimeout(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		_, err := eng.GetProjectedCost(ctx, resources)
 		cancel()
@@ -209,7 +221,8 @@ func BenchmarkEngine_GetProjectedCost_WithTimeout(b *testing.B) {
 	}
 }
 
-// Property serialization benchmark
+// BenchmarkEngine_Properties_Conversion benchmarks the performance of converting
+// resource properties from interface{} maps to string maps for serialization.
 func BenchmarkEngine_Properties_Conversion(b *testing.B) {
 	properties := map[string]interface{}{
 		"instance_type":     "t3.micro",
@@ -230,7 +243,7 @@ func BenchmarkEngine_Properties_Conversion(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Simulate property conversion (from internal/engine/engine.go:187)
 		result := make(map[string]string)
 		for k, v := range properties {
@@ -241,7 +254,8 @@ func BenchmarkEngine_Properties_Conversion(b *testing.B) {
 	}
 }
 
-// Error handling performance
+// BenchmarkEngine_GetProjectedCost_NoClients benchmarks the performance of GetProjectedCost
+// fallback behavior when no plugins are available, testing error handling performance.
 func BenchmarkEngine_GetProjectedCost_NoClients(b *testing.B) {
 	// Test fallback performance when no plugins are available
 	eng := engine.New(nil, nil)
@@ -255,7 +269,7 @@ func BenchmarkEngine_GetProjectedCost_NoClients(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		results, err := eng.GetProjectedCost(context.Background(), resources)
 		if err != nil {
 			b.Fatal(err)

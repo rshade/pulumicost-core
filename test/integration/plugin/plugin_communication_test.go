@@ -1,4 +1,5 @@
-package plugin
+// Package plugin_test provides integration tests for plugin host communication.
+package plugin_test
 
 import (
 	"context"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// TestPluginCommunication_BasicConnection tests basic gRPC connection and Name method.
 func TestPluginCommunication_BasicConnection(t *testing.T) {
 	// Start mock plugin server
 	mockPlugin := plugin.NewMockPlugin("test-integration-plugin")
@@ -34,6 +36,7 @@ func TestPluginCommunication_BasicConnection(t *testing.T) {
 	assert.Equal(t, "test-integration-plugin", nameResp.GetName())
 }
 
+// TestPluginCommunication_ProjectedCostFlow tests projected cost calculation flow with custom responses.
 func TestPluginCommunication_ProjectedCostFlow(t *testing.T) {
 	// Start mock plugin server
 	mockPlugin := plugin.NewMockPlugin("cost-calculator")
@@ -70,12 +73,13 @@ func TestPluginCommunication_ProjectedCostFlow(t *testing.T) {
 	assert.NotNil(t, resp)
 
 	// Verify response fields
-	assert.Equal(t, "USD", resp.Currency)
-	assert.Equal(t, 73.0, resp.CostPerMonth)
-	assert.Equal(t, 0.10, resp.UnitPrice)
-	assert.Contains(t, resp.BillingDetail, "t3.micro")
+	assert.Equal(t, "USD", resp.GetCurrency())
+	assert.InDelta(t, 73.0, resp.GetCostPerMonth(), 0.01)
+	assert.InDelta(t, 0.10, resp.GetUnitPrice(), 0.01)
+	assert.Contains(t, resp.GetBillingDetail(), "t3.micro")
 }
 
+// TestPluginCommunication_ActualCostFlow tests actual cost retrieval with custom responses.
 func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 	// Start mock plugin server
 	mockPlugin := plugin.NewMockPlugin("actual-cost-provider")
@@ -105,13 +109,14 @@ func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 
 	resp, err := client.GetActualCost(context.Background(), req)
 	require.NoError(t, err)
-	require.Len(t, resp.Results, 1)
+	require.Len(t, resp.GetResults(), 1)
 
-	result := resp.Results[0]
-	assert.Equal(t, "mock-source", result.Source)
-	assert.Equal(t, 85.25, result.Cost)
+	result := resp.GetResults()[0]
+	assert.Equal(t, "mock-source", result.GetSource())
+	assert.InDelta(t, 85.25, result.GetCost(), 0.01)
 }
 
+// TestPluginCommunication_ErrorHandling tests error injection and handling in plugin communication.
 func TestPluginCommunication_ErrorHandling(t *testing.T) {
 	// Start mock plugin server
 	mockPlugin := plugin.NewMockPlugin("error-plugin")
@@ -135,12 +140,13 @@ func TestPluginCommunication_ErrorHandling(t *testing.T) {
 	}
 
 	_, err = client.GetProjectedCost(context.Background(), req)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Verify error call was counted
 	assert.Equal(t, 1, mockPlugin.GetCallCount("GetProjectedCost"))
 }
 
+// TestPluginCommunication_Timeout tests context timeout handling with delayed responses.
 func TestPluginCommunication_Timeout(t *testing.T) {
 	// Start mock plugin server with delay
 	mockPlugin := plugin.NewMockPlugin("slow-plugin")
@@ -170,7 +176,7 @@ func TestPluginCommunication_Timeout(t *testing.T) {
 	_, err = client.GetProjectedCost(ctx, req)
 	duration := time.Since(start)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "context deadline exceeded")
 	assert.Less(t, duration, 1*time.Second) // Should timeout quickly
 }

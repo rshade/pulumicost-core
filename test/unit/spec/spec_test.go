@@ -1,4 +1,5 @@
-package spec
+// Package spec_test provides unit tests for the pricing specification loader.
+package spec_test
 
 import (
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestLoadSpec tests loading pricing specifications from YAML files.
 func TestLoadSpec(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -31,7 +33,7 @@ monthly_cost: 7.592
 region: us-east-1
 `,
 			provider:    "aws",
-			service:     "ec2", 
+			service:     "ec2",
 			sku:         "t3.micro",
 			expectError: false,
 		},
@@ -68,8 +70,8 @@ invalid: yaml: structure
 			// Create spec file if content provided
 			if tt.specContent != "" {
 				specFile := filepath.Join(specDir, tt.provider+"-"+tt.service+"-"+tt.sku+".yaml")
-				err := os.WriteFile(specFile, []byte(tt.specContent), 0644)
-				require.NoError(t, err)
+				writeErr := os.WriteFile(specFile, []byte(tt.specContent), 0644)
+				require.NoError(t, writeErr)
 			}
 
 			loader := spec.NewLoader(specDir)
@@ -86,6 +88,7 @@ invalid: yaml: structure
 	}
 }
 
+// TestValidateSpec tests validation of pricing specification fields.
 func TestValidateSpec(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -190,6 +193,7 @@ func TestValidateSpec(t *testing.T) {
 	}
 }
 
+// TestSpecFilePatterns tests parsing of spec filenames with various formats.
 func TestSpecFilePatterns(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -219,7 +223,7 @@ func TestSpecFilePatterns(t *testing.T) {
 			name:     "yml extension",
 			filename: "gcp-compute-n1-standard-1.yml",
 			provider: "gcp",
-			service:  "compute", 
+			service:  "compute",
 			sku:      "n1-standard-1",
 			isValid:  true,
 		},
@@ -240,7 +244,7 @@ func TestSpecFilePatterns(t *testing.T) {
 			provider, service, sku, valid := spec.ParseSpecFilename(tt.filename)
 
 			assert.Equal(t, tt.isValid, valid)
-			
+
 			if tt.isValid {
 				assert.Equal(t, tt.provider, provider)
 				assert.Equal(t, tt.service, service)
@@ -250,6 +254,7 @@ func TestSpecFilePatterns(t *testing.T) {
 	}
 }
 
+// TestSpecLoader tests spec loader creation and directory handling.
 func TestSpecLoader(t *testing.T) {
 	t.Run("creates new loader with directory", func(t *testing.T) {
 		tempDir := t.TempDir()
@@ -260,22 +265,23 @@ func TestSpecLoader(t *testing.T) {
 	t.Run("handles empty directory", func(t *testing.T) {
 		tempDir := t.TempDir()
 		loader := spec.NewLoader(tempDir)
-		
+
 		result, err := loader.LoadSpec("aws", "ec2", "t3.micro")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
 	})
 
 	t.Run("handles non-existent directory", func(t *testing.T) {
 		nonExistentDir := filepath.Join(t.TempDir(), "nonexistent")
 		loader := spec.NewLoader(nonExistentDir)
-		
+
 		result, err := loader.LoadSpec("aws", "ec2", "t3.micro")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
 	})
 }
 
+// TestSpecCache tests spec caching behavior for repeated loads.
 func TestSpecCache(t *testing.T) {
 	t.Run("caches loaded specs", func(t *testing.T) {
 		// Create a temporary directory for specs
@@ -299,7 +305,7 @@ region: us-east-1
 		require.NoError(t, err)
 
 		loader := spec.NewLoader(specDir)
-		
+
 		// Load spec twice
 		result1, err1 := loader.LoadSpec("aws", "ec2", "t3.micro")
 		result2, err2 := loader.LoadSpec("aws", "ec2", "t3.micro")
@@ -315,6 +321,7 @@ region: us-east-1
 	})
 }
 
+// TestSpecErrorHandling tests error handling for file permissions and malformed YAML.
 func TestSpecErrorHandling(t *testing.T) {
 	t.Run("handles file permission errors", func(t *testing.T) {
 		// Create a temporary directory for specs
@@ -331,7 +338,7 @@ func TestSpecErrorHandling(t *testing.T) {
 		loader := spec.NewLoader(specDir)
 		result, err := loader.LoadSpec("aws", "ec2", "t3.micro")
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
 	})
 
@@ -356,7 +363,7 @@ invalid: yaml
 		loader := spec.NewLoader(specDir)
 		result, err := loader.LoadSpec("aws", "ec2", "invalid")
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "yaml") // Should mention YAML parsing issue
 	})
