@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -188,5 +187,3 @@ func TestEngine_ErrorHandling(t *testing.T) {
 		assert.Empty(t, results)
 	})
 }
-}
-
