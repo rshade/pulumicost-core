@@ -188,5 +188,4 @@ func TestEngine_ErrorHandling(t *testing.T) {
 		assert.Empty(t, results)
 	})
 }
-}
 

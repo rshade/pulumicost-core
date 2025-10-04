@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestMockPlugin_Basic(t *testing.T) {
@@ -57,26 +58,22 @@ func TestMockPlugin_GetProjectedCost_Default(t *testing.T) {
 	client := pb.NewCostSourceServiceClient(conn)
 	
 	req := &pb.GetProjectedCostRequest{
-		Resources: []*pb.ResourceDescriptor{
-			{
-				Type:     "aws_instance",
-				Provider: "aws",
-				Properties: map[string]string{
-					"instance_type": "t3.micro",
-				},
+		Resource: &pb.ResourceDescriptor{
+			ResourceType: "aws_instance",
+			Provider:     "aws",
+			Tags: map[string]string{
+				"instance_type": "t3.micro",
 			},
 		},
 	}
 	
 	resp, err := client.GetProjectedCost(context.Background(), req)
 	require.NoError(t, err)
-	require.Len(t, resp.Results, 1)
 	
-	result := resp.Results[0]
-	assert.Equal(t, "aws_instance", result.ResourceType)
-	assert.Equal(t, "USD", result.Currency)
-	assert.Equal(t, 10.0, result.MonthlyCost)
-	assert.Contains(t, result.Notes, "Mock cost")
+	assert.Equal(t, "USD", resp.Currency)
+	assert.Equal(t, 10.0, resp.CostPerMonth)
+	assert.Equal(t, 0.014, resp.UnitPrice)
+	assert.Contains(t, resp.BillingDetail, "Mock cost")
 	assert.Equal(t, 1, mockPlugin.GetCallCount("GetProjectedCost"))
 }
 
@@ -98,23 +95,18 @@ func TestMockPlugin_GetProjectedCost_CustomResponse(t *testing.T) {
 	client := pb.NewCostSourceServiceClient(conn)
 	
 	req := &pb.GetProjectedCostRequest{
-		Resources: []*pb.ResourceDescriptor{
-			{
-				Type:     "aws_instance",
-				Provider: "aws",
-			},
+		Resource: &pb.ResourceDescriptor{
+			ResourceType: "aws_instance",
+			Provider:     "aws",
 		},
 	}
 	
 	resp, err := client.GetProjectedCost(context.Background(), req)
 	require.NoError(t, err)
-	require.Len(t, resp.Results, 1)
 	
-	result := resp.Results[0]
-	assert.Equal(t, "aws_instance", result.ResourceType)
-	assert.Equal(t, 50.0, result.MonthlyCost)
-	assert.Equal(t, 0.068, result.HourlyCost)
-	assert.Equal(t, "Custom mock response", result.Notes)
+	assert.Equal(t, 50.0, resp.CostPerMonth)
+	assert.Equal(t, 0.068, resp.UnitPrice)
+	assert.Contains(t, resp.BillingDetail, "Custom mock response")
 }
 
 func TestMockPlugin_GetActualCost_Default(t *testing.T) {
@@ -130,9 +122,10 @@ func TestMockPlugin_GetActualCost_Default(t *testing.T) {
 	client := pb.NewCostSourceServiceClient(conn)
 	
 	req := &pb.GetActualCostRequest{
-		ResourceIDs: []string{"i-1234567890abcdef0"},
-		StartTime:   1640995200, // 2022-01-01
-		EndTime:     1643673600, // 2022-02-01
+		ResourceId: "i-1234567890abcdef0",
+		Start:      timestamppb.New(time.Unix(1640995200, 0)), // 2022-01-01
+		End:        timestamppb.New(time.Unix(1643673600, 0)), // 2022-02-01
+		Tags:       make(map[string]string),
 	}
 	
 	resp, err := client.GetActualCost(context.Background(), req)
@@ -140,9 +133,8 @@ func TestMockPlugin_GetActualCost_Default(t *testing.T) {
 	require.Len(t, resp.Results, 1)
 	
 	result := resp.Results[0]
-	assert.Equal(t, "i-1234567890abcdef0", result.ResourceID)
-	assert.Equal(t, "USD", result.Currency)
-	assert.Equal(t, 25.50, result.TotalCost)
+	assert.Equal(t, 25.50, result.Cost)
+	assert.Equal(t, "mock-source", result.Source)
 	assert.Equal(t, 1, mockPlugin.GetCallCount("GetActualCost"))
 }
 
@@ -154,7 +146,7 @@ func TestMockPlugin_GetActualCost_CustomResponse(t *testing.T) {
 
 	// Set custom response for specific resource
 	customResponse := CreateActualCostResponse(
-		"i-1234567890abcdef0", "USD", 75.25, 1640995200, 1643673600)
+		"i-1234567890abcdef0", "USD", 75.25)
 	mockPlugin.SetActualCostResponse("i-1234567890abcdef0", customResponse)
 
 	conn, err := grpc.Dial(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -164,9 +156,10 @@ func TestMockPlugin_GetActualCost_CustomResponse(t *testing.T) {
 	client := pb.NewCostSourceServiceClient(conn)
 	
 	req := &pb.GetActualCostRequest{
-		ResourceIDs: []string{"i-1234567890abcdef0"},
-		StartTime:   1640995200,
-		EndTime:     1643673600,
+		ResourceId: "i-1234567890abcdef0",
+		Start:      timestamppb.New(time.Unix(1640995200, 0)),
+		End:        timestamppb.New(time.Unix(1643673600, 0)),
+		Tags:       make(map[string]string),
 	}
 	
 	resp, err := client.GetActualCost(context.Background(), req)
@@ -174,8 +167,8 @@ func TestMockPlugin_GetActualCost_CustomResponse(t *testing.T) {
 	require.Len(t, resp.Results, 1)
 	
 	result := resp.Results[0]
-	assert.Equal(t, "i-1234567890abcdef0", result.ResourceID)
-	assert.Equal(t, 75.25, result.TotalCost)
+	assert.Equal(t, "i-1234567890abcdef0", result.Source)
+	assert.Equal(t, 75.25, result.Cost)
 }
 
 func TestMockPlugin_ErrorInjection(t *testing.T) {
