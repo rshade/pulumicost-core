@@ -50,7 +50,7 @@ func (m *MockPlugin) Start() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	
-	lis, err := net.Listen("tcp", ":0") // Use port 0 for auto-assignment
+	lis, err := net.Listen("tcp", "127.0.0.1:0") // Use port 0 for auto-assignment
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
