@@ -1,3 +1,14 @@
+// Package config provides configuration management for PulumiCost.
+//
+// This package handles:
+// - Loading and saving configuration from YAML files
+// - Output formatting preferences (format, precision)
+// - Plugin-specific configuration
+// - Logging configuration with multiple output destinations
+// - Secure value encryption/decryption for sensitive data
+// - Configuration validation with detailed error reporting
+//
+// The configuration is stored in ~/.pulumicost/config.yaml by default.
 package config
 
 import (
@@ -57,8 +68,20 @@ type PluginConfig struct {
 
 // LoggingConfig defines logging preferences.
 type LoggingConfig struct {
-	Level string `yaml:"level" json:"level"`
-	File  string `yaml:"file"  json:"file"`
+	Level   string      `yaml:"level"   json:"level"`
+	Format  string      `yaml:"format"  json:"format"`  // "json" or "text"
+	Outputs []LogOutput `yaml:"outputs" json:"outputs"` // Multiple output destinations
+	File    string      `yaml:"file"    json:"file"`    // Legacy: single file output
+}
+
+// LogOutput defines a logging output destination.
+type LogOutput struct {
+	Type      string `yaml:"type"                  json:"type"`                  // "console", "file", "syslog"
+	Level     string `yaml:"level,omitempty"       json:"level,omitempty"`       // Optional: override global level
+	Path      string `yaml:"path,omitempty"        json:"path,omitempty"`        // For file type
+	Format    string `yaml:"format,omitempty"      json:"format,omitempty"`      // Optional: override global format
+	MaxSizeMB int    `yaml:"max_size_mb,omitempty" json:"max_size_mb,omitempty"` // File rotation
+	MaxFiles  int    `yaml:"max_files,omitempty"   json:"max_files,omitempty"`   // File rotation
 }
 
 // New creates a new configuration with defaults.
@@ -78,8 +101,16 @@ func New() *Config {
 		},
 		Plugins: make(map[string]PluginConfig),
 		Logging: LoggingConfig{
-			Level: "info",
-			File:  filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
+			Level:  "info",
+			Format: "text",
+			File:   filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
+			Outputs: []LogOutput{
+				{
+					Type:   "console",
+					Level:  "info",
+					Format: "text",
+				},
+			},
 		},
 
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
@@ -198,38 +229,155 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid precision: %d (must be between 0 and 10)", c.Output.Precision)
 	}
 
-	// Validate logging level
-	validLevels := []string{"debug", "info", "warn", "error"}
-	valid = false
-	for _, level := range validLevels {
-		if c.Logging.Level == level {
-			valid = true
-			break
-		}
-	}
-	if !valid {
-		return fmt.Errorf("invalid log level: %s (must be one of: %v)", c.Logging.Level, validLevels)
-	}
-
-	// Validate logging file path (if specified)
-	if c.Logging.File != "" {
-		if !filepath.IsAbs(c.Logging.File) {
-			return fmt.Errorf("log file path must be absolute: %s", c.Logging.File)
-		}
-
-		// Check if parent directory is accessible
-		logDir := filepath.Dir(c.Logging.File)
-		if _, statErr := os.Stat(logDir); statErr != nil && os.IsNotExist(statErr) {
-			// Try to create the directory
-			if mkdirErr := os.MkdirAll(logDir, 0700); mkdirErr != nil {
-				return fmt.Errorf("cannot create log directory %s: %w", logDir, mkdirErr)
-			}
-		}
+	// Validate logging configuration
+	if err := c.validateLogging(); err != nil {
+		return fmt.Errorf("logging configuration validation failed: %w", err)
 	}
 
 	// Validate plugin configurations
 	if err := c.validatePluginConfigurations(); err != nil {
 		return fmt.Errorf("plugin configuration validation failed: %w", err)
+	}
+
+	return nil
+}
+
+// validateLogging validates logging configuration.
+func (c *Config) validateLogging() error {
+	// Validate logging level
+	if c.Logging.Level != "" {
+		if err := isValidLevel(c.Logging.Level); err != nil {
+			return err
+		}
+	}
+
+	// Validate logging format
+	if c.Logging.Format != "" {
+		if err := isValidFormat(c.Logging.Format); err != nil {
+			return err
+		}
+	}
+
+	// Validate legacy file path (if specified)
+	if c.Logging.File != "" {
+		if err := validateFilePath(c.Logging.File); err != nil {
+			return err
+		}
+	}
+
+	// Validate outputs
+	for i, output := range c.Logging.Outputs {
+		if err := validateLogOutput(output); err != nil {
+			return fmt.Errorf("output %d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func isValidLevel(level string) error {
+	validLevels := []string{"debug", "info", "warn", "error"}
+	for _, validLevel := range validLevels {
+		if level == validLevel {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid log level: %s (must be one of: %v)", level, validLevels)
+}
+
+func isValidFormat(format string) error {
+	validFormats := []string{"json", "text"}
+	for _, validFormat := range validFormats {
+		if format == validFormat {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid log format: %s (must be one of: %v)", format, validFormats)
+}
+
+func validateFilePath(path string) error {
+	if !filepath.IsAbs(path) {
+		return fmt.Errorf("log file path must be absolute: %s", path)
+	}
+
+	// Check if parent directory is accessible
+	logDir := filepath.Dir(path)
+	if _, statErr := os.Stat(logDir); statErr != nil && os.IsNotExist(statErr) {
+		// Try to create the directory
+		if mkdirErr := os.MkdirAll(logDir, 0700); mkdirErr != nil {
+			return fmt.Errorf("cannot create log directory %s: %w", logDir, mkdirErr)
+		}
+	}
+
+	return nil
+}
+
+const (
+	outputTypeFile = "file"
+)
+
+// validateLogOutput validates a single log output configuration.
+func validateLogOutput(output LogOutput) error {
+	// Validate output type
+	if err := validateOutputType(output.Type); err != nil {
+		return err
+	}
+
+	// Validate level if specified
+	if output.Level != "" {
+		if err := isValidLevel(output.Level); err != nil {
+			return err
+		}
+	}
+
+	// Validate format if specified
+	if output.Format != "" {
+		if err := isValidFormat(output.Format); err != nil {
+			return err
+		}
+	}
+
+	// File-specific validations
+	if output.Type == outputTypeFile {
+		return validateFileOutput(output)
+	}
+
+	return nil
+}
+
+func validateOutputType(outputType string) error {
+	validTypes := []string{"console", outputTypeFile, "syslog"}
+	for _, t := range validTypes {
+		if outputType == t {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid output type: %s (must be one of: %v)", outputType, validTypes)
+}
+
+func validateFileOutput(output LogOutput) error {
+	if output.Path == "" {
+		return errors.New("file output requires 'path' field")
+	}
+	if !filepath.IsAbs(output.Path) {
+		return fmt.Errorf("file path must be absolute: %s", output.Path)
+	}
+
+	// Check if parent directory is accessible
+	logDir := filepath.Dir(output.Path)
+	if _, statErr := os.Stat(logDir); statErr != nil && os.IsNotExist(statErr) {
+		// Try to create the directory
+		if mkdirErr := os.MkdirAll(logDir, 0700); mkdirErr != nil {
+			return fmt.Errorf("cannot create log directory %s: %w", logDir, mkdirErr)
+		}
+	}
+
+	// Validate rotation settings
+	if output.MaxSizeMB < 0 {
+		return fmt.Errorf("max_size_mb must be non-negative (0 means unlimited), got: %d", output.MaxSizeMB)
+	}
+	if output.MaxFiles < 0 {
+		return fmt.Errorf("max_files must be non-negative (0 means unlimited), got: %d", output.MaxFiles)
 	}
 
 	return nil

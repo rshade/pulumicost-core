@@ -34,7 +34,6 @@ func TestConfig_NewAndDefaults(t *testing.T) {
 
 func TestConfig_SetGetValues(t *testing.T) {
 	stubHome(t)
-	stubHome(t)
 	cfg := New()
 
 	// Test output values
