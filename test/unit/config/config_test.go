@@ -54,8 +54,9 @@ func TestGetConfigDir(t *testing.T) {
 				os.Setenv(tt.envVar, tt.envValue)
 			}
 
-			result := config.GetConfigDir()
-			
+			result, err := config.GetConfigDir()
+			require.NoError(t, err)
+
 			if tt.envVar != "" {
 				assert.Contains(t, result, tt.expected)
 			} else {
@@ -67,8 +68,9 @@ func TestGetConfigDir(t *testing.T) {
 
 func TestGetPluginDir(t *testing.T) {
 	t.Run("returns plugin directory path", func(t *testing.T) {
-		pluginDir := config.GetPluginDir()
-		
+		pluginDir, err := config.GetPluginDir()
+		require.NoError(t, err)
+
 		assert.NotEmpty(t, pluginDir)
 		assert.Contains(t, pluginDir, ".pulumicost")
 		assert.Contains(t, pluginDir, "plugins")
@@ -77,7 +79,8 @@ func TestGetPluginDir(t *testing.T) {
 
 func TestGetSpecDir(t *testing.T) {
 	t.Run("returns spec directory path", func(t *testing.T) {
-		specDir := config.GetSpecDir()
+		specDir, err := config.GetSpecDir()
+		require.NoError(t, err)
 		
 		assert.NotEmpty(t, specDir)
 		assert.Contains(t, specDir, ".pulumicost")
@@ -164,19 +167,22 @@ func TestEnsureSubDirs(t *testing.T) {
 
 func TestConfigPaths(t *testing.T) {
 	t.Run("all config paths are accessible", func(t *testing.T) {
-		configDir := config.GetConfigDir()
-		pluginDir := config.GetPluginDir()
-		specDir := config.GetSpecDir()
-		
+		configDir, err := config.GetConfigDir()
+		require.NoError(t, err)
+		pluginDir, err := config.GetPluginDir()
+		require.NoError(t, err)
+		specDir, err := config.GetSpecDir()
+		require.NoError(t, err)
+
 		// All paths should be non-empty
 		assert.NotEmpty(t, configDir)
 		assert.NotEmpty(t, pluginDir)
 		assert.NotEmpty(t, specDir)
-		
+
 		// Plugin and spec dirs should be under config dir
 		assert.Contains(t, pluginDir, ".pulumicost")
 		assert.Contains(t, specDir, ".pulumicost")
-		
+
 		// Paths should be absolute or relative
 		assert.True(t, filepath.IsAbs(configDir) || !filepath.IsAbs(configDir))
 	})
