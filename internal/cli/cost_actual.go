@@ -30,7 +30,11 @@ const (
 //	--output: output format ("table", "json", or "ndjson"); defaults follow configuration.
 //	--group-by: grouping mode: "resource", "type", "provider", "date", "daily", "monthly", or a tag filter of the form "tag:key=value".
 //
-// The returned command performs resource mapping from the Pulumi plan, opens adapter plugins, requests actual costs, and renders results using the selected output format and grouping.
+// NewCostActualCmd creates the `actual` subcommand which fetches actual historical costs
+// for resources declared in a Pulumi plan by querying cloud provider billing APIs.
+// The command accepts a time range, supports grouping (resource, type, provider, date, daily, monthly)
+// and tag-based filtering (`tag:key=value`), opens adapter plugins as needed, and renders results
+// using the configured output format (table, json, or ndjson).
 func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
@@ -133,6 +137,11 @@ func NewCostActualCmd() *cobra.Command {
 	return cmd
 }
 
+// ParseTimeRange parses the provided from and to date strings into time values and validates that the range is chronological.
+// 
+// ParseTimeRange accepts two date strings, parses each into a time.Time, and ensures the 'to' time is after the 'from' time.
+// It returns the parsed from and to times on success. If either date cannot be parsed or if the 'to' time is not after
+// the 'from' time, an error is returned describing the failure.
 func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 	from, err := ParseTime(fromStr)
 	if err != nil {
@@ -152,7 +161,8 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 }
 
 // ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
-// It returns the parsed time on success, or an error if str does not match either supported format.
+// ParseTime parses a date/time string in either YYYY-MM-DD or RFC3339 format.
+// It returns the parsed time on success, or an error if the string does not match either supported format.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
@@ -171,7 +181,7 @@ func ParseTime(str string) (time.Time, error) {
 
 // parseTagFilter parses a group-by specifier for a tag filter and returns the parsed tags and the resulting groupBy.
 // If groupBy is of the form "tag:key=value", it returns a map containing {key: value} and an empty actualGroupBy (indicating tag-based filtering).
-// For any other input it returns an empty map and the original groupBy unchanged.
+// string (empty when filtering by tag).
 func parseTagFilter(groupBy string) (map[string]string, string) {
 	tags := make(map[string]string)
 	actualGroupBy := groupBy
@@ -196,7 +206,14 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 //	results - the list of cost results to render or aggregate.
 //	actualGroupBy - the group-by specifier; may influence whether cross-provider time aggregation is performed.
 //
-// Returns an error if aggregation or rendering fails.
+// renderActualCostOutput renders actual cost results using the specified output format.
+// If actualGroupBy denotes a time-based grouping, the function first creates
+// cross-provider aggregations for the provided results and renders those;
+// otherwise it renders the raw actual cost results.
+// outputFormat is the desired rendering format, results are the cost entries
+// to render or aggregate, and actualGroupBy controls grouping (time-based
+// groupings trigger cross-provider aggregation).
+// It returns an error if aggregation or rendering fails.
 func renderActualCostOutput(outputFormat engine.OutputFormat, results []engine.CostResult, actualGroupBy string) error {
 	// Check if we need cross-provider aggregation
 	groupByType := engine.GroupBy(actualGroupBy)
