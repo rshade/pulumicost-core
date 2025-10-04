@@ -1,4 +1,4 @@
-package registry //nolint:testpackage // needs access to unexported methods
+package registry // needs access to unexported methods
 
 import (
 	"context"

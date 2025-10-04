@@ -1,4 +1,5 @@
-package engine
+// Package engine_test provides unit tests for the cost calculation engine.
+package engine_test
 
 import (
 	"context"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEngine_GetProjectedCost tests projected cost calculation for various resource types.
 func TestEngine_GetProjectedCost(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -79,6 +81,7 @@ func TestEngine_GetProjectedCost(t *testing.T) {
 	}
 }
 
+// TestEngine_GetActualCost tests actual cost retrieval for resources with time ranges.
 func TestEngine_GetActualCost(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -123,6 +126,7 @@ func TestEngine_GetActualCost(t *testing.T) {
 	}
 }
 
+// TestEngine_PluginFallback tests fallback behavior when no plugins are available.
 func TestEngine_PluginFallback(t *testing.T) {
 	t.Run("falls back when no plugins available", func(t *testing.T) {
 		eng := engine.New(nil, nil)
@@ -151,6 +155,7 @@ func TestEngine_PluginFallback(t *testing.T) {
 	})
 }
 
+// TestEngine_ErrorHandling tests error handling for unknown resources and edge cases.
 func TestEngine_ErrorHandling(t *testing.T) {
 	t.Run("handles unknown resource gracefully", func(t *testing.T) {
 		eng := engine.New(nil, nil)

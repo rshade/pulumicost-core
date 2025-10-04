@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -73,7 +74,7 @@ func GetPluginConfiguration(pluginName string) (map[string]interface{}, error) {
 func EnsureConfigDir() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
 	configDir := filepath.Join(homeDir, ".pulumicost")
@@ -90,7 +91,10 @@ func EnsureLogDir() error {
 		return nil
 	}
 	logDir := filepath.Dir(cfg.Logging.File)
-	return os.MkdirAll(logDir, 0700)
+	if err := os.MkdirAll(logDir, 0700); err != nil {
+		return fmt.Errorf("failed to create log directory %q: %w", logDir, err)
+	}
+	return nil
 }
 
 // GetConfigDir returns the path to the pulumicost configuration directory.
@@ -98,7 +102,7 @@ func EnsureLogDir() error {
 func GetConfigDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
 	return filepath.Join(homeDir, ".pulumicost"), nil
 }
@@ -139,19 +143,19 @@ func EnsureSubDirs() error {
 	// Create plugins directory
 	pluginDir, err := GetPluginDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get plugin directory: %w", err)
 	}
-	if err := os.MkdirAll(pluginDir, 0700); err != nil {
-		return err
+	if mkdirErr := os.MkdirAll(pluginDir, 0700); mkdirErr != nil {
+		return fmt.Errorf("failed to create plugin directory %q: %w", pluginDir, mkdirErr)
 	}
 
 	// Create specs directory
 	specDir, err := GetSpecDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get spec directory: %w", err)
 	}
-	if err := os.MkdirAll(specDir, 0700); err != nil {
-		return err
+	if mkdirErr := os.MkdirAll(specDir, 0700); mkdirErr != nil {
+		return fmt.Errorf("failed to create spec directory %q: %w", specDir, mkdirErr)
 	}
 
 	// Create logs directory
