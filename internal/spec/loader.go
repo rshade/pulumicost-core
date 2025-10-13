@@ -70,7 +70,12 @@ func (l *Loader) ListSpecs() ([]string, error) {
 	return specs, nil
 }
 
-// ParseSpecFilename parses a spec filename to extract provider, service, and SKU.
+// ParseSpecFilename parses a spec filename of the form
+// "provider-service-sku.yaml" or "provider-service-sku.yml" and returns the
+// extracted provider, service and SKU. The SKU may contain dashes; any parts
+// after the second dash are joined to form the SKU.
+// It returns empty strings and false if the extension is not .yaml/.yml or the
+// base filename does not contain at least three dash-separated parts.
 func ParseSpecFilename(filename string) (provider, service, sku string, valid bool) {
 	// Remove extension
 	ext := filepath.Ext(filename)
