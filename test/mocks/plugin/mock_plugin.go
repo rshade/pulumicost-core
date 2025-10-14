@@ -34,7 +34,9 @@ type MockResponse struct {
 	Name          string
 }
 
-// NewMockPlugin creates a new mock plugin server
+// NewMockPlugin returns a new MockPlugin with the given name and its internal maps
+// (responses, errors, delays, callCounts) initialized. The returned plugin is not
+// started; call Start to open the listener and begin serving.
 func NewMockPlugin(name string) *MockPlugin {
 	return &MockPlugin{
 		name:       name,
@@ -238,7 +240,8 @@ func (m *MockPlugin) GetActualCost(ctx context.Context, req *pb.GetActualCostReq
 	}, nil
 }
 
-// Helper function to create standard projected cost response
+// CreateProjectedCostResponse creates a GetProjectedCostResponse populated with the provided currency,
+// monthly cost, hourly unit price and billing notes for the specified resource type.
 func CreateProjectedCostResponse(resourceType, currency string, monthlyCost, hourlyCost float64, notes string) *pb.GetProjectedCostResponse {
 	return &pb.GetProjectedCostResponse{
 		Currency:       currency,
@@ -248,7 +251,8 @@ func CreateProjectedCostResponse(resourceType, currency string, monthlyCost, hou
 	}
 }
 
-// Helper function to create standard actual cost response
+// CreateActualCostResponse constructs a GetActualCostResponse containing a single ActualCostResult
+// with Source set to resourceID and Cost set to totalCost. The currency parameter is accepted but not set on the returned result.
 func CreateActualCostResponse(resourceID, currency string, totalCost float64) *pb.GetActualCostResponse {
 	return &pb.GetActualCostResponse{
 		Results: []*pb.ActualCostResult{

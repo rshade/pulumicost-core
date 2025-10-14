@@ -80,7 +80,10 @@ func EnsureConfigDir() error {
 	return os.MkdirAll(configDir, 0700)
 }
 
-// EnsureLogDir ensures the pulumicost log directory exists.
+// EnsureLogDir ensures the directory for the configured PulumiCost log file exists.
+// It reads the global configuration and, if a log file is configured, creates its
+// parent directory with permission 0700. If no log file is configured, it does nothing.
+// It returns any error encountered while creating the directory.
 func EnsureLogDir() error {
 	cfg := GetGlobalConfig()
 	if cfg.Logging.File == "" {
@@ -91,6 +94,7 @@ func EnsureLogDir() error {
 }
 
 // GetConfigDir returns the path to the pulumicost configuration directory.
+// It yields "<home>/.pulumicost" or an error if the user's home directory cannot be determined.
 func GetConfigDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -99,7 +103,8 @@ func GetConfigDir() (string, error) {
 	return filepath.Join(homeDir, ".pulumicost"), nil
 }
 
-// GetPluginDir returns the path to the plugins directory.
+// GetPluginDir returns the path to the plugins subdirectory under the user's configuration directory (for example, ~/.pulumicost/plugins).
+// It returns an error if the base configuration directory cannot be determined.
 func GetPluginDir() (string, error) {
 	configDir, err := GetConfigDir()
 	if err != nil {
@@ -108,7 +113,9 @@ func GetPluginDir() (string, error) {
 	return filepath.Join(configDir, "plugins"), nil
 }
 
-// GetSpecDir returns the path to the specs directory.
+// GetSpecDir returns the path to the specs directory under the user's config directory
+// (typically ~/.pulumicost/specs). It returns an error if the base config directory
+// cannot be determined.
 func GetSpecDir() (string, error) {
 	configDir, err := GetConfigDir()
 	if err != nil {
@@ -117,7 +124,13 @@ func GetSpecDir() (string, error) {
 	return filepath.Join(configDir, "specs"), nil
 }
 
-// EnsureSubDirs ensures all standard subdirectories exist.
+// EnsureSubDirs creates the standard configuration subdirectories under the user's
+// config directory and ensures the log directory exists.
+//
+// It ensures the base config directory exists, creates the "plugins" and "specs"
+// subdirectories with permission 0700, and then ensures the configured log
+// directory exists. It returns an error if the user's home directory cannot be
+// determined or if any directory creation operation fails.
 func EnsureSubDirs() error {
 	if err := EnsureConfigDir(); err != nil {
 		return err
