@@ -1,0 +1,46 @@
+name: OpenCode Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, reopened]
+
+jobs:
+  opencode-review:
+    # Only run when 'opencode-review' label is present on the PR
+    if: contains(github.event.pull_request.labels.*.name, 'opencode-review')
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Run OpenCode Code Review
+        uses: sst/opencode/github@latest
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+        with:
+          model: xai/grok-code-fast-1
+          prompt: |
+            Please review this pull request and provide feedback on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security concerns
+            - Test coverage
+            - **GitHub Actions workflow configuration issues** (invalid parameters, missing permissions, syntax errors)
+
+            **IMPORTANT**: If this PR modifies any `.github/workflows/*.yml` files, pay special attention to:
+            - Valid action inputs and parameters (check against action documentation)
+            - Required permissions (especially `id-token: write` for OIDC)
+            - Workflow syntax and structure
+            - Environment variable passing and configuration
+
+            Be constructive and helpful in your feedback.
