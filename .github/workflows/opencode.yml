@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run opencode
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@dev
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         with:
