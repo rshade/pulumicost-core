@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
 
     steps:
@@ -22,25 +22,43 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run OpenCode Code Review
-        uses: sst/opencode/github@latest
+      - name: Install OpenCode
+        run: curl -fsSL https://opencode.ai/install | bash
         env:
-          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-        with:
-          model: xai/grok-code-free
-          prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
-            - **GitHub Actions workflow configuration issues** (invalid parameters, missing permissions, syntax errors)
+          VERSION: 0.15.3
 
-            **IMPORTANT**: If this PR modifies any `.github/workflows/*.yml` files, pay special attention to:
-            - Valid action inputs and parameters (check against action documentation)
-            - Required permissions (especially `id-token: write` for OIDC)
-            - Workflow syntax and structure
-            - Environment variable passing and configuration
+      - name: Get PR Details
+        id: pr-details
+        run: |
+          PR_BODY=$(gh pr view ${{ github.event.number }} --json body,title,files -q '.body + "\n\nTitle: " + .title + "\n\nFiles changed:\n" + (.files | map(.path) | join("\n"))')
+          echo "pr_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-            Be constructive and helpful in your feedback.
+      - name: Run OpenCode Code Review
+        run: |
+          export XAI_API_KEY=${{ secrets.XAI_API_KEY }}
+          PROMPT="Please review this pull request and provide feedback on:
+          - Code quality and best practices
+          - Potential bugs or issues
+          - Performance considerations
+          - Security concerns
+          - Test coverage
+          - **GitHub Actions workflow configuration issues** (invalid parameters, missing permissions, syntax errors)
+
+          **IMPORTANT**: If this PR modifies any \`.github/workflows/*.yml\` files, pay special attention to:
+          - Valid action inputs and parameters (check against action documentation)
+          - Required permissions (especially \`id-token: write\` for OIDC)
+          - Workflow syntax and structure
+          - Environment variable passing and configuration
+
+          Be constructive and helpful in your feedback.
+
+          PR Details:
+          ${{ steps.pr-details.outputs.pr_body }}"
+          opencode run --model xai/grok-code-free "$PROMPT" > review_output.txt
+
+      - name: Post Review Comment
+        run: |
+          REVIEW=$(cat review_output.txt)
+          gh pr comment ${{ github.event.number }} --body "$REVIEW"
