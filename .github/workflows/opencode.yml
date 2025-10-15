@@ -24,4 +24,4 @@ jobs:
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         with:
-          model: xai/grok-code-fast-1
+          model: xai/grok-code-free

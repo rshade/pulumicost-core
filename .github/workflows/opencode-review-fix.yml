@@ -44,7 +44,7 @@ jobs:
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         with:
-          model: xai/grok-code-fast-1
+          model: xai/grok-code-free
           prompt: |
             🎯 SENIOR SOFTWARE ENGINEER MISSION: Complete review fix cycle with ZERO new issues
 
