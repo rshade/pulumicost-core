@@ -1,4 +1,4 @@
-package pluginhost //nolint:testpackage // needs access to unexported methods
+package pluginhost // needs access to unexported methods
 
 import (
 	"context"

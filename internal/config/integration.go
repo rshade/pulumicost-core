@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -73,19 +74,90 @@ func GetPluginConfiguration(pluginName string) (map[string]interface{}, error) {
 func EnsureConfigDir() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
 	configDir := filepath.Join(homeDir, ".pulumicost")
 	return os.MkdirAll(configDir, 0700)
 }
 
-// EnsureLogDir ensures the pulumicost log directory exists.
+// EnsureLogDir ensures the directory for the configured PulumiCost log file exists.
+// It reads the global configuration and, if a log file is configured, creates its
+// parent directory with permission 0700. If no log file is configured, it does nothing.
+// It returns any error encountered while creating the directory.
 func EnsureLogDir() error {
 	cfg := GetGlobalConfig()
 	if cfg.Logging.File == "" {
 		return nil
 	}
 	logDir := filepath.Dir(cfg.Logging.File)
-	return os.MkdirAll(logDir, 0700)
+	if err := os.MkdirAll(logDir, 0700); err != nil {
+		return fmt.Errorf("failed to create log directory %q: %w", logDir, err)
+	}
+	return nil
+}
+
+// GetConfigDir returns the path to the pulumicost configuration directory.
+// It yields "<home>/.pulumicost" or an error if the user's home directory cannot be determined.
+func GetConfigDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
+	}
+	return filepath.Join(homeDir, ".pulumicost"), nil
+}
+
+// GetPluginDir returns the path to the plugins subdirectory under the user's configuration directory (for example, ~/.pulumicost/plugins).
+// It returns an error if the base configuration directory cannot be determined.
+func GetPluginDir() (string, error) {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "plugins"), nil
+}
+
+// GetSpecDir returns the path to the specs directory under the user's config directory
+// (typically ~/.pulumicost/specs). It returns an error if the base config directory
+// cannot be determined.
+func GetSpecDir() (string, error) {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "specs"), nil
+}
+
+// EnsureSubDirs creates the standard configuration subdirectories under the user's
+// config directory and ensures the log directory exists.
+//
+// It ensures the base config directory exists, creates the "plugins" and "specs"
+// subdirectories with permission 0700, and then ensures the configured log
+// directory exists. It returns an error if the user's home directory cannot be
+// determined or if any directory creation operation fails.
+func EnsureSubDirs() error {
+	if err := EnsureConfigDir(); err != nil {
+		return err
+	}
+
+	// Create plugins directory
+	pluginDir, err := GetPluginDir()
+	if err != nil {
+		return fmt.Errorf("failed to get plugin directory: %w", err)
+	}
+	if mkdirErr := os.MkdirAll(pluginDir, 0700); mkdirErr != nil {
+		return fmt.Errorf("failed to create plugin directory %q: %w", pluginDir, mkdirErr)
+	}
+
+	// Create specs directory
+	specDir, err := GetSpecDir()
+	if err != nil {
+		return fmt.Errorf("failed to get spec directory: %w", err)
+	}
+	if mkdirErr := os.MkdirAll(specDir, 0700); mkdirErr != nil {
+		return fmt.Errorf("failed to create spec directory %q: %w", specDir, mkdirErr)
+	}
+
+	// Create logs directory
+	return EnsureLogDir()
 }

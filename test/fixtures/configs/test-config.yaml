@@ -1,0 +1,54 @@
+# Test configuration for PulumiCost
+# This file is used by integration tests to verify configuration loading
+
+# Plugin configuration
+plugins:
+  directory: "~/.pulumicost/plugins"
+  timeout: 30s
+  max_retries: 3
+  
+# Pricing specification configuration  
+specs:
+  directory: "~/.pulumicost/specs"
+  cache_ttl: 3600s
+  
+# Output configuration
+output:
+  default_format: "table"
+  precision: 2
+  currency: "USD"
+  
+# Provider-specific settings
+providers:
+  aws:
+    region: "us-east-1"
+    profile: "default"
+    timeout: 30s
+  
+  azure:
+    subscription_id: "12345678-1234-1234-1234-123456789012"
+    tenant_id: "87654321-4321-4321-4321-210987654321"
+    timeout: 30s
+    
+  gcp:
+    project_id: "my-project-12345"
+    region: "us-central1"
+    timeout: 30s
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  
+# Cache configuration
+cache:
+  enabled: true
+  ttl: 1800s
+  directory: "~/.pulumicost/cache"
+  
+# Rate limiting
+rate_limiting:
+  enabled: true
+  requests_per_second: 10
+  burst: 20
