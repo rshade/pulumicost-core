@@ -1,0 +1,27 @@
+provider: aws
+service: ec2
+sku: t3.medium
+currency: USD
+hourly_cost: 0.0416
+monthly_cost: 30.368
+region: us-east-1
+description: "General Purpose t3.medium instance"
+specifications:
+  vcpu: 2
+  memory_gb: 4
+  network_performance: "Up to 5 Gigabit"
+  instance_storage: "EBS-only"
+pricing_details:
+  on_demand:
+    hourly: 0.0416
+    monthly: 30.368
+  reserved_1yr:
+    upfront: 0
+    hourly: 0.0266
+    monthly: 19.428
+  reserved_3yr:
+    upfront: 0
+    hourly: 0.0183
+    monthly: 13.358
+notes: "Burstable performance instances that provide baseline CPU performance with ability to burst"
+last_updated: "2024-01-15T10:30:00Z"

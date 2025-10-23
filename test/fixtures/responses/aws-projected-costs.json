@@ -1,0 +1,75 @@
+{
+  "aws_instance": {
+    "t3.micro": {
+      "currency": "USD",
+      "monthly_cost": 7.59,
+      "hourly_cost": 0.0104,
+      "notes": "t3.micro instance in us-east-1",
+      "cost_breakdown": [
+        "Instance hours: $7.59/month",
+        "Data transfer: $0.00/month"
+      ]
+    },
+    "t3.medium": {
+      "currency": "USD",
+      "monthly_cost": 30.37,
+      "hourly_cost": 0.0416,
+      "notes": "t3.medium instance in us-east-1",
+      "cost_breakdown": [
+        "Instance hours: $30.37/month",
+        "Data transfer: $0.00/month"
+      ]
+    }
+  },
+  "aws_s3_bucket": {
+    "default": {
+      "currency": "USD",
+      "monthly_cost": 5.00,
+      "hourly_cost": 0.0068,
+      "notes": "S3 Standard storage with estimated usage",
+      "cost_breakdown": [
+        "Storage (100GB): $2.30/month",
+        "PUT requests (10K): $0.05/month",
+        "GET requests (100K): $0.04/month",
+        "Data transfer: $2.61/month"
+      ]
+    }
+  },
+  "aws_rds_instance": {
+    "db.t3.micro": {
+      "currency": "USD",
+      "monthly_cost": 12.41,
+      "hourly_cost": 0.017,
+      "notes": "db.t3.micro MySQL instance in us-east-1",
+      "cost_breakdown": [
+        "Instance hours: $12.41/month",
+        "Storage (20GB gp2): $2.30/month",
+        "Backup storage: $0.00/month"
+      ]
+    }
+  },
+  "aws_lambda_function": {
+    "default": {
+      "currency": "USD",
+      "monthly_cost": 0.20,
+      "hourly_cost": 0.0003,
+      "notes": "Lambda function with estimated 1M requests/month",
+      "cost_breakdown": [
+        "Requests (1M): $0.20/month",
+        "Duration (128MB, 100ms avg): $0.00/month"
+      ]
+    }
+  },
+  "aws_cloudwatch_log_group": {
+    "default": {
+      "currency": "USD",
+      "monthly_cost": 0.50,
+      "hourly_cost": 0.0007,
+      "notes": "CloudWatch Logs with estimated 1GB/month",
+      "cost_breakdown": [
+        "Ingestion (1GB): $0.50/month",
+        "Storage (30 days): $0.03/month"
+      ]
+    }
+  }
+}
