@@ -44,7 +44,7 @@ jobs:
           echo "Coverage threshold met: ${COVERAGE}% >= 20%"
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage.out
@@ -165,7 +165,7 @@ jobs:
           eval go build ${LDFLAGS} -o dist/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/pulumicost
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pulumicost-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/pulumicost*
