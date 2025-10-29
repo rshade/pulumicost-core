@@ -1,0 +1,29 @@
+{
+  "name": "pulumicost-core-docs",
+  "version": "0.1.0",
+  "description": "Documentation tooling and build scripts for PulumiCost Core",
+  "private": true,
+  "scripts": {
+    "docs:lint": "markdownlint-cli2 --config docs/.markdownlintrc.json 'docs/**/*.md' --ignore 'docs/_site/**'",
+    "docs:format": "prettier --write 'docs/**/*.md'",
+    "docs:check-format": "prettier --check 'docs/**/*.md'",
+    "docs:link-check": "node scripts/check-links.js",
+    "lint": "npm run docs:lint && npm run docs:check-format"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "markdownlint-cli2": "^0.13.0",
+    "prettier": "^3.1.0",
+    "markdown-link-check": "^3.11.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "pulumi",
+    "cost",
+    "documentation"
+  ],
+  "author": "PulumiCost Community",
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,27 @@
+# Jekyll build output
+_site/
+.jekyll-metadata
+.jekyll-cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node dependencies (if using npm for tools)
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.bak
+*.tmp
+
+# Local test files
+local/
+test-output/

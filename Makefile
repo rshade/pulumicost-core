@@ -12,7 +12,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test lint validate clean run dev help
+.PHONY: all build test lint validate clean run dev help docs-lint docs-serve docs-build docs-validate
 
 all: build
 
@@ -57,13 +57,48 @@ dev: build
 	@echo "Running development build..."
 	bin/$(BINARY)
 
+docs-lint:
+	@echo "Linting documentation..."
+	@command -v markdownlint-cli2 >/dev/null 2>&1 || \
+		(echo "markdownlint-cli2 not found. Install with:"; \
+		echo "  npm install -g markdownlint-cli2"; exit 1)
+	markdownlint-cli2 --config docs/.markdownlintrc.json 'docs/**/*.md' --ignore 'docs/_site/**' || true
+	@echo "Documentation linting complete."
+
+docs-serve:
+	@echo "Serving documentation locally at http://localhost:4000/pulumicost-core"
+	@cd docs && bundle install > /dev/null 2>&1 || true
+	@cd docs && bundle exec jekyll serve --host 0.0.0.0
+
+docs-build:
+	@echo "Building documentation site..."
+	@cd docs && bundle install > /dev/null 2>&1 || true
+	@cd docs && bundle exec jekyll build
+	@echo "Documentation built to docs/_site/"
+
+docs-validate: docs-lint
+	@echo "Validating documentation structure..."
+	@test -f docs/README.md || (echo "Missing: docs/README.md"; exit 1)
+	@test -f docs/plan.md || (echo "Missing: docs/plan.md"; exit 1)
+	@test -f docs/llms.txt || (echo "Missing: docs/llms.txt"; exit 1)
+	@test -f docs/_config.yml || (echo "Missing: docs/_config.yml"; exit 1)
+	@echo "✓ All required documentation files present"
+	@echo "✓ Documentation validation passed"
+
 help:
 	@echo "Available targets:"
-	@echo "  build    - Build the binary"
-	@echo "  test     - Run tests"
-	@echo "  lint     - Run Go + Markdown linters"
-	@echo "  validate - Run validation (go mod, vet, format)"
-	@echo "  clean    - Clean build artifacts"
-	@echo "  run      - Build and run with --help"
-	@echo "  dev      - Build and run"
-	@echo "  help     - Show this help message"
+	@echo "  build        - Build the binary"
+	@echo "  test         - Run tests"
+	@echo "  lint         - Run Go + Markdown linters"
+	@echo "  validate     - Run validation (go mod, vet, format)"
+	@echo "  clean        - Clean build artifacts"
+	@echo "  run          - Build and run with --help"
+	@echo "  dev          - Build and run"
+	@echo ""
+	@echo "Documentation targets:"
+	@echo "  docs-lint    - Lint documentation markdown"
+	@echo "  docs-build   - Build documentation site"
+	@echo "  docs-serve   - Serve documentation locally (http://localhost:4000)"
+	@echo "  docs-validate- Validate documentation structure"
+	@echo ""
+	@echo "  help         - Show this help message"

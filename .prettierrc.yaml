@@ -1,0 +1,24 @@
+# Prettier configuration for code and markdown formatting
+
+printWidth: 120
+trailingComma: es5
+tabWidth: 2
+useTabs: false
+semi: true
+singleQuote: true
+arrowParens: always
+
+# Markdown-specific settings
+# overrides:
+#   - files: "*.md"
+#     options:
+#       proseWrap: always
+#       requirePragma: false
+#       insertPragma: false
+
+# Ignore patterns
+ignore:
+  - /node_modules/
+  - /docs/_site/
+  - /bin/
+  - .git/

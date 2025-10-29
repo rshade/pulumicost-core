@@ -1,0 +1,21 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https://github.com/.*#L[0-9]+$",
+      "description": "GitHub code line links (cannot be checked)"
+    },
+    {
+      "pattern": "^https://localhost",
+      "description": "Local development links"
+    },
+    {
+      "pattern": "^mailto:",
+      "description": "Email links"
+    }
+  ],
+  "timeout": 8000,
+  "retryOn": [429, 503],
+  "retryCount": 3,
+  "fallbackRetryDelay": "500ms",
+  "aliveStatusCodes": [200, 206]
+}

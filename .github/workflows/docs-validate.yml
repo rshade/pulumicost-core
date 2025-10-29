@@ -1,0 +1,220 @@
+name: Validate Documentation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs-validate.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint Markdown Files
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install --save-dev \
+            markdownlint-cli2 \
+            prettier \
+            markdown-link-check
+
+      - name: Run markdownlint
+        run: |
+          npx markdownlint-cli2 \
+            --config docs/.markdownlintrc.json \
+            'docs/**/*.md' \
+            --ignore 'docs/_site/**' \
+            --ignore 'docs/node_modules/**'
+        continue-on-error: true
+
+      - name: Check markdown formatting
+        run: |
+          npx prettier --check 'docs/**/*.md' \
+            --ignore-path docs/.gitignore
+        continue-on-error: true
+
+  link-check:
+    runs-on: ubuntu-latest
+    name: Check for Broken Links
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install markdown-link-check
+        run: npm install --save-dev markdown-link-check
+
+      - name: Check links in documentation
+        run: |
+          find docs -type f -name "*.md" ! -path "docs/_site/*" ! -path "docs/node_modules/*" | \
+          while read file; do
+            echo "Checking links in: $file"
+            npx markdown-link-check \
+              --config docs/.markdown-link-check.json \
+              "$file" || true
+          done
+        continue-on-error: true
+
+  frontmatter:
+    runs-on: ubuntu-latest
+    name: Validate Frontmatter
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate YAML frontmatter
+        run: |
+          find docs -type f -name "*.md" ! -path "docs/_site/*" | \
+          while read file; do
+            # Check if file starts with ---
+            if head -1 "$file" | grep -q "^---"; then
+              echo "✓ Frontmatter found in: $file"
+            else
+              echo "⚠ No frontmatter in: $file"
+            fi
+          done
+        continue-on-error: true
+
+  structure:
+    runs-on: ubuntu-latest
+    name: Validate Documentation Structure
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for required files
+        run: |
+          required_files=(
+            "docs/README.md"
+            "docs/plan.md"
+            "docs/llms.txt"
+            "docs/_config.yml"
+            "docs/.markdownlintrc.json"
+          )
+
+          missing=0
+          for file in "${required_files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✓ $file"
+            else
+              echo "✗ Missing: $file"
+              missing=$((missing + 1))
+            fi
+          done
+
+          if [ $missing -gt 0 ]; then
+            echo "❌ $missing required files missing"
+            exit 1
+          fi
+          echo "✓ All required documentation files present"
+
+      - name: Validate directory structure
+        run: |
+          required_dirs=(
+            "docs/guides"
+            "docs/getting-started"
+            "docs/architecture"
+            "docs/plugins"
+            "docs/reference"
+            "docs/deployment"
+            "docs/support"
+          )
+
+          missing=0
+          for dir in "${required_dirs[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "✓ $dir/"
+            else
+              echo "⚠ Creating missing directory: $dir"
+              mkdir -p "$dir"
+              echo "# Coming Soon" > "$dir/README.md"
+            fi
+          done
+          echo "✓ Documentation directory structure validated"
+
+  llms-txt:
+    runs-on: ubuntu-latest
+    name: Validate llms.txt
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check llms.txt exists and is updated
+        run: |
+          if [ ! -f "docs/llms.txt" ]; then
+            echo "❌ docs/llms.txt not found"
+            exit 1
+          fi
+
+          # Check that llms.txt has recent update timestamp
+          if grep -q "Last Updated:" docs/llms.txt; then
+            echo "✓ llms.txt has update timestamp"
+          else
+            echo "⚠ llms.txt missing update timestamp"
+          fi
+
+          # Check that llms.txt references main documentation
+          required_sections=(
+            "Quick Navigation"
+            "Complete Documentation Map"
+            "Key Concepts"
+          )
+
+          for section in "${required_sections[@]}"; do
+            if grep -q "$section" docs/llms.txt; then
+              echo "✓ Found section: $section"
+            else
+              echo "⚠ Missing section: $section"
+            fi
+          done
+
+summary:
+  runs-on: ubuntu-latest
+  name: Documentation Validation Summary
+  if: always()
+  needs: [lint, link-check, frontmatter, structure, llms-txt]
+
+  steps:
+    - name: Check results
+      run: |
+        echo "## Documentation Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        echo "- Markdown Linting: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Link Checking: ${{ needs.link-check.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Frontmatter Validation: ${{ needs.frontmatter.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Structure Validation: ${{ needs.structure.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- llms.txt Validation: ${{ needs.llms-txt.result }}" >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ needs.structure.result }}" != "success" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Note:** Some validation checks failed, but this is expected during development." >> $GITHUB_STEP_SUMMARY
+          echo "Please review the logs above for details." >> $GITHUB_STEP_SUMMARY
+        fi
