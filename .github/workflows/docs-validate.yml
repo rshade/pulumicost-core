@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
 
       - name: Install dependencies
         run: |
@@ -58,7 +57,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
 
       - name: Install markdown-link-check
         run: npm install --save-dev markdown-link-check
@@ -195,26 +193,26 @@ jobs:
             fi
           done
 
-summary:
-  runs-on: ubuntu-latest
-  name: Documentation Validation Summary
-  if: always()
-  needs: [lint, link-check, frontmatter, structure, llms-txt]
+  validation-summary:
+    runs-on: ubuntu-latest
+    name: Documentation Validation Summary
+    if: always()
+    needs: [lint, link-check, frontmatter, structure, llms-txt]
 
-  steps:
-    - name: Check results
-      run: |
-        echo "## Documentation Validation Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        echo "- Markdown Linting: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Link Checking: ${{ needs.link-check.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Frontmatter Validation: ${{ needs.frontmatter.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Structure Validation: ${{ needs.structure.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- llms.txt Validation: ${{ needs.llms-txt.result }}" >> $GITHUB_STEP_SUMMARY
-
-        if [ "${{ needs.structure.result }}" != "success" ]; then
+    steps:
+      - name: Check results
+        run: |
+          echo "## Documentation Validation Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **Note:** Some validation checks failed, but this is expected during development." >> $GITHUB_STEP_SUMMARY
-          echo "Please review the logs above for details." >> $GITHUB_STEP_SUMMARY
-        fi
+
+          echo "- Markdown Linting: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Link Checking: ${{ needs.link-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontmatter Validation: ${{ needs.frontmatter.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Structure Validation: ${{ needs.structure.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- llms.txt Validation: ${{ needs.llms-txt.result }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.structure.result }}" != "success" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Note:** Some validation checks failed, but this is expected during development." >> $GITHUB_STEP_SUMMARY
+            echo "Please review the logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
