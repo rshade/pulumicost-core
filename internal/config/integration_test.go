@@ -1,4 +1,4 @@
-//nolint:testpackage,usetesting // Test style preferences are acceptable
+//nolint:usetesting // Test style preferences are acceptable
 package config
 
 import (

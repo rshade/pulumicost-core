@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// ValidateSpec validates that a pricing spec has all required fields.
 func ValidateSpec(spec *PricingSpec) error {
 	if spec.Provider == "" {
 		return errors.New("provider is required")
