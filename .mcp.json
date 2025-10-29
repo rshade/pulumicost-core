@@ -14,6 +14,20 @@
       "env": {
         "MCP_MEMORY_STORAGE_BACKEND": "sqlite_vec"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--headless",
+        "--isolated"
+      ],
+      "env": {
+        "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "0"
+      }
     }
   }
 }

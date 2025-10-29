@@ -4,8 +4,6 @@ title: PulumiCost Documentation
 description: Cost visibility for Pulumi infrastructure. Calculate projected and actual costs with a plugin-based architecture.
 ---
 
-# PulumiCost Documentation
-
 Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, architect, or business stakeholder, you'll find comprehensive guides to help you succeed with PulumiCost.
 
 ## Quick Navigation
