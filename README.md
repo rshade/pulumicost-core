@@ -96,7 +96,7 @@ $ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by ty
 ### Plugin Architecture
 PulumiCost uses plugins to fetch cost data from various sources:
 
-- **Cost Plugins**: Query cloud provider APIs (Kubecost, AWS Cost Explorer, etc.)
+- **Cost Plugins**: Query cloud provider APIs (Kubecost, Vantage, AWS Cost Explorer, etc.)
 - **Spec Files**: Local YAML/JSON pricing specifications as fallback
 - **Plugin Discovery**: Automatic detection from `~/.pulumicost/plugins/`
 
@@ -153,18 +153,30 @@ pulumicost plugin validate
 ├── kubecost/
 │   └── 1.0.0/
 │       └── pulumicost-kubecost
-├── aws-plugin/  
+├── vantage/
+│   └── 1.0.0/
+│       └── pulumicost-vantage
+├── aws-plugin/
 │   └── 0.1.0/
 │       └── pulumicost-aws
 ```
 
 ## Documentation
 
-- [📖 **User Guide**](docs/user-guide.md) - Comprehensive usage guide
-- [🚀 **Installation**](docs/installation.md) - Detailed installation instructions
-- [💰 **Cost Calculations**](docs/cost-calculations.md) - Deep dive into projected vs actual costs
-- [🔌 **Plugin System**](docs/plugin-system.md) - Plugin development and management
-- [🔧 **Troubleshooting**](docs/troubleshooting.md) - Common issues and solutions
+Complete documentation is available in the [docs/](docs/) directory with guides for every audience:
+
+- **👤 End Users**: [User Guide](docs/guides/user-guide.md) - How to install and use PulumiCost
+- **🛠️ Engineers**: [Developer Guide](docs/guides/developer-guide.md) - How to extend and contribute
+- **🏗️ Architects**: [Architect Guide](docs/guides/architect-guide.md) - System design and integration
+- **💼 Business/CEO**: [Business Value](docs/guides/business-value.md) - ROI and competitive advantage
+
+**Quick Links:**
+- [🚀 5-Minute Quickstart](docs/getting-started/quickstart.md)
+- [📖 Full Documentation Index](docs/README.md)
+- [🔌 Available Plugins](docs/plugins/) - Vantage, Kubecost, and more
+- [🛠️ Plugin Development](docs/plugins/plugin-development.md)
+- [🏗️ System Architecture](docs/architecture/system-overview.md)
+- [💬 FAQ & Support](docs/support/faq.md)
 
 ## Use Cases
 
@@ -183,7 +195,7 @@ PulumiCost Core is designed as a plugin-agnostic orchestrator:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Pulumi JSON   │    │  PulumiCost     │    │    Plugins      │
 │     Output      │───▶│     Core        │───▶│  (Kubecost,     │
-│                 │    │                 │    │   AWS, etc.)    │
+│                 │    │                 │    │   Vantage, ...) │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
@@ -209,6 +221,7 @@ Apache-2.0 - See [LICENSE](LICENSE) for details.
 
 - [pulumicost-spec](https://github.com/rshade/pulumicost-spec) - Protocol definitions and schemas
 - [pulumicost-plugin-kubecost](https://github.com/rshade/pulumicost-plugin-kubecost) - Kubecost integration plugin
+- [pulumicost-plugin-vantage](https://github.com/rshade/pulumicost-plugin-vantage) - Vantage cost intelligence plugin
 
 ---
 

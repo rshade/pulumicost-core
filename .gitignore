@@ -40,3 +40,16 @@ CodeRabbitPrompt.md
 # MCP Configuration files (keep local)
 .mcp*.json
 CodeRabbitPromptGrok.md
+
+# Documentation build artifacts
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+docs/Gemfile.lock
+
+# NPM/Node artifacts
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+>>>>>>> f584262 (docs: first pass at github pages)

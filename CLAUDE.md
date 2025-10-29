@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL INSTRUCTIONS
+
+**DO NOT RUN `git commit`** - This is explicitly forbidden. You may use `git add`, `git status`, `git diff`, and `git log`, but you are NOT allowed to run commit commands. The user will commit manually.
+
 ## Project Overview
 
 PulumiCost Core is a CLI tool and plugin host system for calculating cloud infrastructure costs from Pulumi infrastructure definitions. It provides both projected cost estimates and actual historical cost analysis through a plugin-based architecture.
@@ -14,6 +18,63 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 - `make run` - Build and run with --help
 - `make dev` - Build and run without arguments
 - `make clean` - Remove build artifacts
+
+## Documentation Commands
+
+- `make docs-lint` - Lint documentation markdown files
+- `make docs-build` - Build documentation site with Jekyll
+- `make docs-serve` - Serve documentation locally (http://localhost:4000/pulumicost-core/)
+- `make docs-validate` - Validate documentation structure and completeness
+
+## Documentation Architecture
+
+### Location
+All documentation is in the `docs/` directory with GitHub Pages deployed from that folder.
+
+### Key Files
+- **docs/README.md** - Documentation home page with navigation
+- **docs/plan.md** - Complete documentation architecture and strategy
+- **docs/llms.txt** - Machine-readable index for LLM/AI tools
+- **docs/_config.yml** - Jekyll configuration
+
+### Directory Structure
+```
+docs/
+├── guides/                # Audience-specific guides (User, Engineer, Architect, CEO)
+├── getting-started/       # Quick onboarding and examples
+├── architecture/          # System design and diagrams
+├── plugins/              # Plugin documentation and development
+├── reference/            # CLI, API, and configuration reference
+├── deployment/           # Installation, configuration, and operations
+└── support/              # FAQ, troubleshooting, contributing, support
+```
+
+### Audience-Specific Guides
+- **guides/user-guide.md** - For end users: "How do I use this?"
+- **guides/developer-guide.md** - For engineers: "How do I extend this?"
+- **guides/architect-guide.md** - For architects: "How is this designed?"
+- **guides/business-value.md** - For CEO/product: "What problem does this solve?"
+
+### Plugin Documentation
+- **plugins/plugin-development.md** - How to build a PulumiCost plugin
+- **plugins/plugin-sdk.md** - Plugin SDK reference
+- **plugins/vantage/** - Vantage plugin example (IN PROGRESS)
+- **plugins/kubecost/** - Kubecost plugin docs (PLANNED)
+- **plugins/flexera/** - Flexera plugin docs (FUTURE)
+- **plugins/cloudability/** - Cloudability plugin docs (FUTURE)
+
+### Documentation Standards
+- Follow Google style guide for markdown
+- All code examples must be tested
+- Keep llms.txt updated (updated automatically by GitHub Actions)
+- Run `make docs-lint` before committing documentation changes
+- Use frontmatter YAML with `title`, `description`, and `layout` fields
+
+### GitHub Actions for Docs
+- **docs-build-deploy.yml** - Builds and deploys docs to GitHub Pages on main branch
+- **docs-validate.yml** - Validates markdown, links, and structure on every commit
+- Automated linting prevents documentation drift
+- Link checking catches broken documentation references
 
 ## Architecture
 
