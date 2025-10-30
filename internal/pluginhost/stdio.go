@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	stdioTimeout = 10 * time.Second
+	stdioTimeout   = 10 * time.Second
+	stdioWaitDelay = 100 * time.Millisecond // Time to wait for I/O after killing process
 )
 
 // StdioLauncher launches plugins using stdin/stdout communication.
@@ -61,7 +62,9 @@ func (s *StdioLauncher) Start(
 	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
 		if cmd.Process != nil {
+			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
 		}
 		return nil, nil, fmt.Errorf("creating proxy listener: %w", err)
 	}
@@ -74,7 +77,9 @@ func (s *StdioLauncher) Start(
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		if cmd.Process != nil {
+			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
 		}
 		_ = listener.Close()
 		return nil, nil, fmt.Errorf("connecting to plugin: %w", err)
@@ -88,6 +93,7 @@ func (s *StdioLauncher) Start(
 			return fmt.Errorf("closing listener: %w", listenerCloseErr)
 		}
 		if cmd.Process != nil {
+			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 		}
