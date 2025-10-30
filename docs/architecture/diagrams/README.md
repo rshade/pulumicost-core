@@ -8,8 +8,9 @@ Visual representation of PulumiCost architecture and data flow.
 - **[Data Flow](data-flow.md)** - How data flows through the system
 - **[Plugin Lifecycle](plugin-lifecycle.md)** - Plugin discovery, startup, and shutdown
 - **[Cost Calculation Flow](cost-calculation-flow.md)** - Cost calculation pipeline
-- **[Integration Example](integration-example.md)** - End-to-end Pulumi → PulumiCost → Vantage
+- **[Integration Example](integration-example.md)** - End-to-end Pulumi →
+  PulumiCost → Vantage
 
 ---
 
-**Status:** 🔴 Not Started - Diagrams coming next week
+**Status:** ✅ Complete - All diagrams implemented with Mermaid
