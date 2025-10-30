@@ -18,6 +18,7 @@ const (
 	defaultTimeout    = 10 * time.Second
 	connectionDelay   = 100 * time.Millisecond
 	connectionTimeout = 100 * time.Millisecond
+	processWaitDelay  = 100 * time.Millisecond // Time to wait for I/O after killing process
 )
 
 // ProcessLauncher launches plugins as separate TCP server processes.
@@ -140,7 +141,9 @@ func (p *ProcessLauncher) isConnectionReady(ctx context.Context, conn *grpc.Clie
 
 func (p *ProcessLauncher) killProcess(cmd *exec.Cmd) {
 	if cmd != nil && cmd.Process != nil {
+		cmd.WaitDelay = processWaitDelay
 		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
 	}
 }
 
@@ -150,6 +153,7 @@ func (p *ProcessLauncher) createCloseFn(conn *grpc.ClientConn, cmd *exec.Cmd) fu
 			return fmt.Errorf("closing connection: %w", err)
 		}
 		if cmd.Process != nil {
+			cmd.WaitDelay = processWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 		}
