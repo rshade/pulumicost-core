@@ -4,6 +4,7 @@ package config_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/rshade/pulumicost-core/internal/config"
@@ -41,6 +42,11 @@ func TestGetConfigDir(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Skip USERPROFILE test on non-Windows platforms
+			if tt.envVar == "USERPROFILE" && runtime.GOOS != "windows" {
+				t.Skip("USERPROFILE is Windows-specific")
+			}
+
 			// Set test env var if specified
 			if tt.envVar != "" && tt.envValue != "" {
 				t.Setenv(tt.envVar, tt.envValue)

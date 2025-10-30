@@ -48,21 +48,29 @@ func TestE2E_ProjectedCostWorkflow(t *testing.T) {
 	output, err := cmd.Output()
 	require.NoError(t, err, "Command failed: %v", err)
 
-	// Parse JSON output
-	var results []map[string]interface{}
-	err = json.Unmarshal(output, &results)
+	// Parse JSON output (aggregated format with summary and results)
+	var aggregated map[string]interface{}
+	err = json.Unmarshal(output, &aggregated)
 	require.NoError(t, err, "Failed to parse JSON output: %s", string(output))
 
 	// Validate output structure
+	assert.Contains(t, aggregated, "summary")
+	assert.Contains(t, aggregated, "resources")
+
+	results, ok := aggregated["resources"].([]interface{})
+	require.True(t, ok, "Resources field should be an array")
 	assert.NotEmpty(t, results, "Expected cost results")
 
-	for _, result := range results {
-		assert.Contains(t, result, "resource_type")
-		assert.Contains(t, result, "resource_id")
+	for _, r := range results {
+		result, resultOk := r.(map[string]interface{})
+		require.True(t, resultOk, "Each result should be a map")
+
+		assert.Contains(t, result, "resourceType")
+		assert.Contains(t, result, "resourceId")
 		assert.Contains(t, result, "adapter")
 		assert.Contains(t, result, "currency")
-		assert.Contains(t, result, "monthly_cost")
-		assert.Contains(t, result, "hourly_cost")
+		assert.Contains(t, result, "monthly")
+		assert.Contains(t, result, "hourly")
 
 		// Since no plugins are available, should use "none" adapter
 		assert.Equal(t, "none", result["adapter"])
@@ -102,17 +110,17 @@ func TestE2E_ProjectedCostWorkflow_TableOutput(t *testing.T) {
 	outputStr := string(output)
 
 	// Validate table output contains expected elements
-	assert.Contains(t, outputStr, "RESOURCE TYPE")
-	assert.Contains(t, outputStr, "RESOURCE ID")
-	assert.Contains(t, outputStr, "ADAPTER")
-	assert.Contains(t, outputStr, "MONTHLY COST")
-	assert.Contains(t, outputStr, "CURRENCY")
+	assert.Contains(t, outputStr, "Resource")
+	assert.Contains(t, outputStr, "Adapter")
+	assert.Contains(t, outputStr, "Monthly")
+	assert.Contains(t, outputStr, "Currency")
+	assert.Contains(t, outputStr, "COST SUMMARY")
 
-	// Should contain resource types from the plan
-	assert.Contains(t, outputStr, "aws_instance")
-	assert.Contains(t, outputStr, "aws_s3_bucket")
-	assert.Contains(t, outputStr, "aws_rds_instance")
-	assert.Contains(t, outputStr, "aws_lambda_function")
+	// Should contain resource types from the plan (in the format aws:service/type:Type)
+	assert.Contains(t, outputStr, "aws:ec2/instance:Instance")
+	assert.Contains(t, outputStr, "aws:s3/bucket:Bucket")
+	assert.Contains(t, outputStr, "aws:rds/instance:Instance")
+	assert.Contains(t, outputStr, "aws:lambda/function:Function")
 }
 
 // TestE2E_ActualCostWorkflow tests the actual cost calculation workflow with
@@ -146,17 +154,21 @@ func TestE2E_ActualCostWorkflow(t *testing.T) {
 		return
 	}
 
-	// If it succeeds, validate the output
-	var results []map[string]interface{}
-	err = json.Unmarshal(output, &results)
+	// If it succeeds, validate the output (aggregated format)
+	var aggregated map[string]interface{}
+	err = json.Unmarshal(output, &aggregated)
 	require.NoError(t, err, "Failed to parse JSON output: %s", string(output))
 
-	// Validate output structure if results exist
-	for _, result := range results {
-		assert.Contains(t, result, "resource_type")
-		assert.Contains(t, result, "resource_id")
-		assert.Contains(t, result, "currency")
-		assert.Contains(t, result, "monthly_cost")
+	// Validate output structure if resources exist
+	if resourcesArray, ok := aggregated["resources"].([]interface{}); ok {
+		for _, r := range resourcesArray {
+			if result, resultOk := r.(map[string]interface{}); resultOk {
+				assert.Contains(t, result, "resourceType")
+				assert.Contains(t, result, "resourceId")
+				assert.Contains(t, result, "currency")
+				assert.Contains(t, result, "monthly")
+			}
+		}
 	}
 }
 
@@ -172,13 +184,13 @@ func TestE2E_PluginListWorkflow(t *testing.T) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, binaryPath, "plugin", "list")
-	output, err := cmd.Output()
-	require.NoError(t, err, "Plugin list command failed: %v", err)
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err, "Plugin list command failed: %v\nOutput: %s", err, string(output))
 
 	outputStr := string(output)
 
 	// Should indicate no plugins are installed
-	assert.Contains(t, outputStr, "No plugins")
+	assert.Contains(t, outputStr, "No plugins installed")
 }
 
 // TestE2E_PluginValidateWorkflow tests the plugin validate command to ensure it reports
@@ -193,13 +205,13 @@ func TestE2E_PluginValidateWorkflow(t *testing.T) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, binaryPath, "plugin", "validate")
-	output, err := cmd.Output()
-	require.NoError(t, err, "Plugin validate command failed: %v", err)
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err, "Plugin validate command failed: %v\nOutput: %s", err, string(output))
 
 	outputStr := string(output)
 
 	// Should indicate no plugins to validate
-	assert.Contains(t, outputStr, "No plugins")
+	assert.Contains(t, outputStr, "No plugins to validate")
 }
 
 // TestE2E_HelpCommands tests various help commands to ensure proper documentation
@@ -217,7 +229,7 @@ func TestE2E_HelpCommands(t *testing.T) {
 		{
 			name:            "root help",
 			args:            []string{"--help"},
-			expectedContent: "CLI tool for calculating cloud infrastructure costs",
+			expectedContent: "Calculate projected and actual cloud costs via plugins",
 		},
 		{
 			name:            "cost help",
@@ -232,7 +244,7 @@ func TestE2E_HelpCommands(t *testing.T) {
 		{
 			name:            "actual cost help",
 			args:            []string{"cost", "actual", "--help"},
-			expectedContent: "Calculate actual costs",
+			expectedContent: "Fetch actual historical costs",
 		},
 		{
 			name:            "plugin help",
