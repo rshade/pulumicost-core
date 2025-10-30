@@ -12,7 +12,7 @@
 *.test
 
 # Built binaries
-bin/*
+bin/*t
 
 # Code coverage profiles and other test artifacts
 *.out
@@ -36,6 +36,10 @@ go.work.sum
 Github_Development_Prompt.md
 PR_MESSAGE.md
 CodeRabbitPrompt.md
+issues.md
+github_comments.json
+coderabbit-output/
+coderabbit_analysis.json
 
 # MCP Configuration files (keep local)
 .mcp*.json
