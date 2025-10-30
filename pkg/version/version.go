@@ -1,3 +1,5 @@
+// Package version provides build version and metadata information for pulumicost.
+// Version information is embedded at build time via ldflags from the CI/CD pipeline.
 package version
 
 // Build information set during compilation.

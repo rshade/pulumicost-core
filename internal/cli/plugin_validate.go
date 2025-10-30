@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewPluginValidateCmd creates the plugin validate command for validating plugin installations.
 func NewPluginValidateCmd() *cobra.Command {
 	var targetPlugin string
 
@@ -37,6 +38,7 @@ func NewPluginValidateCmd() *cobra.Command {
 	return cmd
 }
 
+// ValidatePlugin validates a plugin by checking its binary and optional manifest file.
 func ValidatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	if _, err := os.Stat(plugin.Path); err != nil {
 		return fmt.Errorf("plugin binary not found: %s", plugin.Path)

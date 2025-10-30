@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewPluginListCmd creates the plugin list command for listing installed plugins.
 func NewPluginListCmd() *cobra.Command {
 	var verbose bool
 

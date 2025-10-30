@@ -1,3 +1,5 @@
+// Package pluginhost manages plugin process lifecycle and gRPC communication.
+// It provides launchers for starting plugins via TCP or stdio and wraps plugin connections.
 package pluginhost
 
 import (
@@ -8,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Client wraps a gRPC connection to a plugin and provides the cost source API.
 type Client struct {
 	Name  string
 	Conn  *grpc.ClientConn
@@ -15,10 +18,12 @@ type Client struct {
 	Close func() error
 }
 
+// Launcher is an interface for different plugin launching strategies (TCP or stdio).
 type Launcher interface {
 	Start(ctx context.Context, path string, args ...string) (*grpc.ClientConn, func() error, error)
 }
 
+// NewClient creates a new plugin client by launching the plugin and establishing a gRPC connection.
 func NewClient(ctx context.Context, launcher Launcher, binPath string) (*Client, error) {
 	conn, closeFn, err := launcher.Start(ctx, binPath)
 	if err != nil {

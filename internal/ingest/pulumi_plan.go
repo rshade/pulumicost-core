@@ -1,3 +1,5 @@
+// Package ingest provides Pulumi plan parsing and resource mapping functionality.
+// It converts Pulumi preview JSON output into resource descriptors for cost calculation.
 package ingest
 
 import (
@@ -11,10 +13,12 @@ const (
 	minURNParts = 3
 )
 
+// PulumiPlan represents the top-level structure of a Pulumi preview JSON output.
 type PulumiPlan struct {
 	Steps []PulumiStep `json:"steps"`
 }
 
+// PulumiStep represents a single resource operation step in a Pulumi plan.
 type PulumiStep struct {
 	Op       string                 `json:"op"`
 	URN      string                 `json:"urn"`
@@ -24,6 +28,7 @@ type PulumiStep struct {
 	Outputs  map[string]interface{} `json:"outputs"`
 }
 
+// PulumiResource contains the detailed information about a resource in a Pulumi step.
 type PulumiResource struct {
 	Type     string
 	URN      string
@@ -31,6 +36,7 @@ type PulumiResource struct {
 	Inputs   map[string]interface{}
 }
 
+// LoadPulumiPlan loads and parses a Pulumi plan JSON file from the specified path.
 func LoadPulumiPlan(path string) (*PulumiPlan, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -45,6 +51,7 @@ func LoadPulumiPlan(path string) (*PulumiPlan, error) {
 	return &plan, nil
 }
 
+// GetResources extracts all resources from the Pulumi plan steps.
 func (p *PulumiPlan) GetResources() []PulumiResource {
 	var resources []PulumiResource
 	for _, step := range p.Steps {

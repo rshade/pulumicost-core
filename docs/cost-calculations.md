@@ -62,11 +62,12 @@ Resources are classified by type and provider:
 
 ### Monthly Calculation Formula
 
-```
+```text
 Monthly Cost = Hourly Rate × Hours Per Month (730)
 ```
 
 **Constants used:**
+
 - Hours per month: 730 (average accounting for varying month lengths)
 - Hours per day: 24
 - Days per month: 30.42 (average)
@@ -87,21 +88,25 @@ Monthly Cost = 0.0104 × 730 = $7.59
 ### Resource-Specific Calculations
 
 #### Compute Resources
+
 - **EC2 Instances**: Based on instance type, region, and pricing model
 - **ECS Tasks**: vCPU and memory allocation with Fargate pricing
 - **Lambda Functions**: Execution time and memory allocation
 
-#### Storage Resources  
+#### Storage Resources
+
 - **S3 Buckets**: Storage class, region, and estimated data volume
 - **EBS Volumes**: Volume type, size, and IOPS provisioning
 - **EFS File Systems**: Storage class and throughput mode
 
 #### Database Resources
+
 - **RDS Instances**: Engine type, instance class, and storage
 - **DynamoDB Tables**: Provisioned vs on-demand, read/write capacity
 - **DocumentDB Clusters**: Instance type and storage requirements
 
 #### Network Resources
+
 - **Load Balancers**: Type (ALB/NLB/CLB) and estimated data transfer
 - **NAT Gateways**: Data processing charges
 - **VPC Endpoints**: Interface vs Gateway endpoints
@@ -138,11 +143,13 @@ graph TD
 ### Time Range Processing
 
 #### Date Format Support
+
 - **Simple dates**: `2025-01-01` (assumes start/end of day)
 - **RFC3339**: `2025-01-01T14:30:00Z` (precise timestamps)
 - **Partial timestamps**: `2025-01-01T14:30:00Z` (timezone aware)
 
 #### Time Zone Handling
+
 - All times converted to UTC for consistency
 - Plugin APIs may return data in different time zones
 - Results always include timezone information
@@ -159,6 +166,7 @@ Resources from Pulumi plans are matched to cost data using:
 ### Aggregation Methods
 
 #### By Time Period
+
 ```json
 {
   "dailyCosts": [12.45, 13.67, 11.23, ...],
@@ -168,6 +176,7 @@ Resources from Pulumi plans are matched to cost data using:
 ```
 
 #### By Resource
+
 ```json
 {
   "resourceType": "aws:ec2/instance:Instance",
@@ -177,6 +186,7 @@ Resources from Pulumi plans are matched to cost data using:
 ```
 
 #### By Service/Provider
+
 ```json
 {
   "summary": {
@@ -201,26 +211,31 @@ Resources from Pulumi plans are matched to cost data using:
 ### Common Discrepancies
 
 #### Usage Patterns
+
 - **Projected**: Assumes 100% uptime (730 hours/month)
 - **Actual**: Reflects real usage patterns, scaling, downtime
 
 #### Pricing Models
+
 - **Projected**: Often uses on-demand pricing
 - **Actual**: Includes reserved instances, spot instances, savings plans
 
 #### Additional Services
+
 - **Projected**: Only explicitly defined resources
 - **Actual**: Includes data transfer, API calls, storage I/O
 
 ### Accuracy Factors
 
 #### High Accuracy Scenarios
+
 - Well-defined resource specifications
 - Stable usage patterns
 - On-demand pricing models
 - Simple resource configurations
 
-#### Lower Accuracy Scenarios  
+#### Lower Accuracy Scenarios
+
 - Auto-scaling configurations
 - Complex data transfer patterns
 - Reserved instance utilization
@@ -231,18 +246,21 @@ Resources from Pulumi plans are matched to cost data using:
 ### Plugin-Based Data Sources
 
 #### Kubecost Plugin
+
 - **Source**: Kubecost API
 - **Coverage**: Kubernetes workloads, container costs
 - **Granularity**: Pod, namespace, cluster level
 - **Update Frequency**: Near real-time
 
-#### AWS Cost Explorer Plugin  
+#### AWS Cost Explorer Plugin
+
 - **Source**: AWS Cost Explorer API
 - **Coverage**: All AWS services
 - **Granularity**: Resource, service, account level
 - **Update Frequency**: Daily (24-hour delay)
 
 #### Cloud Provider Plugins
+
 - **Azure Cost Management**: Azure spending data
 - **GCP Cloud Billing**: Google Cloud costs
 - **Multi-cloud**: Aggregated cross-cloud costs
@@ -250,6 +268,7 @@ Resources from Pulumi plans are matched to cost data using:
 ### Local Pricing Specifications
 
 #### Format Example
+
 ```yaml
 provider: aws
 service: ec2
@@ -270,6 +289,7 @@ metadata:
 ```
 
 #### Spec Discovery
+
 1. Check `~/.pulumicost/specs/` directory
 2. Match by provider, service, and SKU
 3. Fallback to generic service pricing
@@ -280,6 +300,7 @@ metadata:
 ### Grouping Options
 
 #### By Resource (`group-by resource`)
+
 ```json
 {
   "resourceType": "aws:ec2/instance:Instance",
@@ -289,6 +310,7 @@ metadata:
 ```
 
 #### By Type (`group-by type`)
+
 ```json
 {
   "groupKey": "aws:ec2/instance:Instance", 
@@ -298,6 +320,7 @@ metadata:
 ```
 
 #### By Provider (`group-by provider`)
+
 ```json
 {
   "groupKey": "aws",
@@ -307,6 +330,7 @@ metadata:
 ```
 
 #### By Date (`group-by date`)
+
 ```json
 {
   "date": "2025-01-15",
@@ -316,6 +340,7 @@ metadata:
 ```
 
 #### By Tags (`group-by tag:key=value`)
+
 ```json
 {
   "tagKey": "Environment",
@@ -328,6 +353,7 @@ metadata:
 ### Summary Calculations
 
 #### Cost Summary Structure
+
 ```json
 {
   "summary": {
@@ -342,6 +368,7 @@ metadata:
 ```
 
 #### Aggregation Rules
+
 - **Sum**: Total costs across resources
 - **Average**: For rate-based metrics
 - **Count**: Number of resources in group
@@ -352,23 +379,27 @@ metadata:
 ### Projected Cost Limitations
 
 #### Pricing Data Freshness
+
 - Local specs may be outdated
 - Regional pricing variations
 - Promotional pricing not reflected
 
 #### Usage Assumptions
+
 - Assumes consistent 24/7 operation
 - No auto-scaling considerations
 - Static resource configurations
 
 #### Missing Costs
+
 - Data transfer charges
 - API request costs
 - Third-party service integrations
 
-### Actual Cost Limitations  
+### Actual Cost Limitations
 
 #### Data Lag
+
 - Billing APIs have 12-48 hour delays
 - Real-time costs not available
 - Processing time for complex queries

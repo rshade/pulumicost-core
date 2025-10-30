@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// PluginInitOptions contains configuration options for plugin initialization.
 type PluginInitOptions struct {
 	Name      string
 	Author    string

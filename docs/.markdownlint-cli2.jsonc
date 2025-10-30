@@ -1,0 +1,66 @@
+{
+  "config": {
+    "default": true,
+    "MD003": {
+      "style": "atx"
+    },
+    "MD004": {
+      "style": "dash"
+    },
+    "MD013": {
+      "line_length": 120,
+      "code_blocks": false,
+      "tables": false,
+      "headings": false
+    },
+    "MD022": {
+      "lines_above": 1,
+      "lines_below": 1
+    },
+    "MD024": {
+      "siblings_only": true
+    },
+    "MD025": {
+      "level": 1,
+      "front_matter_title": "^\\s*title\\s*[:=]"
+    },
+    "MD031": true,
+    "MD032": true,
+    "MD033": {
+      "allowed_elements": [
+        "a",
+        "abbr",
+        "br",
+        "div",
+        "img",
+        "kbd",
+        "span",
+        "sub",
+        "sup",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "details",
+        "summary"
+      ]
+    },
+    "MD034": false,
+    "MD036": false,
+    "MD040": {
+      "allowed_languages": [],
+      "language_only": false
+    },
+    "MD041": false,
+    "MD046": {
+      "style": "fenced"
+    },
+    "MD047": true
+  },
+  "ignores": [
+    "node_modules",
+    "_site"
+  ]
+}

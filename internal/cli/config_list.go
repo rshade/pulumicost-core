@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// NewConfigListCmd creates the config list command for listing all configuration values.
 func NewConfigListCmd() *cobra.Command {
 	var format string
 	cmd := &cobra.Command{

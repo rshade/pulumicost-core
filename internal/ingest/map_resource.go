@@ -9,6 +9,7 @@ import (
 
 const unknownProvider = "unknown"
 
+// MapResource converts a single Pulumi resource to a ResourceDescriptor.
 func MapResource(pulumiResource PulumiResource) (engine.ResourceDescriptor, error) {
 	provider := extractProvider(pulumiResource.Type)
 
@@ -28,6 +29,7 @@ func extractProvider(resourceType string) string {
 	return unknownProvider
 }
 
+// MapResources converts multiple Pulumi resources to ResourceDescriptors.
 func MapResources(resources []PulumiResource) ([]engine.ResourceDescriptor, error) {
 	var descriptors []engine.ResourceDescriptor
 	for _, r := range resources {

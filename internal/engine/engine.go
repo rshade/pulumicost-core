@@ -30,22 +30,30 @@ const (
 )
 
 var (
-	ErrNoCostData       = errors.New("no cost data available")
-	ErrMixedCurrencies  = errors.New("mixed currencies not supported in cross-provider aggregation")
-	ErrInvalidGroupBy   = errors.New("invalid groupBy type for cross-provider aggregation")
-	ErrEmptyResults     = errors.New("empty results provided for aggregation")
+	// ErrNoCostData is returned when no cost data is available for a resource.
+	ErrNoCostData = errors.New("no cost data available")
+	// ErrMixedCurrencies is returned when cross-provider aggregation encounters multiple currencies.
+	ErrMixedCurrencies = errors.New("mixed currencies not supported in cross-provider aggregation")
+	// ErrInvalidGroupBy is returned when a non-time-based grouping is used for cross-provider aggregation.
+	ErrInvalidGroupBy = errors.New("invalid groupBy type for cross-provider aggregation")
+	// ErrEmptyResults is returned when aggregation is attempted on empty results.
+	ErrEmptyResults = errors.New("empty results provided for aggregation")
+	// ErrInvalidDateRange is returned when the end date is before the start date.
 	ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
 )
 
+// SpecLoader is an interface for loading pricing specifications from local YAML files.
 type SpecLoader interface {
 	LoadSpec(provider, service, sku string) (interface{}, error)
 }
 
+// Engine orchestrates cost calculations between plugins and local pricing specifications.
 type Engine struct {
 	clients []*pluginhost.Client
 	loader  SpecLoader
 }
 
+// New creates a new Engine with the given plugin clients and spec loader.
 func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 	return &Engine{
 		clients: clients,
@@ -53,6 +61,7 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 	}
 }
 
+// GetProjectedCost calculates projected costs for the given resources using plugins or specs.
 func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
 	var results []CostResult
 
@@ -96,6 +105,7 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 	return results, nil
 }
 
+// GetActualCost retrieves historical actual costs from plugins for the specified time range.
 func (e *Engine) GetActualCost(
 	ctx context.Context,
 	resources []ResourceDescriptor,
@@ -108,6 +118,7 @@ func (e *Engine) GetActualCost(
 	})
 }
 
+// GetActualCostWithOptions retrieves actual costs with advanced filtering, grouping, and time range options.
 func (e *Engine) GetActualCostWithOptions(
 	ctx context.Context,
 	request ActualCostRequest,
@@ -607,6 +618,7 @@ func extractProviderFromType(resourceType string) string {
 	return "unknown"
 }
 
+// FilterResources filters resources based on the provided filter expression.
 func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDescriptor {
 	if filter == "" {
 		return resources
@@ -655,6 +667,7 @@ func matchesFilter(resource ResourceDescriptor, filter string) bool {
 	}
 }
 
+// MatchesTags checks if resource properties match the specified tag filters.
 func MatchesTags(resource ResourceDescriptor, tags map[string]string) bool {
 	if len(tags) == 0 {
 		return true
@@ -671,6 +684,7 @@ func MatchesTags(resource ResourceDescriptor, tags map[string]string) bool {
 	return true
 }
 
+// FormatPeriod formats a time duration into a human-readable period string.
 func FormatPeriod(from, to time.Time) string {
 	days := int(to.Sub(from).Hours() / hoursPerDay)
 	if days == 1 {
@@ -687,6 +701,7 @@ func FormatPeriod(from, to time.Time) string {
 	return fmt.Sprintf("%d months", months)
 }
 
+// GroupResults groups cost results by the specified grouping strategy.
 func (e *Engine) GroupResults(results []CostResult, groupBy GroupBy) []CostResult {
 	if groupBy == GroupByNone {
 		return results

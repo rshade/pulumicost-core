@@ -8,11 +8,15 @@ import (
 	"text/tabwriter"
 )
 
+// OutputFormat specifies the output format for cost results (table, JSON, NDJSON).
 type OutputFormat string
 
 const (
-	OutputTable  OutputFormat = "table"
-	OutputJSON   OutputFormat = "json"
+	// OutputTable renders results in a formatted table.
+	OutputTable OutputFormat = "table"
+	// OutputJSON renders results as pretty-printed JSON.
+	OutputJSON OutputFormat = "json"
+	// OutputNDJSON renders results as newline-delimited JSON for streaming.
 	OutputNDJSON OutputFormat = "ndjson"
 )
 

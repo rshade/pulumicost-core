@@ -62,7 +62,7 @@ docs-lint:
 	@command -v markdownlint-cli2 >/dev/null 2>&1 || \
 		(echo "markdownlint-cli2 not found. Install with:"; \
 		echo "  npm install -g markdownlint-cli2"; exit 1)
-	markdownlint-cli2 --config docs/.markdownlintrc.json 'docs/**/*.md' --ignore 'docs/_site/**' || true
+	markdownlint-cli2 --config docs/.markdownlint-cli2.jsonc 'docs/**/*.md' --ignore 'docs/_site/**' || true
 	@echo "Documentation linting complete."
 
 docs-serve:
@@ -82,6 +82,7 @@ docs-validate: docs-lint
 	@test -f docs/plan.md || (echo "Missing: docs/plan.md"; exit 1)
 	@test -f docs/llms.txt || (echo "Missing: docs/llms.txt"; exit 1)
 	@test -f docs/_config.yml || (echo "Missing: docs/_config.yml"; exit 1)
+	@test -f docs/.markdownlint-cli2.jsonc || (echo "Missing: docs/.markdownlint-cli2.jsonc"; exit 1)
 	@echo "✓ All required documentation files present"
 	@echo "✓ Documentation validation passed"
 

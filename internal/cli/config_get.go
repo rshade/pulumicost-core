@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewConfigGetCmd creates the config get command for retrieving configuration values.
 func NewConfigGetCmd() *cobra.Command {
 	var decrypt bool
 	cmd := &cobra.Command{
