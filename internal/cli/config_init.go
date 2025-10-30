@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewConfigInitCmd creates the config init command for initializing configuration.
 func NewConfigInitCmd() *cobra.Command {
 	var force bool
 	cmd := &cobra.Command{

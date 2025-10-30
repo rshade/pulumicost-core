@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewConfigSetCmd creates the config set command for setting configuration values.
 func NewConfigSetCmd() *cobra.Command {
 	var encrypt bool
 	cmd := &cobra.Command{

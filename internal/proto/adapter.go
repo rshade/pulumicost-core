@@ -1,3 +1,6 @@
+// Package proto provides adapter types and client wrappers for interfacing with the pulumicost-spec gRPC protocol.
+// This package bridges the engine's internal representation with the protobuf-generated types,
+// enabling seamless integration with the CostSourceService defined in pulumicost-spec.
 package proto
 
 import (
@@ -12,16 +15,21 @@ import (
 // Empty represents an empty request/response for compatibility with existing engine code.
 type Empty struct{}
 
+// ResourceDescriptor describes a cloud resource for cost calculation requests.
+// It contains the resource type, provider, and properties needed for pricing lookups.
 type ResourceDescriptor struct {
 	Type       string
 	Provider   string
 	Properties map[string]string
 }
 
+// GetProjectedCostRequest contains resources for which projected costs should be calculated.
 type GetProjectedCostRequest struct {
 	Resources []*ResourceDescriptor
 }
 
+// CostResult represents the calculated cost information for a single resource.
+// It includes monthly and hourly costs, currency, and detailed cost breakdowns.
 type CostResult struct {
 	Currency      string
 	MonthlyCost   float64
@@ -30,30 +38,38 @@ type CostResult struct {
 	CostBreakdown map[string]float64
 }
 
+// GetProjectedCostResponse contains the results of projected cost calculations.
 type GetProjectedCostResponse struct {
 	Results []*CostResult
 }
 
+// GetActualCostRequest contains parameters for querying historical actual costs.
+// It includes resource IDs and a time range for cost data retrieval.
 type GetActualCostRequest struct {
 	ResourceIDs []string
 	StartTime   int64
 	EndTime     int64
 }
 
+// ActualCostResult represents the calculated actual cost data retrieved from cloud providers.
+// It includes the total cost and detailed breakdowns by service or resource.
 type ActualCostResult struct {
 	Currency      string
 	TotalCost     float64
 	CostBreakdown map[string]float64
 }
 
+// GetActualCostResponse contains the results of actual cost queries.
 type GetActualCostResponse struct {
 	Results []*ActualCostResult
 }
 
+// NameResponse contains the plugin name returned by the Name RPC call.
 type NameResponse struct {
 	Name string
 }
 
+// GetName returns the plugin name from the response.
 func (n *NameResponse) GetName() string {
 	return n.Name
 }

@@ -1,3 +1,6 @@
+// Package main provides the pulumicost CLI tool for calculating cloud infrastructure costs.
+// It supports both projected costs from Pulumi infrastructure definitions and actual historical
+// costs from cloud provider APIs via a plugin-based architecture.
 package main
 
 import (

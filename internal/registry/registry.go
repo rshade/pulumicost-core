@@ -11,11 +11,15 @@ import (
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 )
 
+// Registry manages plugin discovery and lifecycle operations.
+// It scans plugin directories and provides client connections to active plugins.
 type Registry struct {
 	root     string
 	launcher pluginhost.Launcher
 }
 
+// NewDefault creates a new Registry with default configuration from config.PluginDir
+// and using ProcessLauncher for plugin execution.
 func NewDefault() *Registry {
 	cfg := config.New()
 	return &Registry{
@@ -24,6 +28,8 @@ func NewDefault() *Registry {
 	}
 }
 
+// ListPlugins scans the plugin directory and returns metadata for all discovered plugins.
+// It returns an empty list if the plugin directory doesn't exist.
 func (r *Registry) ListPlugins() ([]PluginInfo, error) {
 	var plugins []PluginInfo
 
@@ -98,6 +104,8 @@ func (r *Registry) findBinary(dir string) string {
 	return ""
 }
 
+// Open launches plugin processes and returns active gRPC clients with a cleanup function.
+// If onlyName is non-empty, only that specific plugin is opened.
 func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Client, func(), error) {
 	plugins, err := r.ListPlugins()
 	if err != nil {
@@ -126,6 +134,7 @@ func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Cli
 	return clients, cleanup, nil
 }
 
+// PluginInfo contains metadata about a discovered plugin.
 type PluginInfo struct {
 	Name    string
 	Version string

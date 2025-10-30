@@ -1,34 +1,66 @@
 {
-  "extends": "markdownlint/style/google",
-  "rules": {
+  "config": {
+    "default": true,
     "MD003": {
-      "style": "consistent"
+      "style": "atx"
     },
     "MD004": {
-      "style": "consistent"
+      "style": "dash"
     },
     "MD013": {
       "line_length": 120,
-      "heading_line_length": 120,
-      "headers": true,
-      "headers_line_length": 120,
       "code_blocks": false,
-      "code_lines": true,
       "tables": false,
-      "headers_only": false
+      "headings": false
+    },
+    "MD022": {
+      "lines_above": 1,
+      "lines_below": 1
     },
     "MD024": {
       "siblings_only": true
     },
     "MD025": {
-      "level": 1
+      "level": 1,
+      "front_matter_title": "^\\s*title\\s*[:=]"
     },
+    "MD031": true,
+    "MD032": true,
     "MD033": {
-      "allowed_elements": ["img", "br", "table", "thead", "tbody", "tr", "th", "td"]
+      "allowed_elements": [
+        "a",
+        "abbr",
+        "br",
+        "div",
+        "img",
+        "kbd",
+        "span",
+        "sub",
+        "sup",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "details",
+        "summary"
+      ]
     },
-    "MD034": true,
+    "MD034": false,
+    "MD036": false,
+    "MD040": {
+      "allowed_languages": [],
+      "language_only": false
+    },
     "MD041": false,
-    "no-hard-tabs": true,
-    "whitespace": true
-  }
+    "MD046": {
+      "style": "fenced"
+    },
+    "MD047": true
+  },
+  "ignores": [
+    "node_modules",
+    "_site"
+  ]
 }

@@ -20,16 +20,19 @@ const (
 	connectionTimeout = 100 * time.Millisecond
 )
 
+// ProcessLauncher launches plugins as separate TCP server processes.
 type ProcessLauncher struct {
 	timeout time.Duration
 }
 
+// NewProcessLauncher creates a new TCP process-based plugin launcher.
 func NewProcessLauncher() *ProcessLauncher {
 	return &ProcessLauncher{
 		timeout: defaultTimeout,
 	}
 }
 
+// Start launches a plugin process with TCP communication and returns the gRPC connection.
 func (p *ProcessLauncher) Start(
 	ctx context.Context,
 	path string,

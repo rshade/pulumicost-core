@@ -17,16 +17,19 @@ const (
 	stdioTimeout = 10 * time.Second
 )
 
+// StdioLauncher launches plugins using stdin/stdout communication.
 type StdioLauncher struct {
 	timeout time.Duration
 }
 
+// NewStdioLauncher creates a new stdio-based plugin launcher.
 func NewStdioLauncher() *StdioLauncher {
 	return &StdioLauncher{
 		timeout: stdioTimeout,
 	}
 }
 
+// Start launches a plugin using stdio communication and returns the gRPC connection.
 func (s *StdioLauncher) Start(
 	ctx context.Context,
 	path string,

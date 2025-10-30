@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewConfigValidateCmd creates the config validate command for validating configuration.
 func NewConfigValidateCmd() *cobra.Command {
 	var verbose bool
 	cmd := &cobra.Command{

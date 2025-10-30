@@ -37,6 +37,7 @@ import (
 	"github.com/rshade/pulumicost-core/internal/spec"
 )
 
+// ResourceDescriptor represents a cloud resource with its type, provider, and properties.
 type ResourceDescriptor struct {
 	Type       string
 	ID         string
@@ -44,6 +45,7 @@ type ResourceDescriptor struct {
 	Properties map[string]interface{}
 }
 
+// CostResult contains the calculated cost information for a single resource.
 type CostResult struct {
 	ResourceType string             `json:"resourceType"`
 	ResourceID   string             `json:"resourceId"`
@@ -61,6 +63,7 @@ type CostResult struct {
 	EndDate    time.Time `json:"endDate,omitempty"`
 }
 
+// ActualCostRequest contains parameters for querying historical actual costs with filtering and grouping.
 type ActualCostRequest struct {
 	Resources []ResourceDescriptor
 	From      time.Time
@@ -245,6 +248,7 @@ func (g GroupBy) String() string {
 	return string(g)
 }
 
+// ProjectedCostRequest contains resources for which projected costs should be calculated.
 type ProjectedCostRequest struct {
 	Resources []ResourceDescriptor
 	SpecDir   string
@@ -254,6 +258,7 @@ type ProjectedCostRequest struct {
 // PricingSpec is an alias to the PricingSpec from the spec package to ensure type consistency.
 type PricingSpec = spec.PricingSpec
 
+// CostSummary provides aggregated cost totals grouped by provider, service, and adapter.
 type CostSummary struct {
 	TotalMonthly float64            `json:"totalMonthly"`
 	TotalHourly  float64            `json:"totalHourly"`
@@ -264,6 +269,7 @@ type CostSummary struct {
 	Resources    []CostResult       `json:"resources"`
 }
 
+// AggregatedResults contains cost results with summary and aggregation data.
 type AggregatedResults struct {
 	Summary   CostSummary  `json:"summary"`
 	Resources []CostResult `json:"resources"`

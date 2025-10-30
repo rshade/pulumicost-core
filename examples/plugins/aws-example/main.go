@@ -1,3 +1,6 @@
+// Package main provides an example AWS cost calculation plugin for PulumiCost.
+// This demonstrates how to implement a plugin that calculates projected costs for AWS resources
+// including EC2 instances, S3 buckets, and RDS databases with region and engine-specific pricing.
 package main
 
 import (

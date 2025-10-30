@@ -33,7 +33,7 @@ jobs:
       - name: Run markdownlint
         run: |
           npx markdownlint-cli2 \
-            --config docs/.markdownlintrc.json \
+            --config docs/.markdownlint-cli2.jsonc \
             'docs/**/*.md' \
             --ignore 'docs/_site/**' \
             --ignore 'docs/node_modules/**'
@@ -113,7 +113,7 @@ jobs:
             "docs/plan.md"
             "docs/llms.txt"
             "docs/_config.yml"
-            "docs/.markdownlintrc.json"
+            "docs/.markdownlint-cli2.jsonc"
           )
 
           missing=0

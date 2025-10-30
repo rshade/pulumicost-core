@@ -129,6 +129,7 @@ func announcePort(listener net.Listener, addr *net.TCPAddr) error {
 //
 // Returns an error if PORT cannot be parsed, if the listener cannot be created, or if the gRPC server fails to serve.
 
+// Serve starts the plugin server and handles incoming gRPC requests.
 func Serve(ctx context.Context, config ServeConfig) error {
 	port, err := resolvePort(config.Port)
 	if err != nil {
