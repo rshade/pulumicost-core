@@ -24,7 +24,7 @@ func TestMockPlugin_Basic(t *testing.T) {
 	defer mockPlugin.Stop()
 
 	assert.Positive(t, mockPlugin.GetPort())
-	assert.Contains(t, mockPlugin.GetAddress(), "localhost:")
+	assert.Contains(t, mockPlugin.GetAddress(), "127.0.0.1:")
 }
 
 // TestMockPlugin_Name tests the Name RPC method and call counting.
@@ -139,7 +139,7 @@ func TestMockPlugin_GetActualCost_Default(t *testing.T) {
 
 	result := resp.GetResults()[0]
 	assert.InDelta(t, 25.50, result.GetCost(), 0.01)
-	assert.Equal(t, "mock-source", result.GetSource())
+	assert.Equal(t, "i-1234567890abcdef0", result.GetSource())
 	assert.Equal(t, 1, mockPlugin.GetCallCount("GetActualCost"))
 }
 

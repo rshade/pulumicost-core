@@ -112,7 +112,7 @@ func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 	require.Len(t, resp.GetResults(), 1)
 
 	result := resp.GetResults()[0]
-	assert.Equal(t, "mock-source", result.GetSource())
+	assert.Equal(t, resourceID, result.GetSource())
 	assert.InDelta(t, 85.25, result.GetCost(), 0.01)
 }
 

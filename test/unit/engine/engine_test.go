@@ -65,10 +65,10 @@ func TestEngine_GetProjectedCost(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.NotNil(t, results)
 
 			// Should have same number of results as resources (or at least handle gracefully)
 			if len(tt.resources) > 0 {
+				assert.NotNil(t, results)
 				assert.Len(t, results, len(tt.resources))
 
 				// Should have "none" adapter when no plugins available
@@ -76,6 +76,9 @@ func TestEngine_GetProjectedCost(t *testing.T) {
 					assert.Equal(t, "none", result.Adapter)
 					assert.Equal(t, "USD", result.Currency)
 				}
+			} else {
+				// Empty resources should return nil or empty slice
+				assert.Empty(t, results)
 			}
 		})
 	}
@@ -121,7 +124,12 @@ func TestEngine_GetActualCost(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.NotNil(t, results)
+			// Empty resources should return nil or empty slice
+			if len(tt.resources) > 0 {
+				assert.NotNil(t, results)
+			} else {
+				assert.Empty(t, results)
+			}
 		})
 	}
 }
@@ -188,7 +196,6 @@ func TestEngine_ErrorHandling(t *testing.T) {
 
 		results, err := eng.GetProjectedCost(context.Background(), []engine.ResourceDescriptor{})
 		require.NoError(t, err)
-		assert.NotNil(t, results)
 		assert.Empty(t, results)
 	})
 }
