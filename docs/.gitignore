@@ -3,6 +3,10 @@ _site/
 .jekyll-metadata
 .jekyll-cache
 
+# Ruby/bundler local dependencies
+.bundle/
+vendor/
+
 # IDEs
 .vscode/
 .idea/
