@@ -142,36 +142,6 @@ func TestConfig_Validation(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid log level")
 }
 
-func TestConfig_EncryptDecrypt(t *testing.T) {
-	stubHome(t)
-	cfg := New()
-
-	original := "secret-value-123"
-
-	encrypted, err := cfg.EncryptValue(original)
-	require.NoError(t, err)
-	assert.NotEqual(t, original, encrypted)
-	assert.NotEmpty(t, encrypted)
-
-	decrypted, err := cfg.DecryptValue(encrypted)
-	require.NoError(t, err)
-	assert.Equal(t, original, decrypted)
-}
-
-func TestConfig_EncryptDecryptErrors(t *testing.T) {
-	stubHome(t)
-	cfg := New()
-
-	// Invalid base64 for decryption
-	_, err := cfg.DecryptValue("invalid-base64")
-	assert.Error(t, err)
-
-	// Invalid encrypted data (too short)
-	_, err = cfg.DecryptValue("dGVzdA==") // "test" in base64, too short for GCM
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "ciphertext too short")
-}
-
 func TestConfig_SaveLoad(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "pulumicost-config-test")
 	require.NoError(t, err)
@@ -190,7 +160,6 @@ func TestConfig_SaveLoad(t *testing.T) {
 			File:  filepath.Join(t.TempDir(), "test.log"),
 		},
 		configPath: filepath.Join(tmpDir, "config.yaml"),
-		encKey:     deriveKey(),
 	}
 
 	// Save configuration
@@ -200,7 +169,6 @@ func TestConfig_SaveLoad(t *testing.T) {
 	// Load configuration
 	cfg2 := &Config{
 		configPath: cfg.configPath,
-		encKey:     deriveKey(),
 	}
 	err = cfg2.Load()
 	require.NoError(t, err)

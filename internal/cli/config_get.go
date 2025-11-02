@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
@@ -11,29 +10,28 @@ import (
 
 // NewConfigGetCmd creates the config get command for retrieving configuration values.
 func NewConfigGetCmd() *cobra.Command {
-	var decrypt bool
 	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a configuration value",
-		Long:  "Gets a configuration value using dot notation from ~/.pulumicost/config.yaml.",
+		Long: `Gets a configuration value using dot notation from ~/.pulumicost/config.yaml.
+
+Note: Sensitive values should be stored as environment variables (e.g., PULUMICOST_PLUGIN_AWS_SECRET_KEY)
+and will not appear in configuration files.`,
 		Example: `  # Get output format
   pulumicost config get output.default_format
-  
+
   # Get output precision
   pulumicost config get output.precision
-  
+
   # Get plugin configuration
   pulumicost config get plugins.aws.region
   pulumicost config get plugins.aws
-  
+
   # Get all plugins
   pulumicost config get plugins
-  
+
   # Get logging level
-  pulumicost config get logging.level
-  
-  # Decrypt encrypted value
-  pulumicost config get plugins.aws.secret_key --decrypt`,
+  pulumicost config get logging.level`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
@@ -47,27 +45,12 @@ func NewConfigGetCmd() *cobra.Command {
 				return fmt.Errorf("failed to get config value: %w", err)
 			}
 
-			// Decrypt value if requested and it's a string
-			if decrypt {
-				if strValue, ok := value.(string); ok {
-					decryptedValue, decryptErr := cfg.DecryptValue(strValue)
-					if decryptErr != nil {
-						return fmt.Errorf("failed to decrypt value: %w", decryptErr)
-					}
-					value = decryptedValue
-				} else {
-					return errors.New("can only decrypt string values")
-				}
-			}
-
 			// Format and output the value
 			formatAndPrintValue(cmd, key, value)
 
 			return nil
 		},
 	}
-
-	cmd.Flags().BoolVar(&decrypt, "decrypt", false, "decrypt the value if it's encrypted")
 
 	return cmd
 }

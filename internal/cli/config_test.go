@@ -93,30 +93,6 @@ func TestConfigSetCmd(t *testing.T) {
 	assert.Equal(t, "json", value)
 }
 
-func TestConfigSetCmdWithEncryption(t *testing.T) {
-	_, cleanup := setupTestConfig(t)
-	defer cleanup()
-
-	cmd := cli.NewConfigSetCmd()
-	var output bytes.Buffer
-	cmd.SetOut(&output)
-	cmd.SetErr(&output)
-
-	// Test setting encrypted value
-	cmd.SetArgs([]string{"plugins.aws.secret_key", "my-secret", "--encrypt"})
-	err := cmd.Execute()
-	require.NoError(t, err)
-	assert.Contains(t, output.String(), "Value encrypted before storage")
-	assert.Contains(t, output.String(), "Configuration updated")
-
-	// Verify the value was encrypted
-	cfg := config.New()
-	value, err := cfg.Get("plugins.aws.secret_key")
-	require.NoError(t, err)
-	assert.NotEqual(t, "my-secret", value) // Should be encrypted
-	assert.IsType(t, "", value)            // Should be string
-}
-
 func TestConfigSetCmdErrors(t *testing.T) {
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
@@ -166,37 +142,6 @@ func TestConfigGetCmd(t *testing.T) {
 	err = cmd.Execute()
 	require.NoError(t, err)
 	assert.Equal(t, "us-west-2\n", output.String())
-}
-
-func TestConfigGetCmdWithDecryption(t *testing.T) {
-	_, cleanup := setupTestConfig(t)
-	defer cleanup()
-
-	// Set up encrypted value
-	cfg := config.New()
-	encrypted, err := cfg.EncryptValue("secret-value")
-	require.NoError(t, err)
-	require.NoError(t, cfg.Set("plugins.aws.secret_key", encrypted))
-	require.NoError(t, cfg.Save())
-
-	cmd := cli.NewConfigGetCmd()
-	var output bytes.Buffer
-	cmd.SetOut(&output)
-	cmd.SetErr(&output)
-
-	// Test getting encrypted value without decryption
-	cmd.SetArgs([]string{"plugins.aws.secret_key"})
-	err = cmd.Execute()
-	require.NoError(t, err)
-	assert.Contains(t, output.String(), encrypted) // Should show encrypted value
-	assert.NotContains(t, output.String(), "secret-value")
-
-	// Test getting encrypted value with decryption
-	output.Reset()
-	cmd.SetArgs([]string{"plugins.aws.secret_key", "--decrypt"})
-	err = cmd.Execute()
-	require.NoError(t, err)
-	assert.Equal(t, "secret-value\n", output.String())
 }
 
 func TestConfigGetCmdErrors(t *testing.T) {
