@@ -135,6 +135,52 @@ pulumicost cost projected --pulumi-json plan.json --output json
 pulumicost cost projected --pulumi-json plan.json --output ndjson
 ```
 
+## Configuration
+
+### Basic Configuration
+PulumiCost can be configured using a YAML file at `~/.pulumicost/config.yaml`:
+
+```bash
+# Initialize default configuration
+pulumicost config init
+
+# Set configuration values
+pulumicost config set output.default_format json
+pulumicost config set output.precision 4
+pulumicost config set plugins.aws.region us-west-2
+```
+
+### Environment Variables for Secrets
+For sensitive values like API keys and credentials, use environment variables instead of storing them in configuration files:
+
+```bash
+# AWS credentials
+export PULUMICOST_PLUGIN_AWS_ACCESS_KEY_ID="your-access-key"
+export PULUMICOST_PLUGIN_AWS_SECRET_ACCESS_KEY="your-secret-key"
+
+# Azure credentials
+export PULUMICOST_PLUGIN_AZURE_CLIENT_ID="your-client-id"
+export PULUMICOST_PLUGIN_AZURE_CLIENT_SECRET="your-client-secret"
+
+# Kubecost API
+export PULUMICOST_PLUGIN_KUBECOST_API_KEY="your-api-key"
+
+# Vantage API
+export PULUMICOST_PLUGIN_VANTAGE_API_TOKEN="your-token"
+```
+
+Environment variables override configuration file values and are the recommended way to handle sensitive data. The naming convention is: `PULUMICOST_PLUGIN_<PLUGIN_NAME>_<KEY_NAME>` in uppercase.
+
+### Configuration Management Commands
+```bash
+# View configuration
+pulumicost config get output.default_format
+pulumicost config list
+
+# Validate configuration
+pulumicost config validate
+```
+
 ## Plugin Management
 
 ### List Available Plugins

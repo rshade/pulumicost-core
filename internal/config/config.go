@@ -5,28 +5,20 @@
 // - Output formatting preferences (format, precision)
 // - Plugin-specific configuration
 // - Logging configuration with multiple output destinations
-// - Secure value encryption/decryption for sensitive data
 // - Configuration validation with detailed error reporting
 //
 // The configuration is stored in ~/.pulumicost/config.yaml by default.
+// Sensitive values (API keys, credentials) should be stored as environment variables.
 package config
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
-	"golang.org/x/crypto/pbkdf2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,9 +26,6 @@ const (
 	defaultPrecision     = 2
 	envKeySeparatorCount = 2
 	minPluginKeyParts    = 2
-	pbkdf2Iterations     = 100000
-	saltLength           = 32
-	masterKeySize        = 32
 )
 
 // Config represents the complete configuration structure.
@@ -52,7 +41,6 @@ type Config struct {
 
 	// Internal fields
 	configPath string
-	encKey     []byte
 }
 
 // OutputConfig defines output formatting preferences.
@@ -114,7 +102,6 @@ func New() *Config {
 		},
 
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
-		encKey:     deriveKey(),
 	}
 
 	// Load from file if exists
@@ -412,58 +399,6 @@ func (c *Config) validatePluginConfigurations() error {
 	return nil
 }
 
-// EncryptValue encrypts a sensitive value.
-func (c *Config) EncryptValue(value string) (string, error) {
-	block, err := aes.NewCipher(c.encKey)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = rand.Read(nonce); err != nil {
-		return "", err
-	}
-
-	ciphertext := gcm.Seal(nonce, nonce, []byte(value), nil)
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
-
-// DecryptValue decrypts a sensitive value.
-func (c *Config) DecryptValue(encryptedValue string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(encryptedValue)
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(c.encKey)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(data) < nonceSize {
-		return "", errors.New("ciphertext too short")
-	}
-
-	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return "", err
-	}
-
-	return string(plaintext), nil
-}
-
 // PluginPath returns the path for a specific plugin version (backward compatibility).
 func (c *Config) PluginPath(name, version string) string {
 	return filepath.Join(c.PluginDir, name, version)
@@ -662,91 +597,6 @@ func (c *Config) getLoggingValue(parts []string) (interface{}, error) {
 	}
 }
 
-// deriveKey derives an encryption key from machine-specific data with proper entropy.
-func deriveKey() []byte {
-	homeDir, _ := os.UserHomeDir()
-	masterKeyPath := filepath.Join(homeDir, ".pulumicost", ".masterkey")
-
-	// First try to load or create a master key (secure approach)
-	if key, err := loadOrCreateMasterKey(masterKeyPath); err == nil {
-		return key
-	}
-
-	// LAST-RESORT fallback: retain legacy PBKDF2 path for compatibility,
-	// but warn loudly. Consider removing this fallback in a future release.
-	fmt.Fprintln(os.Stderr, "warning: falling back to weak derived key; unable to persist master key")
-
-	keyFilePath := filepath.Join(homeDir, ".pulumicost", ".keydata")
-	salt := loadOrCreateSalt(keyFilePath)
-
-	// Simplified entropy gathering for fallback
-	var entropy strings.Builder
-	entropy.WriteString(runtime.GOOS)
-	entropy.WriteString(runtime.GOARCH)
-	entropy.WriteString(homeDir)
-	if user := getUserIdentifier(); user != "" {
-		entropy.WriteString(user)
-	}
-
-	return pbkdf2.Key([]byte(entropy.String()), salt, pbkdf2Iterations, saltLength, sha256.New)
-}
-
-// loadOrCreateMasterKey stores/loads a random 32-byte key with strict perms.
-func loadOrCreateMasterKey(path string) ([]byte, error) {
-	// Try to read existing master key
-	if data, err := os.ReadFile(path); err == nil && len(data) == masterKeySize {
-		return data, nil
-	}
-
-	// Generate new random master key
-	key := make([]byte, masterKeySize)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		return nil, fmt.Errorf("generate master key: %w", err)
-	}
-
-	// Create directory with strict permissions
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return nil, fmt.Errorf("mkdir master key dir: %w", err)
-	}
-
-	// Write master key with strict permissions
-	if err := os.WriteFile(path, key, 0600); err != nil {
-		return nil, fmt.Errorf("write master key: %w", err)
-	}
-
-	return key, nil
-}
-
-// loadOrCreateSalt loads an existing salt or creates a new one.
-func loadOrCreateSalt(keyFilePath string) []byte {
-	// Try to read existing salt
-	if data, err := os.ReadFile(keyFilePath); err == nil && len(data) >= 32 {
-		return data[:32] // Use first 32 bytes as salt
-	}
-
-	// Create new random salt
-	salt := make([]byte, saltLength)
-	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		// Fallback to deterministic salt if random generation fails
-		// This maintains backward compatibility but is less secure
-		hostname, _ := os.Hostname()
-		user := getUserIdentifier()
-		fallbackSeed := fmt.Sprintf("%s-%s-fallback", hostname, user)
-		hash := sha256.Sum256([]byte(fallbackSeed))
-		copy(salt, hash[:])
-	} else {
-		// Save the randomly generated salt for future use
-		if mkdirErr := os.MkdirAll(filepath.Dir(keyFilePath), 0700); mkdirErr != nil {
-			// Best-effort: log to stderr but continue using in-memory salt.
-			fmt.Fprintf(os.Stderr, "warning: failed to create key dir: %v\n", mkdirErr)
-		} else if writeErr := os.WriteFile(keyFilePath, salt, 0600); writeErr != nil {
-			fmt.Fprintf(os.Stderr, "warning: failed to persist key salt: %v\n", writeErr)
-		}
-	}
-
-	return salt
-}
-
 // GetOutputFormat returns the output format to use, preferring user choice over config default.
 func GetOutputFormat(userChoice string) string {
 	// If user provided a format, use it
@@ -757,21 +607,4 @@ func GetOutputFormat(userChoice string) string {
 	// Try to get default from configuration (use singleton to avoid side effects)
 	cfg := GetGlobalConfig()
 	return cfg.Output.DefaultFormat
-}
-
-// getUserIdentifier gets a user identifier across platforms.
-func getUserIdentifier() string {
-	// Try different environment variables for cross-platform compatibility
-	for _, envVar := range []string{"USER", "USERNAME", "LOGNAME"} {
-		if user := os.Getenv(envVar); user != "" {
-			return user
-		}
-	}
-
-	// Fallback to user home directory path
-	if homeDir, err := os.UserHomeDir(); err == nil {
-		return filepath.Base(homeDir)
-	}
-
-	return "unknown"
 }
