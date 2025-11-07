@@ -1,0 +1,191 @@
+# Test Fixtures
+
+This directory contains test data files used throughout the PulumiCost test suite.
+
+## Directory Structure
+
+```text
+/test/fixtures
+├── README.md           # This file
+├── plans/              # Pulumi plan JSON files
+├── specs/              # Pricing specification YAML files
+├── configs/            # Configuration files
+└── responses/          # Mock plugin API responses
+```
+
+## Fixture Categories
+
+### Pulumi Plans (/test/fixtures/plans/)
+
+Sample Pulumi plan JSON files representing various infrastructure scenarios:
+
+- **aws-simple-plan.json** - Basic AWS infrastructure (EC2, S3, RDS, Lambda)
+- **azure-plan.json** - Azure resources (VMs, Storage, SQL)
+- **gcp-plan.json** - Google Cloud Platform resources
+- **multi-cloud-plan.json** - Cross-provider infrastructure
+- **large-plan.json** - Large-scale deployment (100+ resources)
+- **error-invalid-json.json** - Malformed JSON for error testing
+- **error-missing-fields.json** - Valid JSON with missing required fields
+
+### Pricing Specifications (/test/fixtures/specs/)
+
+YAML pricing specification files for local pricing fallback:
+
+- **aws-ec2-t3-micro.yaml** - AWS EC2 t3.micro instance pricing
+- **aws-s3-standard.yaml** - AWS S3 Standard storage pricing
+- **azure-vm-b1s.yaml** - Azure B1s VM pricing
+- **gcp-e2-micro.yaml** - GCP e2-micro instance pricing
+
+### Configuration Files (/test/fixtures/configs/)
+
+Test configuration files for various scenarios:
+
+- **default-config.yaml** - Default configuration settings
+- **custom-plugins.yaml** - Custom plugin configuration
+- **multiple-providers.yaml** - Multi-provider setup
+- **debug-mode.yaml** - Debug logging configuration
+
+### Mock Plugin Responses (/test/fixtures/responses/)
+
+Pre-configured API responses for mock plugin testing:
+
+- **projected-cost-success.json** - Successful projected cost response
+- **projected-cost-error.json** - Error response from plugin
+- **actual-cost-success.json** - Successful actual cost response
+- **actual-cost-timeout.json** - Timeout scenario response
+- **plugin-info.json** - Plugin metadata response
+
+## Using Fixtures in Tests
+
+### Loading Pulumi Plans
+
+```go
+import (
+    "os"
+    "path/filepath"
+    "testing"
+)
+
+func TestWithPlan(t *testing.T) {
+    planPath := filepath.Join("test", "fixtures", "plans", "aws-simple-plan.json")
+    planData, err := os.ReadFile(planPath)
+    require.NoError(t, err)
+    // Use planData in your test
+}
+```
+
+### Loading Pricing Specs
+
+```go
+func TestWithSpec(t *testing.T) {
+    specPath := filepath.Join("test", "fixtures", "specs", "aws-ec2-t3-micro.yaml")
+    spec, err := spec.LoadFromFile(specPath)
+    require.NoError(t, err)
+    // Use spec in your test
+}
+```
+
+### Loading Mock Responses
+
+```go
+func TestWithMockResponse(t *testing.T) {
+    responsePath := filepath.Join("test", "fixtures", "responses", "projected-cost-success.json")
+    responseData, err := os.ReadFile(responsePath)
+    require.NoError(t, err)
+    // Configure mock plugin with responseData
+}
+```
+
+## Adding New Fixtures
+
+When adding new test fixtures:
+
+1. **Choose the appropriate directory** based on fixture type
+2. **Use descriptive file names** that indicate the scenario being tested
+3. **Document the fixture** with comments explaining its purpose
+4. **Keep fixtures minimal** - only include necessary data
+5. **Use realistic data** - avoid placeholder values when possible
+6. **Test error scenarios** - include fixtures for error cases
+
+## Fixture Naming Conventions
+
+- **Plans**: `{provider}-{scenario}-plan.json`
+  - Example: `aws-simple-plan.json`, `azure-complex-plan.json`
+
+- **Specs**: `{provider}-{service}-{sku}.yaml`
+  - Example: `aws-ec2-t3-micro.yaml`, `gcp-compute-n1-standard.yaml`
+
+- **Configs**: `{scenario}-config.yaml`
+  - Example: `default-config.yaml`, `multi-provider-config.yaml`
+
+- **Responses**: `{operation}-{outcome}.json`
+  - Example: `projected-cost-success.json`, `actual-cost-error.json`
+
+## Fixture Maintenance
+
+- **Review fixtures regularly** to ensure they remain valid
+- **Update fixtures** when protocol or schema changes occur
+- **Remove unused fixtures** to keep the directory clean
+- **Document breaking changes** in fixture formats
+
+## Cloud Provider Coverage
+
+### AWS Resources Covered
+
+- EC2 instances (t3.micro, m5.large)
+- S3 buckets (Standard, Glacier)
+- RDS databases (PostgreSQL, MySQL)
+- Lambda functions
+- CloudFront distributions
+
+### Azure Resources Covered
+
+- Virtual Machines (B1s, D2s_v3)
+- Storage Accounts (Blob, Files)
+- SQL Databases
+- App Services
+
+### GCP Resources Covered
+
+- Compute Engine instances (e2-micro, n1-standard)
+- Cloud Storage buckets
+- Cloud SQL instances
+- Cloud Functions
+
+## Error Scenario Fixtures
+
+### Invalid JSON
+
+- **error-invalid-json.json** - Malformed JSON syntax
+- **error-truncated-plan.json** - Incomplete JSON structure
+
+### Missing Required Fields
+
+- **error-missing-provider.json** - Plan without provider information
+- **error-missing-urn.json** - Resource without URN
+
+### Schema Violations
+
+- **error-invalid-resource-type.json** - Unknown resource type
+- **error-invalid-provider.json** - Unsupported provider
+
+## Fixture Updates
+
+When updating fixtures after protocol changes:
+
+1. Update all fixtures in the affected category
+2. Run the full test suite to ensure compatibility
+3. Document the changes in this README
+4. Update any associated tests that use the fixtures
+
+## Performance Testing Fixtures
+
+### Large-Scale Plans
+
+- **large-plan.json** (100+ resources) - For performance benchmarking
+- **huge-plan.json** (1000+ resources) - For stress testing
+
+### Complex Scenarios
+
+- **multi-cloud-plan.json** - Cross-provider dependencies
+- **nested-resources-plan.json** - Deeply nested resource structures
