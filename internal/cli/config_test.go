@@ -1,4 +1,3 @@
-//nolint:testifylint // Using assert vs require is acceptable in tests
 package cli_test
 
 import (

@@ -452,6 +452,34 @@ linters:
           - gocognit
           - goconst
           - gosec
+          - govet
+          - intrange
+          - mnd
           - noctx
+          - revive
+          - staticcheck
+          - testableexamples
+          - testifylint
           - testpackage
+          - usetesting
+          - wrapcheck
+      - path: 'test/'
+        linters:
+          - bodyclose
+          - dupl
+          - errcheck
+          - funlen
+          - gocognit
+          - goconst
+          - gosec
+          - govet
+          - intrange
+          - mnd
+          - noctx
+          - revive
+          - staticcheck
+          - testableexamples
+          - testifylint
+          - testpackage
+          - usetesting
           - wrapcheck

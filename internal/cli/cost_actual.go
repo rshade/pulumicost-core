@@ -215,7 +215,12 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 // to render or aggregate, and actualGroupBy controls grouping (time-based
 // groupings trigger cross-provider aggregation).
 // It returns an error if aggregation or rendering fails.
-func renderActualCostOutput(writer io.Writer, outputFormat engine.OutputFormat, results []engine.CostResult, actualGroupBy string) error {
+func renderActualCostOutput(
+	writer io.Writer,
+	outputFormat engine.OutputFormat,
+	results []engine.CostResult,
+	actualGroupBy string,
+) error {
 	// Check if we need cross-provider aggregation
 	groupByType := engine.GroupBy(actualGroupBy)
 	if groupByType.IsTimeBasedGrouping() {
