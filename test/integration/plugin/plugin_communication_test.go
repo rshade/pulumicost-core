@@ -17,14 +17,13 @@ import (
 
 // TestPluginCommunication_BasicConnection tests basic gRPC connection and Name method.
 func TestPluginCommunication_BasicConnection(t *testing.T) {
-	// Start mock plugin server
-	mockPlugin := plugin.NewMockPlugin("test-integration-plugin")
-	err := mockPlugin.Start()
+	// Start mock plugin server on TCP
+	server, err := plugin.StartMockServerTCP()
 	require.NoError(t, err)
-	defer mockPlugin.Stop()
+	defer server.Stop()
 
 	// Create direct gRPC connection
-	conn, err := grpc.NewClient(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -33,24 +32,23 @@ func TestPluginCommunication_BasicConnection(t *testing.T) {
 	// Test Name method
 	nameResp, err := client.Name(context.Background(), &pb.NameRequest{})
 	require.NoError(t, err)
-	assert.Equal(t, "test-integration-plugin", nameResp.GetName())
+	assert.Equal(t, "mock-plugin", nameResp.GetName())
 }
 
 // TestPluginCommunication_ProjectedCostFlow tests projected cost calculation flow with custom responses.
 func TestPluginCommunication_ProjectedCostFlow(t *testing.T) {
-	// Start mock plugin server
-	mockPlugin := plugin.NewMockPlugin("cost-calculator")
-	err := mockPlugin.Start()
+	// Start mock plugin server on TCP
+	server, err := plugin.StartMockServerTCP()
 	require.NoError(t, err)
-	defer mockPlugin.Stop()
+	defer server.Stop()
 
 	// Configure custom response for AWS instance
-	customResponse := plugin.CreateProjectedCostResponse(
-		"aws_instance", "USD", 73.0, 0.10, "EC2 t3.micro instance in us-east-1")
-	mockPlugin.SetProjectedCostResponse("aws_instance", customResponse)
+	customResponse := plugin.QuickResponse("USD", 73.0, 0.10)
+	customResponse.Notes = "EC2 t3.micro instance in us-east-1"
+	server.Plugin.SetProjectedCostResponse("aws_instance", customResponse)
 
 	// Create direct gRPC connection
-	conn, err := grpc.NewClient(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -81,19 +79,18 @@ func TestPluginCommunication_ProjectedCostFlow(t *testing.T) {
 
 // TestPluginCommunication_ActualCostFlow tests actual cost retrieval with custom responses.
 func TestPluginCommunication_ActualCostFlow(t *testing.T) {
-	// Start mock plugin server
-	mockPlugin := plugin.NewMockPlugin("actual-cost-provider")
-	err := mockPlugin.Start()
+	// Start mock plugin server on TCP
+	server, err := plugin.StartMockServerTCP()
 	require.NoError(t, err)
-	defer mockPlugin.Stop()
+	defer server.Stop()
 
 	// Configure custom actual cost response
 	resourceID := "i-1234567890abcdef0"
-	customResponse := plugin.CreateActualCostResponse(resourceID, "USD", 85.25)
-	mockPlugin.SetActualCostResponse(resourceID, customResponse)
+	customResponse := plugin.QuickActualResponse("USD", 85.25)
+	server.Plugin.SetActualCostResponse(resourceID, customResponse)
 
 	// Create direct gRPC connection
-	conn, err := grpc.NewClient(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -112,23 +109,22 @@ func TestPluginCommunication_ActualCostFlow(t *testing.T) {
 	require.Len(t, resp.GetResults(), 1)
 
 	result := resp.GetResults()[0]
-	assert.Equal(t, resourceID, result.GetSource())
+	assert.Equal(t, "total", result.GetSource()) // Source is breakdown category, not resource ID
 	assert.InDelta(t, 85.25, result.GetCost(), 0.01)
 }
 
 // TestPluginCommunication_ErrorHandling tests error injection and handling in plugin communication.
 func TestPluginCommunication_ErrorHandling(t *testing.T) {
-	// Start mock plugin server
-	mockPlugin := plugin.NewMockPlugin("error-plugin")
-	err := mockPlugin.Start()
+	// Start mock plugin server on TCP
+	server, err := plugin.StartMockServerTCP()
 	require.NoError(t, err)
-	defer mockPlugin.Stop()
+	defer server.Stop()
 
 	// Configure error responses
-	mockPlugin.SetError("GetProjectedCost", assert.AnError)
+	server.Plugin.SetError("GetProjectedCost", plugin.ErrorProtocol)
 
 	// Create direct gRPC connection
-	conn, err := grpc.NewClient(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -141,24 +137,21 @@ func TestPluginCommunication_ErrorHandling(t *testing.T) {
 
 	_, err = client.GetProjectedCost(context.Background(), req)
 	require.Error(t, err)
-
-	// Verify error call was counted
-	assert.Equal(t, 1, mockPlugin.GetCallCount("GetProjectedCost"))
+	assert.Contains(t, err.Error(), "protocol")
 }
 
 // TestPluginCommunication_Timeout tests context timeout handling with delayed responses.
 func TestPluginCommunication_Timeout(t *testing.T) {
-	// Start mock plugin server with delay
-	mockPlugin := plugin.NewMockPlugin("slow-plugin")
-	err := mockPlugin.Start()
+	// Start mock plugin server on TCP
+	server, err := plugin.StartMockServerTCP()
 	require.NoError(t, err)
-	defer mockPlugin.Stop()
+	defer server.Stop()
 
-	// Configure slow response (longer than context timeout)
-	mockPlugin.SetDelay("GetProjectedCost", 2*time.Second)
+	// Configure slow response (2000ms latency, longer than 500ms context timeout)
+	server.Plugin.SetLatency(2000)
 
 	// Create direct gRPC connection
-	conn, err := grpc.NewClient(mockPlugin.GetAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 

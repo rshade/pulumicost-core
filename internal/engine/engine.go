@@ -354,10 +354,15 @@ func convertToProto(properties map[string]interface{}) map[string]string {
 }
 
 func extractService(resourceType string) string {
-	// Extract service from resource type like "aws:ec2:Instance" -> "ec2"
+	// Extract service from resource type like "aws:ec2/instance:Instance" -> "ec2"
 	parts := strings.Split(resourceType, ":")
 	if len(parts) >= minProviderServiceParts {
-		return parts[1]
+		servicePath := parts[1]
+		// Handle service/type format (e.g., "ec2/instance" -> "ec2")
+		if slashPos := strings.Index(servicePath, "/"); slashPos > 0 {
+			return servicePath[:slashPos]
+		}
+		return servicePath
 	}
 	return defaultServiceName
 }

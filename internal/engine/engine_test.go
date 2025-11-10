@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"context"
+	"io"
 	"testing"
 	"time"
 
@@ -738,6 +739,6 @@ func TestCurrencySymbolMapping(t *testing.T) {
 
 	// We can't easily test the output formatting without mocking stdout,
 	// but we can at least verify the function doesn't panic with different currencies
-	err := engine.RenderCrossProviderAggregation(engine.OutputJSON, aggregations, engine.GroupByDaily)
+	err := engine.RenderCrossProviderAggregation(io.Discard, engine.OutputJSON, aggregations, engine.GroupByDaily)
 	require.NoError(t, err)
 }
