@@ -1,5 +1,10 @@
 # PulumiCost Core
 
+[![CI](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml/badge.svg)](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-61%25-yellow)](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rshade/pulumicost-core)](https://goreportcard.com/report/github.com/rshade/pulumicost-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **Cloud cost analysis for Pulumi infrastructure** - Calculate projected and actual infrastructure costs without modifying your Pulumi programs.
 
 PulumiCost Core is a CLI tool that analyzes Pulumi infrastructure definitions to provide accurate cost estimates and historical cost tracking through a flexible plugin-based architecture.

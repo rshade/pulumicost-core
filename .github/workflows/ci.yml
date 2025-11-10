@@ -33,21 +33,36 @@ jobs:
           go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./pkg/...
           go tool cover -func=coverage.out
 
-      - name: Check coverage threshold
+      - name: Check overall coverage threshold
         run: |
-          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Total coverage: ${COVERAGE}%"
-          if (( $(echo "${COVERAGE} < 20" | bc -l) )); then
-            echo "Coverage ${COVERAGE}% is below minimum threshold of 20%"
-            exit 1
-          fi
-          echo "Coverage threshold met: ${COVERAGE}% >= 20%"
+          chmod +x scripts/check-coverage.sh
+          scripts/check-coverage.sh coverage.out 61
+
+      - name: Check critical path coverage
+        run: |
+          chmod +x scripts/check-critical-coverage.sh
+          scripts/check-critical-coverage.sh coverage.out 70
+
+      - name: Generate Cobertura coverage report
+        if: github.event_name == 'pull_request'
+        run: |
+          go install github.com/boumenot/gocover-cobertura@latest
+          gocover-cobertura < coverage.out > coverage.xml
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v5
         with:
           name: coverage-report
-          path: coverage.out
+          path: |
+            coverage.out
+            coverage.xml
+
+      - name: Add coverage comment to PR
+        if: github.event_name == 'pull_request'
+        uses: orgoro/coverage@v3.2
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     name: Lint

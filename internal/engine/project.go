@@ -3,7 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"sort"
 	"text/tabwriter"
 )
@@ -21,21 +21,22 @@ const (
 )
 
 // RenderResults renders the given cost results using the specified output format.
-// RenderResults aggregates the results for table and JSON summary outputs, emits NDJSON as individual records, and writes the output to stdout.
+// RenderResults aggregates the results for table and JSON summary outputs, emits NDJSON as individual records, and writes the output to the specified writer.
+// The writer parameter specifies where the output should be written.
 // The format parameter selects one of the supported OutputFormat values (OutputTable, OutputJSON, OutputNDJSON).
 // The results parameter is the slice of CostResult to be rendered.
 // It returns an error if rendering fails or if the provided format is unsupported.
-func RenderResults(format OutputFormat, results []CostResult) error {
+func RenderResults(writer io.Writer, format OutputFormat, results []CostResult) error {
 	// Aggregate results for enhanced reporting
 	aggregated := AggregateResults(results)
 
 	switch format {
 	case OutputTable:
-		return renderTable(aggregated)
+		return renderTable(writer, aggregated)
 	case OutputJSON:
-		return renderJSON(aggregated)
+		return renderJSON(writer, aggregated)
 	case OutputNDJSON:
-		return renderNDJSON(results) // NDJSON doesn't need aggregation
+		return renderNDJSON(writer, results) // NDJSON doesn't need aggregation
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
@@ -56,14 +57,14 @@ func RenderResults(format OutputFormat, results []CostResult) error {
 // results to be rendered.
 //
 // It returns an error if the selected renderer fails or if the format is unsupported.
-func RenderActualCostResults(format OutputFormat, results []CostResult) error {
+func RenderActualCostResults(writer io.Writer, format OutputFormat, results []CostResult) error {
 	switch format {
 	case OutputTable:
-		return renderActualCostTable(results)
+		return renderActualCostTable(writer, results)
 	case OutputJSON:
-		return renderJSONCostResults(results)
+		return renderJSONCostResults(writer, results)
 	case OutputNDJSON:
-		return renderNDJSON(results)
+		return renderNDJSON(writer, results)
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
@@ -86,17 +87,18 @@ func RenderActualCostResults(format OutputFormat, results []CostResult) error {
 //
 // It returns an error if the specified format is not supported or if the selected renderer fails.
 func RenderCrossProviderAggregation(
+	writer io.Writer,
 	format OutputFormat,
 	aggregations []CrossProviderAggregation,
 	groupBy GroupBy,
 ) error {
 	switch format {
 	case OutputTable:
-		return renderCrossProviderTable(aggregations, groupBy)
+		return renderCrossProviderTable(writer, aggregations, groupBy)
 	case OutputJSON:
-		return renderJSONCrossProvider(aggregations)
+		return renderJSONCrossProvider(writer, aggregations)
 	case OutputNDJSON:
-		return renderNDJSONCrossProvider(aggregations)
+		return renderNDJSONCrossProvider(writer, aggregations)
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
@@ -113,9 +115,9 @@ func RenderCrossProviderAggregation(
 // resource list with monthly/hourly costs and notes.
 // aggregated is the precomputed aggregation to render.
 // It returns an error if writing to or flushing the tabulated output fails.
-func renderTable(aggregated *AggregatedResults) error {
+func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 	const tabPadding = 2
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
 
 	// Print summary first
 	fmt.Fprintf(w, "COST SUMMARY\n")
@@ -180,9 +182,9 @@ func renderTable(aggregated *AggregatedResults) error {
 	return w.Flush()
 }
 
-func renderActualCostTable(results []CostResult) error {
+func renderActualCostTable(writer io.Writer, results []CostResult) error {
 	const tabPadding = 2
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
 
 	// Check if we have actual cost data to determine appropriate headers
 	hasActualCosts := false
@@ -241,19 +243,20 @@ func renderActualCostTable(results []CostResult) error {
 	return w.Flush()
 }
 
-func renderJSON(aggregated *AggregatedResults) error {
-	encoder := json.NewEncoder(os.Stdout)
+func renderJSON(writer io.Writer, aggregated *AggregatedResults) error {
+	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(aggregated)
 }
 
-// renderJSONCostResults writes the provided cost results as pretty-printed JSON to standard output.
+// renderJSONCostResults writes the provided cost results as pretty-printed JSON to the specified writer.
 //
+// writer is the destination for the JSON output.
 // results is the slice of CostResult values to be encoded.
 //
 // It returns any error encountered while encoding/writing the JSON.
-func renderJSONCostResults(results []CostResult) error {
-	encoder := json.NewEncoder(os.Stdout)
+func renderJSONCostResults(writer io.Writer, results []CostResult) error {
+	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(results)
 }
@@ -264,8 +267,8 @@ func renderJSONCostResults(results []CostResult) error {
 //
 // The results parameter is the slice of CostResult objects to encode.
 // It returns any encoding error encountered while writing.
-func renderNDJSON(results []CostResult) error {
-	encoder := json.NewEncoder(os.Stdout)
+func renderNDJSON(writer io.Writer, results []CostResult) error {
+	encoder := json.NewEncoder(writer)
 	for _, result := range results {
 		if err := encoder.Encode(result); err != nil {
 			return err
@@ -295,14 +298,14 @@ func renderNDJSON(results []CostResult) error {
 // groupBy controls the period label used in the table header (e.g., daily uses "Date", otherwise "Month").
 //
 // It returns an error if writing to stdout or flushing the table writer fails.
-func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy GroupBy) error {
+func renderCrossProviderTable(writer io.Writer, aggregations []CrossProviderAggregation, groupBy GroupBy) error {
 	if len(aggregations) == 0 {
-		_, err := fmt.Fprintln(os.Stdout, "No cost data available for cross-provider aggregation")
+		_, err := fmt.Fprintln(writer, "No cost data available for cross-provider aggregation")
 		return err
 	}
 
 	const tabPadding = 2
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
 
 	// Collect all unique providers
 	providerSet := make(map[string]bool)
@@ -365,8 +368,8 @@ func renderCrossProviderTable(aggregations []CrossProviderAggregation, groupBy G
 // as pretty-printed (indented) JSON.
 // renderJSONCrossProvider encodes the given cross-provider aggregations as indented JSON to stdout.
 // The provided slice is written as a pretty-printed JSON array; any encoding error is returned.
-func renderJSONCrossProvider(aggregations []CrossProviderAggregation) error {
-	encoder := json.NewEncoder(os.Stdout)
+func renderJSONCrossProvider(writer io.Writer, aggregations []CrossProviderAggregation) error {
+	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(aggregations)
 }
@@ -375,8 +378,8 @@ func renderJSONCrossProvider(aggregations []CrossProviderAggregation) error {
 // as newline-delimited JSON (NDJSON). It returns the first encoding error encountered, or
 // renderNDJSONCrossProvider writes each CrossProviderAggregation as a separate NDJSON object to stdout.
 // It returns an error if encoding any aggregation fails.
-func renderNDJSONCrossProvider(aggregations []CrossProviderAggregation) error {
-	encoder := json.NewEncoder(os.Stdout)
+func renderNDJSONCrossProvider(writer io.Writer, aggregations []CrossProviderAggregation) error {
+	encoder := json.NewEncoder(writer)
 	for _, agg := range aggregations {
 		if err := encoder.Encode(agg); err != nil {
 			return err

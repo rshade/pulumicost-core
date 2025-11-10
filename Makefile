@@ -12,7 +12,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test lint validate clean run dev help docs-lint docs-serve docs-build docs-validate
+.PHONY: all build test lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
 
 all: build
 
@@ -57,6 +57,11 @@ dev: build
 	@echo "Running development build..."
 	bin/$(BINARY)
 
+inspect: build ## Launch the MCP Inspector for interactive testing
+	@echo "Starting MCP Inspector for $(BINARY)..."
+	@echo "Open the URL shown below in your browser to interact with the MCP server"
+	npx @modelcontextprotocol/inspector $$(realpath bin/$(BINARY))
+
 docs-lint:
 	@echo "Linting documentation..."
 	@command -v markdownlint-cli2 >/dev/null 2>&1 || \
@@ -95,6 +100,7 @@ help:
 	@echo "  clean        - Clean build artifacts"
 	@echo "  run          - Build and run with --help"
 	@echo "  dev          - Build and run"
+	@echo "  inspect      - Launch MCP Inspector for interactive testing"
 	@echo ""
 	@echo "Documentation targets:"
 	@echo "  docs-lint    - Lint documentation markdown"
