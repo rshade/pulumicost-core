@@ -52,12 +52,12 @@ func runPluginListCmd(cmd *cobra.Command, verbose bool) error {
 		return nil
 	}
 
-	return displayPlugins(plugins, verbose)
+	return displayPlugins(cmd, plugins, verbose)
 }
 
-func displayPlugins(plugins []registry.PluginInfo, verbose bool) error {
+func displayPlugins(cmd *cobra.Command, plugins []registry.PluginInfo, verbose bool) error {
 	const tabPadding = 2
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, tabPadding, ' ', 0)
 
 	if verbose {
 		return displayVerbosePlugins(w, plugins)

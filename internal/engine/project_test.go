@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"io"
 	"testing"
 )
 
@@ -61,7 +62,7 @@ func TestRenderResults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RenderResults(tt.format, tt.results)
+			err := RenderResults(io.Discard, tt.format, tt.results)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderResults() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -105,7 +106,7 @@ func TestRenderActualCostResults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RenderActualCostResults(tt.format, tt.results)
+			err := RenderActualCostResults(io.Discard, tt.format, tt.results)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderActualCostResults() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -177,7 +178,7 @@ func TestRenderCrossProviderAggregation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RenderCrossProviderAggregation(tt.format, tt.aggregations, tt.groupBy)
+			err := RenderCrossProviderAggregation(io.Discard, tt.format, tt.aggregations, tt.groupBy)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderCrossProviderAggregation() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -325,21 +326,21 @@ func TestJSONMarshaling(t *testing.T) {
 // TestRenderingWithNilResults tests edge cases with nil results.
 func TestRenderingWithNilResults(t *testing.T) {
 	t.Run("RenderResults with nil", func(t *testing.T) {
-		err := RenderResults(OutputJSON, nil)
+		err := RenderResults(io.Discard, OutputJSON, nil)
 		if err != nil {
 			t.Errorf("RenderResults with nil should not error: %v", err)
 		}
 	})
 
 	t.Run("RenderActualCostResults with nil", func(t *testing.T) {
-		err := RenderActualCostResults(OutputJSON, nil)
+		err := RenderActualCostResults(io.Discard, OutputJSON, nil)
 		if err != nil {
 			t.Errorf("RenderActualCostResults with nil should not error: %v", err)
 		}
 	})
 
 	t.Run("RenderCrossProviderAggregation with nil", func(t *testing.T) {
-		err := RenderCrossProviderAggregation(OutputJSON, nil, GroupByDaily)
+		err := RenderCrossProviderAggregation(io.Discard, OutputJSON, nil, GroupByDaily)
 		if err != nil {
 			t.Errorf("RenderCrossProviderAggregation with nil should not error: %v", err)
 		}
@@ -349,21 +350,21 @@ func TestRenderingWithNilResults(t *testing.T) {
 // TestRenderingWithEmptyResults tests edge cases with empty results.
 func TestRenderingWithEmptyResults(t *testing.T) {
 	t.Run("RenderResults with empty slice", func(t *testing.T) {
-		err := RenderResults(OutputTable, []CostResult{})
+		err := RenderResults(io.Discard, OutputTable, []CostResult{})
 		if err != nil {
 			t.Errorf("RenderResults with empty should not error: %v", err)
 		}
 	})
 
 	t.Run("RenderActualCostResults with empty slice", func(t *testing.T) {
-		err := RenderActualCostResults(OutputTable, []CostResult{})
+		err := RenderActualCostResults(io.Discard, OutputTable, []CostResult{})
 		if err != nil {
 			t.Errorf("RenderActualCostResults with empty should not error: %v", err)
 		}
 	})
 
 	t.Run("RenderCrossProviderAggregation with empty slice", func(t *testing.T) {
-		err := RenderCrossProviderAggregation(OutputTable, []CrossProviderAggregation{}, GroupByDaily)
+		err := RenderCrossProviderAggregation(io.Discard, OutputTable, []CrossProviderAggregation{}, GroupByDaily)
 		if err != nil {
 			t.Errorf("RenderCrossProviderAggregation with empty should not error: %v", err)
 		}
@@ -397,21 +398,21 @@ func TestMultiProviderRendering(t *testing.T) {
 	}
 
 	t.Run("multi-provider table rendering", func(t *testing.T) {
-		err := RenderResults(OutputTable, results)
+		err := RenderResults(io.Discard, OutputTable, results)
 		if err != nil {
 			t.Errorf("Multi-provider table rendering failed: %v", err)
 		}
 	})
 
 	t.Run("multi-provider json rendering", func(t *testing.T) {
-		err := RenderResults(OutputJSON, results)
+		err := RenderResults(io.Discard, OutputJSON, results)
 		if err != nil {
 			t.Errorf("Multi-provider JSON rendering failed: %v", err)
 		}
 	})
 
 	t.Run("multi-provider ndjson rendering", func(t *testing.T) {
-		err := RenderResults(OutputNDJSON, results)
+		err := RenderResults(io.Discard, OutputNDJSON, results)
 		if err != nil {
 			t.Errorf("Multi-provider NDJSON rendering failed: %v", err)
 		}
@@ -435,7 +436,7 @@ func TestLongResourceNameHandling(t *testing.T) {
 		},
 	}
 
-	err := RenderResults(OutputTable, results)
+	err := RenderResults(io.Discard, OutputTable, results)
 	if err != nil {
 		t.Errorf("Long resource name rendering failed: %v", err)
 	}

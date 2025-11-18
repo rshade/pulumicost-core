@@ -34,7 +34,7 @@ func NewCostProjectedCmd() *cobra.Command {
 
   # Use custom spec directory
   pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := context.Background()
 
 			plan, err := ingest.LoadPulumiPlan(planPath)
@@ -75,7 +75,7 @@ func NewCostProjectedCmd() *cobra.Command {
 			// Use configuration-aware output format selection
 			finalOutput := config.GetOutputFormat(output)
 			outputFormat := engine.OutputFormat(finalOutput)
-			return engine.RenderResults(outputFormat, results)
+			return engine.RenderResults(cmd.OutOrStdout(), outputFormat, results)
 		},
 	}
 

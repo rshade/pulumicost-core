@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func NewCostActualCmd() *cobra.Command {
 
   # Use RFC3339 timestamps
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := context.Background()
 
 			plan, err := ingest.LoadPulumiPlan(planPath)
@@ -116,7 +117,7 @@ func NewCostActualCmd() *cobra.Command {
 			finalOutput := config.GetOutputFormat(output)
 			outputFormat := engine.OutputFormat(finalOutput)
 
-			return renderActualCostOutput(outputFormat, results, actualGroupBy)
+			return renderActualCostOutput(cmd.OutOrStdout(), outputFormat, results, actualGroupBy)
 		},
 	}
 
@@ -214,7 +215,12 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 // to render or aggregate, and actualGroupBy controls grouping (time-based
 // groupings trigger cross-provider aggregation).
 // It returns an error if aggregation or rendering fails.
-func renderActualCostOutput(outputFormat engine.OutputFormat, results []engine.CostResult, actualGroupBy string) error {
+func renderActualCostOutput(
+	writer io.Writer,
+	outputFormat engine.OutputFormat,
+	results []engine.CostResult,
+	actualGroupBy string,
+) error {
 	// Check if we need cross-provider aggregation
 	groupByType := engine.GroupBy(actualGroupBy)
 	if groupByType.IsTimeBasedGrouping() {
@@ -222,8 +228,8 @@ func renderActualCostOutput(outputFormat engine.OutputFormat, results []engine.C
 		if err != nil {
 			return fmt.Errorf("creating cross-provider aggregation: %w", err)
 		}
-		return engine.RenderCrossProviderAggregation(outputFormat, aggregations, groupByType)
+		return engine.RenderCrossProviderAggregation(writer, outputFormat, aggregations, groupByType)
 	}
 
-	return engine.RenderActualCostResults(outputFormat, results)
+	return engine.RenderActualCostResults(writer, outputFormat, results)
 }
