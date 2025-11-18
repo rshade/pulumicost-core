@@ -3,10 +3,10 @@ module github.com/rshade/pulumicost-core
 go 1.24.7
 
 require (
-	github.com/rshade/pulumicost-spec v0.0.0-20251014132547-35b5694ae025
+	github.com/rshade/pulumicost-spec v0.1.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.76.0
+	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
