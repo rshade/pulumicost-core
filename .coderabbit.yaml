@@ -35,6 +35,9 @@ reviews:
     - '!**/dist/**'
     - '!**/build/**'
     - '!**/.git/**'
+    - '!**/.specify/**'
+    - '!**/.claude/**'
+    - '!**/.gemini/**'
   path_instructions:
     - path: "**/*.go"
       instructions: |
