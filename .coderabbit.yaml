@@ -38,6 +38,7 @@ reviews:
     - '!**/.specify/**'
     - '!**/.claude/**'
     - '!**/.gemini/**'
+    - '!**/specs/**'
   path_instructions:
     - path: "**/*.go"
       instructions: |

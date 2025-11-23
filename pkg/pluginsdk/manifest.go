@@ -41,11 +41,12 @@ func (errs ValidationErrors) Error() string {
 		return "no validation errors"
 	}
 
-	msg := fmt.Sprintf("validation failed with %d error(s):", len(errs))
+	var b strings.Builder
+	fmt.Fprintf(&b, "validation failed with %d error(s):", len(errs))
 	for _, err := range errs {
-		msg += fmt.Sprintf("\n  - %s", err.Error())
+		fmt.Fprintf(&b, "\n  - %s", err.Error())
 	}
-	return msg
+	return b.String()
 }
 
 // LoadManifest loads a plugin manifest from a file path.

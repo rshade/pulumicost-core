@@ -19,6 +19,21 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 - `make dev` - Build and run without arguments
 - `make clean` - Remove build artifacts
 
+## Go Version Information
+
+**Project Go Version**: 1.25.4
+
+### Version Verification Protocol
+
+**CRITICAL**: Before claiming any Go version "doesn't exist" or suggesting version changes:
+
+1. **ALWAYS verify on <https://go.dev/dl/>** using WebFetch
+2. Check `go.mod` for the project's actual Go version
+3. Trust the versions specified in the repository
+4. Never assume based on training data - Go releases frequently after knowledge cutoffs
+
+Do NOT suggest version downgrades without explicit verification from go.dev.
+
 ## Documentation Commands
 
 - `make docs-lint` - Lint documentation markdown files
@@ -539,7 +554,7 @@ Complete CI/CD pipeline setup with GitHub Actions for automated testing, buildin
 Triggered on pull requests and pushes to main branch:
 
 **Test Job:**
-- Go 1.24.5 setup with caching
+- Go 1.25.4 setup with caching
 - Unit tests with race detection and coverage reporting
 - Coverage threshold check (minimum 20%)
 - Artifacts uploaded for coverage reports
