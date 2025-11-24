@@ -90,12 +90,12 @@ func (r *Registry) findBinary(dir string) string {
 			continue
 		}
 
-		if runtime.GOOS != "windows" {
+		if runtime.GOOS != osWindows {
 			if info.Mode()&0111 != 0 {
 				return path
 			}
 		} else {
-			if filepath.Ext(path) == ".exe" {
+			if filepath.Ext(path) == extExe {
 				return path
 			}
 		}

@@ -1,0 +1,82 @@
+package cli
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/rshade/pulumicost-core/internal/registry"
+)
+
+// NewPluginUpdateCmd creates the plugin update command.
+func NewPluginUpdateCmd() *cobra.Command {
+	var (
+		dryRun    bool
+		version   string
+		pluginDir string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "update <plugin>",
+		Short: "Update an installed plugin to the latest version",
+		Long: `Update an installed plugin to the latest version or a specific version.
+
+The plugin must already be installed. Use 'plugin install' to install new plugins.`,
+		Example: `  # Update to latest version
+  pulumicost plugin update kubecost
+
+  # Update to specific version
+  pulumicost plugin update kubecost --version v2.0.0
+
+  # Check what would be updated without making changes
+  pulumicost plugin update kubecost --dry-run`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			// Create installer
+			installer := registry.NewInstaller(pluginDir)
+
+			opts := registry.UpdateOptions{
+				DryRun:    dryRun,
+				Version:   version,
+				PluginDir: pluginDir,
+			}
+
+			// Progress callback
+			progress := func(msg string) {
+				cmd.Printf("%s\n", msg)
+			}
+
+			// Update
+			result, err := installer.Update(name, opts, progress)
+			if err != nil {
+				return fmt.Errorf("updating plugin %q: %w", name, err)
+			}
+
+			if result.WasUpToDate {
+				cmd.Printf("\n✓ Plugin %s is already up to date (%s)\n", result.Name, result.OldVersion)
+				return nil
+			}
+
+			if dryRun {
+				cmd.Printf("\n→ Would update %s from %s to %s\n", result.Name, result.OldVersion, result.NewVersion)
+				return nil
+			}
+
+			cmd.Printf("\n✓ Plugin updated successfully\n")
+			cmd.Printf("  Name:        %s\n", result.Name)
+			cmd.Printf("  Old version: %s\n", result.OldVersion)
+			cmd.Printf("  New version: %s\n", result.NewVersion)
+			cmd.Printf("  Path:        %s\n", result.Path)
+
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be updated without making changes")
+	cmd.Flags().StringVar(&version, "version", "", "Specific version to update to (default: latest)")
+	cmd.Flags().StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory")
+
+	return cmd
+}

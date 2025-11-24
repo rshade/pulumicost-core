@@ -1,0 +1,136 @@
+package cli_test
+
+import (
+	"bytes"
+	"strings"
+	"testing"
+
+	"github.com/rshade/pulumicost-core/internal/cli"
+)
+
+func TestPluginInstallCmd_Help(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	var stdout bytes.Buffer
+	rootCmd.SetOut(&stdout)
+	rootCmd.SetArgs([]string{"plugin", "install", "--help"})
+
+	err := rootCmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := stdout.String()
+
+	// Check for expected content
+	expectedStrings := []string{
+		"Install a plugin from",
+		"--force",
+		"--no-save",
+		"--plugin-dir",
+		"kubecost",
+		"github.com",
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(output, expected) {
+			t.Errorf("help output missing expected string: %q", expected)
+		}
+	}
+}
+
+func TestPluginInstallCmd_NoArgs(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "install"})
+
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error when no plugin specified")
+	}
+
+	errOutput := stderr.String()
+	if !strings.Contains(errOutput, "accepts 1 arg") {
+		t.Errorf("expected 'accepts 1 arg' error, got: %s", errOutput)
+	}
+}
+
+func TestPluginInstallCmd_InvalidPlugin(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "install", "nonexistent-plugin-xyz"})
+
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for non-existent plugin")
+	}
+}
+
+func TestPluginInstallCmd_InvalidGitHubURL(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "install", "github.com/invalid"})
+
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for invalid GitHub URL")
+	}
+}
+
+func TestPluginInstallCmd_Flags(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	// Get the install command to check flags
+	pluginCmd, _, err := rootCmd.Find([]string{"plugin", "install"})
+	if err != nil {
+		t.Fatalf("failed to find install command: %v", err)
+	}
+
+	// Check that expected flags exist
+	expectedFlags := []string{"force", "no-save", "plugin-dir"}
+	for _, flag := range expectedFlags {
+		if pluginCmd.Flags().Lookup(flag) == nil {
+			t.Errorf("expected flag --%s not found", flag)
+		}
+	}
+
+	// Check short flag for force
+	if pluginCmd.Flags().ShorthandLookup("f") == nil {
+		t.Error("expected short flag -f for --force not found")
+	}
+}
+
+func TestPluginInstallCmd_Examples(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	var stdout bytes.Buffer
+	rootCmd.SetOut(&stdout)
+	rootCmd.SetArgs([]string{"plugin", "install", "--help"})
+
+	err := rootCmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := stdout.String()
+
+	// Check for example commands
+	examples := []string{
+		"pulumicost plugin install kubecost",
+		"kubecost@v1.0.0",
+		"--force",
+		"--no-save",
+	}
+
+	for _, example := range examples {
+		if !strings.Contains(output, example) {
+			t.Errorf("help output missing example: %q", example)
+		}
+	}
+}

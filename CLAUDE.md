@@ -21,7 +21,7 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 
 ## Go Version Information
 
-**Project Go Version**: 1.25.4
+**Project Go Version**: 1.24.10
 
 ### Version Verification Protocol
 
@@ -44,10 +44,13 @@ Do NOT suggest version downgrades without explicit verification from go.dev.
 ## Playwright MCP Integration
 
 ### Overview
+
 The project is configured with Playwright MCP for automated browser testing and documentation validation. The configuration is in `.mcp.json` and uses chromium in headless, isolated mode.
 
 ### Configuration
+
 Located in `.mcp.json`:
+
 ```json
 {
   "playwright": {
@@ -61,12 +64,15 @@ Located in `.mcp.json`:
 ```
 
 ### Key Features
+
 - **Browser**: Chromium (automatically installed via npx)
 - **Mode**: Headless and isolated (no persistent profile)
 - **Auto-installation**: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 ensures chromium installs on first use
 
 ### Initial Setup
+
 If you encounter chromium installation issues, manually install:
+
 ```bash
 npx playwright install chromium
 ```
@@ -74,6 +80,7 @@ npx playwright install chromium
 ### Common Use Cases
 
 **1. Documentation Site Validation**
+
 ```bash
 # Navigate to local docs and take screenshot
 mcp__playwright__browser_navigate(url: "http://localhost:4000/pulumicost-core/")
@@ -82,6 +89,7 @@ mcp__playwright__browser_take_screenshot(filename: "docs-homepage.png")
 ```
 
 **2. GitHub Pages Validation**
+
 ```bash
 # Check deployed documentation
 mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
@@ -89,6 +97,7 @@ mcp__playwright__browser_snapshot()
 ```
 
 **3. Link Checking and Navigation Testing**
+
 ```bash
 # Test documentation navigation
 mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
@@ -97,6 +106,7 @@ mcp__playwright__browser_snapshot()
 ```
 
 **4. Form Testing (Future Plugin Integration)**
+
 ```bash
 # Test interactive documentation features
 mcp__playwright__browser_fill_form(fields: [...])
@@ -104,6 +114,7 @@ mcp__playwright__browser_click(element: "Submit button", ref: "button[type='subm
 ```
 
 **5. Network Request Monitoring**
+
 ```bash
 # Monitor API calls in documentation examples
 mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/examples/")
@@ -113,18 +124,22 @@ mcp__playwright__browser_network_requests()
 ### Troubleshooting
 
 **Issue: "Chromium distribution 'chrome' is not found"**
+
 - Solution: Run `npx playwright install chromium`
 - Root cause: Chromium not installed or wrong browser channel specified
 
 **Issue: Hanging on launch**
+
 - Solution: Ensure `--headless` and `--isolated` flags are set in `.mcp.json`
 - Check: `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0` is set to allow installation
 
 **Issue: Permission denied in WSL**
+
 - Solution: Add `--no-sandbox --disable-setuid-sandbox` to launchOptions if needed
 - Note: Already configured in current setup
 
 ### Best Practices
+
 1. **Always use snapshots first**: `browser_snapshot()` is faster than screenshots and provides better context
 2. **Screenshots for visual verification**: Use `browser_take_screenshot()` for visual regression testing
 3. **Network monitoring**: Use `browser_network_requests()` to validate API calls in documentation examples
@@ -136,7 +151,9 @@ mcp__playwright__browser_network_requests()
    - Test links: Click through navigation and verify no 404s
 
 ### Integration with CI/CD
+
 For future automated testing, Playwright can be integrated into GitHub Actions:
+
 ```yaml
 - name: Install Playwright
   run: npx playwright install chromium
@@ -145,7 +162,9 @@ For future automated testing, Playwright can be integrated into GitHub Actions:
 ```
 
 ### Actual Usage Examples
+
 Real-world Playwright MCP usage for testing GitHub Pages:
+
 ```bash
 # Navigate and verify page loads
 mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
@@ -163,21 +182,25 @@ mcp__playwright__browser_network_requests()
 ### Critical Setup Requirements
 
 **1. Entry Point File:**
+
 - GitHub Pages requires `index.md` or `index.html` as the landing page
 - Jekyll does NOT automatically convert `README.md` to `index.html`
 - Always create an explicit `index.md` file in the docs directory
 
 **2. Jekyll Plugin Dependencies:**
+
 - Plugins must be installed BEFORE Jekyll can use their template tags
 - Common error: `Liquid syntax error: Unknown tag 'seo'` means plugin not loaded
 - Solution: Either install the plugin or remove the template tag
 
 **3. Custom CSS Integration:**
+
 - Custom stylesheets must be explicitly linked in `_layouts/default.html`
 - Path format: `{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}`
 - SCSS files in `docs/assets/css/style.scss` are automatically processed by Jekyll
 
 **4. Layout and Content Separation:**
+
 - Avoid duplicate H1 headings between layout header and page content
 - Layout typically provides site title/header
 - Page content should start with introductory text, not repeat the title
@@ -185,8 +208,9 @@ mcp__playwright__browser_network_requests()
 ### Common Jekyll Build Errors
 
 **Error: `Unknown tag 'seo'`**
+
 - Cause: `jekyll-seo-tag` plugin not installed or not in `_config.yml` plugins list
-- Fix: Either add plugin to Gemfile and _config.yml, or replace `{% seo %}` with manual tags
+- Fix: Either add plugin to Gemfile and \_config.yml, or replace `{% seo %}` with manual tags
 - Manual alternative:
   ```html
   <title>{{ page.title | default: site.title }}</title>
@@ -194,6 +218,7 @@ mcp__playwright__browser_network_requests()
   ```
 
 **Error: 404 on GitHub Pages**
+
 - Cause: Missing `index.md` or `index.html` in docs directory
 - Fix: Create `index.md` with proper frontmatter:
   ```yaml
@@ -205,6 +230,7 @@ mcp__playwright__browser_network_requests()
   ```
 
 **Error: No CSS styling on deployed site**
+
 - Cause: Missing stylesheet link in `_layouts/default.html`
 - Fix: Add link tag in `<head>` section:
   ```html
@@ -214,6 +240,7 @@ mcp__playwright__browser_network_requests()
 ### GitHub Actions Workflow Best Practices
 
 **1. npm Cache Configuration:**
+
 - Only use `cache: 'npm'` if `package-lock.json` exists
 - For dynamic npm installs without lockfile, omit the cache parameter
 - Example fix:
@@ -226,17 +253,19 @@ mcp__playwright__browser_network_requests()
   ```
 
 **2. Job Naming Conflicts:**
+
 - Avoid reserved keywords like `summary`, `status`, `output`
 - Use descriptive prefixes: `validation-summary`, `build-status`, etc.
 - Proper indentation is critical for YAML:
   ```yaml
-  validation-summary:  # Good: specific and unique
+  validation-summary: # Good: specific and unique
     runs-on: ubuntu-latest
-    if: always()       # Proper indentation under job
+    if: always() # Proper indentation under job
     needs: [build]
   ```
 
 **3. Testing Jekyll Builds Locally:**
+
 - Always test Jekyll builds before committing changes
 - Use Playwright MCP to verify the deployed site visually
 - Check browser console for 404 errors or missing resources
@@ -245,6 +274,7 @@ mcp__playwright__browser_network_requests()
 ### Jekyll + GitHub Pages Testing Workflow
 
 **Complete testing workflow using Playwright MCP:**
+
 ```bash
 # 1. Test local Jekyll build first (if possible)
 # make docs-serve
@@ -266,17 +296,24 @@ mcp__playwright__browser_snapshot()
 ### Documentation Styling Best Practices
 
 **Custom SCSS Structure:**
+
 ```scss
 ---
 ---
-@import "{{ site.theme }}";  // Import base theme first
+
+@import '{{ site.theme }}'; // Import base theme first
 
 /* Then add custom overrides */
-table { /* Enhanced table styling */ }
-.wrapper { /* Layout adjustments */ }
+table {
+  /* Enhanced table styling */
+}
+.wrapper {
+  /* Layout adjustments */
+}
 ```
 
 **Common Styling Improvements:**
+
 - Table borders, padding, and alternating row colors
 - Wider content area (1200px max-width vs default 860px)
 - Better link colors and hover states
@@ -295,15 +332,18 @@ table { /* Enhanced table styling */ }
 ## Documentation Architecture
 
 ### Location
+
 All documentation is in the `docs/` directory with GitHub Pages deployed from that folder.
 
 ### Key Files
+
 - **docs/README.md** - Documentation home page with navigation
 - **docs/plan.md** - Complete documentation architecture and strategy
 - **docs/llms.txt** - Machine-readable index for LLM/AI tools
-- **docs/_config.yml** - Jekyll configuration
+- **docs/\_config.yml** - Jekyll configuration
 
 ### Directory Structure
+
 ```
 docs/
 ├── guides/                # Audience-specific guides (User, Engineer, Architect, CEO)
@@ -316,12 +356,14 @@ docs/
 ```
 
 ### Audience-Specific Guides
+
 - **guides/user-guide.md** - For end users: "How do I use this?"
 - **guides/developer-guide.md** - For engineers: "How do I extend this?"
 - **guides/architect-guide.md** - For architects: "How is this designed?"
 - **guides/business-value.md** - For CEO/product: "What problem does this solve?"
 
 ### Plugin Documentation
+
 - **plugins/plugin-development.md** - How to build a PulumiCost plugin
 - **plugins/plugin-sdk.md** - Plugin SDK reference
 - **plugins/vantage/** - Vantage plugin example (IN PROGRESS)
@@ -330,6 +372,7 @@ docs/
 - **plugins/cloudability/** - Cloudability plugin docs (FUTURE)
 
 ### Documentation Standards
+
 - Follow Google style guide for markdown
 - All code examples must be tested
 - Keep llms.txt updated (updated automatically by GitHub Actions)
@@ -337,6 +380,7 @@ docs/
 - Use frontmatter YAML with `title`, `description`, and `layout` fields
 
 ### GitHub Actions for Docs
+
 - **docs-build-deploy.yml** - Builds and deploys docs to GitHub Pages on main branch
 - **docs-validate.yml** - Validates markdown, links, and structure on every commit
 - Automated linting prevents documentation drift
@@ -354,7 +398,7 @@ docs/
 
 2. **Engine** (`internal/engine/`) - Core cost calculation logic:
    - Orchestrates between plugins and local pricing specs
-   - Handles resource mapping and cost aggregation  
+   - Handles resource mapping and cost aggregation
    - Supports multiple output formats (table, JSON, NDJSON)
    - **Actual Cost Pipeline**: Advanced cost querying with time ranges, filtering, and grouping
      - `GetActualCostWithOptions()` - Flexible actual cost queries with filtering
@@ -384,6 +428,7 @@ docs/
 Plugins communicate via gRPC using protocol buffers defined in the `pulumicost-spec` repository. Current implementation uses mock protobuf definitions (`internal/proto/mock.go`) until the spec repository is fully implemented.
 
 Key plugin methods:
+
 - `Name()` - Plugin identification
 - `GetProjectedCost()` - Calculate estimated costs for resources
 - `GetActualCost()` - Retrieve historical costs from cloud APIs
@@ -400,7 +445,7 @@ Key plugin methods:
 
 - `cmd/pulumicost/main.go` - CLI entry point
 - `internal/engine/engine.go` - Core orchestration logic
-- `internal/pluginhost/host.go` - Plugin client management  
+- `internal/pluginhost/host.go` - Plugin client management
 - `internal/ingest/pulumi_plan.go` - Pulumi plan parsing
 - `examples/plans/aws-simple-plan.json` - Sample Pulumi plan for testing
 - `examples/specs/aws-ec2-t3-micro.yaml` - Sample pricing specification
@@ -415,19 +460,22 @@ Key plugin methods:
 ## Project Management
 
 ### Cross-Repository Project
+
 - **GitHub Project**: https://github.com/users/rshade/projects/3
 - **Scope**: Manages issues across three repositories:
   - `pulumicost-core` (this repository) - CLI tool and plugin host
-  - `pulumicost-spec` - Protocol buffer definitions and specifications  
+  - `pulumicost-spec` - Protocol buffer definitions and specifications
   - `pulumicost-plugin` - Plugin implementations and SDK
 
 ### Product Manager Responsibilities
+
 - Keep issues synchronized across all three repositories
 - Manage cross-repo dependencies and coordination
 - Track feature development across the entire ecosystem
 - Ensure consistent issue labeling and milestone alignment
 
 ### GitHub CLI Commands for Project Management
+
 ```bash
 # View project overview
 gh project view 3 --owner rshade
@@ -439,46 +487,55 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
 ### Dependency & Milestone Tracker
 
 **Milestones Created:**
+
 - `2025-Q1 - Spec v0.1.0 MVP` (Due: Aug 20, 2025) - Protocol definitions
 - `2025-Q1 - Core v0.1.0 MVP` (Due: Sep 6, 2025) - CLI and plugin host
 - `2025-Q1 - Kubecost Plugin v0.1.0 MVP` (Due: Sep 6, 2025) - Plugin implementation
 
 **Critical Path Dependencies:**
-- SPEC-1 → CORE-3 (Plugin Host Bootstrap)  
+
+- SPEC-1 → CORE-3 (Plugin Host Bootstrap)
 - SPEC-1 → PLUG-KC-1 → CORE-5 (Actual Cost Pipeline)
 - SPEC-2 → PLUG-KC-3 → CORE-4 (Projected Cost Pipeline)
 
 **Week 1 (Parallel Work):**
+
 - Core: CLI Skeleton (#3), Pulumi JSON Ingest (#4)
 - Spec: Freeze proto & schema
 - Plugin: Stub API client, manifest
 
 **Week 2 (Dependencies unlock):**
+
 - Core: Plugin Host Bootstrap (#2)
 - Plugin: Kubecost API Client + Supports()
 
 **Week 3 (Feature completion):**
+
 - Core: Projected Cost Pipeline (#5), Actual Cost Pipeline (#6)
 - Plugin: Projected Cost Logic
 
 **Week 4 (Integration):**
+
 - End-to-end examples and MVP stabilization
 
 ## Protocol Integration Status
 
 ### ✅ SPEC-1 Completed - Proto Integration
+
 - **Status**: costsource.proto v0.1.0 is frozen and integrated
 - **Location**: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
 - **Generated SDK**: Available at `github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
 - **Integration**: Core now uses real proto definitions via `internal/proto/adapter.go`
 
 ### Proto Integration Details
-- Removed mock proto implementation (`internal/proto/mock.go`) 
+
+- Removed mock proto implementation (`internal/proto/mock.go`)
 - Created adapter layer (`internal/proto/adapter.go`) to bridge engine expectations with real proto types
 - Updated dependencies: gRPC v1.74.2, protobuf v1.36.7
 - Core engine successfully uses `CostSourceServiceClient` from pulumicost-spec
 
 ### Verified Working Commands
+
 ```bash
 # Basic CLI functionality verified
 ./bin/pulumicost --help
@@ -493,6 +550,7 @@ gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
 ```
 
 ### ✅ CORE-5 Completed - Actual Cost Pipeline
+
 - **Status**: Comprehensive actual cost pipeline implemented with advanced features
 - **Implementation**: PR #36 - Added cost aggregation, filtering, and grouping capabilities
 - **Key Features**:
@@ -540,54 +598,66 @@ var (
 ```
 
 ### Next Steps Unlocked
+
 With SPEC-1 and CORE-5 complete, the following work can now proceed:
-- **CORE-3**: Plugin Host Bootstrap (depends on SPEC-1) 
+
+- **CORE-3**: Plugin Host Bootstrap (depends on SPEC-1)
 - **PLUG-KC-1**: Kubecost API Client (depends on SPEC-1)
 - Integration testing with actual plugins
 
 ## CI/CD Pipeline
 
 ### Overview
+
 Complete CI/CD pipeline setup with GitHub Actions for automated testing, building, and release management.
 
 ### CI Pipeline (.github/workflows/ci.yml)
+
 Triggered on pull requests and pushes to main branch:
 
 **Test Job:**
-- Go 1.25.4 setup with caching
+
+- Go 1.24.10 setup with caching
 - Unit tests with race detection and coverage reporting
 - Coverage threshold check (minimum 20%)
 - Artifacts uploaded for coverage reports
 
 **Lint Job:**
+
 - golangci-lint with project-specific configuration
 - Security scanning with gosec included
 - Timeout set to 5 minutes
 
 **Security Job:**
+
 - govulncheck for dependency vulnerability scanning
 - Checks for known vulnerabilities in Go dependencies
 
 **Validation Job:**
+
 - gofmt formatting checks
 - go mod tidy verification
 - go vet static analysis
 
 **Build Job:**
+
 - Cross-platform builds (Linux, macOS, Windows)
 - Support for amd64 and arm64 architectures
 - Build artifacts uploaded with proper naming
 
 ### Release Pipeline (.github/workflows/release.yml)
-Triggered on version tags (v*):
+
+Triggered on version tags (v\*):
 
 **Multi-Platform Binaries:**
+
 - Linux: amd64, arm64
-- macOS: amd64, arm64  
+- macOS: amd64, arm64
 - Windows: amd64
 - Naming convention: `pulumicost-v{version}-{os}-{arch}`
 
 **Release Features:**
+
 - Automatic changelog generation from git history
 - SHA256 checksums for all binaries
 - GitHub Release creation with proper metadata
@@ -597,6 +667,7 @@ Triggered on version tags (v*):
 ### Dependency Management
 
 **Renovate Configuration (.github/renovate.json):**
+
 - Weekly updates on Monday mornings (UTC)
 - Grouped updates by dependency type
 - Semantic commit messages with conventional format
@@ -604,6 +675,7 @@ Triggered on version tags (v*):
 - Rate limiting to prevent spam
 
 **Dependabot Configuration (.github/dependabot.yml):**
+
 - Go modules and GitHub Actions monitoring
 - Weekly schedule with proper time zone handling
 - Automatic assignee and reviewer assignment
@@ -612,16 +684,19 @@ Triggered on version tags (v*):
 ### Quality Gates
 
 **Code Quality:**
+
 - golangci-lint with essential linters (errcheck, govet, staticcheck, gosec, etc.)
 - Security scanning integrated into CI pipeline
 - Formatting and import organization enforced
 
 **Coverage Requirements:**
+
 - Minimum 20% code coverage (adjustable as project matures)
 - Coverage reports generated and uploaded as artifacts
 - Automatic threshold validation in CI
 
 **Build Verification:**
+
 - Cross-platform compilation verification
 - Binary naming consistency
 - Version information embedded in binaries
@@ -631,7 +706,7 @@ Triggered on version tags (v*):
 ```bash
 # Basic development workflow
 make build       # Build binary
-make test        # Run all unit tests  
+make test        # Run all unit tests
 make lint        # Code linting
 make validate    # Go vet and formatting checks
 make dev         # Build and run binary without args
@@ -640,7 +715,7 @@ make clean       # Remove build artifacts
 
 # Single package testing
 go test -v ./internal/cli/...           # Test only CLI package
-go test -v ./internal/engine/...        # Test only engine package  
+go test -v ./internal/engine/...        # Test only engine package
 go test -run TestSpecificFunction ./... # Run specific test function
 
 # Coverage analysis
@@ -667,69 +742,80 @@ go tool cover -func=coverage.out | grep total  # Check total coverage
 ## CI/CD Implementation Learnings
 
 ### golangci-lint Configuration
+
 - **Issue**: Original .golangci.yml was overly complex (449 lines) with deprecated/invalid linters
 - **Solution**: Simplified to essential linters (errcheck, govet, staticcheck, gosec, revive, unused, ineffassign)
 - **Key learnings**:
   - `typecheck` and `gofmt` are not valid linters in newer golangci-lint versions
-  - `goimports` is a formatter, not a linter in v2+ 
+  - `goimports` is a formatter, not a linter in v2+
   - Use `--allow-parallel-runners` flag in Makefile to prevent conflicts
   - Project-specific configuration should match codebase maturity
 
 ### Coverage Thresholds
+
 - **Current State**: 24.2% overall coverage, 67.2% in CLI package
 - **Threshold Set**: 20% (adjusted from initial 80% for realistic expectations)
 - **Strategy**: Start conservative, increase as project matures and more tests added
 - **Command**: `go tool cover -func=coverage.out | grep total` for threshold checking
 
-### Security Scanning Integration  
+### Security Scanning Integration
+
 - **gosec**: Already included in golangci-lint configuration
 - **govulncheck**: Separate step for dependency vulnerability scanning
 - **Common Issues**: File permissions (G306), potential file inclusion (G304), subprocess usage (G204)
 - **Test exclusions**: Security issues in test files are often acceptable and should be excluded
 
 ### Cross-Platform Build Patterns
+
 - **Binary naming**: `pulumicost-v{version}-{os}-{arch}` with `.exe` for Windows
 - **Architecture matrix**: Linux/macOS (amd64, arm64), Windows (amd64 only)
 - **LDFLAGS**: Proper shell escaping needed for version embedding
 - **Build verification**: All platforms should compile successfully in CI
 
 ### GitHub Actions Best Practices
+
 - **Deprecated actions**: Avoid `actions/create-release@v1`, use `softprops/action-gh-release@v2`
 - **Artifact management**: Use `actions/upload-artifact@v4` with proper naming
 - **HEREDOC usage**: Essential for multiline strings in workflow files
 - **Matrix excludes**: Use to skip unsupported combinations (e.g., Windows ARM64)
 
 ### Release Automation Patterns
+
 - **Tag detection**: `${GITHUB_REF#refs/tags/}` pattern for version extraction
 - **Changelog generation**: Git history works well with `git log ${PREV_TAG}..${CURRENT_TAG}`
 - **Checksums**: SHA256 for all binaries with verification instructions
 - **Pre-release detection**: Use `contains(steps.version.outputs.tag, '-')` for beta/alpha tags
 
 ### Dependency Management Strategy
+
 - **Dual approach**: Renovate + Dependabot with different schedules (avoid conflicts)
 - **Rate limiting**: Prevent PR spam with `prConcurrentLimit` and `prHourlyLimit`
 - **Semantic commits**: Enable conventional commit format for changelog automation
 - **Security alerts**: Immediate notification for vulnerability PRs
 
 ### Common Linting Issues Found
+
 - **errcheck (23 issues)**: Unchecked error returns, especially in defer statements and fmt functions
-- **gosec (8 issues)**: File permissions, subprocess usage, file inclusion patterns  
+- **gosec (8 issues)**: File permissions, subprocess usage, file inclusion patterns
 - **revive (50 issues)**: Missing package comments, exported type documentation
 - **staticcheck (4 issues)**: Deprecated gRPC functions (grpc.DialContext, grpc.WithBlock)
 
 ### Testing Strategy Insights
+
 - **Race detection**: Use `-race` flag for concurrent code testing
 - **Coverage modes**: `atomic` mode recommended for accurate concurrent coverage
 - **Integration testing**: Include CLI workflow testing in CI pipeline
 - **Test exclusions**: Some linting rules should be relaxed for test files
 
 ### Project-Specific Notes
+
 - **Test distribution**: CLI package well-tested (67.2%), other packages need attention
 - **Architecture**: Plugin system will need careful testing as it develops
 - **Proto integration**: Real protobuf definitions working, mock phase complete
 - **Build system**: Well-structured with proper version/commit embedding
 
 ### Troubleshooting Commands
+
 ```bash
 # Fix parallel linting conflicts
 pkill golangci-lint || true
@@ -761,6 +847,7 @@ The project includes a comprehensive testing framework organized in the `/test` 
 ```
 
 **Test Categories:**
+
 - **Unit Tests** (80% coverage target): Individual component logic
 - **Integration Tests**: Plugin communication, CLI workflows
 - **End-to-End Tests**: Complete CLI workflows with real binaries
@@ -768,6 +855,7 @@ The project includes a comprehensive testing framework organized in the `/test` 
 - **Mock Tests**: Configurable plugin server for testing
 
 **Running Tests:**
+
 ```bash
 # All tests (including existing + new framework)
 make test
@@ -790,6 +878,7 @@ go test -race ./test/...
 ```
 
 **Test Fixtures Available:**
+
 - AWS, Azure, GCP Pulumi plans (`test/fixtures/plans/`)
 - Pricing specifications (`test/fixtures/specs/`)
 - Mock API responses (`test/fixtures/responses/`)
@@ -797,6 +886,7 @@ go test -race ./test/...
 
 **Mock Plugin Server:**
 The testing framework includes a configurable gRPC plugin server for testing plugin communication:
+
 ```go
 mockPlugin := plugin.NewMockPlugin("test-plugin")
 mockPlugin.SetProjectedCostResponse("aws_instance", customResponse)
@@ -806,6 +896,7 @@ mockPlugin.SetError("GetActualCost", simulatedError)
 ### Manual Testing Commands
 
 Use the provided example files for manual testing:
+
 ```bash
 # Projected cost calculation
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
@@ -828,6 +919,7 @@ Use the provided example files for manual testing:
 ```
 
 ### Test Requirements
+
 - **Unit tests**: Must achieve 80% coverage minimum
 - **Critical paths**: Must achieve 95% coverage
 - **All error paths**: Must be tested
@@ -838,12 +930,14 @@ Use the provided example files for manual testing:
 ### CI/CD Integration
 
 The existing CI/CD pipeline automatically runs all tests including the new framework:
+
 - Unit tests with coverage reporting
-- Integration tests with timeout handling  
+- Integration tests with timeout handling
 - Linting and security scanning
 - Cross-platform build verification
 
 **Never complete a project without running:**
+
 ```bash
 make test    # Run all tests
 make lint    # Run linting
@@ -852,7 +946,9 @@ make lint    # Run linting
 ## Package-Specific Documentation
 
 ### internal/cli
+
 The CLI package implements the Cobra-based command-line interface. Key patterns:
+
 - Use `RunE` not `Run` for error handling
 - Always use `cmd.Printf()` for output (not `fmt.Printf()`)
 - Defer cleanup functions immediately after obtaining resources
@@ -860,7 +956,9 @@ The CLI package implements the Cobra-based command-line interface. Key patterns:
 - See `internal/cli/CLAUDE.md` for detailed CLI architecture and patterns
 
 ### internal/engine
+
 The engine package orchestrates cost calculations between plugins and specs:
+
 - Tries plugins first, falls back to local YAML specs
 - Supports three output formats: table, JSON, NDJSON
 - Uses `hoursPerMonth = 730` for monthly calculations
@@ -882,13 +980,16 @@ The engine package orchestrates cost calculations between plugins and specs:
 - See `internal/engine/CLAUDE.md` for detailed calculation flows
 
 **Error Types for Cross-Provider Aggregation**:
+
 - `ErrMixedCurrencies`: Different currencies detected (USD vs EUR)
 - `ErrInvalidGroupBy`: Non-time-based grouping used for cross-provider aggregation
 - `ErrEmptyResults`: Empty or nil results provided for aggregation
 - `ErrInvalidDateRange`: EndDate before StartDate in cost results
 
 ### internal/pluginhost
+
 The pluginhost package manages plugin communication via gRPC:
+
 - Two launcher types: ProcessLauncher (TCP) and StdioLauncher (stdin/stdout)
 - 10-second timeout with 100ms retry delays
 - Platform-specific binary detection (Unix permissions vs Windows .exe)
@@ -896,7 +997,9 @@ The pluginhost package manages plugin communication via gRPC:
 - See `internal/pluginhost/CLAUDE.md` for detailed plugin lifecycle
 
 ### internal/registry
+
 The registry package handles plugin discovery and lifecycle:
+
 - Scans `~/.pulumicost/plugins/<name>/<version>/` structure
 - Optional `plugin.manifest.json` validation
 - Graceful handling of missing directories and invalid binaries
@@ -910,22 +1013,26 @@ The registry package handles plugin discovery and lifecycle:
 The repository includes a comprehensive `.coderabbit.yaml` configuration optimized for Go development with the following key settings:
 
 **PR Blocking Configuration:**
+
 - `fail_commit_status: true` - Blocks PR merging on critical issues
 - `request_changes_workflow: true` - Formally requests changes for issues
 - `profile: assertive` - Uses stricter analysis profile
 
 **Comment Management:**
+
 - `auto_reply: true` - Enables automatic comment responses
 - `abort_on_close: true` - Stops processing when PR is closed
 - `auto_incremental_review: true` - Reviews new commits automatically
 
 **Go-Specific Settings:**
+
 - Custom path instructions for `**/*.go` files focusing on Go best practices
 - Enhanced test review instructions for `**/*_test.go` files
 - Enabled golangci-lint, gitleaks, yamllint, and markdownlint
 - Docstring and unit test generation enabled
 
 **Tool Configuration:**
+
 - `golangci-lint: enabled: true` - Integrates with project's existing linting
 - `markdownlint: enabled: true` - Validates documentation
 - `gitleaks: enabled: true` - Scans for secrets
@@ -935,6 +1042,7 @@ The repository includes a comprehensive `.coderabbit.yaml` configuration optimiz
 ### Usage
 
 CodeRabbit now:
+
 1. **Blocks PRs** with critical issues by setting commit status to failed
 2. **Updates comments** automatically on new commits
 3. **Resolves outdated comments** when issues are fixed
@@ -948,3 +1056,16 @@ CodeRabbit now:
 @coderabbitai configuration    # Show current configuration
 @coderabbitai plan            # Plan code edits for comments
 ```
+
+## Active Technologies
+
+- Go 1.24.10
+- archive/tar
+- archive/zip
+- compress/gzip
+- net/http
+- github.com/spf13/cobra
+- gopkg.in/yaml.v3
+- File system
+  - ~/.pulumicost/plugins/
+  - ~/.pulumicost/config.yaml
