@@ -8,7 +8,12 @@ import (
 	"github.com/rshade/pulumicost-core/internal/registry"
 )
 
-// NewPluginRemoveCmd creates the plugin remove command.
+// NewPluginRemoveCmd returns a Cobra command configured to remove an installed plugin.
+// The command accepts a single plugin name argument and provides the flags
+// `--keep-config` to retain the plugin entry in the configuration and
+// `--plugin-dir` to specify a custom plugin directory. On execution it removes
+// the plugin files and, unless `--keep-config` is set, removes the plugin entry
+// from the configuration. The command's execution returns an error if removal fails.
 func NewPluginRemoveCmd() *cobra.Command {
 	var (
 		keepConfig bool

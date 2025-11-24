@@ -33,7 +33,10 @@ type Installer struct {
 	pluginDir string
 }
 
-// NewInstaller creates a new plugin installer.
+// NewInstaller creates a new Installer configured to install plugins into pluginDir.
+// If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the home
+// directory cannot be determined, the default is "./.pulumicost/plugins" relative to
+// the current directory. The returned Installer contains an initialized GitHub client.
 func NewInstaller(pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -259,7 +262,9 @@ func (i *Installer) installRelease(
 	}, nil
 }
 
-// parseOwnerRepo splits "owner/repo" format.
+// parseOwnerRepo parses a repository string in the "owner/repo" format and returns
+// the owner and repository name. It returns an error if the input does not contain
+// exactly one '/' separator or if either the owner or repo component is empty.
 func parseOwnerRepo(repo string) (string, string, error) {
 	parts := strings.SplitN(repo, "/", 2) //nolint:mnd // split into 2 parts
 	if len(parts) != 2 {                  //nolint:mnd // expect 2 parts
@@ -272,7 +277,13 @@ func parseOwnerRepo(repo string) (string, string, error) {
 	return owner, repoName, nil
 }
 
-// findPluginBinary searches for the plugin binary in the install directory.
+// findPluginBinary searches dir for an executable plugin binary matching name.
+// It first checks common filename patterns (e.g. name, name.exe,
+// pulumicost-plugin-name, pulumicost-plugin-name.exe). If none match, it
+// scans the directory for any executable file (on Windows files must end with
+// .exe; on other systems the file must have an executable bit). It returns the
+// full path to the first matching file, or an empty string if no binary is
+// found.
 func findPluginBinary(dir, name string) string {
 	// Check common patterns
 	patterns := []string{

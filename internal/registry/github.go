@@ -43,7 +43,9 @@ type GitHubClient struct {
 	token      string
 }
 
-// NewGitHubClient creates a new GitHub API client.
+// NewGitHubClient returns a GitHubClient configured with a 30-second HTTP timeout.
+// The client will include an authentication token obtained from the GITHUB_TOKEN
+// environment variable or the `gh` CLI if available.
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{
@@ -52,7 +54,9 @@ func NewGitHubClient() *GitHubClient {
 	}
 }
 
-// getGitHubToken retrieves GitHub token from environment or gh CLI.
+// getGitHubToken returns a GitHub authentication token or an empty string if none is available.
+// It first returns the value of the GITHUB_TOKEN environment variable, and if unset it attempts
+// to obtain a token from the `gh auth token` command.
 func getGitHubToken() string {
 	// Try GITHUB_TOKEN first
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
@@ -135,7 +139,10 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 	return nil, fmt.Errorf("failed after 3 attempts: %w", lastErr)
 }
 
-// FindPlatformAsset finds the appropriate asset for the current platform.
+// FindPlatformAsset locates the release asset matching the current OS and architecture for the given project.
+// It expects assets named "{project}_{version}_{os}_{arch}.{ext}" where ext is ".zip" on Windows and ".tar.gz" otherwise.
+// release is the GitHubRelease to search; projectName is the project name used in asset filenames.
+// It returns the matching ReleaseAsset or an error that includes the available asset names when no match is found.
 func FindPlatformAsset(release *GitHubRelease, projectName string) (*ReleaseAsset, error) {
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH

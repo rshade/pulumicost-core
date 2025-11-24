@@ -8,7 +8,12 @@ import (
 	"github.com/rshade/pulumicost-core/internal/registry"
 )
 
-// NewPluginUpdateCmd creates the plugin update command.
+// NewPluginUpdateCmd returns a Cobra command that updates an installed plugin to the latest or a specified version.
+// The command requires a single positional argument (plugin name) and provides the following flags:
+//   --dry-run   Show what would be updated without making changes.
+//   --version   Specific version to update to (default: latest).
+//   --plugin-dir Custom plugin directory.
+// The command uses the registry installer to perform the update and prints progress and result details to the command output.
 func NewPluginUpdateCmd() *cobra.Command {
 	var (
 		dryRun    bool

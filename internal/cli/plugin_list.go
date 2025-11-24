@@ -10,7 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewPluginListCmd creates the plugin list command for listing installed plugins.
+// NewPluginListCmd creates a Cobra "list" command for displaying plugins.
+// The command lists installed plugins by default and supports an `--verbose`
+// flag for detailed output and an `--available` flag to list plugins from the registry.
+// It returns the configured *cobra.Command.
 func NewPluginListCmd() *cobra.Command {
 	var (
 		verbose   bool
@@ -43,6 +46,14 @@ func NewPluginListCmd() *cobra.Command {
 	return cmd
 }
 
+// runPluginListAvailable lists plugins available in the registry and writes a tabulated
+// table (Name, Description, Repository, Security) to the command's output.
+//
+// If the registry cannot be loaded the function returns an error wrapping the underlying
+// cause. If no entries exist the function prints "No plugins available in registry."
+// to the command output and returns nil. For entries with an empty security level the
+// security column defaults to "community". Any error produced while flushing the
+// output is returned.
 func runPluginListAvailable(cmd *cobra.Command) error {
 	entries, err := registry.GetAllPluginEntries()
 	if err != nil {
@@ -70,6 +81,11 @@ func runPluginListAvailable(cmd *cobra.Command) error {
 	return w.Flush()
 }
 
+// runPluginListCmd lists installed plugins and writes a tabulated listing to the provided Cobra command output.
+// It checks whether the configured plugin directory exists and prints a message and returns nil if it does not.
+// If no plugins are installed it prints 'No plugins found.' and returns nil.
+// cmd is the Cobra command used for printing. verbose controls whether plugin details are shown.
+// Returns an error if querying the registry for installed plugins fails; otherwise nil.
 func runPluginListCmd(cmd *cobra.Command, verbose bool) error {
 	cfg := config.New()
 	if _, err := os.Stat(cfg.PluginDir); os.IsNotExist(err) {

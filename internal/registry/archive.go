@@ -23,7 +23,11 @@ const (
 )
 
 // ExtractArchive extracts an archive to the destination directory.
-// Supports tar.gz and zip formats based on file extension.
+// ExtractArchive extracts the archive at archivePath into destDir.
+// It supports archives with .tar.gz, .tgz, and .zip extensions.
+// archivePath is the path to the archive file to extract.
+// destDir is the directory where extracted files will be written.
+// An error is returned if the archive format is unsupported or if extraction fails.
 func ExtractArchive(archivePath, destDir string) error {
 	if strings.HasSuffix(archivePath, ".tar.gz") || strings.HasSuffix(archivePath, ".tgz") {
 		return extractTarGz(archivePath, destDir)
@@ -34,7 +38,18 @@ func ExtractArchive(archivePath, destDir string) error {
 	return fmt.Errorf("unsupported archive format: %s", archivePath)
 }
 
-// extractTarGz extracts a tar.gz archive.
+// extractTarGz extracts the contents of a gzip-compressed tar archive into destDir.
+// 
+// It opens the archive at archivePath, iterates over tar entries, and delegates each
+// entry to extractTarEntry for writing to disk. The function returns an error if the
+// archive file cannot be opened, the gzip reader cannot be created, a tar entry cannot
+// be read, or any entry fails to extract.
+//
+// archivePath is the path to the .tar.gz or .tgz archive to extract.
+// destDir is the directory into which archive entries will be written.
+//
+// The returned error wraps the underlying cause when file access, gzip initialization,
+// tar reading, or entry extraction fails.
 func extractTarGz(archivePath, destDir string) error {
 	file, err := os.Open(archivePath)
 	if err != nil {
@@ -66,7 +81,12 @@ func extractTarGz(archivePath, destDir string) error {
 	return nil
 }
 
-// extractTarEntry extracts a single tar entry.
+// extractTarEntry extracts a single tar entry named by header into destDir.
+// It sanitizes the entry name to prevent path traversal, creates directories for
+// directory entries, and delegates regular file extraction to extractTarFile.
+// tr is the tar reader positioned at the entry's data; header describes the entry.
+// Returns an error if path sanitization fails, directory creation fails, or file
+// extraction returns an error. Other tar entry types are ignored and return nil.
 func extractTarEntry(tr *tar.Reader, header *tar.Header, destDir string) error {
 	target, err := sanitizePath(destDir, header.Name)
 	if err != nil {
@@ -82,7 +102,18 @@ func extractTarEntry(tr *tar.Reader, header *tar.Header, destDir string) error {
 	return nil
 }
 
-// extractTarFile extracts a regular file from tar.
+// extractTarFile extracts a regular file from the provided tar reader into the
+// filesystem at target, enforcing a maximum decompressed size and preserving the
+// executable bit when present in the tar header.
+// 
+// Parameters:
+//   - tr: tar reader positioned at the file's data (the caller must have read the header).
+//   - header: tar header for the file being extracted; used for mode/size information.
+//   - target: destination path on disk where the file will be written.
+// 
+// It returns an error if creating parent directories or the destination file fails,
+// if copying the file data fails or writes more than maxFileSize bytes, if closing
+// the output file fails, or if setting executable permissions fails.
 func extractTarFile(tr *tar.Reader, header *tar.Header, target string) error {
 	if err := os.MkdirAll(filepath.Dir(target), dirPerm); err != nil {
 		return fmt.Errorf("failed to create parent directory: %w", err)
@@ -115,7 +146,8 @@ func extractTarFile(tr *tar.Reader, header *tar.Header, target string) error {
 	return nil
 }
 
-// extractZip extracts a zip archive.
+// extractZip opens the zip archive at archivePath and extracts its files into destDir.
+// It returns an error if the archive cannot be opened or if extracting any entry fails.
 func extractZip(archivePath, destDir string) error {
 	r, err := zip.OpenReader(archivePath)
 	if err != nil {
@@ -131,7 +163,16 @@ func extractZip(archivePath, destDir string) error {
 	return nil
 }
 
-// extractZipFile extracts a single file from zip.
+// extractZipFile extracts a single entry from the provided zip.File into destDir.
+// It sanitizes the zip entry path to prevent path traversal, creates any required
+// parent directories, and writes the entry to disk.
+//
+// Parameters:
+//  - f: zip entry to extract.
+//  - destDir: destination directory into which the entry will be written.
+//
+// Returns an error if path sanitization fails, directory creation fails, or writing
+// the file fails.
 func extractZipFile(f *zip.File, destDir string) error {
 	target, err := sanitizePath(destDir, f.Name)
 	if err != nil {
@@ -149,7 +190,11 @@ func extractZipFile(f *zip.File, destDir string) error {
 	return writeZipFile(f, target)
 }
 
-// writeZipFile writes a zip file entry to disk.
+// writeZipFile writes the zip file entry f to the given target path.
+// f is the zip entry to extract; target is the destination file path on disk.
+// It returns an error if creating or writing the destination fails, if the extracted
+// data exceeds the configured maximum file size, if closing streams fails, or if
+// setting executable permissions (when the entry has executable bits) fails.
 func writeZipFile(f *zip.File, target string) error {
 	outFile, err := os.Create(target)
 	if err != nil {
@@ -185,7 +230,9 @@ func writeZipFile(f *zip.File, target string) error {
 	return nil
 }
 
-// sanitizePath validates and sanitizes archive paths to prevent zip-slip attacks.
+// sanitizePath validates and sanitizes an archive entry path to ensure it resolves inside the provided destination directory.
+// destDir is the extraction target directory and name is the archive entry path to join to destDir.
+// It returns the joined, cleaned path that is guaranteed to lie within destDir, or an error if the resulting path would escape destDir.
 func sanitizePath(destDir, name string) (string, error) {
 	// Clean the destination directory first
 	cleanDest := filepath.Clean(destDir)
@@ -198,7 +245,10 @@ func sanitizePath(destDir, name string) (string, error) {
 	return target, nil
 }
 
-// ValidateBinary checks if the installed binary is executable.
+// ValidateBinary verifies that the file at binaryPath exists and is a runnable binary for the current platform.
+// On Windows this requires the path to end with the `.exe` extension (case-insensitive).
+// On non-Windows platforms this requires at least one executable permission bit to be set.
+// Returns an error if the path does not exist, points to a directory, lacks the required extension or executable bits, or if other file stat errors occur.
 func ValidateBinary(binaryPath string) error {
 	info, err := os.Stat(binaryPath)
 	if err != nil {
