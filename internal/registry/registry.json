@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "plugins": {
+    "kubecost": {
+      "name": "kubecost",
+      "description": "Kubernetes cost analysis via Kubecost API",
+      "repository": "rshade/pulumicost-plugin-kubecost",
+      "author": "PulumiCost Team",
+      "license": "Apache-2.0",
+      "homepage": "https://github.com/rshade/pulumicost-plugin-kubecost",
+      "supported_providers": ["kubernetes"],
+      "capabilities": ["cost_retrieval", "cost_projection"],
+      "security_level": "official",
+      "min_spec_version": "0.1.0"
+    },
+    "aws-public": {
+      "name": "aws-public",
+      "description": "AWS public pricing data",
+      "repository": "rshade/pulumicost-plugin-aws-public",
+      "author": "PulumiCost Team",
+      "license": "Apache-2.0",
+      "homepage": "https://github.com/rshade/pulumicost-plugin-aws-public",
+      "supported_providers": ["aws"],
+      "capabilities": ["cost_projection", "pricing_specs"],
+      "security_level": "official",
+      "min_spec_version": "0.1.0"
+    }
+  }
+}

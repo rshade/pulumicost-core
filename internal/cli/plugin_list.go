@@ -12,7 +12,10 @@ import (
 
 // NewPluginListCmd creates the plugin list command for listing installed plugins.
 func NewPluginListCmd() *cobra.Command {
-	var verbose bool
+	var (
+		verbose   bool
+		available bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -22,15 +25,49 @@ func NewPluginListCmd() *cobra.Command {
   pulumicost plugin list
 
   # List plugins with detailed information
-  pulumicost plugin list --verbose`,
+  pulumicost plugin list --verbose
+
+  # List available plugins from registry
+  pulumicost plugin list --available`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if available {
+				return runPluginListAvailable(cmd)
+			}
 			return runPluginListCmd(cmd, verbose)
 		},
 	}
 
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Show detailed plugin information")
+	cmd.Flags().BoolVar(&available, "available", false, "List available plugins from registry")
 
 	return cmd
+}
+
+func runPluginListAvailable(cmd *cobra.Command) error {
+	entries, err := registry.GetAllPluginEntries()
+	if err != nil {
+		return fmt.Errorf("loading registry: %w", err)
+	}
+
+	if len(entries) == 0 {
+		cmd.Println("No plugins available in registry.")
+		return nil
+	}
+
+	const tabPadding = 2
+	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, tabPadding, ' ', 0)
+
+	fmt.Fprintln(w, "Name\tDescription\tRepository\tSecurity")
+	fmt.Fprintln(w, "----\t-----------\t----------\t--------")
+
+	for _, entry := range entries {
+		security := entry.SecurityLevel
+		if security == "" {
+			security = "community"
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", entry.Name, entry.Description, entry.Repository, security)
+	}
+	return w.Flush()
 }
 
 func runPluginListCmd(cmd *cobra.Command, verbose bool) error {

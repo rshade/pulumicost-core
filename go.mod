@@ -3,6 +3,7 @@ module github.com/rshade/pulumicost-core
 go 1.24.10
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/rs/zerolog v1.34.0
 	github.com/rshade/pulumicost-spec v0.2.0
 	github.com/spf13/cobra v1.10.1
