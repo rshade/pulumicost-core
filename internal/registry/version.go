@@ -20,7 +20,11 @@ type VersionConstraint struct {
 //   - "<2.0.0" - Less than
 //   - ">=1.0.0,<2.0.0" - Range (AND)
 //   - "~1.2.3" - Patch-level changes (>=1.2.3,<1.3.0)
-//   - "^1.2.3" - Minor-level changes (>=1.2.3,<2.0.0)
+// ParseVersionConstraint parses a semantic version constraint string and returns a VersionConstraint
+// containing the original raw string and the parsed semver.Constraints.
+// 
+// If s is empty, an error is returned. If parsing fails, an error describing the invalid constraint
+// and wrapping the underlying semver parse error is returned.
 func ParseVersionConstraint(s string) (*VersionConstraint, error) {
 	if s == "" {
 		return nil, errors.New("empty version constraint")
@@ -37,7 +41,11 @@ func ParseVersionConstraint(s string) (*VersionConstraint, error) {
 	}, nil
 }
 
-// SatisfiesConstraint checks if a version satisfies the constraint.
+// SatisfiesConstraint reports whether the provided semantic version satisfies the given VersionConstraint.
+// It accepts a version string (a leading "v" is ignored) and evaluates it against the parsed constraint.
+// If the constraint or its parsed representation is nil, an error is returned.
+// If the version cannot be parsed as a semantic version, an error describing the invalid version is returned.
+// The boolean result is true when the version satisfies the constraint, false otherwise.
 func SatisfiesConstraint(version string, constraint *VersionConstraint) (bool, error) {
 	if constraint == nil || constraint.Constraint == nil {
 		return false, fmt.Errorf("nil version constraint")
@@ -59,7 +67,11 @@ func SatisfiesConstraint(version string, constraint *VersionConstraint) (bool, e
 //
 //	-1 if v1 < v2
 //	 0 if v1 == v2
-//	 1 if v1 > v2
+// CompareVersions compares two semantic version strings and returns -1, 0, or 1.
+// It ignores a leading 'v' prefix on each version before parsing.
+// v1 and v2 are the version strings to compare.
+// The returned int is -1 if v1 < v2, 0 if v1 == v2, and 1 if v1 > v2.
+// An error is returned if either input is not a valid semantic version.
 func CompareVersions(v1, v2 string) (int, error) {
 	// Strip 'v' prefix if present
 	v1 = strings.TrimPrefix(v1, "v")
@@ -78,7 +90,8 @@ func CompareVersions(v1, v2 string) (int, error) {
 	return ver1.Compare(ver2), nil
 }
 
-// IsValidVersion checks if a string is a valid semantic version.
+// IsValidVersion reports whether the provided string is a valid semantic version.
+// A leading "v" is ignored; the function returns true if the remainder parses as a semantic version, false otherwise.
 func IsValidVersion(version string) bool {
 	version = strings.TrimPrefix(version, "v")
 	_, err := semver.NewVersion(version)

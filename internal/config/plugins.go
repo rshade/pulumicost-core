@@ -20,7 +20,9 @@ type InstalledPluginsConfig struct {
 	InstalledPlugins []InstalledPlugin `yaml:"installed_plugins" json:"installed_plugins"`
 }
 
-// pluginsConfigPath returns the path to the config file.
+// pluginsConfigPath returns the full path to the plugins configuration file at
+// $HOME/.pulumicost/config.yaml. It returns an error if the current user's home
+// directory cannot be determined.
 func pluginsConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -29,7 +31,7 @@ func pluginsConfigPath() (string, error) {
 	return filepath.Join(homeDir, ".pulumicost", "config.yaml"), nil
 }
 
-// LoadInstalledPlugins loads the list of installed plugins from config.
+// or the YAML cannot be parsed.
 func LoadInstalledPlugins() ([]InstalledPlugin, error) {
 	configPath, err := pluginsConfigPath()
 	if err != nil {
@@ -52,7 +54,11 @@ func LoadInstalledPlugins() ([]InstalledPlugin, error) {
 	return cfg.InstalledPlugins, nil
 }
 
-// SaveInstalledPlugins saves the list of installed plugins to config.
+// SaveInstalledPlugins saves the provided list of installed plugins into the user's PulumiCost config.
+// It ensures the config directory exists, preserves other top-level config keys, updates the
+// `installed_plugins` entry, and performs an atomic write to the config file.
+// The `plugins` parameter is the full list of plugins to persist.
+// It returns an error if the config path cannot be determined, if marshaling or file operations fail.
 func SaveInstalledPlugins(plugins []InstalledPlugin) error {
 	configPath, err := pluginsConfigPath()
 	if err != nil {
@@ -97,7 +103,9 @@ func SaveInstalledPlugins(plugins []InstalledPlugin) error {
 	return nil
 }
 
-// AddInstalledPlugin adds a plugin to the installed plugins list.
+// AddInstalledPlugin adds or updates the given plugin in the installed plugins configuration.
+// If a plugin with the same Name already exists it is replaced; otherwise the plugin is appended.
+// It persists the updated list and returns an error if loading or saving the configuration fails.
 func AddInstalledPlugin(plugin InstalledPlugin) error {
 	plugins, err := LoadInstalledPlugins()
 	if err != nil {
@@ -121,7 +129,8 @@ func AddInstalledPlugin(plugin InstalledPlugin) error {
 	return SaveInstalledPlugins(plugins)
 }
 
-// RemoveInstalledPlugin removes a plugin from the installed plugins list.
+// RemoveInstalledPlugin removes the installed plugin with the given name from the configuration.
+// It returns an error if loading the current configuration or saving the updated configuration fails.
 func RemoveInstalledPlugin(name string) error {
 	plugins, err := LoadInstalledPlugins()
 	if err != nil {
@@ -139,7 +148,8 @@ func RemoveInstalledPlugin(name string) error {
 	return SaveInstalledPlugins(newPlugins)
 }
 
-// GetInstalledPlugin returns a specific installed plugin by name.
+// GetInstalledPlugin retrieves the installed plugin with the given name.
+// It returns a pointer to the InstalledPlugin if found, or an error if the plugin is not present in the config or if the installed plugins cannot be loaded.
 func GetInstalledPlugin(name string) (*InstalledPlugin, error) {
 	plugins, err := LoadInstalledPlugins()
 	if err != nil {
@@ -155,7 +165,8 @@ func GetInstalledPlugin(name string) (*InstalledPlugin, error) {
 	return nil, fmt.Errorf("plugin %q not found in config", name)
 }
 
-// UpdateInstalledPluginVersion updates the version of an installed plugin.
+// UpdateInstalledPluginVersion updates the version of the installed plugin with the given name to the provided version.
+// It returns an error if the installed-plugins configuration cannot be loaded, if no plugin with the given name exists, or if saving the updated configuration fails.
 func UpdateInstalledPluginVersion(name, version string) error {
 	plugins, err := LoadInstalledPlugins()
 	if err != nil {
