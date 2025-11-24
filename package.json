@@ -10,11 +10,12 @@
     "docs:link-check": "node scripts/check-links.js",
     "lint": "npm run docs:lint && npm run docs:check-format"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "markdown-link-check": "^3.11.2",
     "markdownlint-cli2": "^0.19.0",
-    "prettier": "^3.1.0",
-    "markdown-link-check": "^3.11.2"
+    "prettier": "^3.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -862,6 +862,82 @@ func (p *MultiCloudPlugin) GetProjectedCost(
 }
 ```
 
+### SupportsProvider Interface
+
+The `SupportsProvider` interface is an optional interface that plugins can implement
+to indicate whether they support pricing for specific resource types. This allows
+clients to query plugin capabilities before making cost calculation requests.
+
+```go
+// SupportsProvider is an optional interface that plugins can implement.
+type SupportsProvider interface {
+    // Supports checks if the plugin supports pricing for the given resource.
+    Supports(ctx context.Context, req *pbc.SupportsRequest) (*pbc.SupportsResponse, error)
+}
+```
+
+**Implementation Example:**
+
+```go
+// MyPlugin implements both Plugin and SupportsProvider interfaces.
+type MyPlugin struct {
+    *pluginsdk.BasePlugin
+}
+
+// Supports checks if this plugin can provide pricing for the resource.
+func (p *MyPlugin) Supports(
+    ctx context.Context,
+    req *pbc.SupportsRequest,
+) (*pbc.SupportsResponse, error) {
+    resource := req.GetResource()
+
+    // Check if we support this provider
+    if resource.GetProvider() != "aws" {
+        return &pbc.SupportsResponse{
+            Supported: false,
+            Reason:    "Plugin only supports AWS resources",
+        }, nil
+    }
+
+    // Check if we support this resource type
+    supportedTypes := map[string]bool{
+        "aws:ec2:Instance": true,
+        "aws:rds:Instance": true,
+        "aws:s3:Bucket":    true,
+    }
+
+    if !supportedTypes[resource.GetResourceType()] {
+        return &pbc.SupportsResponse{
+            Supported: false,
+            Reason:    fmt.Sprintf("Resource type %s not supported", resource.GetResourceType()),
+        }, nil
+    }
+
+    return &pbc.SupportsResponse{
+        Supported: true,
+    }, nil
+}
+```
+
+**Default Behavior:**
+
+If your plugin does not implement `SupportsProvider`, PulumiCost Core will
+return a default response indicating the capability is not implemented:
+
+```go
+// Default response when SupportsProvider is not implemented
+&pbc.SupportsResponse{
+    Supported: false,
+    Reason:    "Supports capability not implemented by this plugin",
+}
+```
+
+**When to Implement:**
+
+- When you want clients to query supported resource types before making requests
+- When your plugin has specific region or resource type restrictions
+- When you want to provide meaningful error messages for unsupported resources
+
 ---
 
 ## Related Documentation
