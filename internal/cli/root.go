@@ -6,7 +6,7 @@ import (
 
 // NewRootCmd creates the root Cobra command for the pulumicost CLI and configures its subcommands.
 // The returned command has its Version set from ver, a persistent "debug" flag, usage examples, and
-// includes the "cost" subcommands (projected, actual) and the "plugin" subcommands (validate, list, init).
+// - config: init, set, get, list, and validate configuration commands.
 func NewRootCmd(ver string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pulumicost",
@@ -18,6 +18,9 @@ func NewRootCmd(ver string) *cobra.Command {
 
 	  # Get actual costs for the last 7 days
 	  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+
+	  # Install a plugin from registry
+	  pulumicost plugin install kubecost
 
 	  # List installed plugins
 	  pulumicost plugin list
@@ -54,6 +57,9 @@ func NewRootCmd(ver string) *cobra.Command {
 		NewPluginValidateCmd(),
 		NewPluginListCmd(),
 		NewPluginInitCmd(),
+		NewPluginInstallCmd(),
+		NewPluginUpdateCmd(),
+		NewPluginRemoveCmd(),
 	)
 
 	configCmd := &cobra.Command{

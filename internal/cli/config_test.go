@@ -353,3 +353,60 @@ func TestConfigCmdWrongArgs(t *testing.T) {
 	err = getCmd.Execute()
 	assert.Error(t, err)
 }
+
+func TestConfigGetCmdMapOutput(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+
+	// Set up config with plugins
+	cfg := config.New()
+	require.NoError(t, cfg.Set("plugins.aws.region", "us-west-2"))
+	require.NoError(t, cfg.Set("plugins.aws.account_id", "123456789"))
+	require.NoError(t, cfg.Save())
+
+	cmd := cli.NewConfigGetCmd()
+	var output bytes.Buffer
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+
+	// Test getting plugin section (returns map)
+	cmd.SetArgs([]string{"plugins.aws"})
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	mapOutput := output.String()
+	assert.Contains(t, mapOutput, "plugins.aws:")
+	assert.Contains(t, mapOutput, "region:")
+
+	// Test getting all plugins (returns map of PluginConfig)
+	output.Reset()
+	cmd.SetArgs([]string{"plugins"})
+	err = cmd.Execute()
+	require.NoError(t, err)
+
+	allPluginsOutput := output.String()
+	assert.Contains(t, allPluginsOutput, "plugins:")
+	assert.Contains(t, allPluginsOutput, "aws:")
+}
+
+func TestConfigGetCmdIntOutput(t *testing.T) {
+	_, cleanup := setupTestConfig(t)
+	defer cleanup()
+
+	// Set up config with precision (integer)
+	cfg := config.New()
+	require.NoError(t, cfg.Set("output.precision", "4"))
+	require.NoError(t, cfg.Save())
+
+	cmd := cli.NewConfigGetCmd()
+	var output bytes.Buffer
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+
+	// Test getting integer value
+	cmd.SetArgs([]string{"output.precision"})
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	assert.Contains(t, output.String(), "4")
+}
