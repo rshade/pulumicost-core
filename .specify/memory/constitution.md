@@ -1,6 +1,29 @@
 <!--
-Sync Impact Report - Constitution v1.0.0 (Initial Ratification)
-===============================================================
+Sync Impact Report - Constitution v1.1.0 (Docstring Coverage Requirement)
+==========================================================================
+
+Version Change: 1.0.0 → 1.1.0
+Change Type: New quality gate added (MINOR)
+
+Changes:
+- Added Docstring Coverage quality gate (minimum 80%)
+- Enforces Go package and exported symbol documentation
+
+Sections Modified:
+- Quality Gates (added docstring coverage requirement)
+
+Templates Requiring Updates:
+- None (quality gate addition doesn't affect templates)
+
+Follow-up TODOs:
+- None
+
+Date: 2025-11-24
+
+---
+
+Previous Sync Impact Report - Constitution v1.0.0 (Initial Ratification)
+=========================================================================
 
 Version Change: [TEMPLATE] → 1.0.0
 Change Type: Initial ratification (MAJOR)
@@ -98,6 +121,7 @@ All pull requests MUST pass the following automated checks before merging:
 - **Security**: `govulncheck` reports no high/critical vulnerabilities
 - **Formatting**: All Go code formatted with `gofmt` and `goimports`
 - **Documentation**: Markdown linting passes (`markdownlint-cli2`)
+- **Docstring Coverage**: Minimum 80% Go package and exported symbol documentation
 - **Cross-Platform Build**: Successful compilation on Linux, macOS, Windows
 
 ## Multi-Repo Governance
@@ -154,4 +178,4 @@ project-specific patterns, refer to `CLAUDE.md` in the repository root. That
 file provides operational context while this constitution defines
 non-negotiable architectural principles.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-11-06
+**Version**: 1.1.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-11-24
