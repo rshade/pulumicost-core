@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCostProjectedCmd creates the cost projected command for calculating estimated costs.
+// and --filter.
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 
