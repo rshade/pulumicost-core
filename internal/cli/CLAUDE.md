@@ -109,6 +109,25 @@ Plugin commands interact with the registry:
 - Use `tabwriter` for table formatting with consistent padding
 - Support multiple output formats: table, json, ndjson
 
+### Error Display Pattern
+
+Cost commands display errors in two places:
+
+1. **Inline in Results**: Errors appear in the Notes column with "ERROR:" prefix
+2. **Summary After Table**: Aggregated error summary displayed after results
+
+```go
+// Display error summary after results
+if resultWithErrors.HasErrors() {
+    cmd.Println() // Blank line before summary
+    cmd.Println("ERRORS")
+    cmd.Println("======")
+    cmd.Print(resultWithErrors.ErrorSummary())
+}
+```
+
+This dual display ensures users see both individual resource failures and overall error statistics.
+
 ### Date/Time Handling
 
 - Support multiple formats: "2006-01-02", RFC3339

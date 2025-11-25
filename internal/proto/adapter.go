@@ -5,12 +5,134 @@ package proto
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const (
+	// maxErrorsToDisplay is the maximum number of errors to show in summary before truncating.
+	maxErrorsToDisplay = 5
+)
+
+// ErrorDetail captures information about a failed resource cost calculation.
+type ErrorDetail struct {
+	ResourceType string
+	ResourceID   string
+	PluginName   string
+	Error        error
+	Timestamp    time.Time
+}
+
+// CostResultWithErrors wraps results and any errors encountered during cost calculation.
+type CostResultWithErrors struct {
+	Results []*CostResult
+	Errors  []ErrorDetail
+}
+
+// HasErrors returns true if any errors were encountered during cost calculation.
+func (c *CostResultWithErrors) HasErrors() bool {
+	return len(c.Errors) > 0
+}
+
+// ErrorSummary returns a human-readable summary of errors.
+// Truncates the output after 5 errors to keep it readable.
+func (c *CostResultWithErrors) ErrorSummary() string {
+	if !c.HasErrors() {
+		return ""
+	}
+
+	var summary strings.Builder
+	summary.WriteString(fmt.Sprintf("%d resource(s) failed:\n", len(c.Errors)))
+
+	for i, err := range c.Errors {
+		if i >= maxErrorsToDisplay {
+			summary.WriteString(fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay))
+			break
+		}
+		summary.WriteString(fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error))
+	}
+
+	return summary.String()
+}
+
+// GetProjectedCostWithErrors calculates projected costs for resources with error tracking.
+// GetProjectedCostWithErrors queries the provided CostSourceClient for projected costs for each resource
+// and aggregates both successful CostResult entries and per-resource error details.
+//
+// GetProjectedCostWithErrors calls the client's GetProjectedCost once per resource in `resources`.
+// For each resource, a successful response appends its returned results to the aggregated Results slice.
+// If a per-resource RPC fails, an ErrorDetail is recorded in Errors (including timestamp and pluginName)
+// and a placeholder CostResult with an error note is appended to Results. If a call succeeds but returns
+// no results, a zero-cost placeholder CostResult is appended.
+//
+// Parameters:
+//   - ctx: request context passed to the client calls.
+//   - client: the CostSourceClient used to fetch projected cost data.
+//   - pluginName: the name of the plugin making the requests; recorded on ErrorDetail entries.
+//   - resources: slice of ResourceDescriptor values to query.
+//
+// Returns:
+//
+//	A pointer to a CostResultWithErrors containing a Results slice with one or more CostResult entries
+//	(including placeholders for failures or empty responses) and an Errors slice with one ErrorDetail per
+//	resource that experienced an RPC error.
+func GetProjectedCostWithErrors(
+	ctx context.Context,
+	client CostSourceClient,
+	pluginName string,
+	resources []*ResourceDescriptor,
+) *CostResultWithErrors {
+	result := &CostResultWithErrors{
+		Results: []*CostResult{},
+		Errors:  []ErrorDetail{},
+	}
+
+	for _, resource := range resources {
+		req := &GetProjectedCostRequest{
+			Resources: []*ResourceDescriptor{resource},
+		}
+
+		resp, err := client.GetProjectedCost(ctx, req)
+		if err != nil {
+			// Track error instead of silent failure
+			result.Errors = append(result.Errors, ErrorDetail{
+				ResourceType: resource.Type,
+				ResourceID:   resource.Type, // Use type as ID for now
+				PluginName:   pluginName,
+				Error:        fmt.Errorf("plugin call failed: %w", err),
+				Timestamp:    time.Now(),
+			})
+
+			// Add placeholder result with error note
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+				Notes:       fmt.Sprintf("ERROR: %v", err),
+			})
+			continue
+		}
+
+		// Add successful results
+		if len(resp.Results) > 0 {
+			result.Results = append(result.Results, resp.Results...)
+		} else {
+			// Add empty result if no results returned
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+			})
+		}
+	}
+
+	return result
+}
 
 // Empty represents an empty request/response for compatibility with existing engine code.
 type Empty struct{}

@@ -1,19 +1,25 @@
 <!--
-Sync Impact Report - Constitution v1.1.0 (Docstring Coverage Requirement)
-==========================================================================
+Sync Impact Report - Constitution v1.1.0 (Quality Gate Enhancements)
+====================================================================
 
 Version Change: 1.0.0 → 1.1.0
-Change Type: New quality gate added (MINOR)
+Change Type: Expanded guidance (MINOR)
 
-Changes:
+Changes Made:
 - Added Docstring Coverage quality gate (minimum 80%)
 - Enforces Go package and exported symbol documentation
+- Added "Linting Protocol" subsection under Quality Gates
+- Mandates `make lint` and `make test` before claiming task complete
+- Prohibits `.golangci.yml` modifications without approval
 
-Sections Modified:
-- Quality Gates (added docstring coverage requirement)
+Rationale:
+- Ensures comprehensive Go documentation for maintainability
+- Repeated lint failures in CI/CD from incomplete local verification
+- Enforces quality gate compliance at development time
+- Prevents wasted CI cycles from preventable lint errors
 
 Templates Requiring Updates:
-- None (quality gate addition doesn't affect templates)
+- None (quality gate additions don't affect templates)
 
 Follow-up TODOs:
 - None
@@ -22,8 +28,8 @@ Date: 2025-11-24
 
 ---
 
-Previous Sync Impact Report - Constitution v1.0.0 (Initial Ratification)
-=========================================================================
+Previous Version - Constitution v1.0.0 (Initial Ratification)
+==============================================================
 
 Version Change: [TEMPLATE] → 1.0.0
 Change Type: Initial ratification (MAJOR)
@@ -123,6 +129,14 @@ All pull requests MUST pass the following automated checks before merging:
 - **Documentation**: Markdown linting passes (`markdownlint-cli2`)
 - **Docstring Coverage**: Minimum 80% Go package and exported symbol documentation
 - **Cross-Platform Build**: Successful compilation on Linux, macOS, Windows
+
+### Linting Protocol
+
+**Before claiming any task complete**: ALWAYS run `make lint` and `make test`.
+Never push code or claim success if either fails.
+
+**DO NOT** modify `.golangci.yml` without explicit approval. The project uses
+maratori's golden config v2.5.0 intentionally for strict quality enforcement.
 
 ## Multi-Repo Governance
 
