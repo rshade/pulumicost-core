@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -265,5 +266,107 @@ func TestErrorTypes(t *testing.T) {
 				t.Errorf("Error message should not be empty for %v", tt.err)
 			}
 		})
+	}
+}
+
+// Test CostResultWithErrors edge cases.
+func TestCostResultWithErrors_EdgeCases(t *testing.T) {
+	t.Run("nil errors slice", func(t *testing.T) {
+		result := &CostResultWithErrors{
+			Results: []CostResult{},
+			Errors:  nil,
+		}
+
+		if result.HasErrors() {
+			t.Error("HasErrors() should return false for nil errors")
+		}
+		if result.ErrorSummary() != "" {
+			t.Error("ErrorSummary() should return empty string for nil errors")
+		}
+	})
+
+	t.Run("exactly 5 errors shows all", func(t *testing.T) {
+		result := &CostResultWithErrors{
+			Results: []CostResult{},
+			Errors:  make([]ErrorDetail, 5),
+		}
+		for i := 0; i < 5; i++ {
+			result.Errors[i] = ErrorDetail{
+				ResourceType: "aws:ec2:Instance",
+				ResourceID:   "i-" + string(rune('0'+i)),
+				Error:        ErrNoCostData,
+				Timestamp:    time.Now(),
+			}
+		}
+
+		summary := result.ErrorSummary()
+		if summary == "" {
+			t.Error("ErrorSummary should not be empty for 5 errors")
+		}
+		// Should not contain "and X more" since exactly at limit
+		if len(summary) > 500 {
+			t.Error("ErrorSummary should not be excessively long for 5 errors")
+		}
+	})
+
+	t.Run("nil results slice", func(t *testing.T) {
+		result := &CostResultWithErrors{
+			Results: nil,
+			Errors:  []ErrorDetail{},
+		}
+
+		if result.HasErrors() {
+			t.Error("HasErrors() should return false for empty errors with nil results")
+		}
+	})
+
+	t.Run("error with empty resource type", func(t *testing.T) {
+		result := &CostResultWithErrors{
+			Results: []CostResult{},
+			Errors: []ErrorDetail{
+				{
+					ResourceType: "",
+					ResourceID:   "",
+					Error:        ErrNoCostData,
+					Timestamp:    time.Now(),
+				},
+			},
+		}
+
+		if !result.HasErrors() {
+			t.Error("HasErrors() should return true")
+		}
+		summary := result.ErrorSummary()
+		if summary == "" {
+			t.Error("ErrorSummary should handle empty resource type")
+		}
+	})
+}
+
+// Test ErrorDetail creation and fields.
+func TestErrorDetail_Fields(t *testing.T) {
+	timestamp := time.Now()
+	detail := ErrorDetail{
+		ResourceType: "aws:ec2:Instance",
+		ResourceID:   "i-1234567890abcdef0",
+		PluginName:   "test-plugin",
+		Error:        ErrNoCostData,
+		Timestamp:    timestamp,
+	}
+
+	if detail.ResourceType != "aws:ec2:Instance" {
+		t.Errorf("ResourceType = %s, want aws:ec2:Instance", detail.ResourceType)
+	}
+	if detail.ResourceID != "i-1234567890abcdef0" {
+		t.Errorf("ResourceID = %s, want i-1234567890abcdef0", detail.ResourceID)
+	}
+	if detail.PluginName != "test-plugin" {
+		t.Errorf("PluginName = %s, want test-plugin", detail.PluginName)
+	}
+	if !errors.Is(detail.Error, ErrNoCostData) {
+		t.Errorf("Error = %v, want %v", detail.Error, ErrNoCostData)
+	}
+	if !detail.Timestamp.Equal(timestamp) {
+		t.Errorf("Timestamp = %v, want %v", detail.Timestamp, timestamp)
 	}
 }

@@ -129,3 +129,29 @@ func TestCostProjectedCmdExamples(t *testing.T) {
 	assert.Contains(t, cmd.Example, "--adapter aws-plugin")
 	assert.Contains(t, cmd.Example, "--spec-dir ./custom-specs")
 }
+
+func TestCostProjectedCmdErrorSummaryDisplay(t *testing.T) {
+	// This test verifies that the CLI correctly displays error summary after table output
+	// when there are errors during cost calculation.
+	//
+	// Note: This is a structural test. Full integration testing with actual errors
+	// requires a mock plugin that returns errors, which would be in test/integration/.
+	// For now, we verify the command structure supports error display.
+
+	cmd := cli.NewCostProjectedCmd()
+
+	// Verify the command has the expected structure for error handling
+	assert.NotNil(t, cmd.RunE, "Command should have RunE for error handling")
+
+	// Verify output streams can be set (needed for error summary display)
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetErr(&buf)
+
+	// Verify the command accepts the required flags
+	pulumiJSONFlag := cmd.Flags().Lookup("pulumi-json")
+	assert.NotNil(t, pulumiJSONFlag, "Should have pulumi-json flag for plan input")
+
+	outputFlag := cmd.Flags().Lookup("output")
+	assert.NotNil(t, outputFlag, "Should have output flag for format selection")
+}

@@ -19,6 +19,16 @@ const (
 	filterKeyValueParts = 2 // For "key=value" pairs
 )
 
+// costActualParams holds the parameters for the actual cost command execution.
+type costActualParams struct {
+	planPath string
+	adapter  string
+	output   string
+	fromStr  string
+	toStr    string
+	groupBy  string
+}
+
 // NewCostActualCmd returns a *cobra.Command that fetches actual historical costs from cloud provider billing APIs.
 //
 // The command accepts a Pulumi plan JSON and queries provider billing data for the specified time range.
@@ -64,60 +74,15 @@ func NewCostActualCmd() *cobra.Command {
   # Use RFC3339 timestamps
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			ctx := context.Background()
-
-			plan, err := ingest.LoadPulumiPlan(planPath)
-			if err != nil {
-				return fmt.Errorf("loading Pulumi plan: %w", err)
+			params := costActualParams{
+				planPath: planPath,
+				adapter:  adapter,
+				output:   output,
+				fromStr:  fromStr,
+				toStr:    toStr,
+				groupBy:  groupBy,
 			}
-
-			pulumiResources := plan.GetResources()
-			resources, err := ingest.MapResources(pulumiResources)
-			if err != nil {
-				return fmt.Errorf("mapping resources: %w", err)
-			}
-
-			// Default to now if --to is not provided
-			if toStr == "" {
-				toStr = time.Now().Format(time.RFC3339)
-			}
-
-			from, to, err := ParseTimeRange(fromStr, toStr)
-			if err != nil {
-				return fmt.Errorf("parsing time range: %w", err)
-			}
-
-			reg := registry.NewDefault()
-			clients, cleanup, err := reg.Open(ctx, adapter)
-			if err != nil {
-				return fmt.Errorf("opening plugins: %w", err)
-			}
-			defer cleanup()
-
-			eng := engine.New(clients, nil)
-
-			// Parse tags from groupBy if it's in tag:key=value format
-			tags, actualGroupBy := parseTagFilter(groupBy)
-
-			request := engine.ActualCostRequest{
-				Resources: resources,
-				From:      from,
-				To:        to,
-				Adapter:   adapter,
-				GroupBy:   actualGroupBy,
-				Tags:      tags,
-			}
-
-			results, err := eng.GetActualCostWithOptions(ctx, request)
-			if err != nil {
-				return fmt.Errorf("fetching actual costs: %w", err)
-			}
-
-			// Use configuration-aware output format selection
-			finalOutput := config.GetOutputFormat(output)
-			outputFormat := engine.OutputFormat(finalOutput)
-
-			return renderActualCostOutput(cmd.OutOrStdout(), outputFormat, results, actualGroupBy)
+			return executeCostActual(cmd, params)
 		},
 	}
 
@@ -136,6 +101,77 @@ func NewCostActualCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("from")
 
 	return cmd
+}
+
+// executeCostActual executes the actual cost command with the given parameters.
+func executeCostActual(cmd *cobra.Command, params costActualParams) error {
+	ctx := context.Background()
+
+	plan, err := ingest.LoadPulumiPlan(params.planPath)
+	if err != nil {
+		return fmt.Errorf("loading Pulumi plan: %w", err)
+	}
+
+	pulumiResources := plan.GetResources()
+	resources, err := ingest.MapResources(pulumiResources)
+	if err != nil {
+		return fmt.Errorf("mapping resources: %w", err)
+	}
+
+	// Default to now if --to is not provided
+	toStr := params.toStr
+	if toStr == "" {
+		toStr = time.Now().Format(time.RFC3339)
+	}
+
+	from, to, err := ParseTimeRange(params.fromStr, toStr)
+	if err != nil {
+		return fmt.Errorf("parsing time range: %w", err)
+	}
+
+	reg := registry.NewDefault()
+	clients, cleanup, err := reg.Open(ctx, params.adapter)
+	if err != nil {
+		return fmt.Errorf("opening plugins: %w", err)
+	}
+	defer cleanup()
+
+	eng := engine.New(clients, nil)
+
+	// Parse tags from groupBy if it's in tag:key=value format
+	tags, actualGroupBy := parseTagFilter(params.groupBy)
+
+	request := engine.ActualCostRequest{
+		Resources: resources,
+		From:      from,
+		To:        to,
+		Adapter:   params.adapter,
+		GroupBy:   actualGroupBy,
+		Tags:      tags,
+	}
+
+	resultWithErrors, err := eng.GetActualCostWithOptionsAndErrors(ctx, request)
+	if err != nil {
+		return fmt.Errorf("fetching actual costs: %w", err)
+	}
+
+	// Use configuration-aware output format selection
+	finalOutput := config.GetOutputFormat(params.output)
+	outputFormat := engine.OutputFormat(finalOutput)
+
+	if renderErr := renderActualCostOutput(cmd.OutOrStdout(), outputFormat, resultWithErrors.Results, actualGroupBy); renderErr != nil {
+		return renderErr
+	}
+
+	// Display error summary after results if there were errors
+	if resultWithErrors.HasErrors() {
+		cmd.Println() // Add blank line before error summary
+		cmd.Println("ERRORS")
+		cmd.Println("======")
+		cmd.Print(resultWithErrors.ErrorSummary())
+	}
+
+	return nil
 }
 
 // ParseTimeRange parses the provided from and to date strings into time values and validates that the range is chronological.

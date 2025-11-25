@@ -742,3 +742,146 @@ func TestCurrencySymbolMapping(t *testing.T) {
 	err := engine.RenderCrossProviderAggregation(io.Discard, engine.OutputJSON, aggregations, engine.GroupByDaily)
 	require.NoError(t, err)
 }
+
+func TestGetProjectedCostWithErrorsReturnType(t *testing.T) {
+	// Test that GetProjectedCostWithErrors returns *CostResultWithErrors
+	eng := engine.New(nil, nil)
+
+	result, err := eng.GetProjectedCostWithErrors(context.Background(), []engine.ResourceDescriptor{
+		{
+			Type: "aws:ec2:Instance",
+			ID:   "i-123",
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, result, "Result should not be nil")
+
+	// Verify the result contains expected fields
+	assert.NotNil(t, result.Results, "Results slice should not be nil")
+	assert.NotNil(t, result.Errors, "Errors slice should not be nil")
+	assert.Len(t, result.Results, 1, "Should have one result for the input resource")
+
+	// Verify the result has the expected resource info
+	assert.Equal(t, "aws:ec2:Instance", result.Results[0].ResourceType)
+	assert.Equal(t, "i-123", result.Results[0].ResourceID)
+	assert.Equal(t, "none", result.Results[0].Adapter, "Should have 'none' adapter when no plugins")
+	assert.Contains(t, result.Results[0].Notes, "No pricing information available")
+
+	// Verify HasErrors works correctly
+	assert.False(t, result.HasErrors(), "Should not have errors for this scenario")
+	assert.Empty(t, result.ErrorSummary(), "Error summary should be empty when no errors")
+}
+
+func TestGetProjectedCostWithErrorsMultipleResources(t *testing.T) {
+	// Test with multiple resources to ensure all are processed
+	eng := engine.New(nil, nil)
+
+	resources := []engine.ResourceDescriptor{
+		{Type: "aws:ec2:Instance", ID: "i-123"},
+		{Type: "aws:rds:Instance", ID: "db-456"},
+		{Type: "azure:compute:VirtualMachine", ID: "vm-789"},
+	}
+
+	result, err := eng.GetProjectedCostWithErrors(context.Background(), resources)
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Len(t, result.Results, 3, "Should have one result per resource")
+	assert.Empty(t, result.Errors, "Should have no errors with no plugins")
+
+	// Verify each resource type is preserved
+	for i, res := range resources {
+		assert.Equal(t, res.Type, result.Results[i].ResourceType)
+		assert.Equal(t, res.ID, result.Results[i].ResourceID)
+	}
+}
+
+func TestGetActualCostWithOptionsAndErrors(t *testing.T) {
+	t.Run("returns results for resources without plugins", func(t *testing.T) {
+		eng := engine.New(nil, nil)
+		request := engine.ActualCostRequest{
+			Resources: []engine.ResourceDescriptor{
+				{Type: "aws:ec2:Instance", ID: "i-123"},
+				{Type: "aws:rds:Instance", ID: "db-456"},
+			},
+			From: time.Now().Add(-24 * time.Hour),
+			To:   time.Now(),
+		}
+
+		result, err := eng.GetActualCostWithOptionsAndErrors(context.Background(), request)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Len(t, result.Results, 2, "Should have one result per resource")
+		assert.False(t, result.HasErrors(), "Should have no errors with no plugins")
+	})
+
+	t.Run("filters resources by tags", func(t *testing.T) {
+		eng := engine.New(nil, nil)
+		request := engine.ActualCostRequest{
+			Resources: []engine.ResourceDescriptor{
+				{
+					Type: "aws:ec2:Instance",
+					ID:   "i-123",
+					Properties: map[string]interface{}{
+						"env": "prod",
+					},
+				},
+				{
+					Type: "aws:ec2:Instance",
+					ID:   "i-456",
+					Properties: map[string]interface{}{
+						"env": "dev",
+					},
+				},
+			},
+			From: time.Now().Add(-24 * time.Hour),
+			To:   time.Now(),
+			Tags: map[string]string{"env": "prod"},
+		}
+
+		result, err := eng.GetActualCostWithOptionsAndErrors(context.Background(), request)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Len(t, result.Results, 1, "Should only include prod resources")
+		assert.Equal(t, "i-123", result.Results[0].ResourceID)
+	})
+
+	t.Run("empty resources returns empty results", func(t *testing.T) {
+		eng := engine.New(nil, nil)
+		request := engine.ActualCostRequest{
+			Resources: []engine.ResourceDescriptor{},
+			From:      time.Now().Add(-24 * time.Hour),
+			To:        time.Now(),
+		}
+
+		result, err := eng.GetActualCostWithOptionsAndErrors(context.Background(), request)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Len(t, result.Results, 0)
+		assert.False(t, result.HasErrors())
+	})
+
+	t.Run("groups results when groupBy is specified", func(t *testing.T) {
+		eng := engine.New(nil, nil)
+		request := engine.ActualCostRequest{
+			Resources: []engine.ResourceDescriptor{
+				{Type: "aws:ec2:Instance", ID: "i-123"},
+				{Type: "aws:ec2:Instance", ID: "i-456"},
+			},
+			From:    time.Now().Add(-24 * time.Hour),
+			To:      time.Now(),
+			GroupBy: "type",
+		}
+
+		result, err := eng.GetActualCostWithOptionsAndErrors(context.Background(), request)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		// Results should be grouped by type
+		assert.GreaterOrEqual(t, len(result.Results), 1)
+	})
+}
