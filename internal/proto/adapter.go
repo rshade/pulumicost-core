@@ -61,7 +61,26 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 }
 
 // GetProjectedCostWithErrors calculates projected costs for resources with error tracking.
-// It returns results for all resources (with placeholders for failures) and error details.
+// GetProjectedCostWithErrors queries the provided CostSourceClient for projected costs for each resource
+// and aggregates both successful CostResult entries and per-resource error details.
+//
+// GetProjectedCostWithErrors calls the client's GetProjectedCost once per resource in `resources`.
+// For each resource, a successful response appends its returned results to the aggregated Results slice.
+// If a per-resource RPC fails, an ErrorDetail is recorded in Errors (including timestamp and pluginName)
+// and a placeholder CostResult with an error note is appended to Results. If a call succeeds but returns
+// no results, a zero-cost placeholder CostResult is appended.
+//
+// Parameters:
+//   - ctx: request context passed to the client calls.
+//   - client: the CostSourceClient used to fetch projected cost data.
+//   - pluginName: the name of the plugin making the requests; recorded on ErrorDetail entries.
+//   - resources: slice of ResourceDescriptor values to query.
+//
+// Returns:
+//
+//	A pointer to a CostResultWithErrors containing a Results slice with one or more CostResult entries
+//	(including placeholders for failures or empty responses) and an Errors slice with one ErrorDetail per
+//	resource that experienced an RPC error.
 func GetProjectedCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,

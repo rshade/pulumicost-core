@@ -19,6 +19,8 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 - `make dev` - Build and run without arguments
 - `make clean` - Remove build artifacts
 
+**IMPORTANT** Always run `make lint` and `make test` before claiming success. See `.specify/memory/constitution.md` for quality gate requirements.
+
 ## Go Version Information
 
 **Project Go Version**: 1.25.4

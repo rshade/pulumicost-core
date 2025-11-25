@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCostProjectedCmd creates the cost projected command for calculating estimated costs.
+// NewCostProjectedCmd creates the "projected" subcommand that calculates estimated costs from a Pulumi plan.
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 

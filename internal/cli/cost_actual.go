@@ -45,7 +45,11 @@ type costActualParams struct {
 // for resources declared in a Pulumi plan by querying cloud provider billing APIs.
 // The command accepts a time range, supports grouping (resource, type, provider, date, daily, monthly)
 // and tag-based filtering (`tag:key=value`), opens adapter plugins as needed, and renders results
-// using the configured output format (table, json, or ndjson).
+// NewCostActualCmd creates the "actual" subcommand that fetches historical cloud provider billing costs for resources.
+// The command accepts flags for the Pulumi preview JSON path (--pulumi-json, required), start date (--from, required),
+// optional end date (--to, defaults to now), optional adapter plugin (--adapter), output format (--output, defaults
+// to the configured default), and grouping or tag filter (--group-by). It returns a configured *cobra.Command ready
+// to be added to the CLI.
 func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
@@ -103,7 +107,21 @@ func NewCostActualCmd() *cobra.Command {
 	return cmd
 }
 
-// executeCostActual executes the actual cost command with the given parameters.
+// executeCostActual executes the "actual" cost workflow using the provided command context and parameters.
+// It loads and maps a Pulumi plan, resolves the query time range (defaulting the end to now if omitted),
+// opens registry adapters, requests actual cost data from the engine, renders the results, and prints an
+// error summary if any per-resource errors occurred.
+//
+// Parameters:
+//   - cmd: the Cobra command used to access output streams and printing helpers.
+//   - params: command parameters including the Pulumi plan path, adapter name, output format, time range, and grouping/tag filter.
+//
+// Returns an error when any step fails, including but not limited to:
+//   - loading or mapping the Pulumi plan,
+//   - parsing the from/to time range,
+//   - opening adapter plugins,
+//   - fetching actual cost data from the engine,
+//   - rendering the output.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	ctx := context.Background()
 

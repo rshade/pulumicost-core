@@ -14,7 +14,14 @@ import (
 var Logger zerolog.Logger
 
 // InitLogger initializes the global zerolog logger with the specified configuration.
-// It configures output format, level, and optional file logging.
+// InitLogger initializes the package-level Logger with the specified log level and optional file output.
+// It sets the global Logger, configures console output, and—when logToFile is true—ensures the log directory
+// exists and opens the configured log file (falling back to "/tmp/pulumicost.log" if none is set).
+//
+// level is parsed into a zerolog level and defaults to InfoLevel on parse error.
+// logToFile enables writing logs to the configured file in addition to the console.
+//
+// It returns an error if directory creation or opening the log file fails, otherwise nil.
 func InitLogger(level string, logToFile bool) error {
 	// Parse log level
 	lvl, err := zerolog.ParseLevel(level)
@@ -69,7 +76,8 @@ func InitLogger(level string, logToFile bool) error {
 	return nil
 }
 
-// SetLogLevel sets the global log level.
+// SetLogLevel sets the package global Logger's level to the value parsed from level.
+// If the provided level cannot be parsed, the logger level is set to zerolog.InfoLevel.
 func SetLogLevel(level string) {
 	lvl, err := zerolog.ParseLevel(level)
 	if err != nil {
@@ -83,7 +91,10 @@ func GetLogger() zerolog.Logger {
 	return Logger
 }
 
-//nolint:gochecknoinits // init is required for default logger initialization
+// init initializes the package-level default logger to info level with console output only.
+// It calls InitLogger("info", false) and deliberately ignores any returned error.
+//
+//nolint:gochecknoinits // Package-level logger initialization required for default setup
 func init() {
 	// Default to info level, console only
 	_ = InitLogger("info", false)
