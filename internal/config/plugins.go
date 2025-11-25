@@ -31,7 +31,8 @@ func pluginsConfigPath() (string, error) {
 	return filepath.Join(homeDir, ".pulumicost", "config.yaml"), nil
 }
 
-// or the YAML cannot be parsed.
+// LoadInstalledPlugins loads the list of installed plugins from the config file.
+// It returns an empty list if the file does not exist, or an error if the YAML cannot be parsed.
 func LoadInstalledPlugins() ([]InstalledPlugin, error) {
 	configPath, err := pluginsConfigPath()
 	if err != nil {
@@ -66,7 +67,8 @@ func SaveInstalledPlugins(plugins []InstalledPlugin) error {
 	}
 
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
+	err = os.MkdirAll(filepath.Dir(configPath), 0700)
+	if err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -196,7 +198,10 @@ func GetMissingPlugins() ([]InstalledPlugin, error) {
 		return nil, err
 	}
 
-	homeDir, _ := os.UserHomeDir()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get home directory: %w", err)
+	}
 	pluginsDir := filepath.Join(homeDir, ".pulumicost", "plugins")
 
 	var missing []InstalledPlugin

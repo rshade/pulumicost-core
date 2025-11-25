@@ -106,3 +106,58 @@ func TestPluginUpdateCmd_DryRun(t *testing.T) {
 		t.Error("expected error for non-installed plugin even with dry-run")
 	}
 }
+
+func TestPluginUpdateCmd_VersionFlag(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "update", "test-plugin", "--version", "v2.0.0"})
+
+	// Should error because plugin not installed
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for non-installed plugin")
+	}
+}
+
+func TestPluginUpdateCmd_PluginDirFlag(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "update", "test-plugin", "--plugin-dir", tmpDir})
+
+	// Should error because plugin not installed
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for non-installed plugin")
+	}
+}
+
+func TestPluginUpdateCmd_AllFlagsCombined(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	rootCmd.SetOut(&stdout)
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs(
+		[]string{"plugin", "update", "test-plugin", "--dry-run", "--version", "v1.0.0", "--plugin-dir", tmpDir},
+	)
+
+	// Should error because plugin not installed
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for non-installed plugin")
+	}
+}

@@ -20,9 +20,10 @@ type VersionConstraint struct {
 //   - "<2.0.0" - Less than
 //   - ">=1.0.0,<2.0.0" - Range (AND)
 //   - "~1.2.3" - Patch-level changes (>=1.2.3,<1.3.0)
+//
 // ParseVersionConstraint parses a semantic version constraint string and returns a VersionConstraint
 // containing the original raw string and the parsed semver.Constraints.
-// 
+//
 // If s is empty, an error is returned. If parsing fails, an error describing the invalid constraint
 // and wrapping the underlying semver parse error is returned.
 func ParseVersionConstraint(s string) (*VersionConstraint, error) {
@@ -48,7 +49,7 @@ func ParseVersionConstraint(s string) (*VersionConstraint, error) {
 // The boolean result is true when the version satisfies the constraint, false otherwise.
 func SatisfiesConstraint(version string, constraint *VersionConstraint) (bool, error) {
 	if constraint == nil || constraint.Constraint == nil {
-		return false, fmt.Errorf("nil version constraint")
+		return false, errors.New("nil version constraint")
 	}
 
 	// Strip 'v' prefix if present
@@ -67,6 +68,7 @@ func SatisfiesConstraint(version string, constraint *VersionConstraint) (bool, e
 //
 //	-1 if v1 < v2
 //	 0 if v1 == v2
+//
 // CompareVersions compares two semantic version strings and returns -1, 0, or 1.
 // It ignores a leading 'v' prefix on each version before parsing.
 // v1 and v2 are the version strings to compare.

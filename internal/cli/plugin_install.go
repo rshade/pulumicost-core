@@ -8,6 +8,7 @@ import (
 	"github.com/rshade/pulumicost-core/internal/registry"
 )
 
+// NewPluginInstallCmd creates the install command for installing plugins from registry or URL.
 // On success the command prints the installed plugin's name, version, and path.
 func NewPluginInstallCmd() *cobra.Command {
 	var (

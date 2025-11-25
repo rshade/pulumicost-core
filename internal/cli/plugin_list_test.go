@@ -95,3 +95,35 @@ func TestPluginListCmdOutput(t *testing.T) {
 	err := cmd.RunE(cmd, []string{})
 	require.NoError(t, err)
 }
+
+func TestPluginListCmdAvailable(t *testing.T) {
+	var buf bytes.Buffer
+	cmd := cli.NewPluginListCmd()
+	cmd.SetOut(&buf)
+	cmd.SetErr(&buf)
+	cmd.SetArgs([]string{"--available"})
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	output := buf.String()
+	// Check that registry plugins are listed
+	assert.Contains(t, output, "Name")
+	assert.Contains(t, output, "Description")
+	assert.Contains(t, output, "Repository")
+	assert.Contains(t, output, "Security")
+	// Check for known registry plugins
+	assert.Contains(t, output, "kubecost")
+	assert.Contains(t, output, "aws-public")
+}
+
+func TestPluginListCmdAvailableFlag(t *testing.T) {
+	cmd := cli.NewPluginListCmd()
+
+	// Check available flag
+	availableFlag := cmd.Flags().Lookup("available")
+	assert.NotNil(t, availableFlag)
+	assert.Equal(t, "bool", availableFlag.Value.Type())
+	assert.Equal(t, "false", availableFlag.DefValue)
+	assert.Contains(t, availableFlag.Usage, "List available plugins from registry")
+}

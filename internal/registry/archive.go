@@ -39,7 +39,7 @@ func ExtractArchive(archivePath, destDir string) error {
 }
 
 // extractTarGz extracts the contents of a gzip-compressed tar archive into destDir.
-// 
+//
 // It opens the archive at archivePath, iterates over tar entries, and delegates each
 // entry to extractTarEntry for writing to disk. The function returns an error if the
 // archive file cannot be opened, the gzip reader cannot be created, a tar entry cannot
@@ -105,12 +105,12 @@ func extractTarEntry(tr *tar.Reader, header *tar.Header, destDir string) error {
 // extractTarFile extracts a regular file from the provided tar reader into the
 // filesystem at target, enforcing a maximum decompressed size and preserving the
 // executable bit when present in the tar header.
-// 
+//
 // Parameters:
 //   - tr: tar reader positioned at the file's data (the caller must have read the header).
 //   - header: tar header for the file being extracted; used for mode/size information.
 //   - target: destination path on disk where the file will be written.
-// 
+//
 // It returns an error if creating parent directories or the destination file fails,
 // if copying the file data fails or writes more than maxFileSize bytes, if closing
 // the output file fails, or if setting executable permissions fails.
@@ -168,8 +168,8 @@ func extractZip(archivePath, destDir string) error {
 // parent directories, and writes the entry to disk.
 //
 // Parameters:
-//  - f: zip entry to extract.
-//  - destDir: destination directory into which the entry will be written.
+//   - f: zip entry to extract.
+//   - destDir: destination directory into which the entry will be written.
 //
 // Returns an error if path sanitization fails, directory creation fails, or writing
 // the file fails.

@@ -111,29 +111,29 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 		}
 
 		if resp.StatusCode == http.StatusNotFound {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return nil, errors.New("release not found")
 		}
 		if resp.StatusCode == http.StatusForbidden {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return nil, errors.New("GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits")
 		}
 		if resp.StatusCode >= http.StatusInternalServerError {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			lastErr = fmt.Errorf("server error: %d", resp.StatusCode)
 			continue
 		}
 		if resp.StatusCode != http.StatusOK {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 		}
 
 		var release GitHubRelease
 		if decodeErr := json.NewDecoder(resp.Body).Decode(&release); decodeErr != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return nil, fmt.Errorf("failed to decode response: %w", decodeErr)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return &release, nil
 	}
 	return nil, fmt.Errorf("failed after 3 attempts: %w", lastErr)

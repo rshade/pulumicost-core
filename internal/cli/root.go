@@ -6,7 +6,7 @@ import (
 
 // NewRootCmd creates the root Cobra command for the pulumicost CLI and configures its subcommands.
 // The returned command has its Version set from ver, a persistent "debug" flag, usage examples, and
-// - config: init, set, get, list, and validate configuration commands
+// - config: init, set, get, list, and validate configuration commands.
 func NewRootCmd(ver string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pulumicost",

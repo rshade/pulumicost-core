@@ -134,3 +134,64 @@ func TestPluginInstallCmd_Examples(t *testing.T) {
 		}
 	}
 }
+
+func TestPluginInstallCmd_URLSecurityWarning(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	rootCmd.SetOut(&stdout)
+	rootCmd.SetErr(&stderr)
+	// Install from URL - this will fail but we can test it reaches the security warning code
+	rootCmd.SetArgs([]string{"plugin", "install", "github.com/owner/repo", "--plugin-dir", tmpDir})
+
+	_ = rootCmd.Execute() // Error expected - we just want to exercise the code path
+
+	output := stdout.String()
+	// Check for security warning for URL-based installs
+	if !strings.Contains(output, "Installing from URL") {
+		t.Errorf("expected URL security warning, got: %s", output)
+	}
+}
+
+func TestPluginInstallCmd_RegistryPluginNotFound(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	rootCmd.SetArgs([]string{"plugin", "install", "nonexistent-registry-plugin", "--plugin-dir", tmpDir})
+
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Error("expected error for non-existent registry plugin")
+	}
+
+	errOutput := err.Error()
+	if !strings.Contains(errOutput, "not found") {
+		t.Errorf("expected 'not found' error, got: %s", errOutput)
+	}
+}
+
+func TestPluginInstallCmd_VersionSpecified(t *testing.T) {
+	rootCmd := cli.NewRootCmd("test")
+
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	var stderr bytes.Buffer
+	rootCmd.SetErr(&stderr)
+	// Try to install with version - will fail but tests the code path
+	rootCmd.SetArgs([]string{"plugin", "install", "kubecost@v999.0.0", "--plugin-dir", tmpDir})
+
+	err := rootCmd.Execute()
+	// Error expected (version doesn't exist) but we exercised the code path
+	if err == nil {
+		t.Error("expected error for non-existent version")
+	}
+}

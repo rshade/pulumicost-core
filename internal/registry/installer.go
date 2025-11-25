@@ -11,6 +11,10 @@ import (
 	"github.com/rshade/pulumicost-core/internal/config"
 )
 
+const (
+	executablePermissionMask = 0111 // File permission mask for executable files
+)
+
 // InstallOptions configures plugin installation behavior.
 type InstallOptions struct {
 	Force     bool   // Reinstall even if version exists
@@ -272,7 +276,7 @@ func parseOwnerRepo(repo string) (string, string, error) {
 	}
 	owner, repoName := parts[0], parts[1]
 	if owner == "" || repoName == "" {
-		return "", "", fmt.Errorf("invalid repository format: owner or repo empty")
+		return "", "", errors.New("invalid repository format: owner or repo empty")
 	}
 	return owner, repoName, nil
 }
@@ -313,11 +317,11 @@ func findPluginBinary(dir, name string) string {
 		path := filepath.Join(dir, entry.Name())
 		if info, statErr := os.Stat(path); statErr == nil && !info.IsDir() {
 			// Check executability based on OS
-			isExecutable := false
-			if runtime.GOOS == "windows" {
+			var isExecutable bool
+			if runtime.GOOS == osWindows {
 				isExecutable = strings.HasSuffix(path, ".exe")
 			} else {
-				isExecutable = info.Mode()&0111 != 0
+				isExecutable = info.Mode()&executablePermissionMask != 0
 			}
 			if isExecutable {
 				return path

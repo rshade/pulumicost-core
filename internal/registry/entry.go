@@ -41,9 +41,9 @@ var (
 // It returns an error describing the first validation failure encountered or nil if the entry is valid.
 //
 // The following validations are performed:
-//  - `Name` must not be empty.
-//  - `Repository` must not be empty and must match the "owner/repo" format.
-//  - If `SecurityLevel` is set, it must be one of "official", "community", or "experimental".
+//   - `Name` must not be empty.
+//   - `Repository` must not be empty and must match the "owner/repo" format.
+//   - If `SecurityLevel` is set, it must be one of "official", "community", or "experimental".
 //
 // The returned error message indicates which field is invalid and includes the entry name when available.
 func ValidateRegistryEntry(entry RegistryEntry) error {
@@ -72,6 +72,7 @@ func ValidateRegistryEntry(entry RegistryEntry) error {
 //   - "kubecost" - registry plugin, latest version
 //   - "kubecost@v1.0.0" - registry plugin, specific version
 //   - "github.com/owner/repo" - GitHub URL, latest version
+//
 // ParsePluginSpecifier parses a plugin specifier string into a PluginSpecifier.
 // It accepts either a registry name or a GitHub URL with an optional version suffix
 // separated by `@` (for example: `kubecost`, `kubecost@v1.0.0`, `github.com/owner/repo`, or
@@ -131,7 +132,7 @@ func ParsePluginSpecifier(spec string) (*PluginSpecifier, error) {
 // ParseGitHubURL extracts the owner and repository name from a GitHub URL of the form "github.com/owner/repo".
 // It returns the captured owner and repo strings.
 // If the input does not match the expected GitHub URL format, it returns a non-nil error.
-func ParseGitHubURL(url string) (owner, repo string, err error) {
+func ParseGitHubURL(url string) (string, string, error) {
 	matches := githubPattern.FindStringSubmatch(url)
 	if matches == nil {
 		return "", "", fmt.Errorf("invalid GitHub URL format: %s", url)
