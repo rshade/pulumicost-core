@@ -67,7 +67,7 @@ func NewCostProjectedCmd() *cobra.Command {
 			defer cleanup()
 
 			eng := engine.New(clients, loader)
-			results, err := eng.GetProjectedCost(ctx, resources)
+			resultWithErrors, err := eng.GetProjectedCostWithErrors(ctx, resources)
 			if err != nil {
 				return fmt.Errorf("calculating projected costs: %w", err)
 			}
@@ -75,7 +75,19 @@ func NewCostProjectedCmd() *cobra.Command {
 			// Use configuration-aware output format selection
 			finalOutput := config.GetOutputFormat(output)
 			outputFormat := engine.OutputFormat(finalOutput)
-			return engine.RenderResults(cmd.OutOrStdout(), outputFormat, results)
+			if renderErr := engine.RenderResults(cmd.OutOrStdout(), outputFormat, resultWithErrors.Results); renderErr != nil {
+				return renderErr
+			}
+
+			// Display error summary after results if there were errors
+			if resultWithErrors.HasErrors() {
+				cmd.Println() // Add blank line before error summary
+				cmd.Println("ERRORS")
+				cmd.Println("======")
+				cmd.Print(resultWithErrors.ErrorSummary())
+			}
+
+			return nil
 		},
 	}
 

@@ -5,12 +5,115 @@ package proto
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const (
+	// maxErrorsToDisplay is the maximum number of errors to show in summary before truncating.
+	maxErrorsToDisplay = 5
+)
+
+// ErrorDetail captures information about a failed resource cost calculation.
+type ErrorDetail struct {
+	ResourceType string
+	ResourceID   string
+	PluginName   string
+	Error        error
+	Timestamp    time.Time
+}
+
+// CostResultWithErrors wraps results and any errors encountered during cost calculation.
+type CostResultWithErrors struct {
+	Results []*CostResult
+	Errors  []ErrorDetail
+}
+
+// HasErrors returns true if any errors were encountered during cost calculation.
+func (c *CostResultWithErrors) HasErrors() bool {
+	return len(c.Errors) > 0
+}
+
+// ErrorSummary returns a human-readable summary of errors.
+// Truncates the output after 5 errors to keep it readable.
+func (c *CostResultWithErrors) ErrorSummary() string {
+	if !c.HasErrors() {
+		return ""
+	}
+
+	var summary strings.Builder
+	summary.WriteString(fmt.Sprintf("%d resource(s) failed:\n", len(c.Errors)))
+
+	for i, err := range c.Errors {
+		if i >= maxErrorsToDisplay {
+			summary.WriteString(fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay))
+			break
+		}
+		summary.WriteString(fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error))
+	}
+
+	return summary.String()
+}
+
+// GetProjectedCostWithErrors calculates projected costs for resources with error tracking.
+// It returns results for all resources (with placeholders for failures) and error details.
+func GetProjectedCostWithErrors(
+	ctx context.Context,
+	client CostSourceClient,
+	pluginName string,
+	resources []*ResourceDescriptor,
+) *CostResultWithErrors {
+	result := &CostResultWithErrors{
+		Results: []*CostResult{},
+		Errors:  []ErrorDetail{},
+	}
+
+	for _, resource := range resources {
+		req := &GetProjectedCostRequest{
+			Resources: []*ResourceDescriptor{resource},
+		}
+
+		resp, err := client.GetProjectedCost(ctx, req)
+		if err != nil {
+			// Track error instead of silent failure
+			result.Errors = append(result.Errors, ErrorDetail{
+				ResourceType: resource.Type,
+				ResourceID:   resource.Type, // Use type as ID for now
+				PluginName:   pluginName,
+				Error:        fmt.Errorf("plugin call failed: %w", err),
+				Timestamp:    time.Now(),
+			})
+
+			// Add placeholder result with error note
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+				Notes:       fmt.Sprintf("ERROR: %v", err),
+			})
+			continue
+		}
+
+		// Add successful results
+		if len(resp.Results) > 0 {
+			result.Results = append(result.Results, resp.Results...)
+		} else {
+			// Add empty result if no results returned
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+			})
+		}
+	}
+
+	return result
+}
 
 // Empty represents an empty request/response for compatibility with existing engine code.
 type Empty struct{}

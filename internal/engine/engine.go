@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/rshade/pulumicost-core/internal/proto"
 )
@@ -105,6 +106,78 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 	return results, nil
 }
 
+// GetProjectedCostWithErrors calculates projected costs with comprehensive error tracking.
+// It returns results for all resources (with placeholders for failures) and aggregated error details.
+func (e *Engine) GetProjectedCostWithErrors(
+	ctx context.Context,
+	resources []ResourceDescriptor,
+) (*CostResultWithErrors, error) {
+	result := &CostResultWithErrors{
+		Results: []CostResult{},
+		Errors:  []ErrorDetail{},
+	}
+
+	for _, resource := range resources {
+		var resourceResults []CostResult
+		var resourceErrors []ErrorDetail
+
+		// Try each plugin client
+		for _, client := range e.clients {
+			pluginResult, err := e.getProjectedCostFromPlugin(ctx, client, resource)
+			if err != nil {
+				// Log error with structured fields
+				config.Logger.Warn().
+					Str("resource_type", resource.Type).
+					Str("resource_id", resource.ID).
+					Str("plugin", client.Name).
+					Err(err).
+					Msg("plugin call failed for projected cost")
+
+				// Track error instead of silent failure
+				resourceErrors = append(resourceErrors, ErrorDetail{
+					ResourceType: resource.Type,
+					ResourceID:   resource.ID,
+					PluginName:   client.Name,
+					Error:        fmt.Errorf("plugin call failed: %w", err),
+					Timestamp:    time.Now(),
+				})
+				continue
+			}
+			if pluginResult != nil {
+				resourceResults = append(resourceResults, *pluginResult)
+			}
+		}
+
+		// If no results from plugins, try spec fallback
+		if len(resourceResults) == 0 {
+			if e.loader != nil {
+				if specRes := e.getProjectedCostFromSpec(resource); specRes != nil {
+					result.Results = append(result.Results, *specRes)
+					result.Errors = append(result.Errors, resourceErrors...)
+					continue
+				}
+			}
+
+			// Final fallback: no cost data available
+			result.Results = append(result.Results, CostResult{
+				ResourceType: resource.Type,
+				ResourceID:   resource.ID,
+				Adapter:      "none",
+				Currency:     defaultCurrency,
+				Monthly:      0,
+				Hourly:       0,
+				Notes:        "No pricing information available",
+			})
+			result.Errors = append(result.Errors, resourceErrors...)
+		} else {
+			result.Results = append(result.Results, resourceResults...)
+			result.Errors = append(result.Errors, resourceErrors...)
+		}
+	}
+
+	return result, nil
+}
+
 // GetActualCost retrieves historical actual costs from plugins for the specified time range.
 func (e *Engine) GetActualCost(
 	ctx context.Context,
@@ -176,6 +249,98 @@ func (e *Engine) GetActualCostWithOptions(
 	_ = partialErrors // Errors collected but not currently logged
 
 	return results, nil
+}
+
+// GetActualCostWithOptionsAndErrors retrieves actual costs with comprehensive error tracking.
+// It returns results for all resources (with placeholders for failures) and aggregated error details.
+func (e *Engine) GetActualCostWithOptionsAndErrors(
+	ctx context.Context,
+	request ActualCostRequest,
+) (*CostResultWithErrors, error) {
+	result := &CostResultWithErrors{
+		Results: []CostResult{},
+		Errors:  []ErrorDetail{},
+	}
+
+	for _, resource := range request.Resources {
+		// Filter by tags if specified
+		if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
+			continue
+		}
+
+		resourceResult, errors := e.getActualCostForResource(ctx, resource, request)
+		result.Errors = append(result.Errors, errors...)
+		result.Results = append(result.Results, resourceResult)
+	}
+
+	// Group results if requested
+	if request.GroupBy != "" {
+		result.Results = e.GroupResults(result.Results, GroupBy(request.GroupBy))
+	}
+
+	return result, nil
+}
+
+// getActualCostForResource processes a single resource for actual cost with error tracking.
+func (e *Engine) getActualCostForResource(
+	ctx context.Context,
+	resource ResourceDescriptor,
+	request ActualCostRequest,
+) (CostResult, []ErrorDetail) {
+	var errors []ErrorDetail
+	var resourceResult *CostResult
+
+	for _, client := range e.clients {
+		if request.Adapter != "" && client.Name != request.Adapter {
+			continue
+		}
+
+		costResult, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
+		if err != nil {
+			// Log error with structured fields
+			config.Logger.Warn().
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Str("plugin", client.Name).
+				Err(err).
+				Msg("plugin call failed for actual cost")
+
+			errors = append(errors, ErrorDetail{
+				ResourceType: resource.Type,
+				ResourceID:   resource.ID,
+				PluginName:   client.Name,
+				Error:        fmt.Errorf("plugin call failed: %w", err),
+				Timestamp:    time.Now(),
+			})
+			continue
+		}
+		if costResult != nil {
+			resourceResult = costResult
+			break
+		}
+	}
+
+	if resourceResult != nil {
+		return *resourceResult, errors
+	}
+
+	// Create placeholder result
+	notes := "No actual cost data available"
+	if len(errors) > 0 {
+		notes = "ERROR: plugin call failed"
+	}
+
+	return CostResult{
+		ResourceType: resource.Type,
+		ResourceID:   resource.ID,
+		Adapter:      "none",
+		Currency:     defaultCurrency,
+		TotalCost:    0,
+		Notes:        notes,
+		StartDate:    request.From,
+		EndDate:      request.To,
+		CostPeriod:   FormatPeriod(request.From, request.To),
+	}, errors
 }
 
 func (e *Engine) getProjectedCostFromPlugin(

@@ -948,3 +948,6 @@ CodeRabbit now:
 @coderabbitai configuration    # Show current configuration
 @coderabbitai plan            # Plan code edits for comments
 ```
+
+## Recent Changes
+- 001-proto-error-aggregation: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]

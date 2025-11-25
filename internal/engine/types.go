@@ -32,9 +32,16 @@
 package engine
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/spec"
+)
+
+const (
+	// maxErrorsToDisplay is the maximum number of errors to show in summary before truncating.
+	maxErrorsToDisplay = 5
 )
 
 // ResourceDescriptor represents a cloud resource with its type, provider, and properties.
@@ -61,6 +68,47 @@ type CostResult struct {
 	CostPeriod string    `json:"costPeriod,omitempty"`
 	StartDate  time.Time `json:"startDate,omitempty"`
 	EndDate    time.Time `json:"endDate,omitempty"`
+}
+
+// ErrorDetail captures information about a failed resource cost calculation.
+type ErrorDetail struct {
+	ResourceType string
+	ResourceID   string
+	PluginName   string
+	Error        error
+	Timestamp    time.Time
+}
+
+// CostResultWithErrors wraps results and any errors encountered during cost calculation.
+type CostResultWithErrors struct {
+	Results []CostResult
+	Errors  []ErrorDetail
+}
+
+// HasErrors returns true if any errors were encountered during cost calculation.
+func (c *CostResultWithErrors) HasErrors() bool {
+	return len(c.Errors) > 0
+}
+
+// ErrorSummary returns a human-readable summary of errors.
+// Truncates the output after maxErrorsToDisplay errors to keep it readable.
+func (c *CostResultWithErrors) ErrorSummary() string {
+	if !c.HasErrors() {
+		return ""
+	}
+
+	var summary strings.Builder
+	summary.WriteString(fmt.Sprintf("%d resource(s) failed:\n", len(c.Errors)))
+
+	for i, err := range c.Errors {
+		if i >= maxErrorsToDisplay {
+			summary.WriteString(fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay))
+			break
+		}
+		summary.WriteString(fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error))
+	}
+
+	return summary.String()
 }
 
 // ActualCostRequest contains parameters for querying historical actual costs with filtering and grouping.

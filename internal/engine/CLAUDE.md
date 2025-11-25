@@ -25,6 +25,8 @@ The `internal/engine` package is the core orchestration layer for PulumiCost, re
 2. **Types System** (`types.go`)
    - `ResourceDescriptor`: Represents cloud resources with type, provider, and properties
    - `CostResult`: Standardized cost output with breakdown, currency, and metadata
+   - `CostResultWithErrors`: Results with aggregated error tracking
+   - `ErrorDetail`: Detailed error information per resource/plugin failure
    - `PricingSpec`: YAML-based local pricing fallback structure
    - `CrossProviderAggregation`: Time-based multi-provider cost aggregation structure
    - `GroupBy`: Type-safe grouping strategies with validation methods
@@ -155,6 +157,55 @@ monthlyConversion = 30.44    // Average days per month
 - **Per-Resource Isolation**: One resource failure doesn't affect others
 - **Multi-Plugin Tolerance**: Continue if some plugins fail
 - **Default Results**: Always return some result, even if placeholder
+
+### Error Aggregation System
+
+**New in v0.3.0**: Comprehensive error tracking with `CostResultWithErrors`:
+
+```go
+type CostResultWithErrors struct {
+    Results []CostResult   // Successfully calculated costs
+    Errors  []ErrorDetail  // Aggregated errors from all failures
+}
+
+type ErrorDetail struct {
+    ResourceType string    // Resource type that failed
+    ResourceID   string    // Resource ID that failed
+    PluginName   string    // Plugin that returned the error
+    Error        error     // The actual error
+    Timestamp    time.Time // When the error occurred
+}
+```
+
+**Error-Tracking Methods**:
+
+```go
+// Projected costs with error aggregation
+func (e *Engine) GetProjectedCostWithErrors(ctx context.Context, resources []ResourceDescriptor) (*CostResultWithErrors, error)
+
+// Actual costs with error aggregation
+func (e *Engine) GetActualCostWithOptionsAndErrors(ctx context.Context, request ActualCostRequest) (*CostResultWithErrors, error)
+```
+
+**Key Features**:
+- Continues processing on plugin failures (no early termination)
+- Aggregates all errors for post-processing analysis
+- Inline error display in Notes field with "ERROR:" prefix
+- Summary methods: `HasErrors()`, `ErrorSummary()`
+- Structured logging via zerolog for debugging
+
+**Logging Integration**:
+
+All plugin failures are logged with structured fields:
+
+```go
+config.Logger.Warn().
+    Str("resource_type", resource.Type).
+    Str("resource_id", resource.ID).
+    Str("plugin", client.Name).
+    Err(err).
+    Msg("plugin call failed for projected cost")
+```
 
 ### Cross-Provider Aggregation Errors
 

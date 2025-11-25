@@ -1,43 +1,31 @@
-# Implementation Plan: Testing Framework and Strategy
+# Implementation Plan: [FEATURE]
 
-**Branch**: `001-testing-framework` | **Date**: 2025-11-06 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/001-testing-framework/spec.md`
-**GitHub Issue**: [#9](https://github.com/rshade/pulumicost-core/issues/9)
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Establish a comprehensive testing framework for PulumiCost Core that achieves 80% minimum test coverage (95% for critical paths) through unit, integration, and end-to-end tests. The framework includes configurable mock plugins for isolation testing, organized test fixtures covering AWS/Azure/GCP, and CI/CD automation that blocks pull requests failing tests or coverage thresholds. This directly supports the constitution's Test-Driven Development principle and provides the foundation for reliable cost calculations.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: Go 1.24.5 (already in use per go.mod)
-**Primary Dependencies**:
-- `testing` (Go standard library)
-- `github.com/stretchr/testify` (assertions and mocks)
-- `google.golang.org/grpc` (mock plugin gRPC server)
-- `github.com/google/go-cmp` (deep equality comparisons)
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
 
-**Storage**: File-based (test fixtures stored as JSON/YAML files, no database)
-**Testing**: Go native testing framework with testify assertions
-**Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64) - per constitution
-**Project Type**: Single Go project with CLI (existing structure)
-**Performance Goals**:
-- Unit tests: <5 minutes total execution time
-- Integration tests: <3 minutes total execution time
-- E2E tests: <2 minutes total execution time
-- CI complete pipeline: <15 minutes total
-
-**Constraints**:
-- Must achieve 80% minimum coverage (95% for critical paths) per constitution
-- Must run with `-race` flag to detect concurrency issues
-- Must support parallel test execution (`go test -parallel`)
-- Must integrate with existing CI/CD pipeline (`.github/workflows/ci.yml`)
-
-**Scale/Scope**:
-- ~10,000 lines of test code estimated across all categories
-- ~100 test fixtures covering AWS, Azure, GCP scenarios
-- 5 configurable mock plugin response types
-- 3 error injection scenarios
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
@@ -45,167 +33,82 @@ Establish a comprehensive testing framework for PulumiCost Core that achieves 80
 
 Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
 
-- [X] **Plugin-First Architecture**: Testing framework itself doesn't require plugins, but includes mock plugin infrastructure to test plugin communication. Compliant - this is orchestration logic.
-- [X] **Test-Driven Development**: This feature IS the TDD infrastructure. Tests for the testing framework itself will follow TDD (meta-testing). Compliant.
-- [X] **Cross-Platform Compatibility**: All tests will run on Linux, macOS, Windows. CI already verifies cross-platform builds. Compliant.
-- [X] **Documentation as Code**: Will update docs/testing/ with testing guide for developers. Part of implementation. Compliant.
-- [X] **Protocol Stability**: Mock plugin will implement current CostSource protocol. No protocol changes. Compliant.
-- [X] **Quality Gates**: This feature IMPLEMENTS the quality gates. Will integrate with existing CI. Compliant.
-- [X] **Multi-Repo Coordination**: Testing framework is core-only. No cross-repo dependencies. Compliant.
+- [ ] **Plugin-First Architecture**: Is this feature implemented as a plugin or orchestration logic?
+- [ ] **Test-Driven Development**: Are tests planned before implementation? (80% minimum coverage)
+- [ ] **Cross-Platform Compatibility**: Will this work on Linux, macOS, Windows?
+- [ ] **Documentation as Code**: Are audience-specific docs planned?
+- [ ] **Protocol Stability**: Do protocol changes follow semantic versioning?
+- [ ] **Quality Gates**: Are all CI checks (tests, lint, security) passing?
+- [ ] **Multi-Repo Coordination**: Are cross-repo dependencies documented?
 
-**Violations Requiring Justification**: None - all principles satisfied.
+**Violations Requiring Justification**: (Fill only if any principle is violated)
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/001-testing-framework/
+specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
-├── spec.md              # Feature specification (completed)
-├── research.md          # Phase 0 output (testing tools research)
-├── data-model.md        # Phase 1 output (test entities)
-├── quickstart.md        # Phase 1 output (how to write tests)
-├── contracts/           # Phase 1 output (mock plugin API)
-│   └── mock-plugin-api.md
-├── checklists/          # Quality validation
-│   └── requirements.md  # Specification checklist (completed)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created yet)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
-
-Existing Go project structure - will add test directories:
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-# Existing structure (unchanged)
-cmd/pulumicost/          # CLI entry point
-internal/
-├── cli/                 # CLI commands
-├── engine/              # Cost calculation engine
-├── pluginhost/          # Plugin management
-├── registry/            # Plugin discovery
-├── ingest/              # Pulumi plan parsing
-├── spec/                # Local pricing specs
-├── proto/               # Protocol adapters
-└── config/              # Configuration
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
 
-# NEW: Testing infrastructure
-test/
-├── unit/                # Unit tests by package
-│   ├── engine/          # Engine unit tests
-│   ├── cli/             # CLI unit tests
-│   ├── pluginhost/      # Plugin host unit tests
-│   ├── registry/        # Registry unit tests
-│   ├── ingest/          # Ingest unit tests
-│   └── config/          # Config unit tests
-├── integration/         # Cross-component tests
-│   ├── cli_workflow_test.go      # CLI command execution
-│   ├── plugin_comm_test.go       # gRPC plugin communication
-│   └── config_loading_test.go    # Configuration integration
-├── e2e/                 # End-to-end scenarios
-│   ├── projected_cost_test.go    # Full projected workflow
-│   ├── actual_cost_test.go       # Full actual cost workflow
-│   └── output_formats_test.go    # Golden file testing
-├── fixtures/            # Test data files
-│   ├── plans/           # Pulumi plan JSON files
-│   │   ├── aws/         # AWS resource plans
-│   │   ├── azure/       # Azure resource plans
-│   │   └── gcp/         # GCP resource plans
-│   ├── responses/       # Mock plugin responses
-│   ├── configs/         # Test configuration files
-│   └── specs/           # Test pricing specifications
-├── mocks/               # Mock implementations
-│   └── plugin/          # Mock plugin server
-│       ├── server.go    # gRPC mock server
-│       └── config.go    # Response configuration
-└── benchmarks/          # Performance tests
-    └── engine_bench_test.go
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Extend existing single Go project structure with comprehensive `/test` directory organization. Mirrors internal package structure for unit tests, adds integration/e2e/fixtures/mocks for advanced testing scenarios. Aligns with Go testing conventions and existing codebase patterns.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
-No constitution violations - complexity tracking not required.
+> **Fill ONLY if Constitution Check has violations that must be justified**
 
----
-
-## Phase 0: Research & Decisions
-
-### Research Topics
-
-1. **Testing Frameworks**: Evaluate Go testing approaches (standard library vs enhanced frameworks)
-2. **Mock Strategies**: Research gRPC mocking patterns for plugin testing
-3. **Coverage Tools**: Identify best coverage reporting tools for Go
-4. **CI Integration**: Review existing GitHub Actions workflow for test integration points
-5. **Golden File Testing**: Research golden file testing libraries for output validation
-6. **Benchmark Patterns**: Investigate Go benchmark best practices for performance regression detection
-
-### Initial Decisions (to be validated in research.md)
-
-- **Testing Framework**: Go standard `testing` package + `testify` for assertions (already in use)
-- **gRPC Mocking**: Custom mock plugin server (more control than generic mocks)
-- **Coverage**: Go native `go test -cover` + CI coverage reports (already configured)
-- **Golden Files**: `github.com/sebdah/goldie` or custom implementation
-- **CI Integration**: Extend existing `.github/workflows/ci.yml` (already has test job)
-
----
-
-## Phase 1: Design Artifacts
-
-### Data Model
-
-Key entities to be defined in `data-model.md`:
-
-1. **TestSuite**: Metadata, categories, execution results
-2. **MockPlugin**: Configuration, response types, error injection
-3. **TestFixture**: File organization, loading mechanisms, naming conventions
-4. **CoverageReport**: Package-level metrics, critical path identification
-5. **BenchmarkResult**: Performance baselines, regression thresholds
-
-### Contracts
-
-Mock Plugin API to be defined in `contracts/mock-plugin-api.md`:
-
-```
-MockPlugin gRPC Service:
-- Configure(ResponseConfig) → Status
-- SetError(MethodName, ErrorType) → Status
-- Reset() → Status
-
-Implements CostSourceService protocol:
-- Name() → PluginInfo
-- GetProjectedCost(ResourceDescriptor[]) → CostResult[]
-- GetActualCost(ActualCostRequest) → ActualCostResult[]
-```
-
-### Quickstart
-
-Developer guide to be created in `quickstart.md`:
-
-- How to write a unit test for a new function
-- How to add integration test for cross-component flow
-- How to create test fixtures
-- How to run tests locally vs CI
-- How to debug failing tests
-- How to add benchmarks
-
----
-
-## Next Steps
-
-1. **Complete Phase 0**: Generate `research.md` with detailed research findings
-2. **Complete Phase 1**: Generate `data-model.md`, `contracts/`, and `quickstart.md`
-3. **Run Constitution Check**: Verify all principles still satisfied after design
-4. **Generate Tasks**: Run `/speckit.tasks` to create implementation checklist
-
----
-
-## Notes
-
-- This feature directly implements the constitution's TDD principle
-- Existing CI workflow (`.github/workflows/ci.yml`) already has test job - will enhance it
-- Current coverage is 24.2% overall - this feature will bring it to 80%+ target
-- Critical paths already identified in constitution: CLI, engine, pluginhost
-- Mock plugin reusable for future plugin development testing
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
