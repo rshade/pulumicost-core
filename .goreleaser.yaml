@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+version: 2
+
+# Build customization
+builds:
+  - main: ./cmd/pulumicost
+    binary: pulumicost
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -X 'github.com/rshade/pulumicost-core/pkg/version.version={{.Version}}'
+      - -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit={{.Commit}}'
+      - -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate={{.Date}}'
+    env:
+      - CGO_ENABLED=0
+
+# Archive customization
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}-v{{ .Version }}-
+      {{- if eq .Os "darwin" }}macos
+      {{- else if eq .Os "windows" }}windows
+      {{- else }}{{ .Os }}{{ end }}-
+      {{- if eq .Arch "amd64" }}amd64
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+# Checksum customization
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Changelog customization
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+# Release customization
+release:
+  github:
+    owner: rshade
+    name: pulumicost-core
+  draft: false
+  prerelease: auto
+  mode: append
