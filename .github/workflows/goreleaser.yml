@@ -1,11 +1,17 @@
 name: GoReleaser
 
-# GoReleaser should only run when a new git tag is pushed, which is
-# what release-please does when the Release PR is merged.
+# GoReleaser should run when release-please creates a new release.
+# Note: release-please creates tags via GitHub API, not git push,
+# so we trigger on the release event instead of push to tags.
 on:
-  push:
-    tags:
-      - 'v*' # Run for all tags starting with 'v', which is the default for release-please
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write # Needed for GoReleaser to upload artifacts to the release
@@ -14,11 +20,12 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout the code
+      # 1. Checkout the code at the tag
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # GoReleaser requires full git history
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
 
       # 2. Setup Go
       - name: Set up Go
