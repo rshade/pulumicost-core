@@ -166,7 +166,7 @@ func TestProcessLauncher_CreateCloseFn(t *testing.T) {
 		t.Fatalf("failed to create test connection: %v", err)
 	}
 
-	closeFn := launcher.createCloseFn(conn, cmd)
+	closeFn := launcher.createCloseFn(context.Background(), conn, cmd)
 
 	// Test cleanup
 	if closeErr := closeFn(); closeErr != nil {

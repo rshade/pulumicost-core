@@ -1,18 +1,21 @@
 package cli
 
 import (
-	"context"
 	"fmt"
+	"time"
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/rshade/pulumicost-core/internal/ingest"
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/rshade/pulumicost-core/internal/spec"
 	"github.com/spf13/cobra"
 )
 
 // NewCostProjectedCmd creates the "projected" subcommand that calculates estimated costs from a Pulumi plan.
+//
+//nolint:funlen // Comprehensive logging requires additional lines for observability
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 
@@ -35,22 +38,43 @@ func NewCostProjectedCmd() *cobra.Command {
   # Use custom spec directory
   pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			ctx := context.Background()
+			start := time.Now()
+			ctx := cmd.Context()
+
+			// Get logger from context (set by PersistentPreRunE)
+			log := logging.FromContext(ctx)
+			log.Debug().
+				Ctx(ctx).
+				Str("operation", "cost_projected").
+				Str("plan_path", planPath).
+				Msg("starting projected cost calculation")
 
 			plan, err := ingest.LoadPulumiPlan(planPath)
 			if err != nil {
+				log.Error().Ctx(ctx).Err(err).Str("plan_path", planPath).Msg("failed to load Pulumi plan")
 				return fmt.Errorf("loading Pulumi plan: %w", err)
 			}
 
 			pulumiResources := plan.GetResources()
 			resources, err := ingest.MapResources(pulumiResources)
 			if err != nil {
+				log.Error().Ctx(ctx).Err(err).Msg("failed to map resources")
 				return fmt.Errorf("mapping resources: %w", err)
 			}
+
+			log.Debug().
+				Ctx(ctx).
+				Int("resource_count", len(resources)).
+				Msg("resources loaded from plan")
 
 			// Apply resource filter if specified
 			if filter != "" {
 				resources = engine.FilterResources(resources, filter)
+				log.Debug().
+					Ctx(ctx).
+					Str("filter", filter).
+					Int("filtered_count", len(resources)).
+					Msg("applied resource filter")
 			}
 
 			if specDir == "" {
@@ -62,13 +86,20 @@ func NewCostProjectedCmd() *cobra.Command {
 			reg := registry.NewDefault()
 			clients, cleanup, err := reg.Open(ctx, adapter)
 			if err != nil {
+				log.Error().Ctx(ctx).Err(err).Str("adapter", adapter).Msg("failed to open plugins")
 				return fmt.Errorf("opening plugins: %w", err)
 			}
 			defer cleanup()
 
+			log.Debug().
+				Ctx(ctx).
+				Int("plugin_count", len(clients)).
+				Msg("plugins opened")
+
 			eng := engine.New(clients, loader)
 			resultWithErrors, err := eng.GetProjectedCostWithErrors(ctx, resources)
 			if err != nil {
+				log.Error().Ctx(ctx).Err(err).Msg("failed to calculate projected costs")
 				return fmt.Errorf("calculating projected costs: %w", err)
 			}
 
@@ -86,6 +117,14 @@ func NewCostProjectedCmd() *cobra.Command {
 				cmd.Println("======")
 				cmd.Print(resultWithErrors.ErrorSummary())
 			}
+
+			// Log completion with duration
+			log.Info().
+				Ctx(ctx).
+				Str("operation", "cost_projected").
+				Int("result_count", len(resultWithErrors.Results)).
+				Dur("duration_ms", time.Since(start)).
+				Msg("projected cost calculation complete")
 
 			return nil
 		},

@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -31,11 +32,21 @@ func NewStdioLauncher() *StdioLauncher {
 }
 
 // Start launches a plugin using stdio communication and returns the gRPC connection.
+//
+//nolint:funlen // Comprehensive logging requires additional lines for observability
 func (s *StdioLauncher) Start(
 	ctx context.Context,
 	path string,
 	args ...string,
 ) (*grpc.ClientConn, func() error, error) {
+	log := logging.FromContext(ctx)
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Str("operation", "start_plugin_stdio").
+		Str("plugin_path", path).
+		Msg("starting plugin process via stdio")
+
 	//nolint:gosec // Plugin path is validated before execution
 	cmd := exec.CommandContext(
 		ctx,
@@ -74,8 +85,14 @@ func (s *StdioLauncher) Start(
 	address := listener.Addr().String()
 
 	conn, err := grpc.NewClient(address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(TraceInterceptor()))
 	if err != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(err).
+			Msg("failed to create gRPC client")
 		if cmd.Process != nil {
 			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
@@ -85,17 +102,41 @@ func (s *StdioLauncher) Start(
 		return nil, nil, fmt.Errorf("connecting to plugin: %w", err)
 	}
 
+	log.Info().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Str("plugin_path", path).
+		Int("pid", cmd.Process.Pid).
+		Msg("plugin connected successfully via stdio")
+
 	closeFn := func() error {
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Str("operation", "close_plugin_stdio").
+			Msg("closing stdio plugin connection")
+
 		if connCloseErr := conn.Close(); connCloseErr != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "pluginhost").
+				Err(connCloseErr).
+				Msg("error closing gRPC connection")
 			return fmt.Errorf("closing connection: %w", connCloseErr)
 		}
 		if listenerCloseErr := listener.Close(); listenerCloseErr != nil {
 			return fmt.Errorf("closing listener: %w", listenerCloseErr)
 		}
 		if cmd.Process != nil {
+			pid := cmd.Process.Pid
 			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "pluginhost").
+				Int("pid", pid).
+				Msg("stdio plugin process terminated")
 		}
 		return nil
 	}

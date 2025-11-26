@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/rshade/pulumicost-core/internal/ingest"
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/spf13/cobra"
 )
@@ -123,18 +123,37 @@ func NewCostActualCmd() *cobra.Command {
 //   - fetching actual cost data from the engine,
 //   - rendering the output.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
-	ctx := context.Background()
+	start := time.Now()
+	ctx := cmd.Context()
+
+	// Get logger from context (set by PersistentPreRunE)
+	log := logging.FromContext(ctx)
+	log.Debug().
+		Ctx(ctx).
+		Str("operation", "cost_actual").
+		Str("plan_path", params.planPath).
+		Str("from", params.fromStr).
+		Str("to", params.toStr).
+		Str("group_by", params.groupBy).
+		Msg("starting actual cost calculation")
 
 	plan, err := ingest.LoadPulumiPlan(params.planPath)
 	if err != nil {
+		log.Error().Ctx(ctx).Err(err).Str("plan_path", params.planPath).Msg("failed to load Pulumi plan")
 		return fmt.Errorf("loading Pulumi plan: %w", err)
 	}
 
 	pulumiResources := plan.GetResources()
 	resources, err := ingest.MapResources(pulumiResources)
 	if err != nil {
+		log.Error().Ctx(ctx).Err(err).Msg("failed to map resources")
 		return fmt.Errorf("mapping resources: %w", err)
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Int("resource_count", len(resources)).
+		Msg("resources loaded from plan")
 
 	// Default to now if --to is not provided
 	toStr := params.toStr
@@ -144,15 +163,22 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 
 	from, to, err := ParseTimeRange(params.fromStr, toStr)
 	if err != nil {
+		log.Error().Ctx(ctx).Err(err).Msg("failed to parse time range")
 		return fmt.Errorf("parsing time range: %w", err)
 	}
 
 	reg := registry.NewDefault()
 	clients, cleanup, err := reg.Open(ctx, params.adapter)
 	if err != nil {
+		log.Error().Ctx(ctx).Err(err).Str("adapter", params.adapter).Msg("failed to open plugins")
 		return fmt.Errorf("opening plugins: %w", err)
 	}
 	defer cleanup()
+
+	log.Debug().
+		Ctx(ctx).
+		Int("plugin_count", len(clients)).
+		Msg("plugins opened")
 
 	eng := engine.New(clients, nil)
 
@@ -170,6 +196,7 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 
 	resultWithErrors, err := eng.GetActualCostWithOptionsAndErrors(ctx, request)
 	if err != nil {
+		log.Error().Ctx(ctx).Err(err).Msg("failed to fetch actual costs")
 		return fmt.Errorf("fetching actual costs: %w", err)
 	}
 
@@ -188,6 +215,14 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 		cmd.Println("======")
 		cmd.Print(resultWithErrors.ErrorSummary())
 	}
+
+	// Log completion with duration
+	log.Info().
+		Ctx(ctx).
+		Str("operation", "cost_actual").
+		Int("result_count", len(resultWithErrors.Results)).
+		Dur("duration_ms", time.Since(start)).
+		Msg("actual cost calculation complete")
 
 	return nil
 }
