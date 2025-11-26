@@ -1,0 +1,26 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4.4.0
+        with:
+          # Token for GitHub API access
+          # Uses the default GITHUB_TOKEN, but you can use a custom PAT if needed
+          # For custom PAT, create a secret and reference it: token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Note: Using manifest-based configuration
+          # The release-please-config.json and .release-please-manifest.json files
+          # in the repo root will be used automatically

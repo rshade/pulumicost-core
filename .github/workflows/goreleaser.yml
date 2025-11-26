@@ -1,0 +1,37 @@
+name: GoReleaser
+
+# GoReleaser should only run when a new git tag is pushed, which is
+# what release-please does when the Release PR is merged.
+on:
+  push:
+    tags:
+      - 'v*' # Run for all tags starting with 'v', which is the default for release-please
+
+permissions:
+  contents: write # Needed for GoReleaser to upload artifacts to the release
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout the code
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # GoReleaser requires full git history
+
+      # 2. Setup Go
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+
+      # 3. Run GoReleaser
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
