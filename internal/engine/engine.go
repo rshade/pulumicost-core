@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/rshade/pulumicost-core/internal/proto"
 )
@@ -64,17 +64,50 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 
 // GetProjectedCost calculates projected costs for the given resources using plugins or specs.
 func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
+	log := logging.FromContext(ctx)
+	start := time.Now()
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "engine").
+		Str("operation", "get_projected_cost").
+		Int("resource_count", len(resources)).
+		Int("plugin_count", len(e.clients)).
+		Msg("starting projected cost calculation")
+
 	var results []CostResult
 
 	for _, resource := range resources {
 		var resourceResults []CostResult
 
 		for _, client := range e.clients {
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Str("plugin", client.Name).
+				Msg("querying plugin for projected cost")
+
 			result, err := e.getProjectedCostFromPlugin(ctx, client, resource)
 			if err != nil {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("plugin", client.Name).
+					Err(err).
+					Msg("plugin did not return cost data")
 				continue
 			}
 			if result != nil {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("plugin", client.Name).
+					Float64("monthly_cost", result.Monthly).
+					Msg("plugin returned cost data")
 				resourceResults = append(resourceResults, *result)
 			}
 		}
@@ -82,13 +115,33 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 		if len(resourceResults) == 0 {
 			// Single spec fallback per resource
 			if e.loader != nil {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("resource_id", resource.ID).
+					Msg("no plugin data, trying spec fallback")
+
 				if specRes := e.getProjectedCostFromSpec(resource); specRes != nil {
+					log.Debug().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Float64("monthly_cost", specRes.Monthly).
+						Msg("spec fallback provided cost data")
 					results = append(results, *specRes)
 					continue
 				}
 			}
 
 			// Final fallback: no cost data available
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Msg("no pricing data available from plugins or specs")
+
 			results = append(results, CostResult{
 				ResourceType: resource.Type,
 				ResourceID:   resource.ID,
@@ -102,6 +155,14 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 			results = append(results, resourceResults...)
 		}
 	}
+
+	log.Info().
+		Ctx(ctx).
+		Str("component", "engine").
+		Str("operation", "get_projected_cost").
+		Int("result_count", len(results)).
+		Dur("duration_ms", time.Since(start)).
+		Msg("projected cost calculation complete")
 
 	return results, nil
 }
@@ -125,8 +186,11 @@ func (e *Engine) GetProjectedCostWithErrors(
 		for _, client := range e.clients {
 			pluginResult, err := e.getProjectedCostFromPlugin(ctx, client, resource)
 			if err != nil {
-				// Log error with structured fields
-				config.Logger.Warn().
+				// Log error with structured fields using context-based logger
+				log := logging.FromContext(ctx)
+				log.Warn().
+					Ctx(ctx).
+					Str("component", "engine").
 					Str("resource_type", resource.Type).
 					Str("resource_id", resource.ID).
 					Str("plugin", client.Name).
@@ -192,16 +256,37 @@ func (e *Engine) GetActualCost(
 }
 
 // GetActualCostWithOptions retrieves actual costs with advanced filtering, grouping, and time range options.
+//
+//nolint:funlen // Comprehensive logging for debugging cost calculation pipeline requires additional lines
 func (e *Engine) GetActualCostWithOptions(
 	ctx context.Context,
 	request ActualCostRequest,
 ) ([]CostResult, error) {
+	log := logging.FromContext(ctx)
+	start := time.Now()
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "engine").
+		Str("operation", "get_actual_cost").
+		Int("resource_count", len(request.Resources)).
+		Str("from", request.From.Format("2006-01-02")).
+		Str("to", request.To.Format("2006-01-02")).
+		Str("group_by", request.GroupBy).
+		Msg("starting actual cost calculation")
+
 	var results []CostResult
 	var partialErrors []error
 
 	for _, resource := range request.Resources {
 		// Filter by tags if specified
 		if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Msg("resource filtered out by tags")
 			continue
 		}
 
@@ -211,12 +296,34 @@ func (e *Engine) GetActualCostWithOptions(
 				continue
 			}
 
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Str("plugin", client.Name).
+				Msg("querying plugin for actual cost")
+
 			result, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
 			if err != nil {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("plugin", client.Name).
+					Err(err).
+					Msg("plugin did not return actual cost data")
 				partialErrors = append(partialErrors, fmt.Errorf("plugin %s: %w", client.Name, err))
 				continue
 			}
 			if result != nil {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("plugin", client.Name).
+					Float64("total_cost", result.TotalCost).
+					Msg("plugin returned actual cost data")
 				resourceResult = result
 				break
 			}
@@ -224,6 +331,13 @@ func (e *Engine) GetActualCostWithOptions(
 
 		// If no plugin provided data, create a placeholder result
 		if resourceResult == nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("resource_type", resource.Type).
+				Str("resource_id", resource.ID).
+				Msg("no actual cost data available from plugins")
+
 			resourceResult = &CostResult{
 				ResourceType: resource.Type,
 				ResourceID:   resource.ID,
@@ -242,11 +356,31 @@ func (e *Engine) GetActualCostWithOptions(
 
 	// Group results if requested
 	if request.GroupBy != "" {
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "engine").
+			Str("group_by", request.GroupBy).
+			Int("pre_group_count", len(results)).
+			Msg("grouping results")
 		results = e.GroupResults(results, GroupBy(request.GroupBy))
 	}
 
-	// Log partial errors but don't fail the entire operation
-	_ = partialErrors // Errors collected but not currently logged
+	// Log partial errors
+	if len(partialErrors) > 0 {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "engine").
+			Int("error_count", len(partialErrors)).
+			Msg("some plugins returned errors during actual cost calculation")
+	}
+
+	log.Info().
+		Ctx(ctx).
+		Str("component", "engine").
+		Str("operation", "get_actual_cost").
+		Int("result_count", len(results)).
+		Dur("duration_ms", time.Since(start)).
+		Msg("actual cost calculation complete")
 
 	return results, nil
 }
@@ -297,8 +431,11 @@ func (e *Engine) getActualCostForResource(
 
 		costResult, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
 		if err != nil {
-			// Log error with structured fields
-			config.Logger.Warn().
+			// Log error with structured fields using context-based logger
+			log := logging.FromContext(ctx)
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
 				Str("resource_type", resource.Type).
 				Str("resource_id", resource.ID).
 				Str("plugin", client.Name).

@@ -338,6 +338,77 @@ pulumicost cost actual --group-by "tag:env" --from 2024-01-01
 
 ---
 
+## Debugging and Logging
+
+### Using Debug Mode
+
+PulumiCost includes a `--debug` flag that enables verbose logging to help troubleshoot issues:
+
+```bash
+# Enable debug output for any command
+pulumicost cost projected --debug --pulumi-json plan.json
+
+# Debug output shows:
+# - Command start/stop with duration
+# - Resource ingestion details
+# - Plugin lookup attempts
+# - Cost calculation decisions
+# - Fallback behavior when plugins don't return data
+```
+
+**Example Debug Output:**
+
+```text
+2025-01-15T10:30:45Z INF command started command=projected trace_id=01HQ7X2J3K4M5N6P7Q8R9S0T1U component=cli
+2025-01-15T10:30:45Z DBG loading Pulumi plan plan_path=plan.json component=ingest
+2025-01-15T10:30:45Z DBG extracted 3 resources from plan component=ingest
+2025-01-15T10:30:45Z DBG querying plugin for projected cost resource_type=aws:ec2:Instance plugin=vantage component=engine
+2025-01-15T10:30:46Z DBG plugin returned cost data monthly_cost=7.50 component=engine
+2025-01-15T10:30:46Z INF projected cost calculation complete result_count=3 duration_ms=245 component=engine
+```
+
+### Environment Variables for Logging
+
+Configure logging behavior via environment variables:
+
+```bash
+# Set log level (trace, debug, info, warn, error)
+export PULUMICOST_LOG_LEVEL=debug
+
+# Set log format (json, text, console)
+export PULUMICOST_LOG_FORMAT=json
+
+# Inject external trace ID for correlation with other systems
+export PULUMICOST_TRACE_ID=my-pipeline-trace-12345
+
+# Example: Debug with JSON format for log aggregation
+PULUMICOST_LOG_LEVEL=debug PULUMICOST_LOG_FORMAT=json \
+  pulumicost cost projected --pulumi-json plan.json 2> debug.log
+```
+
+### Configuration Precedence
+
+Log settings are applied in this order (highest priority first):
+
+1. **CLI flags** (`--debug`)
+2. **Environment variables** (`PULUMICOST_LOG_LEVEL`)
+3. **Config file** (`~/.pulumicost/config.yaml`)
+4. **Defaults** (info level, text format)
+
+### Trace ID for Debugging
+
+Every command generates a unique trace ID that appears in all log entries.
+This helps correlate log entries for a single operation:
+
+```bash
+# Use external trace ID for pipeline correlation
+PULUMICOST_TRACE_ID=jenkins-build-123 pulumicost cost projected --debug --pulumi-json plan.json
+
+# All logs will include: trace_id=jenkins-build-123
+```
+
+---
+
 ## Troubleshooting
 
 ### "No cost data available"

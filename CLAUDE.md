@@ -945,6 +945,80 @@ make test    # Run all tests
 make lint    # Run linting
 ```
 
+## Logging (Zerolog)
+
+PulumiCost uses zerolog for structured logging with distributed tracing support.
+
+### Enabling Debug Output
+
+```bash
+# CLI flag
+pulumicost cost projected --debug --pulumi-json plan.json
+
+# Environment variable
+export PULUMICOST_LOG_LEVEL=debug
+export PULUMICOST_LOG_FORMAT=json    # json or console
+export PULUMICOST_TRACE_ID=external-trace-123  # inject external trace ID
+```
+
+### Configuration Precedence
+
+1. CLI flags (`--debug`)
+2. Environment variables (`PULUMICOST_LOG_LEVEL`)
+3. Config file (`~/.pulumicost/config.yaml`)
+4. Default (info level, console format)
+
+### Logging Patterns for Developers
+
+```go
+// Get logger from context (preferred - includes trace_id)
+log := logging.FromContext(ctx)
+log.Debug().
+    Ctx(ctx).
+    Str("component", "engine").
+    Str("operation", "get_projected_cost").
+    Int("resource_count", len(resources)).
+    Msg("starting projected cost calculation")
+
+// Create component sub-logger
+logger = logging.ComponentLogger(logger, "registry")
+
+// Log with duration
+start := time.Now()
+// ... operation ...
+log.Info().
+    Ctx(ctx).
+    Dur("duration_ms", time.Since(start)).
+    Msg("operation complete")
+```
+
+### Standard Log Fields
+
+| Field         | Purpose                  | Example                      |
+| ------------- | ------------------------ | ---------------------------- |
+| `trace_id`    | Request correlation      | "01HQ7X2J3K4M5N6P7Q8R9S0T1U" |
+| `component`   | Package identifier       | "cli", "engine", "registry"  |
+| `operation`   | Current operation        | "get_projected_cost"         |
+| `duration_ms` | Operation timing         | 245                          |
+
+### Log Levels
+
+- **TRACE**: Property extraction, detailed calculations
+- **DEBUG**: Function entry/exit, retries, intermediate values
+- **INFO**: High-level operations (command start/end)
+- **WARN**: Recoverable issues (fallbacks, deprecations)
+- **ERROR**: Failures needing attention
+
+### Trace ID Management
+
+```go
+// Generate trace ID at entry point (usually in CLI PersistentPreRunE)
+traceID := logging.GetOrGenerateTraceID(ctx)
+ctx = logging.ContextWithTraceID(ctx, traceID)
+
+// TracingHook automatically injects trace_id when using .Ctx(ctx)
+```
+
 ## Package-Specific Documentation
 
 ### internal/cli
@@ -1060,6 +1134,8 @@ CodeRabbit now:
 ```
 
 ## Active Technologies
+- Go 1.24.10 + github.com/rs/zerolog v1.34.0, github.com/oklog/ulid/v2 (for trace IDs) (004-zerolog-tracing)
+- N/A (logs to stderr/file, no persistence) (004-zerolog-tracing)
 
 - Go 1.24.10
 - archive/tar
@@ -1075,5 +1151,6 @@ CodeRabbit now:
 
 ## Recent Changes
 
+- 004-zerolog-tracing: Zerolog distributed tracing with --debug flag, environment variables, and trace ID propagation
 - 001-proto-error-aggregation: Comprehensive error aggregation system for engine operations
 - 003-plugin-install: Plugin install/update/remove commands with GitHub registry support

@@ -266,3 +266,117 @@ func TestConfig_BackwardCompatibility(t *testing.T) {
 	assert.Contains(t, pluginPath, "test-plugin")
 	assert.Contains(t, pluginPath, "1.0.0")
 }
+
+// T044: Unit test for configuration precedence (CLI > env > config).
+func TestConfig_Precedence_EnvOverridesConfigFile(t *testing.T) {
+	// Create a temporary config file with specific values
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, ".pulumicost", "config.yaml")
+	err := os.MkdirAll(filepath.Dir(configPath), 0700)
+	require.NoError(t, err)
+
+	configContent := `
+logging:
+  level: error
+  format: json
+`
+	err = os.WriteFile(configPath, []byte(configContent), 0600)
+	require.NoError(t, err)
+
+	// Set HOME to use our test config
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("USERPROFILE", tmpDir)
+
+	// Set environment variables that should override config file
+	t.Setenv("PULUMICOST_LOG_LEVEL", "debug")
+	t.Setenv("PULUMICOST_LOG_FORMAT", "text")
+
+	cfg := New()
+
+	// Environment should override config file values
+	assert.Equal(t, "debug", cfg.Logging.Level, "env should override config file level")
+	assert.Equal(t, "text", cfg.Logging.Format, "env should override config file format")
+}
+
+// T045: Unit test for PULUMICOST_LOG_LEVEL environment variable.
+func TestConfig_PULUMICOST_LOG_LEVEL_EnvVar(t *testing.T) {
+	stubHome(t)
+
+	// Test various log levels via environment variable
+	tests := []struct {
+		envValue      string
+		expectedLevel string
+	}{
+		{"debug", "debug"},
+		{"info", "info"},
+		{"warn", "warn"},
+		{"error", "error"},
+		{"trace", "trace"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.envValue, func(t *testing.T) {
+			t.Setenv("PULUMICOST_LOG_LEVEL", tt.envValue)
+
+			cfg := New()
+			assert.Equal(t, tt.expectedLevel, cfg.Logging.Level)
+		})
+	}
+}
+
+// T046: Unit test for PULUMICOST_LOG_FORMAT environment variable.
+func TestConfig_PULUMICOST_LOG_FORMAT_EnvVar(t *testing.T) {
+	stubHome(t)
+
+	// Test various log formats via environment variable
+	tests := []struct {
+		envValue       string
+		expectedFormat string
+	}{
+		{"json", "json"},
+		{"text", "text"},
+		{"console", "console"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.envValue, func(t *testing.T) {
+			t.Setenv("PULUMICOST_LOG_FORMAT", tt.envValue)
+
+			cfg := New()
+			assert.Equal(t, tt.expectedFormat, cfg.Logging.Format)
+		})
+	}
+}
+
+// T047: Unit test for invalid log level fallback to INFO.
+func TestConfig_InvalidLogLevel_Validation(t *testing.T) {
+	stubHome(t)
+	cfg := New()
+
+	// Set an invalid log level
+	cfg.Logging.Level = "invalid_level"
+
+	// Validation should fail with invalid level
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid log level")
+}
+
+// Test that defaults work correctly when no env vars are set.
+func TestConfig_Defaults_NoEnvVars(t *testing.T) {
+	// Clear all relevant env vars
+	t.Setenv("PULUMICOST_LOG_LEVEL", "")
+	t.Setenv("PULUMICOST_LOG_FORMAT", "")
+	t.Setenv("PULUMICOST_LOG_FILE", "")
+	t.Setenv("PULUMICOST_OUTPUT_FORMAT", "")
+	t.Setenv("PULUMICOST_OUTPUT_PRECISION", "")
+
+	stubHome(t)
+	cfg := New()
+
+	// Should have default values
+	assert.Equal(t, "info", cfg.Logging.Level)
+	assert.Equal(t, "text", cfg.Logging.Format)
+	assert.Equal(t, "table", cfg.Output.DefaultFormat)
+	assert.Equal(t, 2, cfg.Output.Precision)
+}

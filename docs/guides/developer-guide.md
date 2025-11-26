@@ -274,6 +274,84 @@ func (e *Engine) GetActualCost(ctx context.Context,
 - Provide code examples
 - Run `make docs-lint` before committing
 
+### Logging Patterns
+
+PulumiCost uses zerolog for structured logging with distributed tracing. Follow these patterns:
+
+**Getting a Logger:**
+
+```go
+// From context (preferred - includes trace ID)
+log := logging.FromContext(ctx)
+log.Debug().
+    Ctx(ctx).
+    Str("component", "engine").
+    Str("operation", "get_projected_cost").
+    Int("resource_count", len(resources)).
+    Msg("starting projected cost calculation")
+```
+
+**Component Loggers:**
+
+Each package should identify itself with a component field:
+
+```go
+// In CLI package
+logger = logging.ComponentLogger(logger, "cli")
+
+// Or inline for context-based logging
+log.Info().
+    Ctx(ctx).
+    Str("component", "engine").
+    Msg("operation complete")
+```
+
+**Standard Log Fields:**
+
+| Field         | Purpose                             | Example                              |
+| ------------- | ----------------------------------- | ------------------------------------ |
+| `component`   | Package identifier                  | "cli", "engine", "registry"          |
+| `operation`   | Current operation                   | "get_projected_cost", "load_plan"    |
+| `trace_id`    | Request correlation (auto-injected) | "01HQ7X2J3K4M5N6P7Q8R9S0T1U"         |
+| `duration_ms` | Operation timing                    | `Dur("duration_ms", elapsed)`        |
+
+**Logging Levels:**
+
+```go
+// Trace - Very detailed debugging
+log.Trace().Ctx(ctx).Str("component", "engine").Msg("internal detail")
+
+// Debug - Detailed troubleshooting info
+log.Debug().Ctx(ctx).Str("component", "engine").Msg("querying plugin")
+
+// Info - Normal operations
+log.Info().Ctx(ctx).Str("component", "engine").Msg("calculation complete")
+
+// Warn - Something unexpected but recoverable
+log.Warn().Ctx(ctx).Str("component", "engine").Err(err).Msg("plugin timeout, using fallback")
+
+// Error - Something failed
+log.Error().Ctx(ctx).Str("component", "engine").Err(err).Msg("calculation failed")
+```
+
+**Sensitive Data Protection:**
+
+```go
+// Use SafeStr for potentially sensitive key-value pairs
+logging.SafeStr(event, "api_key", apiKey)  // Automatically redacts sensitive keys
+```
+
+**Trace ID Management:**
+
+```go
+// Generate trace ID at entry point
+traceID := logging.GetOrGenerateTraceID(ctx)
+ctx = logging.ContextWithTraceID(ctx, traceID)
+
+// TracingHook automatically injects trace_id into all log entries
+// when using .Ctx(ctx)
+```
+
 ### Commit Messages
 
 ```

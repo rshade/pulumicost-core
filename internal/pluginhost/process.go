@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
@@ -39,22 +40,68 @@ func (p *ProcessLauncher) Start(
 	path string,
 	args ...string,
 ) (*grpc.ClientConn, func() error, error) {
+	log := logging.FromContext(ctx)
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Str("operation", "start_plugin").
+		Str("plugin_path", path).
+		Msg("starting plugin process")
+
 	port, err := p.allocatePort(ctx)
 	if err != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(err).
+			Msg("failed to allocate port for plugin")
 		return nil, nil, err
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Int("port", port).
+		Msg("allocated port for plugin")
 
 	cmd, err := p.startPlugin(ctx, path, port, args)
 	if err != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(err).
+			Str("plugin_path", path).
+			Int("port", port).
+			Msg("failed to start plugin process")
 		return nil, nil, err
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Int("pid", cmd.Process.Pid).
+		Msg("plugin process started")
 
 	conn, err := p.connectToPlugin(ctx, fmt.Sprintf("127.0.0.1:%d", port), cmd)
 	if err != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(err).
+			Str("address", fmt.Sprintf("127.0.0.1:%d", port)).
+			Msg("failed to connect to plugin")
 		return nil, nil, err
 	}
 
-	closeFn := p.createCloseFn(conn, cmd)
+	log.Info().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Str("plugin_path", path).
+		Int("port", port).
+		Int("pid", cmd.Process.Pid).
+		Msg("plugin connected successfully")
+
+	closeFn := p.createCloseFn(ctx, conn, cmd)
 	return conn, closeFn, nil
 }
 
@@ -122,7 +169,8 @@ func (p *ProcessLauncher) connectToPlugin(
 
 func (p *ProcessLauncher) tryConnect(address string) (*grpc.ClientConn, error) {
 	return grpc.NewClient(address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(TraceInterceptor()))
 }
 
 func (p *ProcessLauncher) isConnectionReady(ctx context.Context, conn *grpc.ClientConn) bool {
@@ -147,15 +195,33 @@ func (p *ProcessLauncher) killProcess(cmd *exec.Cmd) {
 	}
 }
 
-func (p *ProcessLauncher) createCloseFn(conn *grpc.ClientConn, cmd *exec.Cmd) func() error {
+func (p *ProcessLauncher) createCloseFn(ctx context.Context, conn *grpc.ClientConn, cmd *exec.Cmd) func() error {
 	return func() error {
+		log := logging.FromContext(ctx)
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Str("operation", "close_plugin").
+			Msg("closing plugin connection")
+
 		if err := conn.Close(); err != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "pluginhost").
+				Err(err).
+				Msg("error closing gRPC connection")
 			return fmt.Errorf("closing connection: %w", err)
 		}
 		if cmd.Process != nil {
+			pid := cmd.Process.Pid
 			cmd.WaitDelay = processWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "pluginhost").
+				Int("pid", pid).
+				Msg("plugin process terminated")
 		}
 		return nil
 	}

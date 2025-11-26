@@ -126,26 +126,50 @@ get_highest_from_branches() {
     echo "$highest"
 }
 
-# Function to check existing branches (local and remote) and return next available number
+# Function to get next available feature number across ALL branches and specs
+# This ensures globally unique numbering regardless of short-name
+get_next_feature_number() {
+    local specs_dir="$1"
+
+    # Fetch all remotes to get latest branch info (suppress errors if no remotes)
+    git fetch --all --prune 2>/dev/null || true
+
+    # Get highest from branches (uses git branch -a to check all)
+    local branch_highest=$(get_highest_from_branches)
+
+    # Get highest from specs directory
+    local specs_highest=$(get_highest_from_specs "$specs_dir")
+
+    # Return the higher of the two, plus 1
+    local max_num=$branch_highest
+    if [ "$specs_highest" -gt "$max_num" ]; then
+        max_num=$specs_highest
+    fi
+
+    echo $((max_num + 1))
+}
+
+# Legacy function kept for backwards compatibility - checks specific short-name
+# Use get_next_feature_number instead for globally unique numbering
 check_existing_branches() {
     local short_name="$1"
     local specs_dir="$2"
-    
+
     # Fetch all remotes to get latest branch info (suppress errors if no remotes)
     git fetch --all --prune 2>/dev/null || true
-    
+
     # Find all branches matching the pattern using git ls-remote (more reliable)
     local remote_branches=$(git ls-remote --heads origin 2>/dev/null | grep -E "refs/heads/[0-9]+-${short_name}$" | sed 's/.*\/\([0-9]*\)-.*/\1/' | sort -n)
-    
+
     # Also check local branches
     local local_branches=$(git branch 2>/dev/null | grep -E "^[* ]*[0-9]+-${short_name}$" | sed 's/^[* ]*//' | sed 's/-.*//' | sort -n)
-    
+
     # Check specs directory as well
     local spec_dirs=""
     if [ -d "$specs_dir" ]; then
         spec_dirs=$(find "$specs_dir" -maxdepth 1 -type d -name "[0-9]*-${short_name}" 2>/dev/null | xargs -n1 basename 2>/dev/null | sed 's/-.*//' | sort -n)
     fi
-    
+
     # Combine all sources and get the highest number
     local max_num=0
     for num in $remote_branches $local_branches $spec_dirs; do
@@ -153,7 +177,7 @@ check_existing_branches() {
             max_num=$num
         fi
     done
-    
+
     # Return next number
     echo $((max_num + 1))
 }
@@ -246,8 +270,8 @@ fi
 # Determine branch number
 if [ -z "$BRANCH_NUMBER" ]; then
     if [ "$HAS_GIT" = true ]; then
-        # Check existing branches on remotes
-        BRANCH_NUMBER=$(check_existing_branches "$BRANCH_SUFFIX" "$SPECS_DIR")
+        # Get next available number across ALL branches and specs (globally unique)
+        BRANCH_NUMBER=$(get_next_feature_number "$SPECS_DIR")
     else
         # Fall back to local directory check
         HIGHEST=$(get_highest_from_specs "$SPECS_DIR")

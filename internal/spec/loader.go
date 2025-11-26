@@ -4,12 +4,14 @@
 package spec
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"gopkg.in/yaml.v3"
 )
 
@@ -45,21 +47,65 @@ type PricingSpec struct {
 
 // LoadSpec loads a pricing specification by provider, service, and SKU.
 func (l *Loader) LoadSpec(provider, service, sku string) (interface{}, error) {
+	return l.LoadSpecWithContext(context.Background(), provider, service, sku)
+}
+
+// LoadSpecWithContext loads a pricing specification by provider, service, and SKU with logging.
+func (l *Loader) LoadSpecWithContext(ctx context.Context, provider, service, sku string) (interface{}, error) {
+	log := logging.FromContext(ctx)
 	filename := fmt.Sprintf("%s-%s-%s.yaml", provider, service, sku)
 	path := filepath.Join(l.specDir, filename)
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "spec").
+		Str("operation", "load_spec").
+		Str("provider", provider).
+		Str("service", service).
+		Str("sku", sku).
+		Str("spec_path", path).
+		Msg("loading pricing spec")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "spec").
+				Str("provider", provider).
+				Str("service", service).
+				Str("sku", sku).
+				Msg("spec file not found")
 			return nil, ErrSpecNotFound
 		}
+		log.Error().
+			Ctx(ctx).
+			Str("component", "spec").
+			Err(err).
+			Str("spec_path", path).
+			Msg("failed to read spec file")
 		return nil, fmt.Errorf("reading spec file: %w", err)
 	}
 
 	var spec PricingSpec
 	if unmarshalErr := yaml.Unmarshal(data, &spec); unmarshalErr != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "spec").
+			Err(unmarshalErr).
+			Str("spec_path", path).
+			Msg("failed to parse spec YAML")
 		return nil, fmt.Errorf("parsing spec YAML: %w", unmarshalErr)
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "spec").
+		Str("provider", spec.Provider).
+		Str("service", spec.Service).
+		Str("sku", spec.SKU).
+		Str("currency", spec.Currency).
+		Msg("spec loaded successfully")
 
 	return &spec, nil
 }

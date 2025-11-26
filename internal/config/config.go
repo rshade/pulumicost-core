@@ -436,6 +436,9 @@ func (c *Config) applyEnvOverrides() {
 	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
 		c.Logging.Level = level
 	}
+	if format := os.Getenv("PULUMICOST_LOG_FORMAT"); format != "" {
+		c.Logging.Format = format
+	}
 	if logFile := os.Getenv("PULUMICOST_LOG_FILE"); logFile != "" {
 		c.Logging.File = logFile
 	}

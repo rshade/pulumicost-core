@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 )
 
@@ -107,10 +108,30 @@ func (r *Registry) findBinary(dir string) string {
 // Open launches plugin processes and returns active gRPC clients with a cleanup function.
 // If onlyName is non-empty, only that specific plugin is opened.
 func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Client, func(), error) {
+	log := logging.FromContext(ctx)
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "registry").
+		Str("operation", "open_plugins").
+		Str("plugin_filter", onlyName).
+		Str("plugin_root", r.root).
+		Msg("opening plugins")
+
 	plugins, err := r.ListPlugins()
 	if err != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "registry").
+			Err(err).
+			Msg("failed to list plugins")
 		return nil, nil, err
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "registry").
+		Int("discovered_plugins", len(plugins)).
+		Msg("plugins discovered")
 
 	var clients []*pluginhost.Client
 	cleanup := func() {
@@ -121,15 +142,51 @@ func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Cli
 
 	for _, plugin := range plugins {
 		if onlyName != "" && plugin.Name != onlyName {
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "registry").
+				Str("plugin_name", plugin.Name).
+				Str("filter", onlyName).
+				Msg("skipping plugin (filter mismatch)")
 			continue
 		}
 
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "registry").
+			Str("plugin_name", plugin.Name).
+			Str("plugin_version", plugin.Version).
+			Str("plugin_path", plugin.Path).
+			Msg("attempting to connect to plugin")
+
 		client, clientErr := pluginhost.NewClient(ctx, r.launcher, plugin.Path)
 		if clientErr != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "registry").
+				Str("plugin_name", plugin.Name).
+				Str("plugin_path", plugin.Path).
+				Err(clientErr).
+				Msg("failed to connect to plugin")
 			continue
 		}
+
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "registry").
+			Str("plugin_name", plugin.Name).
+			Str("plugin_version", plugin.Version).
+			Msg("plugin connected successfully")
+
 		clients = append(clients, client)
 	}
+
+	log.Info().
+		Ctx(ctx).
+		Str("component", "registry").
+		Int("connected_plugins", len(clients)).
+		Int("total_discovered", len(plugins)).
+		Msg("plugin discovery complete")
 
 	return clients, cleanup, nil
 }
