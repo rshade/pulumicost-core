@@ -7,6 +7,9 @@ RUN apk add --no-cache git make ca-certificates
 # Set working directory
 WORKDIR /app
 
+# Bypass Go proxy for rshade modules - fetch directly from GitHub
+ENV GOPRIVATE=github.com/rshade/*
+
 # Copy go mod files
 COPY go.mod go.sum ./
 

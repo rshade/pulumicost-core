@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -379,11 +380,29 @@ require (
 }
 
 func (g *projectGenerator) generateManifest() error {
-	manifest := pluginsdk.CreateDefaultManifest(g.name, g.author, g.providers)
-	if err := manifest.SaveManifest(filepath.Join(g.projectDir, "manifest.yaml")); err != nil {
+	// Create manifest using proto structs
+	manifest := &pbc.PluginManifest{
+		Metadata: &pbc.PluginMetadata{
+			Name:        g.name,
+			Version:     "0.1.0",
+			Description: fmt.Sprintf("PulumiCost plugin for %s", g.name),
+			Author:      g.author,
+			License:     "Apache-2.0",
+			Keywords:    append([]string{"pulumicost", "cost", "plugin"}, g.providers...),
+		},
+		Specification: &pbc.PluginSpecification{
+			SpecVersion:        "1.0",
+			SupportedProviders: g.providers,
+			Capabilities:       []string{"projected_cost", "actual_cost"},
+		},
+	}
+
+	// Save as YAML
+	if err := pluginsdk.SaveManifest(filepath.Join(g.projectDir, "manifest.yaml"), manifest); err != nil {
 		return err
 	}
-	return manifest.SaveManifest(filepath.Join(g.projectDir, "manifest.json"))
+	// Save as JSON
+	return pluginsdk.SaveManifest(filepath.Join(g.projectDir, "manifest.json"), manifest)
 }
 
 func (g *projectGenerator) generateMainGo() error {
@@ -397,7 +416,7 @@ import (
 	"syscall"
 
 	"github.com/example/%s/internal/pricing"
-	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 )
 
 func main() {
@@ -441,7 +460,7 @@ import (
 	"context"
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
-	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 )
 
 // Calculator implements the PulumiCost plugin interface for %s.
@@ -778,7 +797,7 @@ import (
 	"testing"
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
-	"github.com/rshade/pulumicost-core/pkg/pluginsdk"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 )
 
 func TestCalculatorName(t *testing.T) {
