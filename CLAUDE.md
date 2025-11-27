@@ -1136,6 +1136,8 @@ CodeRabbit now:
 ## Active Technologies
 - Go 1.24.10 + github.com/rs/zerolog v1.34.0, github.com/oklog/ulid/v2 (for trace IDs) (004-zerolog-tracing)
 - N/A (logs to stderr/file, no persistence) (004-zerolog-tracing)
+- Go 1.24.10 + google.golang.org/grpc v1.74.2, github.com/rs/zerolog (001-pluginsdk-interceptors)
+- N/A (stateless configuration) (001-pluginsdk-interceptors)
 
 - Go 1.24.10
 - archive/tar

@@ -370,9 +370,8 @@ func (g *projectGenerator) generateGoMod() error {
 go 1.21
 
 require (
-	github.com/rshade/pulumicost-core v0.1.0
-	github.com/rshade/pulumicost-spec v0.1.0
-	google.golang.org/grpc v1.74.2
+	github.com/rshade/pulumicost-spec v0.4.1
+	google.golang.org/grpc v1.77.0
 )
 `, g.name)
 
