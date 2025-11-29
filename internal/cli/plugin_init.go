@@ -367,12 +367,11 @@ func (g *projectGenerator) createDirectories() error {
 func (g *projectGenerator) generateGoMod() error {
 	content := fmt.Sprintf(`module github.com/example/%s
 
-go 1.21
+go 1.24.10
 
 require (
-	github.com/rshade/pulumicost-core v0.1.0
-	github.com/rshade/pulumicost-spec v0.1.0
-	google.golang.org/grpc v1.74.2
+	github.com/rshade/pulumicost-spec v0.4.1
+	google.golang.org/grpc v1.77.0
 )
 `, g.name)
 
@@ -588,7 +587,7 @@ func SavePricingData(path string, data []PricingData) error {
 	}
 
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, pluginDirPerm); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
