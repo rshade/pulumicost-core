@@ -4,6 +4,10 @@ on:
   issue_comment:
     types: [created]
 
+env:
+  # Bypass Go proxy for rshade modules - fetch directly from GitHub
+  GOPRIVATE: github.com/rshade/*
+
 jobs:
   opencode-review-fix:
     if: |

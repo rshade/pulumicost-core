@@ -16,6 +16,10 @@ on:
 permissions:
   contents: write # Needed for GoReleaser to upload artifacts to the release
 
+env:
+  # Bypass Go proxy for rshade modules - fetch directly from GitHub
+  GOPRIVATE: github.com/rshade/*
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest

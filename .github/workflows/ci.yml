@@ -11,6 +11,10 @@ permissions:
   contents: read
   checks: write
 
+env:
+  # Bypass Go proxy for rshade modules - fetch directly from GitHub
+  GOPRIVATE: github.com/rshade/*
+
 jobs:
   test:
     name: Test
