@@ -84,37 +84,41 @@ find_repo_root() {
 get_highest_from_specs() {
     local specs_dir="$1"
     local highest=0
-    
+
     if [ -d "$specs_dir" ]; then
-        for dir in "$specs_dir"/*; do
-            [ -d "$dir" ] || continue
+        # Use find to reliably get directories, avoiding glob issues
+        while IFS= read -r dir; do
+            [ -z "$dir" ] && continue
             dirname=$(basename "$dir")
-            number=$(echo "$dirname" | grep -o '^[0-9]\+' || echo "0")
+            # Extract leading digits using grep -E for portability
+            number=$(echo "$dirname" | grep -oE '^[0-9]+' || echo "0")
+            [ -z "$number" ] && number=0
             number=$((10#$number))
             if [ "$number" -gt "$highest" ]; then
                 highest=$number
             fi
-        done
+        done < <(find "$specs_dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
     fi
-    
+
     echo "$highest"
 }
 
 # Function to get highest number from git branches
 get_highest_from_branches() {
     local highest=0
-    
+
     # Get all branches (local and remote)
     branches=$(git branch -a 2>/dev/null || echo "")
-    
+
     if [ -n "$branches" ]; then
         while IFS= read -r branch; do
+            [ -z "$branch" ] && continue
             # Clean branch name: remove leading markers and remote prefixes
             clean_branch=$(echo "$branch" | sed 's/^[* ]*//; s|^remotes/[^/]*/||')
-            
-            # Extract feature number if branch matches pattern ###-*
-            if echo "$clean_branch" | grep -q '^[0-9]\{3\}-'; then
-                number=$(echo "$clean_branch" | grep -o '^[0-9]\{3\}' || echo "0")
+
+            # Extract feature number if branch matches pattern NNN-* (any digits)
+            number=$(echo "$clean_branch" | grep -oE '^[0-9]+' || echo "")
+            if [ -n "$number" ]; then
                 number=$((10#$number))
                 if [ "$number" -gt "$highest" ]; then
                     highest=$number
@@ -122,7 +126,7 @@ get_highest_from_branches() {
             fi
         done <<< "$branches"
     fi
-    
+
     echo "$highest"
 }
 
