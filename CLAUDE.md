@@ -25,6 +25,25 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 
 **Project Go Version**: 1.24.10
 
+### Dependencies
+
+- `github.com/spf13/cobra` - CLI framework
+- `google.golang.org/grpc` - Plugin communication
+- `gopkg.in/yaml.v3` - YAML spec parsing
+- `github.com/rshade/pulumicost-spec` - Protocol definitions (via replace directive to ../pulumicost-spec)
+- archive/tar
+- archive/zip
+- compress/gzip
+- net/http
+- github.com/spf13/cobra
+- github.com/rs/zerolog
+- github.com/oklog/ulid/v2
+- gopkg.in/yaml.v3
+- google.golang.org/grpc v1.77.0
+- File system
+  - ~/.pulumicost/plugins/
+  - ~/.pulumicost/config.yaml
+
 ### Version Verification Protocol
 
 **CRITICAL**: Before claiming any Go version "doesn't exist" or suggesting version changes:
@@ -42,202 +61,6 @@ Do NOT suggest version downgrades without explicit verification from go.dev.
 - `make docs-build` - Build documentation site with Jekyll
 - `make docs-serve` - Serve documentation locally (http://localhost:4000/pulumicost-core/)
 - `make docs-validate` - Validate documentation structure and completeness
-
-## Playwright MCP Integration
-
-### Overview
-
-The project is configured with Playwright MCP for automated browser testing and documentation validation. The configuration is in `.mcp.json` and uses chromium in headless, isolated mode.
-
-### Configuration
-
-Located in `.mcp.json`:
-
-```json
-{
-  "playwright": {
-    "command": "npx",
-    "args": ["-y", "@playwright/mcp@latest", "--browser", "chromium", "--headless", "--isolated"],
-    "env": {
-      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "0"
-    }
-  }
-}
-```
-
-### Key Features
-
-- **Browser**: Chromium (automatically installed via npx)
-- **Mode**: Headless and isolated (no persistent profile)
-- **Auto-installation**: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 ensures chromium installs on first use
-
-### Initial Setup
-
-If you encounter chromium installation issues, manually install:
-
-```bash
-npx playwright install chromium
-```
-
-### Common Use Cases
-
-**1. Documentation Site Validation**
-
-```bash
-# Navigate to local docs and take screenshot
-mcp__playwright__browser_navigate(url: "http://localhost:4000/pulumicost-core/")
-mcp__playwright__browser_snapshot()
-mcp__playwright__browser_take_screenshot(filename: "docs-homepage.png")
-```
-
-**2. GitHub Pages Validation**
-
-```bash
-# Check deployed documentation
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
-mcp__playwright__browser_snapshot()
-```
-
-**3. Link Checking and Navigation Testing**
-
-```bash
-# Test documentation navigation
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
-mcp__playwright__browser_click(element: "User Guide link", ref: "a[href='/guides/user-guide']")
-mcp__playwright__browser_snapshot()
-```
-
-**4. Form Testing (Future Plugin Integration)**
-
-```bash
-# Test interactive documentation features
-mcp__playwright__browser_fill_form(fields: [...])
-mcp__playwright__browser_click(element: "Submit button", ref: "button[type='submit']")
-```
-
-**5. Network Request Monitoring**
-
-```bash
-# Monitor API calls in documentation examples
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/examples/")
-mcp__playwright__browser_network_requests()
-```
-
-### Troubleshooting
-
-**Issue: "Chromium distribution 'chrome' is not found"**
-
-- Solution: Run `npx playwright install chromium`
-- Root cause: Chromium not installed or wrong browser channel specified
-
-**Issue: Hanging on launch**
-
-- Solution: Ensure `--headless` and `--isolated` flags are set in `.mcp.json`
-- Check: `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0` is set to allow installation
-
-**Issue: Permission denied in WSL**
-
-- Solution: Add `--no-sandbox --disable-setuid-sandbox` to launchOptions if needed
-- Note: Already configured in current setup
-
-### Best Practices
-
-1. **Always use snapshots first**: `browser_snapshot()` is faster than screenshots and provides better context
-2. **Screenshots for visual verification**: Use `browser_take_screenshot()` for visual regression testing
-3. **Network monitoring**: Use `browser_network_requests()` to validate API calls in documentation examples
-4. **Cleanup**: Browser instances are automatically cleaned up due to `--isolated` flag
-5. **Documentation validation workflow**:
-   - Start local docs: `make docs-serve`
-   - Navigate: `browser_navigate(url: "http://localhost:4000/pulumicost-core/")`
-   - Validate: `browser_snapshot()` and verify content
-   - Test links: Click through navigation and verify no 404s
-
-### Integration with CI/CD
-
-For future automated testing, Playwright can be integrated into GitHub Actions:
-
-```yaml
-- name: Install Playwright
-  run: npx playwright install chromium
-- name: Test Documentation
-  run: npx playwright test
-```
-
-### Actual Usage Examples
-
-Real-world Playwright MCP usage for testing GitHub Pages:
-
-```bash
-# Navigate and verify page loads
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
-
-# Take full page screenshot for visual verification
-mcp__playwright__browser_take_screenshot(filename: "site-screenshot.png", fullPage: true)
-
-# Check network requests to verify CSS and assets loaded
-mcp__playwright__browser_network_requests()
-# Returns: All HTTP requests with status codes (useful for debugging 404s)
-```
-
-## GitHub Pages and Jekyll Documentation Setup
-
-### Critical Setup Requirements
-
-**1. Entry Point File:**
-
-- GitHub Pages requires `index.md` or `index.html` as the landing page
-- Jekyll does NOT automatically convert `README.md` to `index.html`
-- Always create an explicit `index.md` file in the docs directory
-
-**2. Jekyll Plugin Dependencies:**
-
-- Plugins must be installed BEFORE Jekyll can use their template tags
-- Common error: `Liquid syntax error: Unknown tag 'seo'` means plugin not loaded
-- Solution: Either install the plugin or remove the template tag
-
-**3. Custom CSS Integration:**
-
-- Custom stylesheets must be explicitly linked in `_layouts/default.html`
-- Path format: `{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}`
-- SCSS files in `docs/assets/css/style.scss` are automatically processed by Jekyll
-
-**4. Layout and Content Separation:**
-
-- Avoid duplicate H1 headings between layout header and page content
-- Layout typically provides site title/header
-- Page content should start with introductory text, not repeat the title
-
-### Common Jekyll Build Errors
-
-**Error: `Unknown tag 'seo'`**
-
-- Cause: `jekyll-seo-tag` plugin not installed or not in `_config.yml` plugins list
-- Fix: Either add plugin to Gemfile and \_config.yml, or replace `{% seo %}` with manual tags
-- Manual alternative:
-  ```html
-  <title>{{ page.title | default: site.title }}</title>
-  <meta name="description" content="{{ page.description | default: site.description }}" />
-  ```
-
-**Error: 404 on GitHub Pages**
-
-- Cause: Missing `index.md` or `index.html` in docs directory
-- Fix: Create `index.md` with proper frontmatter:
-  ```yaml
-  ---
-  layout: default
-  title: Your Title
-  description: Your description
-  ---
-  ```
-
-**Error: No CSS styling on deployed site**
-
-- Cause: Missing stylesheet link in `_layouts/default.html`
-- Fix: Add link tag in `<head>` section:
-  ```html
-  <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
-  ```
 
 ### GitHub Actions Workflow Best Practices
 
@@ -452,13 +275,6 @@ Key plugin methods:
 - `examples/plans/aws-simple-plan.json` - Sample Pulumi plan for testing
 - `examples/specs/aws-ec2-t3-micro.yaml` - Sample pricing specification
 
-## Dependencies
-
-- `github.com/spf13/cobra` - CLI framework
-- `google.golang.org/grpc` - Plugin communication
-- `gopkg.in/yaml.v3` - YAML spec parsing
-- `github.com/rshade/pulumicost-spec` - Protocol definitions (via replace directive to ../pulumicost-spec)
-
 ## Project Management
 
 ### Cross-Repository Project
@@ -486,109 +302,6 @@ gh project view 3 --owner rshade
 gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
 ```
 
-### Dependency & Milestone Tracker
-
-**Milestones Created:**
-
-- `2025-Q1 - Spec v0.1.0 MVP` (Due: Aug 20, 2025) - Protocol definitions
-- `2025-Q1 - Core v0.1.0 MVP` (Due: Sep 6, 2025) - CLI and plugin host
-- `2025-Q1 - Kubecost Plugin v0.1.0 MVP` (Due: Sep 6, 2025) - Plugin implementation
-
-**Critical Path Dependencies:**
-
-- SPEC-1 → CORE-3 (Plugin Host Bootstrap)
-- SPEC-1 → PLUG-KC-1 → CORE-5 (Actual Cost Pipeline)
-- SPEC-2 → PLUG-KC-3 → CORE-4 (Projected Cost Pipeline)
-
-**Week 1 (Parallel Work):**
-
-- Core: CLI Skeleton (#3), Pulumi JSON Ingest (#4)
-- Spec: Freeze proto & schema
-- Plugin: Stub API client, manifest
-
-**Week 2 (Dependencies unlock):**
-
-- Core: Plugin Host Bootstrap (#2)
-- Plugin: Kubecost API Client + Supports()
-
-**Week 3 (Feature completion):**
-
-- Core: Projected Cost Pipeline (#5), Actual Cost Pipeline (#6)
-- Plugin: Projected Cost Logic
-
-**Week 4 (Integration):**
-
-- End-to-end examples and MVP stabilization
-
-## Protocol Integration Status
-
-### ✅ SPEC-1 Completed - Proto Integration
-
-- **Status**: costsource.proto v0.1.0 is frozen and integrated
-- **Location**: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
-- **Generated SDK**: Available at `github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
-- **Integration**: Core now uses real proto definitions via `internal/proto/adapter.go`
-
-### Proto Integration Details
-
-- Removed mock proto implementation (`internal/proto/mock.go`)
-- Created adapter layer (`internal/proto/adapter.go`) to bridge engine expectations with real proto types
-- Updated dependencies: gRPC v1.74.2, protobuf v1.36.7
-- Core engine successfully uses `CostSourceServiceClient` from pulumicost-spec
-
-### Verified Working Commands
-
-```bash
-# Basic CLI functionality verified
-./bin/pulumicost --help
-./bin/pulumicost cost projected --help
-
-# Projected cost calculation (shows resources but "none" adapter since no plugins)
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
-
-# Plugin management (correctly reports no plugins installed)
-./bin/pulumicost plugin list
-./bin/pulumicost plugin validate
-```
-
-### ✅ CORE-5 Completed - Actual Cost Pipeline
-
-- **Status**: Comprehensive actual cost pipeline implemented with advanced features
-- **Implementation**: PR #36 - Added cost aggregation, filtering, and grouping capabilities
-- **Key Features**:
-  - Time range queries with flexible date parsing ("2006-01-02", RFC3339)
-  - Resource filtering by tags/metadata with `tag:key=value` syntax
-  - Cost aggregation with daily/monthly breakdowns
-  - Grouping by resource, type, provider, or date dimensions
-  - Multiple output formats (table, JSON, NDJSON)
-  - Comprehensive cost reporting with actual vs projected comparisons
-
-### ✅ CORE-6 Completed - Cross-Provider Aggregation System
-
-- **Status**: Advanced cross-provider cost aggregation with comprehensive validation
-- **Key Features**:
-  - **Currency Validation**: Ensures consistent currency across all cost results (ErrMixedCurrencies)
-  - **Input Validation**: Comprehensive checks for empty results, invalid date ranges, and grouping types
-  - **Time-Based Aggregation**: Daily and monthly cost aggregation with intelligent cost conversion
-  - **Provider Extraction**: Automatic provider identification from resource types ("aws:ec2:Instance" → "aws")
-  - **Type Safety**: GroupBy validation methods (IsValid(), IsTimeBasedGrouping(), String())
-  - **Error Handling**: Specific error types for different validation failures
-  - **Cost Intelligence**: Prefers actual costs (TotalCost) over projections with automatic daily/monthly conversion
-
-### Architecture Changes
-
-- **New Engine Method**: `GetActualCostWithOptions()` with flexible querying
-- **Enhanced Data Structures**: `ActualCostRequest` with advanced filtering options
-- **Tag Matching**: `matchesTags()` helper for resource filtering
-- **Cost Aggregation**: Daily/monthly cost breakdown logic
-- **Output Enhancement**: Rich table formatting for actual cost results
-- **Cross-Provider Functions**: `CreateCrossProviderAggregation()` with comprehensive validation pipeline
-- **Currency System**: Centralized currency validation with defaulting to USD
-- **Time Processing**: Intelligent cost calculation for different time periods
-- **Error Types**: New error constants for specific validation scenarios
-
-**New Error Types for Cross-Provider Aggregation**:
-
 ```go
 var (
     ErrNoCostData       = errors.New("no cost data available")
@@ -598,14 +311,6 @@ var (
     ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
 )
 ```
-
-### Next Steps Unlocked
-
-With SPEC-1 and CORE-5 complete, the following work can now proceed:
-
-- **CORE-3**: Plugin Host Bootstrap (depends on SPEC-1)
-- **PLUG-KC-1**: Kubecost API Client (depends on SPEC-1)
-- Integration testing with actual plugins
 
 ## CI/CD Pipeline
 
@@ -666,23 +371,6 @@ Triggered on version tags (v\*):
 - Asset upload with verification instructions
 - Pre-release detection for tags containing hyphens
 
-### Dependency Management
-
-**Renovate Configuration (.github/renovate.json):**
-
-- Weekly updates on Monday mornings (UTC)
-- Grouped updates by dependency type
-- Semantic commit messages with conventional format
-- Security vulnerability alerts with priority labeling
-- Rate limiting to prevent spam
-
-**Dependabot Configuration (.github/dependabot.yml):**
-
-- Go modules and GitHub Actions monitoring
-- Weekly schedule with proper time zone handling
-- Automatic assignee and reviewer assignment
-- Conventional commit message formatting
-
 ### Quality Gates
 
 **Code Quality:**
@@ -733,13 +421,6 @@ go tool cover -func=coverage.out | grep total  # Check total coverage
 ./bin/pulumicost plugin list
 ./bin/pulumicost plugin validate
 ```
-
-### Release Process
-
-1. Create and push version tag: `git tag v1.0.0 && git push origin v1.0.0`
-2. GitHub Actions automatically builds multi-platform binaries
-3. Release created with changelog and downloadable assets
-4. Checksums provided for verification
 
 ## CI/CD Implementation Learnings
 
@@ -1109,7 +790,7 @@ The repository includes a comprehensive `.coderabbit.yaml` configuration optimiz
 
 **Tool Configuration:**
 
-- `golangci-lint: enabled: true` - Integrates with project's existing linting
+- `golangci-lint: enabled: false` - Integrates with project's existing linting
 - `markdownlint: enabled: true` - Validates documentation
 - `gitleaks: enabled: true` - Scans for secrets
 - `actionlint: enabled: true` - Validates GitHub Actions
@@ -1124,35 +805,3 @@ CodeRabbit now:
 3. **Resolves outdated comments** when issues are fixed
 4. **Provides detailed Go-specific feedback** on code quality
 5. **Integrates with existing CI/CD** tools and workflows
-
-### Commands
-
-```bash
-@coderabbitai resolve          # Mark all previous comments as resolved
-@coderabbitai configuration    # Show current configuration
-@coderabbitai plan            # Plan code edits for comments
-```
-
-## Active Technologies
-- Go 1.24.10 + github.com/rs/zerolog v1.34.0, github.com/oklog/ulid/v2 (for trace IDs) (004-zerolog-tracing)
-- N/A (logs to stderr/file, no persistence) (004-zerolog-tracing)
-- Go 1.24.10 + google.golang.org/grpc v1.74.2, github.com/rs/zerolog (001-pluginsdk-interceptors)
-- N/A (stateless configuration) (001-pluginsdk-interceptors)
-
-- Go 1.24.10
-- archive/tar
-- archive/zip
-- compress/gzip
-- net/http
-- github.com/spf13/cobra
-- github.com/rs/zerolog
-- gopkg.in/yaml.v3
-- File system
-  - ~/.pulumicost/plugins/
-  - ~/.pulumicost/config.yaml
-
-## Recent Changes
-
-- 004-zerolog-tracing: Zerolog distributed tracing with --debug flag, environment variables, and trace ID propagation
-- 001-proto-error-aggregation: Comprehensive error aggregation system for engine operations
-- 003-plugin-install: Plugin install/update/remove commands with GitHub registry support
