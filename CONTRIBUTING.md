@@ -1,458 +1,391 @@
-# Contributing to PulumiCost
+# Contributing to PulumiCost Core
 
-Thank you for your interest in contributing to PulumiCost! This document provides guidelines and instructions for contributing code, documentation, and feedback.
+Thank you for your interest in contributing to PulumiCost Core! This document
+provides guidelines and instructions for contributing code, documentation, and
+feedback.
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Testing](#testing)
+- [License](#license)
+- [Contribution Types](#contribution-types)
+- [Development Environment Setup](#development-environment-setup)
+- [Feature Development with SpecKit](#feature-development-with-speckit)
+- [Minor Bug Fixes](#minor-bug-fixes)
+- [Quality Requirements](#quality-requirements)
 - [Submitting Changes](#submitting-changes)
-- [Documentation](#documentation)
-- [Plugin Development](#plugin-development)
 - [Getting Help](#getting-help)
 
----
+## License
 
-## Code of Conduct
+This project is licensed under the **Apache License 2.0**.
 
-We are committed to providing a welcoming and inclusive environment. Please read our [Code of Conduct](docs/support/code-of-conduct.md) before participating.
+By contributing to PulumiCost Core, you agree that your contributions will be
+licensed under the same terms. See the [LICENSE](LICENSE) file for the full
+license text.
 
----
+## Contribution Types
 
-## Getting Started
+### New Features (Requires SpecKit)
+
+New features, capabilities, and architectural changes **must** use
+[SpecKit](https://github.com/github/spec-kit) for specification-driven
+development. This ensures features are well-planned, documented, and testable.
+
+### Minor Bug Fixes (SpecKit Optional)
+
+Minor bug fixes and small improvements **do not require** SpecKit. You may
+submit a pull request directly.
+
+**What qualifies as a minor bug fix:**
+
+- Typo corrections in code or documentation
+- Small logic fixes that don't change APIs
+- Documentation corrections or clarifications
+- Dependency updates for security patches
+- Test improvements and additional test coverage
+- Performance optimizations without API changes
+
+**What requires SpecKit:**
+
+- New CLI commands or flags
+- New features or capabilities
+- API changes or new endpoints
+- Architectural modifications
+- Changes affecting the plugin protocol
+- New integrations or data sources
+
+## Development Environment Setup
 
 ### Prerequisites
 
-- Go 1.24+ (for core development)
-- Git
-- Make
-- For documentation: Ruby 3.2+ (for Jekyll)
+| Tool             | Version    | Purpose             |
+| ---------------- | ---------- | ------------------- |
+| Go               | 1.25+      | Core development    |
+| golangci-lint    | v2.6.2     | Go linting          |
+| markdownlint-cli | v0.45.0    | Markdown linting    |
+| Git              | Latest     | Version control     |
+| Make             | Latest     | Build automation    |
+| Node.js          | Latest LTS | Documentation tools |
 
-### Fork and Clone
+### Installing Development Tools
+
+**Install Go** (if not already installed):
+
+Download from [go.dev/dl](https://go.dev/dl/)
+
+**Install golangci-lint:**
 
 ```bash
-# Fork the repository on GitHub
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/pulumicost-core.git
+# Download and install golangci-lint
+LINT_URL="https://raw.githubusercontent.com/golangci/golangci-lint"
+curl -sSfL "${LINT_URL}/HEAD/install.sh" | sh -s -- -b "$HOME/go/bin" v2.6.2
+```
+
+**Install markdownlint-cli:**
+
+```bash
+npm install -g markdownlint-cli@0.45.0
+```
+
+### Clone and Build
+
+```bash
+# Clone the repository
+git clone https://github.com/rshade/pulumicost-core.git
 cd pulumicost-core
 
-# Add upstream remote
-git remote add upstream https://github.com/rshade/pulumicost-core.git
-```
-
----
-
-## Development Setup
-
-### Initial Setup
-
-```bash
-# Install dependencies
+# Download dependencies
 go mod download
 
-# Verify your setup
-make build
-./bin/pulumicost --help
-```
-
-### Development Commands
-
-```bash
 # Build the binary
 make build
 
-# Run tests
-make test
-
-# Run linters
-make lint
-
-# Run validation
-make validate
-
-# Clean build artifacts
-make clean
-
-# View all commands
-make help
+# Verify the build
+./bin/pulumicost --help
 ```
 
-### For Documentation Development
+### Make Targets Reference
+
+Run `make help` for a complete list. All available targets:
+
+#### Core Development Targets
+
+| Target            | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `make build`      | Build the `pulumicost` binary to `bin/pulumicost`   |
+| `make test`       | Run all unit tests                                  |
+| `make test-race`  | Run tests with Go race detector enabled             |
+| `make lint`       | Run Go linters (golangci-lint) and Markdown linters |
+| `make validate`   | Run `go mod tidy`, `go vet`, and format validation  |
+| `make clean`      | Remove build artifacts (`bin/` directory)           |
+| `make run`        | Build and run binary with `--help` flag             |
+| `make dev`        | Build and run binary without arguments              |
+| `make inspect`    | Launch MCP Inspector for interactive testing        |
+
+#### Documentation Targets
+
+| Target               | Description                                       |
+| -------------------- | ------------------------------------------------- |
+| `make docs-lint`     | Lint documentation markdown files                 |
+| `make docs-build`    | Build documentation site with Jekyll              |
+| `make docs-serve`    | Serve documentation locally (localhost:4000)      |
+| `make docs-validate` | Validate documentation structure and completeness |
+
+### Verifying Your Setup
 
 ```bash
-# Install Ruby dependencies
-cd docs
-bundle install
-cd ..
-
-# Lint documentation
-make docs-lint
-
-# Serve documentation locally
-make docs-serve
-# Visit http://localhost:4000/pulumicost-core/
-
-# Build documentation
-make docs-build
-
-# Validate documentation
-make docs-validate
+# All of these should pass before you begin development
+make build      # Should complete without errors
+make test       # All tests should pass
+make lint       # No linting errors
+make validate   # Module and vet checks pass
 ```
 
----
+## Feature Development with SpecKit
 
-## Making Changes
+New features **must** follow specification-driven development using
+[SpecKit](https://github.com/github/spec-kit). This workflow ensures features
+are properly designed before implementation.
 
-### Creating a Branch
+### Why SpecKit?
+
+- **Better planning**: Features are fully specified before coding begins
+- **Clearer requirements**: User stories and acceptance criteria defined upfront
+- **Consistent quality**: Follows project constitution and quality gates
+- **Easier review**: Reviewers understand the intent and scope
+
+### Installing SpecKit
 
 ```bash
-# Fetch latest changes
-git fetch upstream
+# Install with uv (recommended)
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 
-# Create feature branch from main
-git checkout -b feature/my-feature upstream/main
+# Or install with pipx
+pipx install git+https://github.com/github/spec-kit.git
 ```
 
-### Branch Naming Conventions
+### SpecKit Workflow
 
-- `feature/description` - New features
-- `fix/description` - Bug fixes
-- `docs/description` - Documentation only
-- `refactor/description` - Code refactoring
-- `test/description` - Test additions/improvements
+1. **Create specification** - Define what you're building:
 
-### Code Style
+   ```text
+   /speckit.specify [your feature description]
+   ```
 
-#### Go Code
+2. **Clarify ambiguities** - Resolve underspecified areas (recommended):
 
-- Follow standard Go conventions ([Effective Go](https://golang.org/doc/effective_go))
-- Use `gofmt` for formatting
-- Ensure `golangci-lint` passes: `make lint`
-- Write clear variable and function names
-- Add comments for exported functions and complex logic
+   ```text
+   /speckit.clarify
+   ```
 
-#### Markdown
+   This asks targeted questions to fill gaps in your spec before planning.
 
-- Follow Google style guide for markdown formatting
-- Use `make docs-lint` to validate
-- Line length: 120 characters (soft limit for prose)
-- Use clear headings and structure
+3. **Plan implementation** - Design the technical approach:
 
-### Commit Messages
+   ```text
+   /speckit.plan
+   ```
 
-Write clear, descriptive commit messages:
+4. **Generate tasks** - Break down into actionable items:
 
+   ```text
+   /speckit.tasks
+   ```
+
+5. **Analyze consistency** - Validate artifacts before implementation:
+
+   ```text
+   /speckit.analyze
+   ```
+
+   This performs read-only analysis across spec, plan, and tasks to catch
+   inconsistencies, gaps, and constitution violations.
+
+6. **Implement** - Build the feature:
+
+   ```text
+   /speckit.implement
+   ```
+
+### Project Specifications Directory
+
+All specifications, plans, and templates are stored in the `.specify/` directory:
+
+```text
+.specify/
+├── memory/
+│   └── constitution.md    # Project principles and quality gates
+├── scripts/               # Helper scripts for SpecKit workflows
+│   └── bash/
+│       ├── check-prerequisites.sh
+│       ├── create-new-feature.sh
+│       └── setup-plan.sh
+└── templates/             # Templates for specs, plans, tasks
+    ├── spec-template.md
+    ├── plan-template.md
+    ├── tasks-template.md
+    └── checklist-template.md
 ```
-feature: Add support for cost filtering by tags
 
-This allows users to filter cost results by resource tags,
-enabling cost allocation by team or environment.
+**Important**: Review [.specify/memory/constitution.md](.specify/memory/constitution.md)
+before starting any feature work. It defines the core principles and quality
+gates that all contributions must follow.
 
-- Add tag filtering to engine
-- Add --filter flag to CLI
-- Update tests and documentation
+## Minor Bug Fixes
 
-Closes #123
-```
+For minor bug fixes that don't require SpecKit:
 
-**Format:**
-- First line: type: Short description (50 chars max)
-- Blank line
-- Body: Detailed explanation (wrapped at 72 chars)
-- Blank line
-- References: Link to related issues/PRs
+1. **Create a branch:**
 
-**Types:**
-- `feature` - New functionality
-- `fix` - Bug fixes
-- `docs` - Documentation changes
-- `test` - Test additions/changes
-- `refactor` - Code refactoring
-- `perf` - Performance improvements
-- `chore` - Build, dependencies, etc.
+   ```bash
+   git checkout -b fix/brief-description main
+   ```
 
-### Testing Your Changes
+2. **Make your changes** and write tests
+
+3. **Run quality checks:**
+
+   ```bash
+   make test    # Must pass
+   make lint    # Must pass
+   ```
+
+4. **Submit a pull request** with:
+   - Clear description of the bug
+   - Explanation of the fix
+   - Tests demonstrating the fix works
+
+## Quality Requirements
+
+All contributions must meet these quality gates, which are enforced by CI:
+
+### Code Quality
+
+- **Test Coverage**: Minimum 80% overall, 95% for critical paths
+- **Linting**: `golangci-lint` must pass with zero errors
+- **Security**: `govulncheck` must report no high/critical vulnerabilities
+- **Formatting**: All Go code must be formatted with `gofmt`
+- **Documentation**: Minimum 80% docstring coverage for exported symbols
+
+### Pre-Submission Checklist
+
+**Always run these commands before submitting:**
 
 ```bash
-# Run tests for your changes
-make test
-
-# Run tests with coverage
-go test -cover ./...
-
-# Run tests in specific package
-go test -v ./internal/engine/...
-
-# Run specific test
-go test -run TestCostCalculation ./...
+make lint      # Must pass with no errors
+make test      # All tests must pass
+make validate  # Module and vet checks must pass
 ```
 
-All tests must pass before submitting a PR.
+### Test Requirements
 
----
+- Write tests before implementation (TDD approach)
+- Include tests for all new code paths
+- Test error conditions and edge cases
+- Use table-driven tests where appropriate
+- Run tests with race detector: `make test-race`
 
-## Testing
+### Commit Message Format
 
-### Writing Tests
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-Place tests in `*_test.go` files alongside the code being tested.
+```text
+type(scope): description
 
-```go
-// Example test
-func TestMyFeature(t *testing.T) {
-    // Arrange
-    input := "test input"
+[optional body]
 
-    // Act
-    result := MyFunction(input)
-
-    // Assert
-    if result != "expected" {
-        t.Errorf("Expected 'expected', got '%s'", result)
-    }
-}
+[optional footer]
 ```
 
-### Test Coverage
+**Types:** `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`
 
-- Aim for >80% coverage in new code
-- Run `make test` to check current coverage
-- Focus on critical paths and error cases
+**Examples:**
 
----
+```text
+feat(cli): add --format flag for cost output
+fix(engine): correct monthly cost calculation rounding
+docs(contributing): add SpecKit workflow documentation
+test(registry): add plugin discovery edge case tests
+```
 
 ## Submitting Changes
 
 ### Pull Request Process
 
-1. **Ensure your branch is up to date:**
+1. **Ensure your branch is current:**
+
    ```bash
-   git fetch upstream
-   git rebase upstream/main
+   git fetch origin
+   git rebase origin/main
    ```
 
-2. **Run all checks locally:**
+2. **Run all quality checks:**
+
    ```bash
    make test
    make lint
    make validate
-   make docs-validate  # If docs changed
    ```
 
-3. **Push your changes:**
+3. **Push and create PR:**
+
    ```bash
-   git push origin feature/my-feature
+   git push origin your-branch-name
    ```
 
-4. **Create a Pull Request:**
-   - Go to the repository on GitHub
-   - Click "New Pull Request"
-   - Select your branch
-   - Fill in the PR template
-   - Submit
-
-### PR Description Template
-
-```markdown
-## Description
-Brief description of the changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Motivation and Context
-Why is this change needed? What problem does it solve?
-
-## How Has This Been Tested?
-Describe how you tested your changes
-
-## Screenshots (if applicable)
-Add screenshots for UI changes
-
-## Checklist
-- [ ] My code follows the project style guidelines
-- [ ] I have performed a self-review
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests passed locally with my changes
-- [ ] All linters pass (`make lint`)
-
-## Closes
-Closes #(issue number)
-```
+4. **Fill in PR template** with:
+   - Description of changes
+   - Type of change (feature, fix, docs, etc.)
+   - Testing performed
+   - Related issues
 
 ### CI Checks
 
-All pull requests must pass the following checks:
+All pull requests must pass:
 
-- ✅ Go Tests (`go test`)
-- ✅ Code Coverage (minimum 20%)
-- ✅ Lint (`golangci-lint`)
-- ✅ Security (`govulncheck`)
-- ✅ Documentation Validation
-- ✅ Cross-Platform Build
+- Go Tests with race detection
+- Code Coverage (minimum threshold)
+- golangci-lint
+- Security scanning (govulncheck)
+- Documentation validation
+- Cross-platform builds (Linux, macOS, Windows)
 
----
+## Project Architecture
 
-## Documentation
+PulumiCost operates as a three-repository ecosystem:
 
-### Where Documentation Lives
+| Repository | Purpose |
+| ---------- | ------- |
+| [pulumicost-core][core] | CLI tool, plugin host, orchestration engine |
+| [pulumicost-spec][spec] | Protocol buffer definitions, SDK generation |
+| [pulumicost-plugin][plugin] | Plugin implementations (Kubecost, Vantage) |
 
-- **Code-focused docs**: `docs/` directory
-- **API docs**: Protocol buffer comments in `internal/proto/`
-- **Package docs**: `CLAUDE.md` files in package directories
-- **Contributing**: This file and `docs/support/contributing.md`
+[core]: https://github.com/rshade/pulumicost-core
+[spec]: https://github.com/rshade/pulumicost-spec
+[plugin]: https://github.com/rshade/pulumicost-plugin
 
-### Documentation Standards
-
-- All public functions should have godoc comments
-- Update `docs/` when adding user-facing features
-- Update `docs/reference/` for CLI/API changes
-- Link to relevant documentation in code comments
-
-### Documentation Commands
-
-```bash
-# Lint documentation
-make docs-lint
-
-# Build documentation site
-make docs-build
-
-# Serve locally for preview
-make docs-serve
-
-# Validate documentation
-make docs-validate
-```
-
-### Adding a New Guide
-
-1. Create file in appropriate `docs/` subdirectory
-2. Add frontmatter:
-   ```yaml
-   ---
-   layout: default
-   title: My Guide Title
-   description: Brief description for search
-   ---
-   ```
-3. Write content following [Google style guide](https://developers.google.com/style)
-4. Run `make docs-lint` to validate
-5. Submit PR with documentation changes
-
----
-
-## Plugin Development
-
-To develop a PulumiCost plugin:
-
-1. **Read the plugin development guide**: [docs/plugins/plugin-development.md](docs/plugins/plugin-development.md)
-2. **Review the SDK reference**: [docs/plugins/plugin-sdk.md](docs/plugins/plugin-sdk.md)
-3. **Study the Vantage plugin example**: [docs/plugins/vantage/](docs/plugins/vantage/)
-4. **Use the plugin template**: `cmd/pulumicost plugin-init`
-
----
+Cross-repository changes require coordination. See the
+[constitution](.specify/memory/constitution.md) for the cross-repo change
+protocol.
 
 ## Getting Help
 
 ### Documentation
 
-- [Developer Guide](docs/guides/developer-guide.md) - Complete developer documentation
-- [Architecture](docs/architecture/) - System design and architecture
-- [API Reference](docs/reference/api-reference.md) - gRPC API documentation
-- [Troubleshooting](docs/support/troubleshooting.md) - Common issues
+- [Developer Guide](docs/guides/developer-guide.md) - Complete developer docs
+- [Architecture](docs/architecture/) - System design and diagrams
+- [Plugin Development](docs/plugins/plugin-development.md) - Building plugins
 
 ### Support Channels
 
 - **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: Questions and ideas
-- **Code Review**: Learn by reviewing open PRs
-- **Examples**: Study examples in `examples/`
+- **GitHub Discussions**: Questions and community discussion
+
+## Code of Conduct
+
+Be respectful and constructive in all interactions. We welcome contributors of
+all experience levels and backgrounds.
 
 ---
 
-## Development Workflow Example
-
-```bash
-# 1. Create feature branch
-git checkout -b feature/cost-filtering upstream/main
-
-# 2. Make changes to code
-# ... edit files ...
-
-# 3. Write or update tests
-# ... edit *_test.go files ...
-
-# 4. Run tests locally
-make test
-
-# 5. Run linters
-make lint
-
-# 6. Run validation
-make validate
-
-# 7. Commit changes
-git add .
-git commit -m "feature: Add cost filtering by tags"
-
-# 8. Push to fork
-git push origin feature/cost-filtering
-
-# 9. Create PR on GitHub (website)
-
-# 10. Address review feedback
-# ... make changes based on review ...
-
-# 11. Rebase and push
-git rebase upstream/main
-git push -f origin feature/cost-filtering
-```
-
----
-
-## Code Review Process
-
-### What to Expect
-
-- Code reviews by maintainers and community
-- Feedback on code quality, design, and testing
-- Suggestions for improvement
-- Timeline: Reviews typically happen within 2-3 business days
-
-### Providing Good Reviews
-
-When reviewing others' code:
-
-- Be respectful and constructive
-- Focus on the code, not the person
-- Ask questions if something is unclear
-- Suggest improvements, don't demand changes
-- Acknowledge good work
-
----
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the Apache-2.0 license. See [LICENSE](LICENSE) for details.
-
----
-
-## Questions?
-
-- **Development questions**: [docs/support/support-channels.md](docs/support/support-channels.md)
-- **Documentation questions**: Check [docs/README.md](docs/README.md)
-- **Plugin questions**: [docs/plugins/plugin-development.md](docs/plugins/plugin-development.md)
-
----
-
-Thank you for contributing to PulumiCost! 🙏
+Thank you for contributing to PulumiCost Core!
