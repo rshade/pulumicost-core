@@ -16,7 +16,10 @@ import (
 )
 
 const (
-	filterKeyValueParts = 2 // For "key=value" pairs
+	filterKeyValueParts = 2   // For "key=value" pairs
+	maxDateRangeDays    = 366 // Maximum date range (1 year + 1 day for leap years)
+	maxPastYears        = 5   // Maximum years in the past allowed
+	hoursPerDay         = 24  // Hours in a day for date calculations
 )
 
 // costActualParams holds the parameters for the actual cost command execution.
@@ -232,6 +235,7 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 // ParseTimeRange accepts two date strings, parses each into a time.Time, and ensures the 'to' time is after the 'from' time.
 // It returns the parsed from and to times on success. If either date cannot be parsed or if the 'to' time is not after
 // the 'from' time, an error is returned describing the failure.
+// Additionally validates that the date range does not exceed maximum limits.
 func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 	from, err := ParseTime(fromStr)
 	if err != nil {
@@ -247,26 +251,66 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 		return time.Time{}, time.Time{}, errors.New("'to' date must be after 'from' date")
 	}
 
+	// Validate date range is within acceptable limits
+	if rangeErr := ValidateDateRange(from, to); rangeErr != nil {
+		return time.Time{}, time.Time{}, rangeErr
+	}
+
 	return from, to, nil
 }
 
 // ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
 // ParseTime parses a date/time string in either YYYY-MM-DD or RFC3339 format.
 // It returns the parsed time on success, or an error if the string does not match either supported format.
+// Additionally validates that the date is not in the future and not more than 5 years in the past.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
 		time.RFC3339,
 	}
 
+	var parsedTime time.Time
+	var parseErr error
+	parsed := false
+
 	for _, layout := range layouts {
 		t, err := time.Parse(layout, str)
 		if err == nil {
-			return t, nil
+			parsedTime = t
+			parsed = true
+			break
 		}
+		parseErr = err
 	}
 
-	return time.Time{}, fmt.Errorf("unable to parse date: %s (use YYYY-MM-DD or RFC3339)", str)
+	if !parsed {
+		return time.Time{}, fmt.Errorf("unable to parse date: %s (use YYYY-MM-DD or RFC3339): %w", str, parseErr)
+	}
+
+	// Validate: date cannot be in the future
+	now := time.Now()
+	if parsedTime.After(now) {
+		return time.Time{}, fmt.Errorf("date cannot be in the future: %s", str)
+	}
+
+	// Validate: date cannot be more than maxPastYears years in the past
+	oldestAllowed := now.AddDate(-maxPastYears, 0, 0)
+	if parsedTime.Before(oldestAllowed) {
+		return time.Time{}, fmt.Errorf("date too far in past: %s (max %d years ago)", str, maxPastYears)
+	}
+
+	return parsedTime, nil
+}
+
+// ValidateDateRange validates that the date range is within acceptable limits.
+// Returns an error if the range exceeds maxDateRangeDays (approximately 1 year).
+func ValidateDateRange(from, to time.Time) error {
+	days := int(to.Sub(from).Hours() / hoursPerDay)
+	if days > maxDateRangeDays {
+		return fmt.Errorf("date range too large: %d days (max %d days / ~1 year). "+
+			"Tip: Use --group-by monthly to analyze longer periods efficiently", days, maxDateRangeDays)
+	}
+	return nil
 }
 
 // parseTagFilter parses a group-by specifier for a tag filter and returns the parsed tags and the resulting groupBy.

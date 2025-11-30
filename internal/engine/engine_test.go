@@ -208,6 +208,20 @@ func TestGetProjectedCostWithSpecLoader(t *testing.T) {
 	assert.Contains(t, result.Notes, "local spec")
 }
 
+func TestGetProjectedCost_PropagatesContextError(t *testing.T) {
+	eng := engine.New(nil, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	results, err := eng.GetProjectedCost(ctx, []engine.ResourceDescriptor{
+		{Type: "aws:ec2:Instance", ID: "i-123"},
+	})
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Len(t, results, 0)
+}
+
 func TestFormatPeriod(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -692,6 +706,25 @@ func TestGetActualCostWithOptions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetActualCostWithOptions_PropagatesContextError(t *testing.T) {
+	eng := engine.New(nil, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	req := engine.ActualCostRequest{
+		Resources: []engine.ResourceDescriptor{
+			{Type: "aws:ec2/instance:Instance", ID: "i-123", Provider: "aws"},
+		},
+		From: time.Now().Add(-1 * time.Hour),
+		To:   time.Now(),
+	}
+
+	results, err := eng.GetActualCostWithOptions(ctx, req)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Len(t, results, 0)
 }
 
 func TestGroupByValidation(t *testing.T) {

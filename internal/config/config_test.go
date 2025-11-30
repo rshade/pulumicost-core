@@ -31,6 +31,96 @@ func TestConfig_NewAndDefaults(t *testing.T) {
 	assert.NotEmpty(t, cfg.SpecDir)
 }
 
+func TestConfig_NewStrict(t *testing.T) {
+	t.Run("success with no config file", func(t *testing.T) {
+		stubHome(t)
+		cfg, err := NewStrict()
+
+		require.NoError(t, err)
+		assert.NotNil(t, cfg)
+		assert.Equal(t, "table", cfg.Output.DefaultFormat)
+		assert.Equal(t, "info", cfg.Logging.Level)
+	})
+
+	t.Run("success with valid config file", func(t *testing.T) {
+		stubHome(t)
+
+		// Create a valid config file
+		cfg := New()
+		cfg.Output.DefaultFormat = "json"
+		err := cfg.Save()
+		require.NoError(t, err)
+
+		// NewStrict should load the config successfully
+		strictCfg, err := NewStrict()
+		require.NoError(t, err)
+		assert.NotNil(t, strictCfg)
+		assert.Equal(t, "json", strictCfg.Output.DefaultFormat)
+	})
+
+	t.Run("failure with corrupted config file", func(t *testing.T) {
+		stubHome(t)
+
+		// Create a corrupted config file
+		configDir := filepath.Join(os.Getenv("HOME"), ".pulumicost")
+		err := os.MkdirAll(configDir, 0755)
+		require.NoError(t, err)
+
+		configPath := filepath.Join(configDir, "config.yaml")
+		err = os.WriteFile(configPath, []byte("invalid: yaml: content: [unclosed"), 0644)
+		require.NoError(t, err)
+
+		// NewStrict should fail with corrupted config
+		cfg, err := NewStrict()
+		assert.Error(t, err)
+		assert.Nil(t, cfg)
+		assert.Contains(t, err.Error(), "corrupted")
+	})
+}
+
+func TestGetOutputFormat(t *testing.T) {
+	// Reset global config for clean state
+	ResetGlobalConfigForTest()
+
+	t.Run("returns user choice when provided", func(t *testing.T) {
+		result := GetOutputFormat("json")
+		assert.Equal(t, "json", result)
+	})
+
+	t.Run("returns config default when no user choice", func(t *testing.T) {
+		// Set a custom default format
+		cfg := GetGlobalConfig()
+		cfg.Output.DefaultFormat = "table"
+
+		result := GetOutputFormat("")
+		assert.Equal(t, "table", result)
+	})
+}
+
+func TestSetLogLevel(t *testing.T) {
+	// Reset logger to known state
+	_ = InitLogger("info", false)
+
+	t.Run("sets valid log level", func(t *testing.T) {
+		SetLogLevel("debug")
+		logger := GetLogger()
+		// Note: We can't easily test the internal level without exposing it
+		// But we can verify the function doesn't panic
+		assert.NotNil(t, logger)
+	})
+
+	t.Run("defaults to info for invalid level", func(t *testing.T) {
+		SetLogLevel("invalid-level")
+		logger := GetLogger()
+		assert.NotNil(t, logger)
+	})
+}
+
+func TestGetLogger(t *testing.T) {
+	logger := GetLogger()
+	assert.NotNil(t, logger)
+}
+
 func TestConfig_SetGetValues(t *testing.T) {
 	stubHome(t)
 	cfg := New()

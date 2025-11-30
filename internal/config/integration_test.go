@@ -108,3 +108,74 @@ func TestEnsureLogDirError(t *testing.T) {
 	err = EnsureLogDir()
 	assert.Error(t, err)
 }
+
+func TestGetConfigDir(t *testing.T) {
+	stubHome(t)
+
+	dir, err := GetConfigDir()
+	require.NoError(t, err)
+	assert.NotEmpty(t, dir)
+
+	// Should be under home directory
+	homeDir, err := os.UserHomeDir()
+	require.NoError(t, err)
+	assert.Contains(t, dir, homeDir)
+	assert.Contains(t, dir, ".pulumicost")
+}
+
+func TestGetPluginDir(t *testing.T) {
+	stubHome(t)
+
+	dir, err := GetPluginDir()
+	require.NoError(t, err)
+	assert.NotEmpty(t, dir)
+
+	// Should be under config directory
+	configDir, err := GetConfigDir()
+	require.NoError(t, err)
+	assert.Contains(t, dir, configDir)
+	assert.Contains(t, dir, "plugins")
+}
+
+func TestGetSpecDir(t *testing.T) {
+	stubHome(t)
+
+	dir, err := GetSpecDir()
+	require.NoError(t, err)
+	assert.NotEmpty(t, dir)
+
+	// Should be under config directory
+	configDir, err := GetConfigDir()
+	require.NoError(t, err)
+	assert.Contains(t, dir, configDir)
+	assert.Contains(t, dir, "specs")
+}
+
+func TestEnsureSubDirs(t *testing.T) {
+	stubHome(t)
+
+	// Ensure subdirs should create the necessary directories
+	err := EnsureSubDirs()
+	require.NoError(t, err)
+
+	// Check that config directory exists
+	configDir, err := GetConfigDir()
+	require.NoError(t, err)
+	stat, err := os.Stat(configDir)
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Check that plugin directory exists
+	pluginDir, err := GetPluginDir()
+	require.NoError(t, err)
+	stat, err = os.Stat(pluginDir)
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Check that spec directory exists
+	specDir, err := GetSpecDir()
+	require.NoError(t, err)
+	stat, err = os.Stat(specDir)
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+}
