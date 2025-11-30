@@ -1,5 +1,3 @@
-// Package ingest provides Pulumi plan parsing and resource mapping functionality.
-// It converts Pulumi preview JSON output into resource descriptors for cost calculation.
 package ingest
 
 import (

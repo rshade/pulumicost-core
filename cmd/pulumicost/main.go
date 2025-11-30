@@ -4,6 +4,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rshade/pulumicost-core/internal/cli"
@@ -24,6 +25,9 @@ func main() {
 
 	root := cli.NewRootCmd(version.GetVersion())
 	if err := root.Execute(); err != nil {
+		// Print user-friendly error to stderr for immediate visibility
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		// Also log for debugging purposes
 		startupLogger.Error().Err(err).Msg("command execution failed")
 		os.Exit(1)
 	}

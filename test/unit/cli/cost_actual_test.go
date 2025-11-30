@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/engine"
@@ -86,10 +87,13 @@ func TestCostActualCmd_DefaultEndDate(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	// Use a recent date within the max 366-day range
+	recentDate := time.Now().AddDate(0, -1, 0).Format("2006-01-02") // 1 month ago
+
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
+		"--from", recentDate,
 		// No --to (should default to now)
 		"--output", "json",
 	})

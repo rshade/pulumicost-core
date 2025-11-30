@@ -1,6 +1,3 @@
-// Package registry implements plugin discovery and lifecycle management for PulumiCost.
-// It scans the filesystem for installed plugins following the ~/.pulumicost/plugins/<name>/<version>/
-// directory structure and manages plugin connections via gRPC.
 package registry
 
 import (
