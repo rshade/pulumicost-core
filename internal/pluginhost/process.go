@@ -332,6 +332,8 @@ func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port))
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
+	// Set WaitDelay before Start to avoid race condition with watchCtx goroutine
+	cmd.WaitDelay = processWaitDelay
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("starting plugin: %w", err)
@@ -390,7 +392,6 @@ func (p *ProcessLauncher) isConnectionReady(ctx context.Context, conn *grpc.Clie
 
 func (p *ProcessLauncher) killProcess(cmd *exec.Cmd) {
 	if cmd != nil && cmd.Process != nil {
-		cmd.WaitDelay = processWaitDelay
 		_ = cmd.Process.Kill()
 		_ = cmd.Wait()
 	}
@@ -415,7 +416,6 @@ func (p *ProcessLauncher) createCloseFn(ctx context.Context, conn *grpc.ClientCo
 		}
 		if cmd.Process != nil {
 			pid := cmd.Process.Pid
-			cmd.WaitDelay = processWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 			log.Debug().
