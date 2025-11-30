@@ -2,12 +2,14 @@ package pluginhost // needs access to unexported methods
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -347,3 +349,348 @@ func createScript(t *testing.T, content, ext string) string {
 }
 
 // Helper functions and cleanup utilities for testing
+
+// =============================================================================
+// Race Condition Prevention Tests
+// =============================================================================
+
+func TestProcessLauncher_AllocatePortWithListener(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	port, pl, err := launcher.allocatePortWithListener(ctx)
+	if err != nil {
+		t.Fatalf("allocatePortWithListener failed: %v", err)
+	}
+
+	if port <= 0 || port > 65535 {
+		t.Errorf("invalid port number: %d", port)
+	}
+
+	if pl == nil {
+		t.Fatal("expected non-nil portListener")
+	}
+
+	if pl.port != port {
+		t.Errorf("portListener port mismatch: got %d, want %d", pl.port, port)
+	}
+
+	// Verify the listener is tracked
+	launcher.mu.Lock()
+	_, exists := launcher.portListeners[port]
+	launcher.mu.Unlock()
+	if !exists {
+		t.Error("port listener not tracked in map")
+	}
+
+	// Port should NOT be available because listener is held open
+	testListener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err == nil {
+		testListener.Close()
+		t.Error("expected port to be unavailable while listener is held open")
+	}
+
+	// Release the listener
+	if err := launcher.releasePortListener(port); err != nil {
+		t.Errorf("releasePortListener failed: %v", err)
+	}
+
+	// Now port should be available
+	testListener, err = net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		t.Errorf("expected port to be available after release: %v", err)
+	} else {
+		testListener.Close()
+	}
+}
+
+func TestProcessLauncher_ReleasePortListener_NotExists(t *testing.T) {
+	launcher := NewProcessLauncher()
+
+	err := launcher.releasePortListener(99999)
+	if err == nil {
+		t.Error("expected error for non-existent port")
+	}
+
+	if !strings.Contains(err.Error(), "no listener for port") {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestProcessLauncher_ConcurrentPortAllocation(t *testing.T) {
+	launcher := NewProcessLauncher()
+
+	const numPorts = 50
+	ports := make(chan int, numPorts)
+	errs := make(chan error, numPorts)
+
+	var wg sync.WaitGroup
+	for i := range numPorts {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			ctx := context.Background()
+
+			port, pl, err := launcher.allocatePortWithListener(ctx)
+			if err != nil {
+				errs <- fmt.Errorf("allocation %d failed: %w", idx, err)
+				return
+			}
+
+			// Hold the port briefly
+			time.Sleep(10 * time.Millisecond)
+
+			// Release
+			if err := launcher.releasePortListener(port); err != nil {
+				errs <- fmt.Errorf("release %d failed: %w", idx, err)
+				return
+			}
+
+			ports <- port
+			_ = pl
+		}(i)
+	}
+
+	wg.Wait()
+	close(ports)
+	close(errs)
+
+	// Check for errors
+	for err := range errs {
+		t.Errorf("concurrent allocation error: %v", err)
+	}
+
+	// Verify all ports unique
+	seenPorts := make(map[int]bool)
+	for port := range ports {
+		if seenPorts[port] {
+			t.Errorf("port %d allocated twice!", port)
+		}
+		seenPorts[port] = true
+	}
+
+	if len(seenPorts) != numPorts {
+		t.Errorf("expected %d unique ports, got %d", numPorts, len(seenPorts))
+	}
+}
+
+func TestProcessLauncher_WaitForPluginBind_Success(t *testing.T) {
+	launcher := NewProcessLauncher()
+
+	// Start a listener to simulate a plugin binding
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to create test listener: %v", err)
+	}
+	defer listener.Close()
+
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	err = launcher.waitForPluginBind(ctx, port)
+	if err != nil {
+		t.Errorf("waitForPluginBind failed: %v", err)
+	}
+}
+
+func TestProcessLauncher_WaitForPluginBind_Timeout(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	// Allocate and immediately release a port to get a known-unused port.
+	// This avoids hardcoding a port number which could cause flaky tests
+	// if that port happens to be in use on the test machine.
+	port, _, err := launcher.allocatePortWithListener(ctx)
+	if err != nil {
+		t.Fatalf("failed to allocate port: %v", err)
+	}
+	if err := launcher.releasePortListener(port); err != nil {
+		t.Fatalf("failed to release port: %v", err)
+	}
+
+	bindCtx, cancel := context.WithTimeout(ctx, 300*time.Millisecond)
+	defer cancel()
+
+	err = launcher.waitForPluginBind(bindCtx, port)
+	if err == nil {
+		t.Error("expected timeout error")
+	}
+
+	if !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("expected timeout error, got: %v", err)
+	}
+}
+
+func TestProcessLauncher_WaitForPluginBind_DelayedBind(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	// Allocate a port first
+	port, _, err := launcher.allocatePortWithListener(ctx)
+	if err != nil {
+		t.Fatalf("failed to allocate port: %v", err)
+	}
+
+	// Release so we can bind later
+	if err := launcher.releasePortListener(port); err != nil {
+		t.Fatalf("failed to release port: %v", err)
+	}
+
+	// Start waiting in a goroutine
+	waitCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	waitDone := make(chan error, 1)
+	go func() {
+		waitDone <- launcher.waitForPluginBind(waitCtx, port)
+	}()
+
+	// Simulate delayed plugin startup
+	time.Sleep(200 * time.Millisecond)
+
+	// Start listener to simulate plugin binding
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		t.Fatalf("failed to create test listener: %v", err)
+	}
+	defer listener.Close()
+
+	// Wait for waitForPluginBind to complete
+	select {
+	case err := <-waitDone:
+		if err != nil {
+			t.Errorf("waitForPluginBind failed after delayed bind: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Error("waitForPluginBind did not complete after plugin bound")
+	}
+}
+
+func TestIsPortCollisionError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+		{
+			name:     "address already in use",
+			err:      errors.New("listen tcp 127.0.0.1:8080: address already in use"),
+			expected: true,
+		},
+		{
+			name:     "bind address already in use",
+			err:      errors.New("bind: address already in use"),
+			expected: true,
+		},
+		{
+			name:     "port is already allocated",
+			err:      errors.New("port is already allocated"),
+			expected: true,
+		},
+		{
+			name:     "failed to bind to port",
+			err:      errors.New("plugin failed to bind to port: context deadline exceeded"),
+			expected: true,
+		},
+		{
+			name:     "unrelated error",
+			err:      errors.New("connection refused"),
+			expected: false,
+		},
+		{
+			name:     "file not found",
+			err:      errors.New("no such file or directory"),
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := isPortCollisionError(tc.err)
+			if result != tc.expected {
+				t.Errorf("isPortCollisionError(%v) = %v, want %v", tc.err, result, tc.expected)
+			}
+		})
+	}
+}
+
+func TestProcessLauncher_StartWithRetry_NonPortError(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	// Use a non-existent command - should fail immediately without retry
+	_, _, err := launcher.StartWithRetry(ctx, "/nonexistent/command/path")
+
+	if err == nil {
+		t.Error("expected error for non-existent command")
+	}
+
+	// Should fail with starting plugin error, not retry error
+	if strings.Contains(err.Error(), "failed after") {
+		t.Error("should not have retried for non-port error")
+	}
+}
+
+func TestProcessLauncher_MapCleanup(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	// Allocate several ports
+	var ports []int
+	for range 5 {
+		port, _, err := launcher.allocatePortWithListener(ctx)
+		if err != nil {
+			t.Fatalf("allocatePortWithListener failed: %v", err)
+		}
+		ports = append(ports, port)
+	}
+
+	// Verify all are tracked
+	launcher.mu.Lock()
+	if len(launcher.portListeners) != 5 {
+		t.Errorf("expected 5 tracked listeners, got %d", len(launcher.portListeners))
+	}
+	launcher.mu.Unlock()
+
+	// Release all
+	for _, port := range ports {
+		if err := launcher.releasePortListener(port); err != nil {
+			t.Errorf("releasePortListener failed: %v", err)
+		}
+	}
+
+	// Verify map is empty
+	launcher.mu.Lock()
+	if len(launcher.portListeners) != 0 {
+		t.Errorf("expected 0 tracked listeners after cleanup, got %d", len(launcher.portListeners))
+	}
+	launcher.mu.Unlock()
+}
+
+func TestProcessLauncher_DoubleRelease(t *testing.T) {
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	port, _, err := launcher.allocatePortWithListener(ctx)
+	if err != nil {
+		t.Fatalf("allocatePortWithListener failed: %v", err)
+	}
+
+	// First release should succeed
+	if err := launcher.releasePortListener(port); err != nil {
+		t.Errorf("first release failed: %v", err)
+	}
+
+	// Second release should fail
+	err = launcher.releasePortListener(port)
+	if err == nil {
+		t.Error("expected error on double release")
+	}
+}

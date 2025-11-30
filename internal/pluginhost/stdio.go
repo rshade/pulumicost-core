@@ -64,6 +64,8 @@ func (s *StdioLauncher) Start(
 	}
 
 	cmd.Stderr = os.Stderr
+	// Set WaitDelay before Start to avoid race condition with watchCtx goroutine
+	cmd.WaitDelay = stdioWaitDelay
 
 	if startErr := cmd.Start(); startErr != nil {
 		return nil, nil, fmt.Errorf("starting plugin: %w", startErr)
@@ -73,7 +75,6 @@ func (s *StdioLauncher) Start(
 	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
 		if cmd.Process != nil {
-			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 		}
@@ -94,7 +95,6 @@ func (s *StdioLauncher) Start(
 			Err(err).
 			Msg("failed to create gRPC client")
 		if cmd.Process != nil {
-			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 		}
@@ -129,7 +129,6 @@ func (s *StdioLauncher) Start(
 		}
 		if cmd.Process != nil {
 			pid := cmd.Process.Pid
-			cmd.WaitDelay = stdioWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 			log.Debug().

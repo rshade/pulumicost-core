@@ -7,6 +7,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/logging"
@@ -20,22 +22,94 @@ const (
 	connectionDelay   = 100 * time.Millisecond
 	connectionTimeout = 100 * time.Millisecond
 	processWaitDelay  = 100 * time.Millisecond // Time to wait for I/O after killing process
+	pluginBindTimeout = 5 * time.Second        // Time to wait for plugin to bind to port
+	bindCheckInterval = 100 * time.Millisecond // Interval between bind checks
+
+	// Retry configuration for port collision handling.
+	maxPortRetries    = 5
+	initialBackoff    = 100 * time.Millisecond
+	maxBackoff        = 2 * time.Second
+	backoffMultiplier = 2
 )
+
+// portListener holds a reference to an open listener for port reservation.
+// It is used to prevent race conditions during plugin startup by keeping
+// a TCP listener open while a port is being allocated. The listener is
+// stored in ProcessLauncher.portListeners and must be explicitly released
+// via releasePortListener before the plugin can bind to the port.
+type portListener struct {
+	listener net.Listener
+	port     int
+}
 
 // ProcessLauncher launches plugins as separate TCP server processes.
 type ProcessLauncher struct {
-	timeout time.Duration
+	timeout       time.Duration
+	portListeners map[int]*portListener
+	mu            sync.Mutex
 }
 
-// NewProcessLauncher creates a new TCP process-based plugin launcher.
+// NewProcessLauncher creates a new ProcessLauncher configured with the package default timeout and an initialized map for tracking reserved port listeners.
 func NewProcessLauncher() *ProcessLauncher {
 	return &ProcessLauncher{
-		timeout: defaultTimeout,
+		timeout:       defaultTimeout,
+		portListeners: make(map[int]*portListener),
 	}
 }
 
 // Start launches a plugin process with TCP communication and returns the gRPC connection.
+// This method uses retry logic with exponential backoff to handle potential port collisions.
 func (p *ProcessLauncher) Start(
+	ctx context.Context,
+	path string,
+	args ...string,
+) (*grpc.ClientConn, func() error, error) {
+	return p.StartWithRetry(ctx, path, args...)
+}
+
+// StartWithRetry attempts to launch a plugin with retry logic for port collisions.
+func (p *ProcessLauncher) StartWithRetry(
+	ctx context.Context,
+	path string,
+	args ...string,
+) (*grpc.ClientConn, func() error, error) {
+	log := logging.FromContext(ctx)
+	var lastErr error
+	backoff := initialBackoff
+
+	for attempt := range maxPortRetries {
+		if attempt > 0 {
+			log.Debug().
+				Ctx(ctx).
+				Str("component", "pluginhost").
+				Int("attempt", attempt+1).
+				Int("max_attempts", maxPortRetries).
+				Dur("backoff", backoff).
+				Msg("retrying plugin launch after port collision")
+			time.Sleep(backoff)
+			backoff = min(backoff*backoffMultiplier, maxBackoff)
+		}
+
+		conn, closeFn, err := p.startOnce(ctx, path, args...)
+		if err == nil {
+			return conn, closeFn, nil
+		}
+
+		// Check if error is port-related
+		if isPortCollisionError(err) {
+			lastErr = err
+			continue
+		}
+
+		// Non-port error, fail immediately
+		return nil, nil, err
+	}
+
+	return nil, nil, fmt.Errorf("failed after %d attempts: %w", maxPortRetries, lastErr)
+}
+
+// startOnce performs a single attempt to start the plugin.
+func (p *ProcessLauncher) startOnce(
 	ctx context.Context,
 	path string,
 	args ...string,
@@ -48,7 +122,8 @@ func (p *ProcessLauncher) Start(
 		Str("plugin_path", path).
 		Msg("starting plugin process")
 
-	port, err := p.allocatePort(ctx)
+	// Allocate port and keep listener open to prevent race condition
+	port, pl, err := p.allocatePortWithListener(ctx)
 	if err != nil {
 		log.Error().
 			Ctx(ctx).
@@ -62,7 +137,18 @@ func (p *ProcessLauncher) Start(
 		Ctx(ctx).
 		Str("component", "pluginhost").
 		Int("port", port).
-		Msg("allocated port for plugin")
+		Msg("allocated port for plugin (listener held open)")
+
+	// Release the listener before starting the plugin so plugin can bind
+	if releaseErr := p.releasePortListener(port); releaseErr != nil {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(releaseErr).
+			Int("port", port).
+			Msg("failed to release port listener")
+	}
+	_ = pl // Silence unused variable warning
 
 	cmd, err := p.startPlugin(ctx, path, port, args)
 	if err != nil {
@@ -81,6 +167,27 @@ func (p *ProcessLauncher) Start(
 		Str("component", "pluginhost").
 		Int("pid", cmd.Process.Pid).
 		Msg("plugin process started")
+
+	// Wait for plugin to bind to port
+	bindCtx, bindCancel := context.WithTimeout(ctx, pluginBindTimeout)
+	defer bindCancel()
+
+	if bindErr := p.waitForPluginBind(bindCtx, port); bindErr != nil {
+		log.Error().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Err(bindErr).
+			Int("port", port).
+			Msg("plugin failed to bind to port")
+		p.killProcess(cmd)
+		return nil, nil, fmt.Errorf("plugin failed to bind to port: %w", bindErr)
+	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "pluginhost").
+		Int("port", port).
+		Msg("plugin bound to port successfully")
 
 	conn, err := p.connectToPlugin(ctx, fmt.Sprintf("127.0.0.1:%d", port), cmd)
 	if err != nil {
@@ -105,21 +212,115 @@ func (p *ProcessLauncher) Start(
 	return conn, closeFn, nil
 }
 
+// allocatePort allocates a port (legacy method, still available for backward compatibility).
+// Note: This method has a race condition window between port allocation and plugin startup.
+// Prefer using allocatePortWithListener for new code.
 func (p *ProcessLauncher) allocatePort(ctx context.Context) (int, error) {
+	port, _, err := p.allocatePortWithListener(ctx)
+	if err != nil {
+		return 0, err
+	}
+	// Immediately release for backward compatibility
+	if releaseErr := p.releasePortListener(port); releaseErr != nil {
+		return 0, fmt.Errorf("releasing port listener: %w", releaseErr)
+	}
+	return port, nil
+}
+
+// allocatePortWithListener allocates a port and keeps the listener open to prevent race conditions.
+// The caller must call releasePortListener when ready for the plugin to bind.
+func (p *ProcessLauncher) allocatePortWithListener(ctx context.Context) (int, *portListener, error) {
 	lc := &net.ListenConfig{}
 	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
-		return 0, fmt.Errorf("creating listener: %w", err)
+		return 0, nil, fmt.Errorf("creating listener: %w", err)
 	}
+
 	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
-		return 0, errors.New("listener is not TCP address")
+		_ = listener.Close()
+		return 0, nil, errors.New("listener is not TCP address")
 	}
 	port := tcpAddr.Port
-	if closeErr := listener.Close(); closeErr != nil {
-		return 0, fmt.Errorf("closing listener: %w", closeErr)
+
+	pl := &portListener{
+		listener: listener,
+		port:     port,
 	}
-	return port, nil
+
+	p.mu.Lock()
+	p.portListeners[port] = pl
+	p.mu.Unlock()
+
+	return port, pl, nil
+}
+
+// releasePortListener closes the listener for a reserved port, allowing the plugin to bind.
+func (p *ProcessLauncher) releasePortListener(port int) error {
+	p.mu.Lock()
+	pl, exists := p.portListeners[port]
+	if exists {
+		delete(p.portListeners, port)
+	}
+	p.mu.Unlock()
+
+	if !exists {
+		return fmt.Errorf("no listener for port %d", port)
+	}
+
+	if err := pl.listener.Close(); err != nil {
+		return fmt.Errorf("closing listener: %w", err)
+	}
+
+	return nil
+}
+
+// waitForPluginBind polls until the plugin binds to the specified port or timeout.
+func (p *ProcessLauncher) waitForPluginBind(ctx context.Context, port int) error {
+	ticker := time.NewTicker(bindCheckInterval)
+	defer ticker.Stop()
+
+	address := fmt.Sprintf("127.0.0.1:%d", port)
+	dialer := &net.Dialer{Timeout: connectionTimeout}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout waiting for plugin to bind: %w", ctx.Err())
+		case <-ticker.C:
+			// Try to connect - if plugin is listening, this will succeed
+			conn, err := dialer.DialContext(ctx, "tcp", address)
+			if err == nil {
+				_ = conn.Close()
+				return nil // Plugin is listening!
+			}
+			// Keep trying...
+		}
+	}
+}
+
+// isPortCollisionError checks if an error is related to port collision.
+// It uses string pattern matching to handle port collision errors across
+// isPortCollisionError reports whether the provided error indicates a port/address
+// collision when attempting to bind a network address.
+//
+// It returns true if err contains common platform-independent phrases that
+// indicate the address or port is already in use; returns false for nil or
+// unrelated errors. The check uses string matching to remain portable across
+// operating systems and locales.
+func isPortCollisionError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Use string matching which is portable across OS/locales.
+	// The error message "address already in use" is consistent across platforms,
+	// even though the underlying syscall errors differ (EADDRINUSE vs WSAEADDRINUSE).
+	errStr := err.Error()
+	return strings.Contains(errStr, "address already in use") ||
+		strings.Contains(errStr, "bind: address already in use") ||
+		strings.Contains(errStr, "port is already allocated") ||
+		strings.Contains(errStr, "failed to bind to port")
 }
 
 func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int, args []string) (*exec.Cmd, error) {
@@ -131,6 +332,8 @@ func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port))
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
+	// Set WaitDelay before Start to avoid race condition with watchCtx goroutine
+	cmd.WaitDelay = processWaitDelay
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("starting plugin: %w", err)
@@ -189,7 +392,6 @@ func (p *ProcessLauncher) isConnectionReady(ctx context.Context, conn *grpc.Clie
 
 func (p *ProcessLauncher) killProcess(cmd *exec.Cmd) {
 	if cmd != nil && cmd.Process != nil {
-		cmd.WaitDelay = processWaitDelay
 		_ = cmd.Process.Kill()
 		_ = cmd.Wait()
 	}
@@ -214,7 +416,6 @@ func (p *ProcessLauncher) createCloseFn(ctx context.Context, conn *grpc.ClientCo
 		}
 		if cmd.Process != nil {
 			pid := cmd.Process.Pid
-			cmd.WaitDelay = processWaitDelay
 			_ = cmd.Process.Kill()
 			_ = cmd.Wait()
 			log.Debug().
