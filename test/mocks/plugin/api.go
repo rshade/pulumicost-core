@@ -8,6 +8,7 @@ package plugin
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/rshade/pulumicost-core/internal/proto"
 )
@@ -70,6 +71,7 @@ var (
 // MockPlugin represents a configurable mock plugin server.
 type MockPlugin struct {
 	config MockConfig
+	mu     sync.RWMutex
 }
 
 // NewMockPlugin creates a new mock plugin with default configuration.
@@ -88,12 +90,16 @@ func NewMockPlugin() *MockPlugin {
 // Configure sets the mock plugin configuration.
 // This method can be called multiple times to update configuration.
 func (m *MockPlugin) Configure(config MockConfig) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.config = config
 }
 
 // SetProjectedCostResponse configures a response for a specific resource type.
 // This is a convenience method for setting individual responses.
 func (m *MockPlugin) SetProjectedCostResponse(resourceType string, response *proto.CostResult) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.config.ProjectedCostResponses == nil {
 		m.config.ProjectedCostResponses = make(map[string]*proto.CostResult)
 	}
@@ -103,6 +109,8 @@ func (m *MockPlugin) SetProjectedCostResponse(resourceType string, response *pro
 // SetActualCostResponse configures a response for a specific resource ID.
 // This is a convenience method for setting individual responses.
 func (m *MockPlugin) SetActualCostResponse(resourceID string, response *proto.ActualCostResult) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.config.ActualCostResponses == nil {
 		m.config.ActualCostResponses = make(map[string]*proto.ActualCostResult)
 	}
@@ -113,6 +121,8 @@ func (m *MockPlugin) SetActualCostResponse(resourceID string, response *proto.Ac
 // methodName should be "GetProjectedCost" or "GetActualCost".
 // Set errorType to ErrorNone to clear error injection.
 func (m *MockPlugin) SetError(methodName string, errorType ErrorType) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.config.ErrorMethod = methodName
 	m.config.ErrorType = errorType
 }
@@ -120,12 +130,16 @@ func (m *MockPlugin) SetError(methodName string, errorType ErrorType) {
 // SetLatency configures simulated latency in milliseconds.
 // Set to 0 to disable latency simulation.
 func (m *MockPlugin) SetLatency(latencyMS int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.config.LatencyMS = latencyMS
 }
 
 // Reset clears all configuration and returns the mock to its default state.
 // This should be called between tests to ensure isolation.
 func (m *MockPlugin) Reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.config = MockConfig{
 		ProjectedCostResponses: make(map[string]*proto.CostResult),
 		ActualCostResponses:    make(map[string]*proto.ActualCostResult),
@@ -137,18 +151,44 @@ func (m *MockPlugin) Reset() {
 
 // GetConfig returns the current mock configuration (for testing/debugging).
 func (m *MockPlugin) GetConfig() MockConfig {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.config
 }
 
-// shouldInjectError determines if an error should be injected for the given method.
-func (m *MockPlugin) shouldInjectError(methodName string) error {
+// GetLatency returns the configured latency.
+func (m *MockPlugin) GetLatency() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.config.LatencyMS
+}
+
+// GetProjectedResponse returns the configured response for a resource type.
+func (m *MockPlugin) GetProjectedResponse(resourceType string) (*proto.CostResult, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	resp, ok := m.config.ProjectedCostResponses[resourceType]
+	return resp, ok
+}
+
+// GetActualResponse returns the configured response for a resource ID.
+func (m *MockPlugin) GetActualResponse(resourceID string) (*proto.ActualCostResult, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	resp, ok := m.config.ActualCostResponses[resourceID]
+	return resp, ok
+}
+
+// ShouldInjectError determines if an error should be injected for the given method.
+func (m *MockPlugin) ShouldInjectError(methodName string) error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.config.ErrorMethod != methodName || m.config.ErrorType == ErrorNone {
 		return nil
 	}
 
-	switch m.config.ErrorType {
-	case ErrorNone:
-		return nil
+	switch m.config.ErrorType { //nolint:exhaustive // ErrorNone handled by early return guard above
 	case ErrorTimeout:
 		return ErrMockTimeout
 	case ErrorProtocol:

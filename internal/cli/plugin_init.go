@@ -489,8 +489,10 @@ func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjected
 		return nil, pluginsdk.NotSupportedError(req.Resource)
 	}
 
-	// TODO: Implement your pricing logic here
-	// This is a placeholder implementation
+	// [TEMPLATE] Implementation Required: Pricing Logic
+	// Calculate the unit price based on the resource type and tags.
+	// The example below demonstrates how to handle AWS EC2 instances.
+	// Replace this with your provider's specific logic.
 	unitPrice := 0.0
 	billingDetail := "Pricing not implemented"
 
@@ -508,17 +510,18 @@ func (c *Calculator) GetProjectedCost(ctx context.Context, req *pbc.GetProjected
 
 // GetActualCost retrieves actual historical costs.
 func (c *Calculator) GetActualCost(ctx context.Context, req *pbc.GetActualCostRequest) (*pbc.GetActualCostResponse, error) {
-	// TODO: Implement actual cost retrieval from your cloud provider's billing API
-	// This is a placeholder implementation
+	// [TEMPLATE] Implementation Required: Actual Cost Retrieval
+	// Connect to your cloud provider's billing API to retrieve historical cost data.
+	// If actual cost retrieval is not supported, keep returning NoDataError.
 	return nil, pluginsdk.NoDataError(req.ResourceId)
 }
 
 // calculateEC2InstanceCost is an example pricing calculation.
 func (c *Calculator) calculateEC2InstanceCost(resource *pbc.ResourceDescriptor) float64 {
-	// TODO: Implement actual EC2 pricing logic
-	// This is a simplified example - real implementation should:
+	// [TEMPLATE] Implementation Required: Pricing Calculation
+	// This is a simplified example. A real implementation should:
 	// 1. Parse instance type from resource properties
-	// 2. Look up pricing from AWS Pricing API or local pricing data
+	// 2. Look up pricing from your provider's Pricing API or local pricing data
 	// 3. Consider region, operating system, tenancy, etc.
 	
 	instanceType := resource.Tags["instanceType"]
@@ -652,10 +655,12 @@ type Config struct {
 
 // NewClient creates a new cloud provider client.
 func NewClient(config Config) (*Client, error) {
-	// TODO: Initialize your cloud provider client here
+	// [TEMPLATE] Implementation Required: Client Initialization
+	// Initialize your cloud provider's SDK client using the provided config.
+	//
 	// Example:
 	// return &Client{
-	//     awsClient: aws.New(config.AWSConfig),
+	//     api: someprovider.NewClient(config.APIKey),
 	// }, nil
 	
 	return &Client{}, nil
@@ -663,8 +668,10 @@ func NewClient(config Config) (*Client, error) {
 
 // GetResourceCost retrieves actual cost data for a specific resource.
 func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTime, endTime int64) (float64, error) {
-	// TODO: Implement actual cost retrieval from your cloud provider
-	// This should call the appropriate billing/cost management API
+	// [TEMPLATE] Implementation Required: Actual Cost Retrieval
+	// This method should call the appropriate billing/cost management API
+	// to get the actual cost for the given resource and time range.
+	//
 	// Examples:
 	// - AWS Cost Explorer API
 	// - Azure Cost Management API
@@ -675,16 +682,18 @@ func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTi
 
 // ValidateCredentials checks if the client credentials are valid.
 func (c *Client) ValidateCredentials(ctx context.Context) error {
-	// TODO: Implement credential validation
-	// Make a simple API call to verify credentials work
+	// [TEMPLATE] Implementation Required: Credential Validation
+	// Make a lightweight API call to verify that the credentials are valid
+	// and have the necessary permissions.
 	
 	return fmt.Errorf("not implemented: ValidateCredentials")
 }
 
 // GetSupportedRegions returns the list of supported regions.
 func (c *Client) GetSupportedRegions(ctx context.Context) ([]string, error) {
-	// TODO: Implement region discovery
-	// Return the list of regions supported by your cloud provider
+	// [TEMPLATE] Implementation Required: Region Discovery
+	// Return the list of regions supported by your cloud provider.
+	// This can be hardcoded or fetched dynamically.
 	
 	return []string{"us-east-1", "us-west-2"}, nil
 }

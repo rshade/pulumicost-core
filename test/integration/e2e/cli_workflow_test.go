@@ -4,6 +4,8 @@ package e2e_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,13 +17,85 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testBinaryPath string //nolint:gochecknoglobals // Required for TestMain pattern
+var testTempDir string    //nolint:gochecknoglobals // Required for TestMain cleanup
+
+func TestMain(m *testing.M) {
+	// Build the binary once for all tests
+	var err error
+	testBinaryPath, testTempDir, err = buildPulumicostBinary()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to build binary: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Run tests
+	code := m.Run()
+
+	// Cleanup: remove the entire temp directory (includes the binary)
+	if testTempDir != "" {
+		os.RemoveAll(testTempDir)
+	}
+
+	os.Exit(code)
+}
+
+// buildPulumicostBinary builds the pulumicost binary from source
+// for testing purposes, returning the path to the compiled executable and
+// the temporary directory (for cleanup).
+func buildPulumicostBinary() (string, string, error) {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "pulumicost-e2e-*")
+	if err != nil {
+		return "", "", fmt.Errorf("creating temp dir: %w", err)
+	}
+
+	binaryName := "pulumicost"
+	if runtime.GOOS == "windows" {
+		binaryName = "pulumicost.exe"
+	}
+	binaryPath := filepath.Join(tempDir, binaryName)
+
+	// Build the binary
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	// Get the project root directory (3 levels up from test/integration/e2e)
+	// Note: We assume the test is running from the package directory
+	projectRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	if err != nil {
+		return "", "", fmt.Errorf("resolving project root: %w", err)
+	}
+
+	cmd := exec.CommandContext(ctx, "go", "build", "-o", binaryPath, "./cmd/pulumicost")
+	cmd.Dir = projectRoot
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// Clean up temp dir on build failure
+		os.RemoveAll(tempDir)
+		return "", "", fmt.Errorf("build failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Verify binary was created and is executable
+	info, err := os.Stat(binaryPath)
+	if err != nil {
+		// Clean up temp dir on verification failure
+		os.RemoveAll(tempDir)
+		return "", "", fmt.Errorf("binary not found after build: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		// Clean up temp dir on verification failure
+		os.RemoveAll(tempDir)
+		return "", "", errors.New("binary is not a regular file")
+	}
+
+	return binaryPath, tempDir, nil
+}
+
 // TestE2E_ProjectedCostWorkflow tests the complete projected cost workflow from
 // building the binary, loading a Pulumi plan, and outputting JSON results.
 func TestE2E_ProjectedCostWorkflow(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Use test fixture plan
 	planFile := filepath.Join("..", "..", "fixtures", "plans", "aws-simple-plan.json")
 	planPath, err := filepath.Abs(planFile)
@@ -37,7 +111,7 @@ func TestE2E_ProjectedCostWorkflow(t *testing.T) {
 
 	cmd := exec.CommandContext(
 		ctx,
-		binaryPath,
+		testBinaryPath,
 		"cost",
 		"projected",
 		"--pulumi-json",
@@ -81,10 +155,6 @@ func TestE2E_ProjectedCostWorkflow(t *testing.T) {
 // TestE2E_ProjectedCostWorkflow_TableOutput tests the projected cost workflow with
 // table output format to ensure formatting and resource type display are correct.
 func TestE2E_ProjectedCostWorkflow_TableOutput(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Use multi-resource test plan
 	planFile := filepath.Join("..", "..", "fixtures", "plans", "aws-multi-resource-plan.json")
 	planPath, err := filepath.Abs(planFile)
@@ -96,7 +166,7 @@ func TestE2E_ProjectedCostWorkflow_TableOutput(t *testing.T) {
 
 	cmd := exec.CommandContext(
 		ctx,
-		binaryPath,
+		testBinaryPath,
 		"cost",
 		"projected",
 		"--pulumi-json",
@@ -126,17 +196,13 @@ func TestE2E_ProjectedCostWorkflow_TableOutput(t *testing.T) {
 // TestE2E_ActualCostWorkflow tests the actual cost calculation workflow with
 // a time range query to validate actual cost command functionality.
 func TestE2E_ActualCostWorkflow(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Run actual cost command
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(
 		ctx,
-		binaryPath,
+		testBinaryPath,
 		"cost",
 		"actual",
 		"--from",
@@ -175,15 +241,11 @@ func TestE2E_ActualCostWorkflow(t *testing.T) {
 // TestE2E_PluginListWorkflow tests the plugin list command to ensure it reports
 // correctly when no plugins are installed.
 func TestE2E_PluginListWorkflow(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Run plugin list command
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, binaryPath, "plugin", "list")
+	cmd := exec.CommandContext(ctx, testBinaryPath, "plugin", "list")
 	output, err := cmd.CombinedOutput()
 	require.NoError(t, err, "Plugin list command failed: %v\nOutput: %s", err, string(output))
 
@@ -196,15 +258,11 @@ func TestE2E_PluginListWorkflow(t *testing.T) {
 // TestE2E_PluginValidateWorkflow tests the plugin validate command to ensure it reports
 // correctly when no plugins are installed or available for validation.
 func TestE2E_PluginValidateWorkflow(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Run plugin validate command
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, binaryPath, "plugin", "validate")
+	cmd := exec.CommandContext(ctx, testBinaryPath, "plugin", "validate")
 	output, err := cmd.CombinedOutput()
 	require.NoError(t, err, "Plugin validate command failed: %v\nOutput: %s", err, string(output))
 
@@ -217,10 +275,6 @@ func TestE2E_PluginValidateWorkflow(t *testing.T) {
 // TestE2E_HelpCommands tests various help commands to ensure proper documentation
 // and usage information is available for all major CLI commands.
 func TestE2E_HelpCommands(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	tests := []struct {
 		name            string
 		args            []string
@@ -258,7 +312,7 @@ func TestE2E_HelpCommands(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			cmd := exec.CommandContext(ctx, binaryPath, tt.args...)
+			cmd := exec.CommandContext(ctx, testBinaryPath, tt.args...)
 			output, err := cmd.Output()
 			require.NoError(t, err, "Help command failed: %v", err)
 
@@ -271,10 +325,6 @@ func TestE2E_HelpCommands(t *testing.T) {
 // TestE2E_InvalidInputHandling tests error handling for invalid inputs such as
 // missing flags, invalid file paths, and invalid date formats.
 func TestE2E_InvalidInputHandling(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	tests := []struct {
 		name        string
 		args        []string
@@ -319,7 +369,7 @@ func TestE2E_InvalidInputHandling(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			cmd := exec.CommandContext(ctx, binaryPath, tt.args...)
+			cmd := exec.CommandContext(ctx, testBinaryPath, tt.args...)
 			_, err := cmd.Output()
 
 			if tt.expectError {
@@ -334,10 +384,6 @@ func TestE2E_InvalidInputHandling(t *testing.T) {
 // TestE2E_MultipleOutputFormats tests that all supported output formats (json, table, ndjson)
 // produce valid output and can be properly parsed.
 func TestE2E_MultipleOutputFormats(t *testing.T) {
-	// Build the binary first
-	binaryPath := buildPulumicostBinary(t)
-	defer os.Remove(binaryPath)
-
 	// Use test fixture plan
 	planFile := filepath.Join("..", "..", "fixtures", "plans", "aws-simple-plan.json")
 	planPath, err := filepath.Abs(planFile)
@@ -350,7 +396,7 @@ func TestE2E_MultipleOutputFormats(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 
-			cmd := exec.CommandContext(ctx, binaryPath, "cost", "projected",
+			cmd := exec.CommandContext(ctx, testBinaryPath, "cost", "projected",
 				"--pulumi-json", planPath, "--output", format)
 			output, cmdErr := cmd.Output()
 			require.NoError(t, cmdErr, "Command failed for format %s: %v", format, cmdErr)
@@ -377,37 +423,4 @@ func TestE2E_MultipleOutputFormats(t *testing.T) {
 			}
 		})
 	}
-}
-
-// buildPulumicostBinary is a helper function that builds the pulumicost binary from source
-// for testing purposes, returning the path to the compiled executable.
-func buildPulumicostBinary(t *testing.T) string {
-	// Create a temporary binary path
-	tempDir := t.TempDir()
-	binaryName := "pulumicost"
-	if runtime.GOOS == "windows" {
-		binaryName = "pulumicost.exe"
-	}
-	binaryPath := filepath.Join(tempDir, binaryName)
-
-	// Build the binary
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	// Get the project root directory (3 levels up from test/integration/e2e)
-	projectRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
-	require.NoError(t, err)
-
-	cmd := exec.CommandContext(ctx, "go", "build", "-o", binaryPath, "./cmd/pulumicost")
-	cmd.Dir = projectRoot
-
-	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Failed to build binary: %v\nOutput: %s", err, string(output))
-
-	// Verify binary was created and is executable
-	info, err := os.Stat(binaryPath)
-	require.NoError(t, err, "Binary not found after build")
-	require.True(t, info.Mode().IsRegular(), "Binary is not a regular file")
-
-	return binaryPath
 }

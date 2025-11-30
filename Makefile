@@ -25,6 +25,10 @@ test:
 	@echo "Running tests..."
 	go test -v ./...
 
+test-race:
+	@echo "Running tests with race detector..."
+	go test -v -race ./...
+
 lint:
 	@echo "Running golangci-lint (expected version $(GOLANGCI_LINT_VERSION))..."
 	@$(GOLANGCI_LINT) --version | grep -q "$(GOLANGCI_LINT_VERSION)" || \

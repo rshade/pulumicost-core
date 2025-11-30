@@ -20,6 +20,15 @@ const (
 	OutputNDJSON OutputFormat = "ndjson"
 )
 
+const (
+	// defaultTabPadding is the number of spaces to use for padding in table output.
+	defaultTabPadding = 2
+	// maxResourceDisplayLen is the maximum length of the resource name in table output before truncation.
+	maxResourceDisplayLen = 40
+	// truncationEllipsis is the string to append when truncating resource names.
+	truncationEllipsis = "..."
+)
+
 // RenderResults renders the given cost results using the specified output format.
 // RenderResults aggregates the results for table and JSON summary outputs, emits NDJSON as individual records, and writes the output to the specified writer.
 // The writer parameter specifies where the output should be written.
@@ -116,8 +125,7 @@ func RenderCrossProviderAggregation(
 // aggregated is the precomputed aggregation to render.
 // It returns an error if writing to or flushing the tabulated output fails.
 func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
-	const tabPadding = 2
-	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
 	// Print summary first
 	fmt.Fprintf(w, "COST SUMMARY\n")
@@ -165,9 +173,8 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 
 	for _, result := range aggregated.Resources {
 		resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
-		const maxResourceLen = 40
-		if len(resource) > maxResourceLen {
-			resource = resource[:maxResourceLen-3] + "..."
+		if len(resource) > maxResourceDisplayLen {
+			resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
 		}
 		fmt.Fprintf(w, "%s\t%s\t%.2f\t%.4f\t%s\t%s\n",
 			resource,
@@ -183,8 +190,7 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 }
 
 func renderActualCostTable(writer io.Writer, results []CostResult) error {
-	const tabPadding = 2
-	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
 	// Check if we have actual cost data to determine appropriate headers
 	hasActualCosts := false
@@ -205,9 +211,8 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 
 	for _, result := range results {
 		resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
-		const maxResourceLen = 40
-		if len(resource) > maxResourceLen {
-			resource = resource[:maxResourceLen-3] + "..."
+		if len(resource) > maxResourceDisplayLen {
+			resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
 		}
 
 		if hasActualCosts {
@@ -304,8 +309,7 @@ func renderCrossProviderTable(writer io.Writer, aggregations []CrossProviderAggr
 		return err
 	}
 
-	const tabPadding = 2
-	w := tabwriter.NewWriter(writer, 0, 0, tabPadding, ' ', 0)
+	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
 	// Collect all unique providers
 	providerSet := make(map[string]bool)
