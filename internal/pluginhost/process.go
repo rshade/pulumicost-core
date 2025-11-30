@@ -49,7 +49,7 @@ type ProcessLauncher struct {
 	mu            sync.Mutex
 }
 
-// NewProcessLauncher creates a new TCP process-based plugin launcher.
+// NewProcessLauncher creates a new ProcessLauncher configured with the package default timeout and an initialized map for tracking reserved port listeners.
 func NewProcessLauncher() *ProcessLauncher {
 	return &ProcessLauncher{
 		timeout:       defaultTimeout,
@@ -301,7 +301,13 @@ func (p *ProcessLauncher) waitForPluginBind(ctx context.Context, port int) error
 
 // isPortCollisionError checks if an error is related to port collision.
 // It uses string pattern matching to handle port collision errors across
-// different operating systems, as syscall error codes vary by platform.
+// isPortCollisionError reports whether the provided error indicates a port/address
+// collision when attempting to bind a network address.
+//
+// It returns true if err contains common platform-independent phrases that
+// indicate the address or port is already in use; returns false for nil or
+// unrelated errors. The check uses string matching to remain portable across
+// operating systems and locales.
 func isPortCollisionError(err error) bool {
 	if err == nil {
 		return false
