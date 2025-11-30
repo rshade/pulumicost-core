@@ -39,4 +39,7 @@ make run
 Go 1.24.10: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
+## Workflow Restrictions
+
+- **NEVER COMMIT**: Do not execute `git commit`. Always stop after `git add` and ask the user to review/commit.
 <!-- MANUAL ADDITIONS END -->
