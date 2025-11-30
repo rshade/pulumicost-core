@@ -66,7 +66,20 @@ type LogOutput struct {
 
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
-// By default, config errors are logged as warnings and defaults are used.
+// New creates a Config populated with sensible defaults and then merges any configuration
+// found on disk and from environment variables.
+// 
+// The returned configuration includes legacy directory defaults under ~/.pulumicost,
+// default output and logging settings, and an empty plugins map. If a config file
+// exists it is attempted to be loaded; if the file is missing the defaults are used.
+// By default, permission or parse errors when reading the config file are emitted as
+// warnings and defaults are retained. When the environment variable
+// PULUMICOST_CONFIG_STRICT is set to "true" or "1", permission or parse errors cause
+// a panic instead of a warning.
+// 
+// Environment variable overrides (e.g., output format/precision and logging settings)
+// are applied after loading the file. The function never returns an error; it always
+// returns a *Config (possibly using defaults).
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
@@ -129,7 +142,7 @@ func New() *Config {
 }
 
 // NewStrict creates a new configuration with strict error handling.
-// It returns an error instead of using defaults if the config file exists but cannot be parsed.
+// configuration is validated; validation failures are returned as an error.
 func NewStrict() (*Config, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

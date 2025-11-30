@@ -12,6 +12,7 @@ import (
 	"github.com/rshade/pulumicost-core/pkg/version"
 )
 
+// and exits the process with status code 1.
 func main() {
 	// Initialize a minimal startup logger for early error reporting
 	// Full logger initialization happens in PersistentPreRunE with debug/config options

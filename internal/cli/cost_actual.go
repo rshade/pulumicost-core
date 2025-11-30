@@ -235,7 +235,17 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 // ParseTimeRange accepts two date strings, parses each into a time.Time, and ensures the 'to' time is after the 'from' time.
 // It returns the parsed from and to times on success. If either date cannot be parsed or if the 'to' time is not after
 // the 'from' time, an error is returned describing the failure.
-// Additionally validates that the date range does not exceed maximum limits.
+// ParseTimeRange parses the given fromStr and toStr into time values, ensures the
+// end time is after the start time, and validates the date range does not exceed
+// configured limits.
+// 
+// fromStr is the start date string and toStr is the end date string; both accept
+// either "YYYY-MM-DD" or RFC3339 formats as validated by ParseTime.
+// 
+// Returns the parsed from and to times on success. Returns an error if parsing
+// either input fails (the error is wrapped with a message indicating which input
+// failed), if the end time is not after the start time, or if the range violates
+// the maximum allowed span as enforced by ValidateDateRange.
 func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 	from, err := ParseTime(fromStr)
 	if err != nil {
@@ -262,7 +272,10 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 // ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
 // ParseTime parses a date/time string in either YYYY-MM-DD or RFC3339 format.
 // It returns the parsed time on success, or an error if the string does not match either supported format.
-// Additionally validates that the date is not in the future and not more than 5 years in the past.
+// ParseTime parses the given date string as either `YYYY-MM-DD` or RFC3339 and returns the parsed time.
+// It rejects dates that are after the current time or more than `maxPastYears` years in the past.
+// The `str` parameter is the date string to parse. On success the parsed time is returned; on failure an error
+// describes the parse or validation problem.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
@@ -303,7 +316,10 @@ func ParseTime(str string) (time.Time, error) {
 }
 
 // ValidateDateRange validates that the date range is within acceptable limits.
-// Returns an error if the range exceeds maxDateRangeDays (approximately 1 year).
+// ValidateDateRange reports an error when the interval between from and to exceeds maxDateRangeDays.
+// from is the start time and to is the end time of the range. If the span is greater than
+// maxDateRangeDays, ValidateDateRange returns an error describing the actual number of days
+// and the allowed maximum; otherwise it returns nil.
 func ValidateDateRange(from, to time.Time) error {
 	days := int(to.Sub(from).Hours() / hoursPerDay)
 	if days > maxDateRangeDays {
