@@ -3,6 +3,7 @@ package plugin_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,6 +171,19 @@ func TestPluginCommunication_Timeout(t *testing.T) {
 	duration := time.Since(start)
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "context deadline exceeded")
+	// gRPC may return either "context deadline exceeded" or "DeadlineExceeded" error code
+	errStr := err.Error()
+	assert.True(t, containsAny(errStr, "context deadline exceeded", "DeadlineExceeded"),
+		"expected timeout error, got: %s", errStr)
 	assert.Less(t, duration, 1*time.Second) // Should timeout quickly
+}
+
+// containsAny returns true if s contains any of the substrings.
+func containsAny(s string, substrings ...string) bool {
+	for _, substr := range substrings {
+		if strings.Contains(s, substr) {
+			return true
+		}
+	}
+	return false
 }
