@@ -27,12 +27,13 @@ func newMockServer(plugin *MockPlugin) *mockServer {
 // Name implements the Name RPC method.
 func (s *mockServer) Name(_ context.Context, _ *pbc.NameRequest) (*pbc.NameResponse, error) {
 	// Simulate latency if configured
-	if s.plugin.config.LatencyMS > 0 {
-		time.Sleep(time.Duration(s.plugin.config.LatencyMS) * time.Millisecond)
+	latency := s.plugin.GetLatency()
+	if latency > 0 {
+		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	// Check for error injection
-	if err := s.plugin.shouldInjectError("Name"); err != nil {
+	if err := s.plugin.ShouldInjectError("Name"); err != nil {
 		return nil, toGRPCError(err)
 	}
 
@@ -47,18 +48,19 @@ func (s *mockServer) GetProjectedCost(
 	req *pbc.GetProjectedCostRequest,
 ) (*pbc.GetProjectedCostResponse, error) {
 	// Simulate latency if configured
-	if s.plugin.config.LatencyMS > 0 {
-		time.Sleep(time.Duration(s.plugin.config.LatencyMS) * time.Millisecond)
+	latency := s.plugin.GetLatency()
+	if latency > 0 {
+		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	// Check for error injection
-	if err := s.plugin.shouldInjectError("GetProjectedCost"); err != nil {
+	if err := s.plugin.ShouldInjectError("GetProjectedCost"); err != nil {
 		return nil, toGRPCError(err)
 	}
 
 	// Look up configured response for this resource type
 	resourceType := req.GetResource().GetResourceType()
-	configuredResult, found := s.plugin.config.ProjectedCostResponses[resourceType]
+	configuredResult, found := s.plugin.GetProjectedResponse(resourceType)
 
 	if !found {
 		// Return error if no response configured
@@ -82,18 +84,19 @@ func (s *mockServer) GetActualCost(
 	req *pbc.GetActualCostRequest,
 ) (*pbc.GetActualCostResponse, error) {
 	// Simulate latency if configured
-	if s.plugin.config.LatencyMS > 0 {
-		time.Sleep(time.Duration(s.plugin.config.LatencyMS) * time.Millisecond)
+	latency := s.plugin.GetLatency()
+	if latency > 0 {
+		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	// Check for error injection
-	if err := s.plugin.shouldInjectError("GetActualCost"); err != nil {
+	if err := s.plugin.ShouldInjectError("GetActualCost"); err != nil {
 		return nil, toGRPCError(err)
 	}
 
 	// Look up configured response for this resource ID
 	resourceID := req.GetResourceId()
-	configuredResult, found := s.plugin.config.ActualCostResponses[resourceID]
+	configuredResult, found := s.plugin.GetActualResponse(resourceID)
 
 	if !found {
 		// Return error if no response configured
