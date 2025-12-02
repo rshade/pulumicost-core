@@ -52,6 +52,13 @@ type LoggingConfig struct {
 	Format  string      `yaml:"format"  json:"format"`  // "json" or "text"
 	Outputs []LogOutput `yaml:"outputs" json:"outputs"` // Multiple output destinations
 	File    string      `yaml:"file"    json:"file"`    // Legacy: single file output
+	Audit   AuditConfig `yaml:"audit"   json:"audit"`   // Audit logging configuration
+}
+
+// AuditConfig defines audit logging settings for cost query operations.
+type AuditConfig struct {
+	Enabled bool   `yaml:"enabled" json:"enabled"` // Enable audit logging
+	File    string `yaml:"file"    json:"file"`    // Separate audit file (optional, empty = main log)
 }
 
 // LogOutput defines a logging output destination.
@@ -321,6 +328,28 @@ func (c *Config) validateLogging() error {
 	for i, output := range c.Logging.Outputs {
 		if err := validateLogOutput(output); err != nil {
 			return fmt.Errorf("output %d: %w", i, err)
+		}
+	}
+
+	// Validate audit configuration
+	if err := c.validateAuditConfig(); err != nil {
+		return fmt.Errorf("audit configuration: %w", err)
+	}
+
+	return nil
+}
+
+// validateAuditConfig validates the audit logging configuration.
+func (c *Config) validateAuditConfig() error {
+	// If audit logging is disabled, no further validation needed
+	if !c.Logging.Audit.Enabled {
+		return nil
+	}
+
+	// Validate audit file path if specified
+	if c.Logging.Audit.File != "" {
+		if err := validateFilePath(c.Logging.Audit.File); err != nil {
+			return fmt.Errorf("audit file: %w", err)
 		}
 	}
 

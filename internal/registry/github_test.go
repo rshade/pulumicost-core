@@ -10,7 +10,7 @@ func TestNewGitHubClient(t *testing.T) {
 	if client == nil {
 		t.Fatal("NewGitHubClient() returned nil")
 	}
-	if client.httpClient == nil {
+	if client.HTTPClient == nil {
 		t.Error("httpClient is nil")
 	}
 }

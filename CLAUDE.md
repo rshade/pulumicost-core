@@ -805,3 +805,10 @@ CodeRabbit now:
 3. **Resolves outdated comments** when issues are fixed
 4. **Provides detailed Go-specific feedback** on code quality
 5. **Integrates with existing CI/CD** tools and workflows
+
+## Active Technologies
+- Go 1.25 + zerolog v1.34.0 (already integrated), cobra v1.10.1, yaml.v3 (001-integrate-logging)
+- File system (`~/.pulumicost/config.yaml`, log files) (001-integrate-logging)
+
+## Recent Changes
+- 001-integrate-logging: Added Go 1.25 + zerolog v1.34.0 (already integrated), cobra v1.10.1, yaml.v3
