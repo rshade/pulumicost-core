@@ -4,6 +4,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rshade/pulumicost-core/internal/cli"
@@ -11,7 +12,8 @@ import (
 	"github.com/rshade/pulumicost-core/pkg/version"
 )
 
-func main() {
+// run is the main application logic, separated for testability.
+func run() error {
 	// Initialize a minimal startup logger for early error reporting
 	// Full logger initialization happens in PersistentPreRunE with debug/config options
 	startupCfg := logging.LoggingConfig{
@@ -24,7 +26,17 @@ func main() {
 
 	root := cli.NewRootCmd(version.GetVersion())
 	if err := root.Execute(); err != nil {
+		// Print user-friendly error to stderr for immediate visibility
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		// Also log for debugging purposes
 		startupLogger.Error().Err(err).Msg("command execution failed")
+		return err
+	}
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
 		os.Exit(1)
 	}
 }

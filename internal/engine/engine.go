@@ -28,6 +28,10 @@ const (
 	defaultComputeMonthlyCost   = 20.0  // Default monthly cost for compute resources
 	defaultServiceName          = "default"
 	defaultCurrency             = "USD" // Default currency for cost calculations
+
+	// Timeout constants for engine operations.
+	defaultQueryTimeout = 60 * time.Second // Overall query timeout.
+	perResourceTimeout  = 5 * time.Second  // Per-resource calculation timeout.
 )
 
 var (
@@ -63,9 +67,18 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 }
 
 // GetProjectedCost calculates projected costs for the given resources using plugins or specs.
+//
+//nolint:gocognit,funlen // Comprehensive cost calculation requires multiple nested conditions and fallbacks.
 func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
 	log := logging.FromContext(ctx)
 	start := time.Now()
+
+	// Apply overall query timeout if not already set
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, defaultQueryTimeout)
+		defer cancel()
+	}
 
 	log.Debug().
 		Ctx(ctx).
@@ -75,9 +88,29 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 		Int("plugin_count", len(e.clients)).
 		Msg("starting projected cost calculation")
 
+	// Validate all resources before processing
+	for i, resource := range resources {
+		if err := resource.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid resource at index %d: %w", i, err)
+		}
+	}
+
 	var results []CostResult
+	var ctxErr error
 
 	for _, resource := range resources {
+		// Check if context is cancelled before processing each resource
+		if err := ctx.Err(); err != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
+				Int("processed", len(results)).
+				Int("total", len(resources)).
+				Msg("query timeout reached, returning partial results")
+			ctxErr = err
+			break
+		}
+
 		var resourceResults []CostResult
 
 		for _, client := range e.clients {
@@ -89,7 +122,10 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 				Str("plugin", client.Name).
 				Msg("querying plugin for projected cost")
 
-			result, err := e.getProjectedCostFromPlugin(ctx, client, resource)
+			// Apply per-resource timeout for plugin calls
+			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
+			result, err := e.getProjectedCostFromPlugin(resourceCtx, client, resource)
+			resourceCancel()
 			if err != nil {
 				log.Debug().
 					Ctx(ctx).
@@ -154,6 +190,10 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 		} else {
 			results = append(results, resourceResults...)
 		}
+	}
+
+	if ctxErr != nil {
+		return results, fmt.Errorf("projected cost calculation cancelled: %w", ctxErr)
 	}
 
 	log.Info().
@@ -257,13 +297,20 @@ func (e *Engine) GetActualCost(
 
 // GetActualCostWithOptions retrieves actual costs with advanced filtering, grouping, and time range options.
 //
-//nolint:funlen // Comprehensive logging for debugging cost calculation pipeline requires additional lines
+//nolint:funlen,gocognit // Comprehensive logging and cost calculation pipeline requires additional complexity.
 func (e *Engine) GetActualCostWithOptions(
 	ctx context.Context,
 	request ActualCostRequest,
 ) ([]CostResult, error) {
 	log := logging.FromContext(ctx)
 	start := time.Now()
+
+	// Apply overall query timeout if not already set
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, defaultQueryTimeout)
+		defer cancel()
+	}
 
 	log.Debug().
 		Ctx(ctx).
@@ -275,10 +322,30 @@ func (e *Engine) GetActualCostWithOptions(
 		Str("group_by", request.GroupBy).
 		Msg("starting actual cost calculation")
 
+	// Validate all resources before processing
+	for i, resource := range request.Resources {
+		if err := resource.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid resource at index %d: %w", i, err)
+		}
+	}
+
 	var results []CostResult
 	var partialErrors []error
+	var ctxErr error
 
 	for _, resource := range request.Resources {
+		// Check if context is cancelled before processing each resource
+		if err := ctx.Err(); err != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
+				Int("processed", len(results)).
+				Int("total", len(request.Resources)).
+				Msg("query timeout reached, returning partial results")
+			ctxErr = err
+			break
+		}
+
 		// Filter by tags if specified
 		if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
 			log.Debug().
@@ -304,7 +371,10 @@ func (e *Engine) GetActualCostWithOptions(
 				Str("plugin", client.Name).
 				Msg("querying plugin for actual cost")
 
-			result, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
+			// Apply per-resource timeout for plugin calls
+			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
+			result, err := e.getActualCostFromPlugin(resourceCtx, client, resource, request.From, request.To)
+			resourceCancel()
 			if err != nil {
 				log.Debug().
 					Ctx(ctx).
@@ -372,6 +442,10 @@ func (e *Engine) GetActualCostWithOptions(
 			Str("component", "engine").
 			Int("error_count", len(partialErrors)).
 			Msg("some plugins returned errors during actual cost calculation")
+	}
+
+	if ctxErr != nil {
+		return results, fmt.Errorf("actual cost calculation cancelled: %w", ctxErr)
 	}
 
 	log.Info().
@@ -611,7 +685,7 @@ func (e *Engine) getActualCostFromPlugin(
 	if totalDays > 0 {
 		dailyCosts = make([]float64, totalDays)
 		avgDaily := result.TotalCost / float64(totalDays)
-		for i := range totalDays {
+		for i := range dailyCosts {
 			dailyCosts[i] = avgDaily
 		}
 	}

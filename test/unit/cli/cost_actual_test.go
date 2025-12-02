@@ -4,12 +4,37 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// getRecentDateRange returns dynamic dates within the 5-year limit for testing.
+func getRecentDateRange() (string, string) {
+	now := time.Now()
+	fromDate := now.AddDate(0, -1, 0).Format("2006-01-02") // 1 month ago
+	toDate := now.Format("2006-01-02")                     // today
+	return fromDate, toDate
+}
+
+// getRecentRFC3339Range returns dynamic RFC3339 dates within the 5-year limit for testing.
+func getRecentRFC3339Range() (string, string) {
+	now := time.Now()
+	fromDate := now.AddDate(0, -1, 0).Format(time.RFC3339) // 1 month ago
+	toDate := now.Format(time.RFC3339)                     // today
+	return fromDate, toDate
+}
+
+// getShortDateRange returns a 3-day dynamic date range within the 5-year limit for testing.
+func getShortDateRange() (string, string) {
+	now := time.Now()
+	fromDate := now.AddDate(0, 0, -2).Format("2006-01-02") // 2 days ago
+	toDate := now.Format("2006-01-02")                     // today
+	return fromDate, toDate
+}
 
 // TestCostActualCmd_Success tests basic actual cost retrieval.
 func TestCostActualCmd_Success(t *testing.T) {
@@ -22,11 +47,12 @@ func TestCostActualCmd_Success(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--output", "json",
 	})
 
@@ -58,11 +84,12 @@ func TestCostActualCmd_MissingStartDate(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	_, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
 		// Missing --from
-		"--to", "2024-01-31",
+		"--to", toDate,
 	})
 
 	var out bytes.Buffer
@@ -86,10 +113,13 @@ func TestCostActualCmd_DefaultEndDate(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	// Use a recent date within the max 366-day range
+	recentDate := time.Now().AddDate(0, -1, 0).Format("2006-01-02") // 1 month ago
+
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
+		"--from", recentDate,
 		// No --to (should default to now)
 		"--output", "json",
 	})
@@ -118,11 +148,12 @@ func TestCostActualCmd_InvalidDateFormat(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	_, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
 		"--from", "invalid-date",
-		"--to", "2024-01-31",
+		"--to", toDate,
 	})
 
 	var out bytes.Buffer
@@ -146,11 +177,12 @@ func TestCostActualCmd_RFC3339DateFormat(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentRFC3339Range()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01T00:00:00Z",
-		"--to", "2024-01-31T23:59:59Z",
+		"--from", fromDate,
+		"--to", toDate,
 		"--output", "json",
 	})
 
@@ -182,11 +214,12 @@ func TestCostActualCmd_GroupByResource(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--group-by", "resource",
 		"--output", "json",
 	})
@@ -219,11 +252,12 @@ func TestCostActualCmd_GroupByType(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--group-by", "type",
 		"--output", "json",
 	})
@@ -256,11 +290,12 @@ func TestCostActualCmd_GroupByProvider(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--group-by", "provider",
 		"--output", "json",
 	})
@@ -289,11 +324,12 @@ func TestCostActualCmd_GroupByDaily(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getShortDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-03",
+		"--from", fromDate,
+		"--to", toDate,
 		"--group-by", "daily",
 		"--output", "json",
 	})
@@ -320,11 +356,12 @@ func TestCostActualCmd_TableOutput(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--output", "table",
 	})
 
@@ -354,11 +391,12 @@ func TestCostActualCmd_NDJSONOutput(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--output", "ndjson",
 	})
 
@@ -384,11 +422,12 @@ func TestCostActualCmd_AdapterFilter(t *testing.T) {
 
 	planPath := createTestPlan(t, resources)
 
+	fromDate, toDate := getRecentDateRange()
 	cmd := cli.NewCostActualCmd()
 	cmd.SetArgs([]string{
 		"--pulumi-json", planPath,
-		"--from", "2024-01-01",
-		"--to", "2024-01-31",
+		"--from", fromDate,
+		"--to", toDate,
 		"--adapter", "kubecost",
 		"--output", "json",
 	})

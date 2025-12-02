@@ -1,6 +1,3 @@
-// Package spec provides YAML-based pricing specification loading for cloud resources.
-// Specs act as a fallback when plugins are unavailable, following the provider-service-sku.yaml
-// naming convention for organizing pricing data by cloud provider, service, and SKU identifier.
 package spec
 
 import (

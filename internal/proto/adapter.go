@@ -1,6 +1,3 @@
-// Package proto provides adapter types and client wrappers for interfacing with the pulumicost-spec gRPC protocol.
-// This package bridges the engine's internal representation with the protobuf-generated types,
-// enabling seamless integration with the CostSourceService defined in pulumicost-spec.
 package proto
 
 import (

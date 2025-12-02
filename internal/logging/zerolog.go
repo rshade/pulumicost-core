@@ -1,26 +1,3 @@
-// Package logging provides zerolog-based structured logging with distributed tracing for PulumiCost.
-//
-// This package implements comprehensive logging infrastructure with:
-//   - Zero-allocation structured logging using zerolog v1.34.0+
-//   - Distributed tracing via trace IDs propagated through context
-//   - ULID-based trace ID generation for sortable, unique identifiers
-//   - Configurable log levels (trace, debug, info, warn, error)
-//   - JSON and console output formats
-//   - Automatic trace ID injection via TracingHook
-//   - Sensitive data protection with pattern-based redaction
-//
-// Usage:
-//
-//	// Initialize logger at application startup
-//	cfg := logging.LoggingConfig{Level: "info", Format: "json"}
-//	logger := logging.NewLogger(cfg)
-//
-//	// Generate trace ID at command start
-//	traceID := logging.GenerateTraceID()
-//	ctx := logging.ContextWithTraceID(ctx, traceID)
-//
-//	// Log with automatic trace ID injection
-//	logging.FromContext(ctx).Info().Str("component", "cli").Msg("command started")
 package logging
 
 import (

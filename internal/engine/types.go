@@ -1,43 +1,26 @@
-// Package engine provides the core cost calculation and aggregation functionality for PulumiCost.
-//
-// This package orchestrates cost calculations between multiple cloud provider plugins,
-// handles fallback to local pricing specifications, and provides comprehensive
-// cross-provider cost aggregation and analysis capabilities.
-//
-// Key Features:
-//   - Multi-provider cost calculation with plugin architecture
-//   - Cross-provider cost aggregation with currency validation
-//   - Time-based grouping (daily/monthly) with intelligent cost conversion
-//   - Flexible resource filtering and tag-based matching
-//   - Multiple output formats (table, JSON, NDJSON) with rich cost breakdowns
-//   - Graceful fallback from plugins to local YAML specifications
-//
-// Architecture Overview:
-//
-//	Pulumi Resources → Engine → Plugins (gRPC) → Cost Results
-//	                      ↓ (fallback)
-//	                 Spec Loader (YAML) → Cost Results
-//	                      ↓
-//	              Cross-Provider Aggregation → Formatted Output
-//
-// Thread Safety:
-//   - Engine instances are safe for concurrent use
-//   - Individual cost calculations are independent
-//   - Aggregation functions are pure and stateless
-//
-// Performance:
-//   - Designed for datasets up to 10,000 cost results
-//   - Memory usage scales linearly with resource count
-//   - Plugin communication uses connection pooling
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/rshade/pulumicost-core/internal/spec"
 )
+
+// Validation constants for ResourceDescriptor.
+const (
+	maxProperties      = 100       // Maximum number of properties allowed
+	maxPropertyKeyLen  = 128       // Maximum length of property keys
+	maxPropertyValLen  = 10 * 1024 // Maximum length of property values (10KB)
+	maxResourceTypeLen = 256       // Maximum length of resource type
+	maxResourceIDLen   = 1024      // Maximum length of resource ID
+)
+
+// ErrResourceValidation is returned when resource validation fails.
+var ErrResourceValidation = errors.New("resource validation failed")
 
 const (
 	// maxErrorsToDisplay is the maximum number of errors to show in summary before truncating.
@@ -50,6 +33,74 @@ type ResourceDescriptor struct {
 	ID         string
 	Provider   string
 	Properties map[string]interface{}
+}
+
+// Validate checks that the ResourceDescriptor has valid fields and returns an error if validation fails.
+// It validates:
+//   - Type is not empty and within length limits
+//   - ID is within length limits (can be empty for some resources)
+//   - Properties count does not exceed maximum
+//   - Property keys are valid identifiers and within length limits
+//   - Property values do not exceed size limits
+func (r *ResourceDescriptor) Validate() error {
+	// Validate Type (required)
+	if r.Type == "" {
+		return fmt.Errorf("%w: resource type is required", ErrResourceValidation)
+	}
+	if len(r.Type) > maxResourceTypeLen {
+		return fmt.Errorf("%w: resource type too long: %d bytes (max %d)",
+			ErrResourceValidation, len(r.Type), maxResourceTypeLen)
+	}
+
+	// Validate ID (can be empty but must not exceed limit)
+	if len(r.ID) > maxResourceIDLen {
+		return fmt.Errorf("%w: resource ID too long: %d bytes (max %d)",
+			ErrResourceValidation, len(r.ID), maxResourceIDLen)
+	}
+
+	// Validate Properties count
+	if len(r.Properties) > maxProperties {
+		return fmt.Errorf("%w: too many properties: %d (max %d)",
+			ErrResourceValidation, len(r.Properties), maxProperties)
+	}
+
+	// Validate each property
+	for key, val := range r.Properties {
+		if err := validatePropertyKey(key); err != nil {
+			return fmt.Errorf("%w: %w", ErrResourceValidation, err)
+		}
+
+		valStr := fmt.Sprintf("%v", val)
+		if len(valStr) > maxPropertyValLen {
+			return fmt.Errorf("%w: property value too large for key %q: %d bytes (max %d)",
+				ErrResourceValidation, key, len(valStr), maxPropertyValLen)
+		}
+	}
+
+	return nil
+}
+
+// validatePropertyKey checks if a property key is a valid identifier.
+// Valid keys contain only alphanumeric characters, underscores, hyphens, and dots.
+func validatePropertyKey(key string) error {
+	if key == "" {
+		return errors.New("property key cannot be empty")
+	}
+	if len(key) > maxPropertyKeyLen {
+		return fmt.Errorf("property key too long: %d bytes (max %d)", len(key), maxPropertyKeyLen)
+	}
+
+	for _, ch := range key {
+		if !isValidPropertyKeyChar(ch) {
+			return fmt.Errorf("invalid character in property key %q: %c (must be alphanumeric, _, -, or .)", key, ch)
+		}
+	}
+	return nil
+}
+
+// isValidPropertyKeyChar returns true if the character is valid in a property key.
+func isValidPropertyKeyChar(ch rune) bool {
+	return unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_' || ch == '-' || ch == '.'
 }
 
 // CostResult contains the calculated cost information for a single resource.

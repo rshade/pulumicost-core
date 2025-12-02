@@ -1,5 +1,3 @@
-// Package pluginhost manages plugin process lifecycle and gRPC communication.
-// It provides launchers for starting plugins via TCP or stdio and wraps plugin connections.
 package pluginhost
 
 import (

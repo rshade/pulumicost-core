@@ -1,14 +1,3 @@
-// Package config provides configuration management for PulumiCost.
-//
-// This package handles:
-// - Loading and saving configuration from YAML files
-// - Output formatting preferences (format, precision)
-// - Plugin-specific configuration
-// - Logging configuration with multiple output destinations
-// - Configuration validation with detailed error reporting
-//
-// The configuration is stored in ~/.pulumicost/config.yaml by default.
-// Sensitive values (API keys, credentials) should be stored as environment variables.
 package config
 
 import (
@@ -27,6 +16,9 @@ const (
 	envKeySeparatorCount = 2
 	minPluginKeyParts    = 2
 )
+
+// ErrConfigCorrupted is returned in strict mode when the config file exists but cannot be parsed.
+var ErrConfigCorrupted = errors.New("configuration file appears corrupted")
 
 // Config represents the complete configuration structure.
 type Config struct {
@@ -73,6 +65,8 @@ type LogOutput struct {
 }
 
 // New creates a new configuration with defaults.
+// In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
+// By default, config errors are logged as warnings and defaults are used.
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
@@ -104,16 +98,26 @@ func New() *Config {
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
 	}
 
+	// Check for strict mode
+	strictMode := os.Getenv("PULUMICOST_CONFIG_STRICT") == "true" ||
+		os.Getenv("PULUMICOST_CONFIG_STRICT") == "1"
+
 	// Load from file if exists
 	if err := cfg.Load(); err != nil {
 		switch {
 		case os.IsNotExist(err):
 			// Config file doesn't exist - this is fine, use defaults
 		case os.IsPermission(err):
-			// Permission error - warn but continue
+			// Permission error - warn but continue (or fail in strict mode)
+			if strictMode {
+				panic(fmt.Sprintf("STRICT MODE: Permission denied reading config file: %v", err))
+			}
 			fmt.Fprintf(os.Stderr, "Warning: Permission denied reading config file: %v\n", err)
 		default:
-			// Likely a corrupted config file - warn about potential data corruption
+			// Likely a corrupted config file - fail in strict mode
+			if strictMode {
+				panic(fmt.Sprintf("STRICT MODE: Config file appears corrupted: %v", err))
+			}
 			fmt.Fprintf(os.Stderr, "Warning: Config file may be corrupted, using defaults: %v\n", err)
 		}
 	}
@@ -122,6 +126,67 @@ func New() *Config {
 	cfg.applyEnvOverrides()
 
 	return cfg
+}
+
+// NewStrict creates a new configuration with strict error handling.
+// It returns an error instead of using defaults if the config file exists but cannot be parsed.
+func NewStrict() (*Config, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+	}
+	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+
+	cfg := &Config{
+		// Legacy fields
+		PluginDir: filepath.Join(pulumicostDir, "plugins"),
+		SpecDir:   filepath.Join(pulumicostDir, "specs"),
+
+		// New configuration
+		Output: OutputConfig{
+			DefaultFormat: "table",
+			Precision:     defaultPrecision,
+		},
+		Plugins: make(map[string]PluginConfig),
+		Logging: LoggingConfig{
+			Level:  "info",
+			Format: "text",
+			File:   filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
+			Outputs: []LogOutput{
+				{
+					Type:   "console",
+					Level:  "info",
+					Format: "text",
+				},
+			},
+		},
+
+		configPath: filepath.Join(pulumicostDir, "config.yaml"),
+	}
+
+	// Load from file with strict error handling
+	if loadErr := cfg.Load(); loadErr != nil {
+		switch {
+		case os.IsNotExist(loadErr):
+			// Config file doesn't exist - this is fine, use defaults
+		case os.IsPermission(loadErr):
+			// Permission error - fail immediately
+			return nil, fmt.Errorf("permission denied reading config file: %w", loadErr)
+		default:
+			// Likely a corrupted config file - fail immediately
+			return nil, fmt.Errorf("%w: %w", ErrConfigCorrupted, loadErr)
+		}
+	}
+
+	// Apply environment variable overrides
+	cfg.applyEnvOverrides()
+
+	// Validate the configuration
+	if validateErr := cfg.Validate(); validateErr != nil {
+		return nil, fmt.Errorf("configuration validation failed: %w", validateErr)
+	}
+
+	return cfg, nil
 }
 
 // Load loads configuration from the config file.
