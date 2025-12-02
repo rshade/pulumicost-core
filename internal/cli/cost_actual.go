@@ -125,6 +125,8 @@ func NewCostActualCmd() *cobra.Command {
 //   - opening adapter plugins,
 //   - fetching actual cost data from the engine,
 //   - rendering the output.
+//
+//nolint:funlen // Comprehensive logging requires additional lines for observability
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	start := time.Now()
 	ctx := cmd.Context()
@@ -140,16 +142,41 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 		Str("group_by", params.groupBy).
 		Msg("starting actual cost calculation")
 
-	plan, err := ingest.LoadPulumiPlan(params.planPath)
+	// Get audit logger and trace ID for audit entry
+	auditLogger := logging.AuditLoggerFromContext(ctx)
+	traceID := logging.TraceIDFromContext(ctx)
+	auditParams := map[string]string{
+		"pulumi_json": params.planPath,
+		"output":      params.output,
+		"from":        params.fromStr,
+		"to":          params.toStr,
+	}
+	if params.groupBy != "" {
+		auditParams["group_by"] = params.groupBy
+	}
+
+	plan, err := ingest.LoadPulumiPlanWithContext(ctx, params.planPath)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Str("plan_path", params.planPath).Msg("failed to load Pulumi plan")
+		// Log audit entry for failure
+		auditEntry := logging.NewAuditEntry("cost actual", traceID).
+			WithParameters(auditParams).
+			WithError(err.Error()).
+			WithDuration(start)
+		auditLogger.Log(ctx, *auditEntry)
 		return fmt.Errorf("loading Pulumi plan: %w", err)
 	}
 
-	pulumiResources := plan.GetResources()
+	pulumiResources := plan.GetResourcesWithContext(ctx)
 	resources, err := ingest.MapResources(pulumiResources)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Msg("failed to map resources")
+		// Log audit entry for failure
+		auditEntry := logging.NewAuditEntry("cost actual", traceID).
+			WithParameters(auditParams).
+			WithError(err.Error()).
+			WithDuration(start)
+		auditLogger.Log(ctx, *auditEntry)
 		return fmt.Errorf("mapping resources: %w", err)
 	}
 
@@ -167,6 +194,12 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	from, to, err := ParseTimeRange(params.fromStr, toStr)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Msg("failed to parse time range")
+		// Log audit entry for failure
+		auditEntry := logging.NewAuditEntry("cost actual", traceID).
+			WithParameters(auditParams).
+			WithError(err.Error()).
+			WithDuration(start)
+		auditLogger.Log(ctx, *auditEntry)
 		return fmt.Errorf("parsing time range: %w", err)
 	}
 
@@ -174,6 +207,12 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	clients, cleanup, err := reg.Open(ctx, params.adapter)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Str("adapter", params.adapter).Msg("failed to open plugins")
+		// Log audit entry for failure
+		auditEntry := logging.NewAuditEntry("cost actual", traceID).
+			WithParameters(auditParams).
+			WithError(err.Error()).
+			WithDuration(start)
+		auditLogger.Log(ctx, *auditEntry)
 		return fmt.Errorf("opening plugins: %w", err)
 	}
 	defer cleanup()
@@ -200,6 +239,12 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	resultWithErrors, err := eng.GetActualCostWithOptionsAndErrors(ctx, request)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Msg("failed to fetch actual costs")
+		// Log audit entry for failure
+		auditEntry := logging.NewAuditEntry("cost actual", traceID).
+			WithParameters(auditParams).
+			WithError(err.Error()).
+			WithDuration(start)
+		auditLogger.Log(ctx, *auditEntry)
 		return fmt.Errorf("fetching actual costs: %w", err)
 	}
 
@@ -226,6 +271,17 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 		Int("result_count", len(resultWithErrors.Results)).
 		Dur("duration_ms", time.Since(start)).
 		Msg("actual cost calculation complete")
+
+	// Log audit entry for success
+	totalCost := 0.0
+	for _, r := range resultWithErrors.Results {
+		totalCost += r.Monthly
+	}
+	auditEntry := logging.NewAuditEntry("cost actual", traceID).
+		WithParameters(auditParams).
+		WithSuccess(len(resultWithErrors.Results), totalCost).
+		WithDuration(start)
+	auditLogger.Log(ctx, *auditEntry)
 
 	return nil
 }

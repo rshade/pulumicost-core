@@ -49,16 +49,39 @@ func NewCostProjectedCmd() *cobra.Command {
 				Str("plan_path", planPath).
 				Msg("starting projected cost calculation")
 
-			plan, err := ingest.LoadPulumiPlan(planPath)
+			// Get audit logger and trace ID for audit entry
+			auditLogger := logging.AuditLoggerFromContext(ctx)
+			traceID := logging.TraceIDFromContext(ctx)
+			auditParams := map[string]string{
+				"pulumi_json": planPath,
+				"output":      output,
+			}
+			if filter != "" {
+				auditParams["filter"] = filter
+			}
+
+			plan, err := ingest.LoadPulumiPlanWithContext(ctx, planPath)
 			if err != nil {
 				log.Error().Ctx(ctx).Err(err).Str("plan_path", planPath).Msg("failed to load Pulumi plan")
+				// Log audit entry for failure
+				auditEntry := logging.NewAuditEntry("cost projected", traceID).
+					WithParameters(auditParams).
+					WithError(err.Error()).
+					WithDuration(start)
+				auditLogger.Log(ctx, *auditEntry)
 				return fmt.Errorf("loading Pulumi plan: %w", err)
 			}
 
-			pulumiResources := plan.GetResources()
+			pulumiResources := plan.GetResourcesWithContext(ctx)
 			resources, err := ingest.MapResources(pulumiResources)
 			if err != nil {
 				log.Error().Ctx(ctx).Err(err).Msg("failed to map resources")
+				// Log audit entry for failure
+				auditEntry := logging.NewAuditEntry("cost projected", traceID).
+					WithParameters(auditParams).
+					WithError(err.Error()).
+					WithDuration(start)
+				auditLogger.Log(ctx, *auditEntry)
 				return fmt.Errorf("mapping resources: %w", err)
 			}
 
@@ -87,6 +110,12 @@ func NewCostProjectedCmd() *cobra.Command {
 			clients, cleanup, err := reg.Open(ctx, adapter)
 			if err != nil {
 				log.Error().Ctx(ctx).Err(err).Str("adapter", adapter).Msg("failed to open plugins")
+				// Log audit entry for failure
+				auditEntry := logging.NewAuditEntry("cost projected", traceID).
+					WithParameters(auditParams).
+					WithError(err.Error()).
+					WithDuration(start)
+				auditLogger.Log(ctx, *auditEntry)
 				return fmt.Errorf("opening plugins: %w", err)
 			}
 			defer cleanup()
@@ -100,6 +129,12 @@ func NewCostProjectedCmd() *cobra.Command {
 			resultWithErrors, err := eng.GetProjectedCostWithErrors(ctx, resources)
 			if err != nil {
 				log.Error().Ctx(ctx).Err(err).Msg("failed to calculate projected costs")
+				// Log audit entry for failure
+				auditEntry := logging.NewAuditEntry("cost projected", traceID).
+					WithParameters(auditParams).
+					WithError(err.Error()).
+					WithDuration(start)
+				auditLogger.Log(ctx, *auditEntry)
 				return fmt.Errorf("calculating projected costs: %w", err)
 			}
 
@@ -125,6 +160,17 @@ func NewCostProjectedCmd() *cobra.Command {
 				Int("result_count", len(resultWithErrors.Results)).
 				Dur("duration_ms", time.Since(start)).
 				Msg("projected cost calculation complete")
+
+			// Log audit entry for success
+			totalCost := 0.0
+			for _, r := range resultWithErrors.Results {
+				totalCost += r.Monthly
+			}
+			auditEntry := logging.NewAuditEntry("cost projected", traceID).
+				WithParameters(auditParams).
+				WithSuccess(len(resultWithErrors.Results), totalCost).
+				WithDuration(start)
+			auditLogger.Log(ctx, *auditEntry)
 
 			return nil
 		},

@@ -56,6 +56,22 @@ func NewInstaller(pluginDir string) *Installer {
 	}
 }
 
+// NewInstallerWithClient creates a new Installer with a custom GitHub client.
+func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
+	if pluginDir == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			// Fallback to current directory if home cannot be determined
+			homeDir = "."
+		}
+		pluginDir = filepath.Join(homeDir, ".pulumicost", "plugins")
+	}
+	return &Installer{
+		client:    client,
+		pluginDir: pluginDir,
+	}
+}
+
 // Install installs a plugin from a specifier (name or URL with optional version).
 func (i *Installer) Install(specifier string, opts InstallOptions, progress func(msg string)) (*InstallResult, error) {
 	spec, err := ParsePluginSpecifier(specifier)
@@ -193,8 +209,21 @@ func (i *Installer) installRelease(
 		progress(fmt.Sprintf("Downloading %s (%d bytes)...", asset.Name, asset.Size))
 	}
 
+	// Determine extension for temp file
+	pattern := "pulumicost-plugin-*"
+	if strings.HasSuffix(asset.Name, ".zip") {
+		pattern += ".zip"
+	} else if strings.HasSuffix(asset.Name, ".tar.gz") {
+		pattern += ".tar.gz"
+	} else if strings.HasSuffix(asset.Name, ".tgz") {
+		pattern += ".tgz"
+	} else {
+		pattern += filepath.Ext(asset.Name)
+	}
+	fmt.Printf("DEBUG: asset.Name=%s, pattern=%s\n", asset.Name, pattern)
+
 	// Create temp file for download
-	tmpFile, err := os.CreateTemp("", "pulumicost-plugin-*")
+	tmpFile, err := os.CreateTemp("", pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}

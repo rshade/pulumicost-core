@@ -18,7 +18,9 @@ This guide is for anyone who wants to **use PulumiCost** to see costs for their 
 6. [Configuration](#configuration)
 7. [Output Formats](#output-formats)
 8. [Filtering and Grouping](#filtering-and-grouping)
-9. [Troubleshooting](#troubleshooting)
+9. [Debugging and Logging](#debugging-and-logging)
+10. [Logging Configuration](#logging-configuration)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -405,6 +407,140 @@ This helps correlate log entries for a single operation:
 PULUMICOST_TRACE_ID=jenkins-build-123 pulumicost cost projected --debug --pulumi-json plan.json
 
 # All logs will include: trace_id=jenkins-build-123
+```
+
+---
+
+## Logging Configuration
+
+PulumiCost provides comprehensive logging capabilities for debugging, monitoring, and auditing.
+
+### Configuration File
+
+Create or edit `~/.pulumicost/config.yaml` to configure logging:
+
+```yaml
+logging:
+  # Log level: trace, debug, info, warn, error (default: info)
+  level: info
+
+  # Log format: json, text, console (default: console)
+  format: json
+
+  # Log to file (optional - defaults to stderr)
+  file: /var/log/pulumicost/pulumicost.log
+
+  # Audit logging for compliance (optional)
+  audit:
+    enabled: true
+    file: /var/log/pulumicost/audit.log
+```
+
+### Log Output Locations
+
+**Default Behavior:**
+
+- Without configuration: logs go to stderr in console format
+- With `--debug` flag: forces debug level, console format, and stderr output
+
+**File Logging:**
+
+When file logging is configured, PulumiCost displays the log location at startup:
+
+```bash
+$ pulumicost cost projected --pulumi-json plan.json
+Logging to: /var/log/pulumicost/pulumicost.log
+COST SUMMARY
+============
+...
+```
+
+**Fallback Behavior:**
+
+If the configured log file cannot be written (permissions, disk full), PulumiCost:
+
+1. Falls back to stderr
+2. Displays a warning with the reason
+
+```bash
+$ pulumicost cost projected --pulumi-json plan.json
+Warning: Could not write to log file, falling back to stderr (permission denied)
+COST SUMMARY
+============
+...
+```
+
+### Audit Logging
+
+Audit logging tracks all cost queries for compliance and analysis.
+
+**Enable Audit Logging:**
+
+```yaml
+logging:
+  audit:
+    enabled: true
+    file: /var/log/pulumicost/audit.log
+```
+
+**Audit Log Entry Example:**
+
+```json
+{
+  "time": "2025-01-15T10:30:45Z",
+  "level": "info",
+  "audit": true,
+  "command": "cost projected",
+  "trace_id": "01HQ7X2J3K4M5N6P7Q8R9S0T1U",
+  "duration_ms": 245,
+  "success": true,
+  "result_count": 3,
+  "total_cost": 7.50,
+  "parameters": {
+    "pulumi_json": "plan.json",
+    "output": "table"
+  }
+}
+```
+
+**Audit Entry Fields:**
+
+| Field          | Description                                               |
+| -------------- | --------------------------------------------------------- |
+| `command`      | CLI command executed (e.g., "cost projected", "cost actual") |
+| `trace_id`     | Unique request identifier for correlation                 |
+| `duration_ms`  | Command execution time in milliseconds                    |
+| `success`      | Whether the command completed successfully                |
+| `result_count` | Number of resources processed                             |
+| `total_cost`   | Sum of all calculated costs                               |
+| `parameters`   | Command parameters (sensitive values redacted)            |
+
+**Security:** Sensitive parameter values (API keys, passwords, tokens) are automatically redacted in audit logs.
+
+### Log Rotation
+
+PulumiCost does not perform log rotation internally. Use external tools:
+
+**Linux (logrotate):**
+
+```text
+# /etc/logrotate.d/pulumicost
+/var/log/pulumicost/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+}
+```
+
+**systemd journald:**
+
+If running as a service, logs go to journald automatically:
+
+```bash
+journalctl -u pulumicost --since today
 ```
 
 ---

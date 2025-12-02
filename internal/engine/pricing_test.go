@@ -1,8 +1,11 @@
 package engine
 
 import (
+	"context"
 	"testing"
+	"time"
 
+	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,71 +15,30 @@ func TestGetDefaultMonthlyByType(t *testing.T) {
 		resourceType string
 		expected     float64
 	}{
-		{"database", "aws:rds:dbInstance", defaultDatabaseMonthlyCost},
+		// Database types
+		{"database_rds", "aws:rds/instance:Instance", defaultDatabaseMonthlyCost},
+		{"database_rds_legacy", "aws:rds:dbInstance", defaultDatabaseMonthlyCost},
+		{"database_generic", "azure:database:Sql", defaultDatabaseMonthlyCost},
 		{"database_case_insensitive", "aws:RDS:dbInstance", defaultDatabaseMonthlyCost},
-		{"storage", "aws:s3:Bucket", defaultStorageMonthlyCost},
+		{"case_insensitive_upper", "AWS:RDS:INSTANCE", defaultDatabaseMonthlyCost},
+
+		// Storage types
+		{"storage_s3", "aws:s3/bucket:Bucket", defaultStorageMonthlyCost},
+		{"storage_s3_legacy", "aws:s3:Bucket", defaultStorageMonthlyCost},
 		{"storage_generic", "azure:storage:account", defaultStorageMonthlyCost},
-		{"compute_default", "aws:ec2:Instance", defaultComputeMonthlyCost},
+		{"storage_gcp", "gcp:storage:Bucket", defaultStorageMonthlyCost},
+
+		// Compute types (default)
+		{"compute_ec2", "aws:ec2/instance:Instance", defaultComputeMonthlyCost},
+		{"compute_ec2_legacy", "aws:ec2:Instance", defaultComputeMonthlyCost},
+		{"compute_generic", "unknown:resource:Type", defaultComputeMonthlyCost},
 		{"unknown", "gcp:unknown:resource", defaultComputeMonthlyCost},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cost := getDefaultMonthlyByType(tt.resourceType)
-			assert.Equal(t, tt.expected, cost)
-		})
-	}
-}
-
-func TestTryStoragePricing(t *testing.T) {
-	tests := []struct {
-		name            string
-		pricing         map[string]interface{}
-		resource        ResourceDescriptor
-		expectedMonthly float64
-		expectedHourly  float64
-		expectedOk      bool
-	}{
-		{
-			name:    "valid_pricing_with_size",
-			pricing: map[string]interface{}{"pricePerGBMonth": 0.1},
-			resource: ResourceDescriptor{
-				Properties: map[string]interface{}{"size": 100.0},
-			},
-			expectedMonthly: 10.0,         // 100 * 0.1
-			expectedHourly:  10.0 / 730.0, // 10 / 730
-			expectedOk:      true,
-		},
-		{
-			name:    "missing_size",
-			pricing: map[string]interface{}{"pricePerGBMonth": 0.1},
-			resource: ResourceDescriptor{
-				Properties: map[string]interface{}{},
-			},
-			expectedMonthly: 0,
-			expectedHourly:  0,
-			expectedOk:      false,
-		},
-		{
-			name:    "missing_pricing",
-			pricing: map[string]interface{}{"other": 0.1},
-			resource: ResourceDescriptor{
-				Properties: map[string]interface{}{"size": 100.0},
-			},
-			expectedMonthly: 0,
-			expectedHourly:  0,
-			expectedOk:      false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			monthly, hourly, ok := tryStoragePricing(tt.pricing, tt.resource)
-			assert.Equal(t, tt.expectedOk, ok)
-			if tt.expectedOk {
-				assert.InDelta(t, tt.expectedMonthly, monthly, 0.0001)
-				assert.InDelta(t, tt.expectedHourly, hourly, 0.0001)
-			}
+			got := getDefaultMonthlyByType(tt.resourceType)
+			assert.Equal(t, tt.expected, got)
 		})
 	}
 }
@@ -125,4 +87,157 @@ func TestParseFloatValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetStorageSize(t *testing.T) {
+	tests := []struct {
+		name       string
+		properties map[string]interface{}
+		wantSize   float64
+		wantFound  bool
+	}{
+		{"size_prop", map[string]interface{}{"size": 100}, 100.0, true},
+		{"sizeGb_prop", map[string]interface{}{"sizeGb": "200"}, 200.0, true},
+		{"volumeSize_prop", map[string]interface{}{"volumeSize": 50.5}, 50.5, true},
+		{"allocatedStorage_prop", map[string]interface{}{"allocatedStorage": 500}, 500.0, true},
+		{"no_size_prop", map[string]interface{}{"name": "test"}, 0, false},
+		{"nil_props", nil, 0, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := ResourceDescriptor{Properties: tt.properties}
+			size, found := getStorageSize(res)
+			assert.Equal(t, tt.wantFound, found)
+			if found {
+				assert.Equal(t, tt.wantSize, size)
+			}
+		})
+	}
+}
+
+func TestTryStoragePricing(t *testing.T) {
+	tests := []struct {
+		name            string
+		pricing         map[string]interface{}
+		resource        ResourceDescriptor
+		expectedMonthly float64
+		expectedHourly  float64
+		expectedOk      bool
+	}{
+		{
+			name:    "valid_pricing_with_size",
+			pricing: map[string]interface{}{"pricePerGBMonth": 0.1},
+			resource: ResourceDescriptor{
+				Properties: map[string]interface{}{"size": 100.0},
+			},
+			expectedMonthly: 10.0,         // 100 * 0.1
+			expectedHourly:  10.0 / 730.0, // 10 / 730
+			expectedOk:      true,
+		},
+		{
+			name:    "valid_storage_pricing_int_size",
+			pricing: map[string]interface{}{"pricePerGBMonth": 0.10},
+			resource: ResourceDescriptor{
+				Properties: map[string]interface{}{"size": 100},
+			},
+			expectedMonthly: 10.0, // 100 * 0.10
+			expectedHourly:  10.0 / hoursPerMonth,
+			expectedOk:      true,
+		},
+		{
+			name:    "missing_size",
+			pricing: map[string]interface{}{"pricePerGBMonth": 0.1},
+			resource: ResourceDescriptor{
+				Properties: map[string]interface{}{},
+			},
+			expectedMonthly: 0,
+			expectedHourly:  0,
+			expectedOk:      false,
+		},
+		{
+			name:    "missing_pricing_key",
+			pricing: map[string]interface{}{"otherKey": 0.1},
+			resource: ResourceDescriptor{
+				Properties: map[string]interface{}{"size": 100.0},
+			},
+			expectedMonthly: 0,
+			expectedHourly:  0,
+			expectedOk:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			monthly, hourly, ok := tryStoragePricing(tt.pricing, tt.resource)
+			assert.Equal(t, tt.expectedOk, ok)
+			if tt.expectedOk {
+				assert.InDelta(t, tt.expectedMonthly, monthly, 0.0001)
+				assert.InDelta(t, tt.expectedHourly, hourly, 0.0001)
+			}
+		})
+	}
+}
+
+func TestTryFallbackNumericValue(t *testing.T) {
+	tests := []struct {
+		name        string
+		pricing     map[string]interface{}
+		wantMonthly float64
+		wantHourly  float64
+		wantFound   bool
+	}{
+		{
+			name:        "single_numeric_value",
+			pricing:     map[string]interface{}{"flatRate": 0.5},
+			wantMonthly: 0.5 * hoursPerMonth,
+			wantHourly:  0.5,
+			wantFound:   true,
+		},
+		{
+			name:      "no_numeric_values",
+			pricing:   map[string]interface{}{"desc": "text only"},
+			wantFound: false,
+		},
+		{
+			name:      "zero_value_ignored",
+			pricing:   map[string]interface{}{"free": 0.0},
+			wantFound: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, h, found := tryFallbackNumericValue(tt.pricing)
+			assert.Equal(t, tt.wantFound, found)
+			if found {
+				assert.InDelta(t, tt.wantMonthly, m, 0.0001)
+				assert.InDelta(t, tt.wantHourly, h, 0.0001)
+			}
+		})
+	}
+}
+
+func TestGetActualCost_Wrapper(t *testing.T) {
+	// Test the simple wrapper function GetActualCost
+	// We can't easily mock the full engine here without setting up plugins,
+	// but we can test that it calls GetActualCostWithOptions correctly.
+	// Since we are in the engine package, we can just create an engine with no clients/loader
+	// and expect it to return results (even if empty or placeholders).
+
+	e := New([]*pluginhost.Client{}, nil)
+
+	resources := []ResourceDescriptor{
+		{Type: "aws:s3:Bucket", ID: "bucket-1", Provider: "aws"},
+	}
+	from := time.Now().Add(-24 * time.Hour)
+	to := time.Now()
+
+	results, err := e.GetActualCost(context.Background(), resources, from, to)
+
+	// Should return a result (fallback placeholder) and no error
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+	assert.Equal(t, "none", results[0].Adapter)
+	assert.Equal(t, 0.0, results[0].TotalCost)
 }

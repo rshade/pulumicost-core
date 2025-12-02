@@ -56,4 +56,3 @@ node_modules/
 package-lock.json
 npm-debug.log*
 yarn-error.log*
->>>>>>> f584262 (docs: first pass at github pages)

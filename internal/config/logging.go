@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rshade/pulumicost-core/internal/logging"
 )
 
 // Logger is the global zerolog logger instance.
@@ -98,4 +99,38 @@ func GetLogger() zerolog.Logger {
 func init() {
 	// Default to info level, console only
 	_ = InitLogger("info", false)
+}
+
+// ToLoggingConfig converts config.LoggingConfig to logging.Config for use with
+// the internal/logging package. This bridges the configuration system to the
+// logging infrastructure.
+//
+// The conversion applies these rules:
+//   - Level, Format are copied directly
+//   - If File is set, Output becomes "file" and File is passed through
+//   - If File is empty, Output defaults to "stderr"
+func (lc *LoggingConfig) ToLoggingConfig() logging.Config {
+	output := "stderr"
+	if lc.File != "" {
+		output = outputTypeFile
+	}
+
+	return logging.Config{
+		Level:  lc.Level,
+		Format: lc.Format,
+		Output: output,
+		File:   lc.File,
+		Caller: false, // Default, can be extended if needed
+	}
+}
+
+// GetLoggingConfig returns the logging configuration from the global config,
+// applying environment variable overrides in priority order:
+//
+//	config file < PULUMICOST_LOG_LEVEL/PULUMICOST_LOG_FORMAT < --debug flag
+//
+// The --debug flag override should be applied by the caller after this function.
+func GetLoggingConfig() LoggingConfig {
+	cfg := GetGlobalConfig()
+	return cfg.Logging
 }

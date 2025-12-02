@@ -807,8 +807,12 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+
 - Go 1.24.10 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
-- N/A (testing framework, no persistence) (001-engine-test-coverage)
+- Go 1.24.10 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
+- File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
 
 ## Recent Changes
+
 - 001-engine-test-coverage: Added Go 1.24.10 + testing (stdlib), github.com/stretchr/testify
+- 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
