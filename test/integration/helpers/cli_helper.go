@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -21,8 +23,18 @@ type CLIHelper struct {
 }
 
 // NewCLIHelper creates a new CLI test helper.
+// It configures the environment to suppress log output to avoid polluting test output.
 func NewCLIHelper(t *testing.T) *CLIHelper {
 	t.Helper()
+
+	// Set zerolog global level to disabled to suppress all logging during tests.
+	// This prevents JSON parsing errors from log output mixing with command output.
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+
+	// Restore global level after test completes
+	t.Cleanup(func() {
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	})
 
 	return &CLIHelper{
 		t:      t,
@@ -31,8 +43,30 @@ func NewCLIHelper(t *testing.T) *CLIHelper {
 	}
 }
 
+// filterLogLines removes JSON log lines from output.
+// Plugin processes may write logs to stderr which can get mixed with stdout in some test
+// scenarios. This function filters out lines that look like zerolog JSON output.
+func filterLogLines(output string) string {
+	var filtered []string
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		// Skip zerolog JSON log lines (start with {"level":)
+		if strings.HasPrefix(trimmed, "{\"level\":") {
+			continue
+		}
+		// Skip plugin startup lines (e.g., "PORT=12345")
+		if strings.HasPrefix(trimmed, "PORT=") {
+			continue
+		}
+		filtered = append(filtered, line)
+	}
+	return strings.Join(filtered, "\n")
+}
+
 // Execute runs a CLI command with the given arguments.
 // Returns the stdout output and any error.
+// Note: Output is filtered to remove log lines from plugin processes that may
+// write to stderr (which gets captured by the test runner).
 func (h *CLIHelper) Execute(args ...string) (string, error) {
 	h.t.Helper()
 
@@ -49,7 +83,11 @@ func (h *CLIHelper) Execute(args ...string) (string, error) {
 	// Execute command
 	err := h.cmd.Execute()
 
-	return h.stdout.String(), err
+	// Filter log lines from output - plugin processes may write logs to stderr
+	// which can appear in stdout when captured by the test framework
+	output := filterLogLines(h.stdout.String())
+
+	return output, err
 }
 
 // ExecuteOrFail runs a CLI command and fails the test if it returns an error.

@@ -50,6 +50,10 @@ func TestTracePropagation_ConsistentTraceID(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
+	// Create isolated HOME directory to ensure no plugins are found
+	// Plugins have their own trace ID generation which would cause mismatches
+	tempHome := t.TempDir()
+
 	// Build the CLI binary
 	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
 	output, err := cmd.CombinedOutput()
@@ -60,7 +64,7 @@ func TestTracePropagation_ConsistentTraceID(t *testing.T) {
 	// Run with debug flag and force JSON format for parseable output
 	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected", "--debug",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
-	cmd.Env = append(os.Environ(), pluginsdk.EnvLogFormat+"=json")
+	cmd.Env = append(os.Environ(), pluginsdk.EnvLogFormat+"=json", "HOME="+tempHome)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

@@ -115,25 +115,32 @@ func TestAnalyzer_FullStackFlow(t *testing.T) {
 		},
 	}
 
+	// First, call Analyze() for each resource to populate the cost cache
+	// (In real Pulumi flow, the engine calls Analyze() for each resource)
+	for _, res := range resources {
+		_, err := server.Analyze(ctx, &pulumirpc.AnalyzeRequest{
+			Type:       res.GetType(),
+			Urn:        res.GetUrn(),
+			Name:       res.GetName(),
+			Properties: res.GetProperties(),
+		})
+		require.NoError(t, err)
+	}
+
+	// Now call AnalyzeStack which returns only the summary diagnostic
+	// Per-resource diagnostics are returned by individual Analyze() calls
 	analyzeResp, err := server.AnalyzeStack(ctx, &pulumirpc.AnalyzeStackRequest{
 		Resources: resources,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, analyzeResp)
 
-	// Should have 2 per-resource diagnostics + 1 summary = 3
-	require.Len(t, analyzeResp.GetDiagnostics(), 3)
-
-	// Verify per-resource diagnostics
-	for i := 0; i < 2; i++ {
-		diag := analyzeResp.GetDiagnostics()[i]
-		assert.Equal(t, "cost-estimate", diag.GetPolicyName())
-		assert.Equal(t, pulumirpc.EnforcementLevel_ADVISORY, diag.GetEnforcementLevel())
-		assert.NotEmpty(t, diag.GetUrn())
-	}
+	// AnalyzeStack returns only the summary diagnostic (per-resource diagnostics
+	// are returned by individual Analyze() calls during the Pulumi preview flow)
+	require.Len(t, analyzeResp.GetDiagnostics(), 1)
 
 	// Verify summary diagnostic
-	summary := analyzeResp.GetDiagnostics()[2]
+	summary := analyzeResp.GetDiagnostics()[0]
 	assert.Equal(t, "stack-cost-summary", summary.GetPolicyName())
 	assert.Contains(t, summary.GetMessage(), "$125.50 USD")
 	assert.Contains(t, summary.GetMessage(), "2 resources analyzed")

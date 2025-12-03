@@ -1,6 +1,6 @@
 module github.com/rshade/pulumicost-core/test/e2e
 
-go 1.25.4
+go 1.25.5
 
 require (
 	github.com/oklog/ulid/v2 v2.1.1
