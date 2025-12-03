@@ -1,10 +1,9 @@
-package engine_test
+package engine
 
 import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +13,7 @@ func TestCreateCrossProviderAggregation_DailyGrouping(t *testing.T) {
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan2 := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -31,7 +30,7 @@ func TestCreateCrossProviderAggregation_DailyGrouping(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 1)
@@ -53,7 +52,7 @@ func TestCreateCrossProviderAggregation_MonthlyGrouping(t *testing.T) {
 	feb1 := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	feb29 := time.Date(2024, 2, 29, 23, 59, 59, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    3100.0,
@@ -70,7 +69,7 @@ func TestCreateCrossProviderAggregation_MonthlyGrouping(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByMonthly)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByMonthly)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 2)
@@ -93,7 +92,7 @@ func TestCreateCrossProviderAggregation_MultipleProviders(t *testing.T) {
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan2 := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -117,7 +116,7 @@ func TestCreateCrossProviderAggregation_MultipleProviders(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 1)
@@ -137,7 +136,7 @@ func TestCreateCrossProviderAggregation_MultipleDays(t *testing.T) {
 	jan3 := time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)
 	jan4 := time.Date(2024, 1, 4, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -161,7 +160,7 @@ func TestCreateCrossProviderAggregation_MultipleDays(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 2)
@@ -187,7 +186,7 @@ func TestCreateCrossProviderAggregation_WithDailyCosts(t *testing.T) {
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan4 := time.Date(2024, 1, 4, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			Currency:     "USD",
@@ -197,7 +196,7 @@ func TestCreateCrossProviderAggregation_WithDailyCosts(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 3)
@@ -218,7 +217,7 @@ func TestCreateCrossProviderAggregation_FallbackToMonthly(t *testing.T) {
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan2 := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    0,      // No actual cost
@@ -229,7 +228,7 @@ func TestCreateCrossProviderAggregation_FallbackToMonthly(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 1)
@@ -244,7 +243,7 @@ func TestCreateCrossProviderAggregation_EmptyCurrencyDefaultsToUSD(t *testing.T)
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan2 := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -261,7 +260,7 @@ func TestCreateCrossProviderAggregation_EmptyCurrencyDefaultsToUSD(t *testing.T)
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 1)
@@ -276,7 +275,7 @@ func TestCreateCrossProviderAggregation_EmptyCurrencyDefaultsToUSD(t *testing.T)
 func TestCreateCrossProviderAggregation_ZeroDateHandling(t *testing.T) {
 	jan1 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -286,7 +285,7 @@ func TestCreateCrossProviderAggregation_ZeroDateHandling(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	// Should succeed (zero EndDate is allowed as long as it's not before StartDate)
 	require.NoError(t, err)
@@ -302,7 +301,7 @@ func TestCreateCrossProviderAggregation_SortingOrder(t *testing.T) {
 	dec31 := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
 	jan1Next := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2:Instance",
 			TotalCost:    100.0,
@@ -326,7 +325,7 @@ func TestCreateCrossProviderAggregation_SortingOrder(t *testing.T) {
 		},
 	}
 
-	aggregations, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+	aggregations, err := CreateCrossProviderAggregation(results, GroupByDaily)
 
 	require.NoError(t, err)
 	require.Len(t, aggregations, 3)
@@ -339,7 +338,7 @@ func TestCreateCrossProviderAggregation_SortingOrder(t *testing.T) {
 
 // TestAggregateResults_SingleResource tests aggregation with one resource.
 func TestAggregateResults_SingleResource(t *testing.T) {
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2/instance:Instance",
 			ResourceID:   "i-001",
@@ -349,7 +348,7 @@ func TestAggregateResults_SingleResource(t *testing.T) {
 		},
 	}
 
-	aggregated := engine.AggregateResults(results)
+	aggregated := AggregateResults(results)
 
 	require.NotNil(t, aggregated)
 	assert.Equal(t, 10.0, aggregated.Summary.TotalMonthly)
@@ -360,7 +359,7 @@ func TestAggregateResults_SingleResource(t *testing.T) {
 
 // TestAggregateResults_MultipleResources tests aggregation with multiple resources.
 func TestAggregateResults_MultipleResources(t *testing.T) {
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2/instance:Instance",
 			Monthly:      10.0,
@@ -381,7 +380,7 @@ func TestAggregateResults_MultipleResources(t *testing.T) {
 		},
 	}
 
-	aggregated := engine.AggregateResults(results)
+	aggregated := AggregateResults(results)
 
 	require.NotNil(t, aggregated)
 	assert.Equal(t, 35.0, aggregated.Summary.TotalMonthly)
@@ -391,7 +390,7 @@ func TestAggregateResults_MultipleResources(t *testing.T) {
 
 // TestAggregateResults_ByProvider tests provider-level aggregation.
 func TestAggregateResults_ByProvider(t *testing.T) {
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2/instance:Instance",
 			Monthly:      10.0,
@@ -409,7 +408,7 @@ func TestAggregateResults_ByProvider(t *testing.T) {
 		},
 	}
 
-	aggregated := engine.AggregateResults(results)
+	aggregated := AggregateResults(results)
 
 	assert.Equal(t, 15.0, aggregated.Summary.ByProvider["aws"])
 	assert.Equal(t, 15.0, aggregated.Summary.ByProvider["azure"])
@@ -417,7 +416,7 @@ func TestAggregateResults_ByProvider(t *testing.T) {
 
 // TestAggregateResults_ByService tests service-level aggregation.
 func TestAggregateResults_ByService(t *testing.T) {
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2/instance:Instance",
 			Monthly:      10.0,
@@ -435,7 +434,7 @@ func TestAggregateResults_ByService(t *testing.T) {
 		},
 	}
 
-	aggregated := engine.AggregateResults(results)
+	aggregated := AggregateResults(results)
 
 	assert.Equal(t, 13.0, aggregated.Summary.ByService["ec2"])
 	assert.Equal(t, 5.0, aggregated.Summary.ByService["s3"])
@@ -443,7 +442,7 @@ func TestAggregateResults_ByService(t *testing.T) {
 
 // TestAggregateResults_ByAdapter tests adapter-level aggregation.
 func TestAggregateResults_ByAdapter(t *testing.T) {
-	results := []engine.CostResult{
+	results := []CostResult{
 		{
 			ResourceType: "aws:ec2/instance:Instance",
 			Adapter:      "plugin1",
@@ -464,9 +463,113 @@ func TestAggregateResults_ByAdapter(t *testing.T) {
 		},
 	}
 
-	aggregated := engine.AggregateResults(results)
+	aggregated := AggregateResults(results)
 
 	assert.Equal(t, 10.0, aggregated.Summary.ByAdapter["plugin1"])
 	assert.Equal(t, 5.0, aggregated.Summary.ByAdapter["plugin2"])
 	assert.Equal(t, 20.0, aggregated.Summary.ByAdapter["local-spec"])
+}
+
+func TestAggregation_ZeroCostsNoDivideByZero(t *testing.T) {
+	results := []CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			Monthly:      0.0,
+			Hourly:       0.0,
+			Currency:     "USD",
+		},
+	}
+
+	aggregated := AggregateResults(results)
+
+	require.NotNil(t, aggregated)
+	assert.Equal(t, 0.0, aggregated.Summary.TotalMonthly)
+	assert.Equal(t, 0.0, aggregated.Summary.TotalHourly)
+}
+
+func TestAggregation_SingleResultUnchanged(t *testing.T) {
+	results := []CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			Monthly:      123.45,
+			Hourly:       0.5,
+			Currency:     "EUR",
+		},
+	}
+
+	aggregated := AggregateResults(results)
+
+	require.NotNil(t, aggregated)
+
+	assert.Equal(t, 123.45, aggregated.Summary.TotalMonthly)
+
+	assert.Equal(t, 0.5, aggregated.Summary.TotalHourly)
+
+	assert.Equal(t, "EUR", aggregated.Summary.Currency)
+}
+
+func TestEdgeCase_LargeValuesNoOverflow(t *testing.T) {
+	// Use very large numbers, much smaller than MaxFloat64 (1.8e308), to allow addition without overflow
+	largeValue := float64(1e300)
+	numResources := 100
+	results := make([]CostResult, numResources)
+	for i := 0; i < numResources; i++ {
+		results[i] = CostResult{
+			ResourceType: "large:resource",
+			Monthly:      largeValue,
+			Hourly:       largeValue / 730,
+			Currency:     "USD",
+		}
+	}
+
+	aggregated := AggregateResults(results)
+
+	require.NotNil(t, aggregated)
+	// Use InDelta for large floating point comparisons due to precision limits
+	assert.InDelta(t, largeValue*float64(numResources), aggregated.Summary.TotalMonthly, 1e299)
+	assert.InDelta(t, (largeValue/730)*float64(numResources), aggregated.Summary.TotalHourly, 1e296)
+	assert.Equal(t, "USD", aggregated.Summary.Currency)
+}
+
+// TestEdgeCase_NilPropertiesNoNilPointerPanic verifies that resources with nil Properties
+// do not cause nil pointer panics during processing.
+func TestEdgeCase_NilPropertiesNoNilPointerPanic(t *testing.T) {
+	// Create resource descriptor with nil Properties map
+	resource := ResourceDescriptor{
+		Type:       "aws:ec2:Instance",
+		ID:         "i-nil-props",
+		Properties: nil, // Explicitly nil
+	}
+
+	// Validate should handle nil Properties gracefully
+	err := resource.Validate()
+	assert.NoError(t, err, "Validate should not panic or error on nil Properties")
+
+	// FilterResources should handle nil Properties
+	resources := []ResourceDescriptor{resource}
+	filtered := FilterResources(resources, "provider=aws")
+	assert.NotNil(t, filtered, "FilterResources should not panic on nil Properties")
+}
+
+// TestEdgeCase_UnknownProviderReturnsUnknown verifies extractProviderFromType handles
+// malformed resource types by returning "unknown".
+func TestEdgeCase_UnknownProviderReturnsUnknown(t *testing.T) {
+	tests := []struct {
+		name         string
+		resourceType string
+		expected     string
+	}{
+		{"empty_string", "", ""},
+		{"no_colon", "simpleresource", "simpleresource"},
+		{"standard_format", "aws:ec2:Instance", "aws"},
+		{"azure_format", "azure:compute:VirtualMachine", "azure"},
+		{"gcp_format", "gcp:compute:Instance", "gcp"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractProviderFromType(tt.resourceType)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }

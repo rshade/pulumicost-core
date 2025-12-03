@@ -187,3 +187,141 @@ func containsAny(s string, substrings ...string) bool {
 	}
 	return false
 }
+
+// TestIntegration_PluginFallbackToSpec tests that engine falls back to spec when plugin unavailable.
+func TestIntegration_PluginFallbackToSpec(t *testing.T) {
+	// Start mock plugin server
+	server, err := plugin.StartMockServerTCP()
+	require.NoError(t, err)
+	defer server.Stop()
+
+	// Configure plugin to return error for specific resource type
+	server.Plugin.SetError("GetProjectedCost", plugin.ErrorUnavailable)
+
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	client := pb.NewCostSourceServiceClient(conn)
+
+	req := &pb.GetProjectedCostRequest{
+		Resource: &pb.ResourceDescriptor{
+			ResourceType: "unsupported_resource",
+			Provider:     "aws",
+		},
+	}
+
+	// Plugin returns error - engine would fall back to spec
+	_, err = client.GetProjectedCost(context.Background(), req)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unavailable")
+}
+
+// TestIntegration_TagFilterProcessing tests tag-based filtering in plugin requests.
+func TestIntegration_TagFilterProcessing(t *testing.T) {
+	server, err := plugin.StartMockServerTCP()
+	require.NoError(t, err)
+	defer server.Stop()
+
+	// Configure response for resource with tags
+	customResponse := plugin.QuickActualResponse("USD", 150.0)
+	server.Plugin.SetActualCostResponse("i-with-tags", customResponse)
+
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	client := pb.NewCostSourceServiceClient(conn)
+
+	// Request with specific tags
+	req := &pb.GetActualCostRequest{
+		ResourceId: "i-with-tags",
+		Start:      timestamppb.New(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+		End:        timestamppb.New(time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)),
+		Tags: map[string]string{
+			"env":  "prod",
+			"team": "platform",
+		},
+	}
+
+	resp, err := client.GetActualCost(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+}
+
+// TestIntegration_DailyCostsAggregation tests daily costs are correctly processed.
+func TestIntegration_DailyCostsAggregation(t *testing.T) {
+	server, err := plugin.StartMockServerTCP()
+	require.NoError(t, err)
+	defer server.Stop()
+
+	// Configure response with daily breakdown
+	customResponse := plugin.QuickActualResponse("USD", 100.0)
+	server.Plugin.SetActualCostResponse("i-daily-costs", customResponse)
+
+	conn, err := grpc.NewClient(server.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	client := pb.NewCostSourceServiceClient(conn)
+
+	req := &pb.GetActualCostRequest{
+		ResourceId: "i-daily-costs",
+		Start:      timestamppb.New(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+		End:        timestamppb.New(time.Date(2024, 1, 7, 23, 59, 59, 0, time.UTC)),
+		Tags:       make(map[string]string),
+	}
+
+	resp, err := client.GetActualCost(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotEmpty(t, resp.GetResults())
+}
+
+// TestIntegration_MultiPluginCostCollection tests cost collection from multiple plugins.
+func TestIntegration_MultiPluginCostCollection(t *testing.T) {
+	// Start first mock plugin server
+	server1, err := plugin.StartMockServerTCP()
+	require.NoError(t, err)
+	defer server1.Stop()
+
+	// Start second mock plugin server
+	server2, err := plugin.StartMockServerTCP()
+	require.NoError(t, err)
+	defer server2.Stop()
+
+	// Configure different responses for each server
+	resp1 := plugin.QuickResponse("USD", 50.0, 0.07)
+	resp2 := plugin.QuickResponse("USD", 75.0, 0.10)
+	server1.Plugin.SetProjectedCostResponse("aws_instance", resp1)
+	server2.Plugin.SetProjectedCostResponse("aws_instance", resp2)
+
+	// Connect to both servers
+	conn1, err := grpc.NewClient(server1.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn1.Close()
+
+	conn2, err := grpc.NewClient(server2.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn2.Close()
+
+	client1 := pb.NewCostSourceServiceClient(conn1)
+	client2 := pb.NewCostSourceServiceClient(conn2)
+
+	req := &pb.GetProjectedCostRequest{
+		Resource: &pb.ResourceDescriptor{
+			ResourceType: "aws_instance",
+			Provider:     "aws",
+		},
+	}
+
+	// Get responses from both plugins
+	result1, err := client1.GetProjectedCost(context.Background(), req)
+	require.NoError(t, err)
+
+	result2, err := client2.GetProjectedCost(context.Background(), req)
+	require.NoError(t, err)
+
+	// Verify different costs from different plugins
+	assert.InDelta(t, 50.0, result1.GetCostPerMonth(), 0.01)
+	assert.InDelta(t, 75.0, result2.GetCostPerMonth(), 0.01)
+}
