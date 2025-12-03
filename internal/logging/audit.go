@@ -26,7 +26,8 @@ type AuditEntry struct {
 }
 
 // NewAuditEntry creates a new AuditEntry with the given command and trace ID.
-// Use the With* methods to populate additional fields.
+// NewAuditEntry creates a new AuditEntry with Timestamp set to the current UTC time and the provided command and traceID.
+// It initializes Parameters as an empty map so callers can populate additional fields; use the With* builder methods to set duration, success, error, or parameters.
 func NewAuditEntry(command, traceID string) *AuditEntry {
 	return &AuditEntry{
 		Timestamp:  time.Now().UTC(),
@@ -87,7 +88,13 @@ type zerologAuditLogger struct {
 
 // NewAuditLogger creates a new AuditLogger with the given configuration.
 //
-//nolint:nestif // Writer initialization has acceptable complexity for configuration logic
+// NewAuditLogger creates an AuditLogger according to cfg.
+// If cfg.Enabled is false, NewAuditLogger returns a no-op logger.
+// If cfg.Writer is provided it is used as the destination; otherwise, if cfg.File is set
+// the file is opened for append and used as the destination. If opening cfg.File fails
+// or neither Writer nor File are provided, stderr is used as the destination.
+// The returned logger emits structured audit records and reports Enabled() == true when
+// auditing is active.
 func NewAuditLogger(cfg AuditLoggerConfig) AuditLogger {
 	if !cfg.Enabled {
 		return &noOpAuditLogger{}
@@ -171,12 +178,14 @@ func (n *noOpAuditLogger) Enabled() bool {
 	return false
 }
 
-// NoOpAuditLogger returns a no-op audit logger for when auditing is disabled.
+// NoOpAuditLogger returns an AuditLogger that performs no operations.
+// The returned logger's Log method is a no-op and Enabled reports false.
 func NoOpAuditLogger() AuditLogger {
 	return &noOpAuditLogger{}
 }
 
-// SafeParams creates a copy of parameters with sensitive values redacted.
+// SafeParams returns a shallow copy of params where values for keys identified as sensitive are replaced with "[REDACTED]".
+// The returned map preserves all original keys; non-sensitive values are copied unchanged.
 func SafeParams(params map[string]string) map[string]string {
 	safe := make(map[string]string, len(params))
 	for k, v := range params {
@@ -190,18 +199,20 @@ func SafeParams(params map[string]string) map[string]string {
 }
 
 // IsSensitiveKey checks if a key name contains sensitive patterns.
-// This is exported to allow callers to check before logging.
+// IsSensitiveKey reports whether the provided parameter key is considered sensitive and should be redacted.
+// It returns true if the key identifies sensitive data (for example, passwords, tokens, or keys), false otherwise.
 func IsSensitiveKey(key string) bool {
 	return isSensitiveKey(key)
 }
 
-// ContextWithAuditLogger stores an AuditLogger in the context.
+// ContextWithAuditLogger returns a copy of ctx that carries the provided AuditLogger under an internal package key.
 func ContextWithAuditLogger(ctx context.Context, logger AuditLogger) context.Context {
 	return context.WithValue(ctx, auditLoggerKey{}, logger)
 }
 
 // AuditLoggerFromContext extracts the AuditLogger from context.
-// Returns a no-op logger if none is stored.
+// AuditLoggerFromContext retrieves the AuditLogger stored in ctx.
+// It returns the AuditLogger found in the context, or a no-op AuditLogger if none is present.
 func AuditLoggerFromContext(ctx context.Context) AuditLogger {
 	if logger, ok := ctx.Value(auditLoggerKey{}).(AuditLogger); ok {
 		return logger

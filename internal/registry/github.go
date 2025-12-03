@@ -46,7 +46,9 @@ type GitHubClient struct {
 
 // NewGitHubClient returns a GitHubClient configured with a 30-second HTTP timeout.
 // The client will include an authentication token obtained from the GITHUB_TOKEN
-// environment variable or the `gh` CLI if available.
+// NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
+// The client has an HTTP client with a 30-second timeout and BaseURL set to https://api.github.com.
+// It initializes the authentication token by reading GITHUB_TOKEN or, if unset, attempting to obtain it from the `gh` CLI.
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{

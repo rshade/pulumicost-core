@@ -16,7 +16,12 @@ var logger zerolog.Logger //nolint:gochecknoglobals // Required for zerolog cont
 // The returned command has its Version set from ver, a persistent "debug" flag, usage examples, and
 // - config: init, set, get, list, and validate configuration commands.
 //
-//nolint:funlen // Comprehensive logging setup and subcommand registration requires additional lines
+// NewRootCmd creates the root cobra.Command for the pulumicost CLI, configures logging and runtime context, and registers the cost, plugin, and config subcommands.
+// 
+// The provided ver string is used as the command version and included in startup logs.
+// The command's persistent pre-run configures logging (including --debug and environment overrides), initializes a component-scoped logger, prints log path or fallback messages to stderr when appropriate, generates or retrieves a trace ID and attaches it to the context, initializes an audit logger and attaches it to the context, and logs the command start.
+// 
+// It returns the fully constructed *cobra.Command ready to be executed.
 func NewRootCmd(ver string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pulumicost",

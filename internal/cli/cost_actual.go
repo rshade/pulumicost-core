@@ -126,7 +126,16 @@ func NewCostActualCmd() *cobra.Command {
 //   - fetching actual cost data from the engine,
 //   - rendering the output.
 //
-//nolint:funlen // Comprehensive logging requires additional lines for observability
+// executeCostActual orchestrates the "actual" cost workflow: it loads a Pulumi plan, maps resources,
+// validates the time range, opens adapter plugins, calculates actual costs, renders output, and emits
+// audit and operational logs.
+// 
+// The cmd parameter provides command context and I/O; params configures input paths, adapters, date
+// range, grouping, and output formatting.
+// 
+// It returns an error when any step of the workflow fails (for example: loading the Pulumi plan,
+// mapping resources, parsing the time range, opening adapter plugins, fetching costs, or rendering
+// output). On success it returns nil.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	start := time.Now()
 	ctx := cmd.Context()

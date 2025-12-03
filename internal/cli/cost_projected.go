@@ -15,7 +15,11 @@ import (
 
 // NewCostProjectedCmd creates the "projected" subcommand that calculates estimated costs from a Pulumi plan.
 //
-//nolint:funlen // Comprehensive logging requires additional lines for observability
+// NewCostProjectedCmd creates the "projected" subcommand for calculating estimated costs from a Pulumi preview JSON.
+// The command loads a Pulumi plan, maps and optionally filters resources, loads pricing specs and adapter plugins,
+// computes projected monthly costs (including per-resource errors), renders results in the configured output format,
+// and emits structured audit entries for failures and for successful completion.
+// Flags: --pulumi-json (required), --spec-dir, --adapter, --output, and --filter.
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 
