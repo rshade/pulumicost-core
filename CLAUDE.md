@@ -805,3 +805,10 @@ CodeRabbit now:
 3. **Resolves outdated comments** when issues are fixed
 4. **Provides detailed Go-specific feedback** on code quality
 5. **Integrates with existing CI/CD** tools and workflows
+
+## Active Technologies
+- Go 1.24.10 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
+- N/A (testing framework, no persistence) (001-engine-test-coverage)
+
+## Recent Changes
+- 001-engine-test-coverage: Added Go 1.24.10 + testing (stdlib), github.com/stretchr/testify

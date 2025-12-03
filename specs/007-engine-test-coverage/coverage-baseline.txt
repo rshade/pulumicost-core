@@ -1,0 +1,75 @@
+# Engine Test Coverage Baseline
+# Generated: 2025-12-02
+# Branch: 001-engine-test-coverage
+
+## Summary
+
+Total Coverage: 84.0% of statements (exceeds 80% target)
+
+## Functions at 0% Coverage (Per research.md - intentionally not tested)
+
+| Function                  | Lines   | Status       | Rationale                           |
+|---------------------------|---------|--------------|-------------------------------------|
+| GetActualCost             | 15      | NOT TESTING  | Simple delegation to WithOptions    |
+| tryFallbackNumericValue   | 10      | NOT TESTING  | Last-resort fallback, minimal logic |
+
+## Functions Needing Additional Coverage
+
+| Function                      | Current | Target | Priority |
+|-------------------------------|---------|--------|----------|
+| parseFloatValue               | 25.0%   | 80%+   | HIGH     |
+| getActualCostForResource      | 35.0%   | 70%+   | MEDIUM   |
+| GetProjectedCostWithErrors    | 41.7%   | 60%+   | MEDIUM   |
+| calculateCostsFromSpec        | 50.0%   | 70%+   | MEDIUM   |
+| tryExtractCostsFromPricing    | 57.1%   | 70%+   | LOW      |
+| AggregateResultsInternal      | 60.0%   | 70%+   | LOW      |
+
+## Functions at 100% Coverage (High Quality)
+
+- New
+- GetActualCostWithOptionsAndErrors
+- getProjectedCostFromSpec
+- loadSpecWithFallback
+- createSpecBasedResult
+- extractSKU
+- getStringProperty
+- tryMonthlyEstimate
+- tryStoragePricing
+- getFloatFromPricing
+- getDefaultMonthlyByType
+- AggregateResults
+- FilterResources
+- MatchesTags
+- FormatPeriod
+- CreateCrossProviderAggregation
+- validateAggregationInputs
+- groupResultsByPeriod
+- formatPeriodForGrouping
+- calculateCostForPeriod
+- createSortedAggregations
+- RenderResults
+- RenderActualCostResults
+- RenderCrossProviderAggregation
+- renderTable
+- renderJSON
+- renderJSONCostResults
+- renderCrossProviderTable
+- renderJSONCrossProvider
+- getCurrencySymbol
+- IsValid
+- IsTimeBasedGrouping
+- String
+
+## Test Files Present
+
+- internal/engine/engine_test.go
+- internal/engine/aggregation_test.go
+- internal/engine/pricing_test.go
+- internal/engine/types_test.go
+
+## Next Steps
+
+1. Add TestParseFloatValue table-driven tests (T009)
+2. Verify error type tests exist (T012-T016)
+3. Run tests with -race flag
+4. Document anti-slop compliance

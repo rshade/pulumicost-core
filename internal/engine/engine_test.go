@@ -715,7 +715,7 @@ func TestGetActualCostWithOptions_PropagatesContextError(t *testing.T) {
 
 	req := engine.ActualCostRequest{
 		Resources: []engine.ResourceDescriptor{
-			{Type: "aws:ec2/instance:Instance", ID: "i-123", Provider: "aws"},
+			{Type: "aws:ec2:Instance", ID: "i-123", Provider: "aws"},
 		},
 		From: time.Now().Add(-1 * time.Hour),
 		To:   time.Now(),
@@ -803,7 +803,7 @@ func TestGetProjectedCostWithErrorsReturnType(t *testing.T) {
 
 	// Verify HasErrors works correctly
 	assert.False(t, result.HasErrors(), "Should not have errors for this scenario")
-	assert.Empty(t, result.ErrorSummary(), "Error summary should be empty when no errors")
+	assert.Empty(t, result.ErrorSummary())
 }
 
 func TestGetProjectedCostWithErrorsMultipleResources(t *testing.T) {

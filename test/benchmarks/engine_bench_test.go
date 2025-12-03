@@ -282,3 +282,149 @@ func BenchmarkEngine_GetProjectedCost_NoClients(b *testing.B) {
 		}
 	}
 }
+
+// ============================================================================
+// Enterprise Scale Benchmarks (1K, 10K, 100K resources)
+// These benchmarks test performance at enterprise deployment scales.
+// ============================================================================
+
+// createResources creates n ResourceDescriptor instances for benchmarking.
+func createResources(n int) []engine.ResourceDescriptor {
+	resources := make([]engine.ResourceDescriptor, n)
+	for i := range n {
+		resources[i] = engine.ResourceDescriptor{
+			ID:       fmt.Sprintf("i-%08d", i),
+			Type:     "aws:ec2:Instance",
+			Provider: "aws",
+			Properties: map[string]interface{}{
+				"instance_type": "t3.micro",
+				"region":        "us-east-1",
+			},
+		}
+	}
+	return resources
+}
+
+// BenchmarkEngine_GetProjectedCost_1K benchmarks projected cost with 1,000 resources.
+func BenchmarkEngine_GetProjectedCost_1K(b *testing.B) {
+	eng := engine.New(nil, nil)
+	resources := createResources(1000)
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := eng.GetProjectedCost(context.Background(), resources)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_GetProjectedCost_10K benchmarks projected cost with 10,000 resources.
+func BenchmarkEngine_GetProjectedCost_10K(b *testing.B) {
+	eng := engine.New(nil, nil)
+	resources := createResources(10000)
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := eng.GetProjectedCost(context.Background(), resources)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_GetProjectedCost_100K benchmarks projected cost with 100,000 resources.
+func BenchmarkEngine_GetProjectedCost_100K(b *testing.B) {
+	eng := engine.New(nil, nil)
+	resources := createResources(100000)
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := eng.GetProjectedCost(context.Background(), resources)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_GetActualCost_1K benchmarks actual cost with 1,000 resources.
+func BenchmarkEngine_GetActualCost_1K(b *testing.B) {
+	eng := engine.New(nil, nil)
+	resources := createResources(1000)
+	from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := eng.GetActualCost(context.Background(), resources, from, to)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_GetActualCost_10K benchmarks actual cost with 10,000 resources.
+func BenchmarkEngine_GetActualCost_10K(b *testing.B) {
+	eng := engine.New(nil, nil)
+	resources := createResources(10000)
+	from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := eng.GetActualCost(context.Background(), resources, from, to)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_CrossProviderAggregation_1K benchmarks cross-provider aggregation with 1K results.
+func BenchmarkEngine_CrossProviderAggregation_1K(b *testing.B) {
+	results := make([]engine.CostResult, 1000)
+	startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	providers := []string{"aws", "azure", "gcp"}
+
+	for i := range 1000 {
+		results[i] = engine.CostResult{
+			ResourceType: fmt.Sprintf("%s:compute:Instance", providers[i%3]),
+			ResourceID:   fmt.Sprintf("resource-%d", i),
+			Monthly:      float64(100 + i%50),
+			Currency:     "USD",
+			StartDate:    startDate.Add(time.Duration(i%30) * 24 * time.Hour),
+		}
+	}
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEngine_CrossProviderAggregation_10K benchmarks cross-provider aggregation with 10K results.
+func BenchmarkEngine_CrossProviderAggregation_10K(b *testing.B) {
+	results := make([]engine.CostResult, 10000)
+	startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	providers := []string{"aws", "azure", "gcp"}
+
+	for i := range 10000 {
+		results[i] = engine.CostResult{
+			ResourceType: fmt.Sprintf("%s:compute:Instance", providers[i%3]),
+			ResourceID:   fmt.Sprintf("resource-%d", i),
+			Monthly:      float64(100 + i%50),
+			Currency:     "USD",
+			StartDate:    startDate.Add(time.Duration(i%30) * 24 * time.Hour),
+		}
+	}
+
+	b.ResetTimer()
+	for range b.N {
+		_, err := engine.CreateCrossProviderAggregation(results, engine.GroupByDaily)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
