@@ -70,7 +70,7 @@ docker run --rm \
 ## Image Details
 
 - **Base Image**: Alpine Linux (latest)
-- **Go Version**: 1.25.5 (golang:1.25-alpine)
+- **Go Version**: 1.25.5 (golang:1.25.5-alpine)
 - **User**: Non-root user `pulumicost` (UID: 1001, GID: 1001)
 - **Working Directory**: `/home/pulumicost`
 - **Plugin Directory**: `/home/pulumicost/.pulumicost/plugins`
