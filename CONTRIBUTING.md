@@ -285,6 +285,73 @@ make validate  # Module and vet checks must pass
 - Use table-driven tests where appropriate
 - Run tests with race detector: `make test-race`
 
+### Running Fuzz Tests
+
+PulumiCost uses Go's native fuzzing (Go 1.25+) to test parser resilience:
+
+```bash
+# Run JSON parser fuzz test (30 seconds)
+go test -fuzz=FuzzJSON$ -fuzztime=30s ./internal/ingest
+
+# Run YAML parser fuzz test (30 seconds)
+go test -fuzz=FuzzYAML$ -fuzztime=30s ./internal/spec
+
+# Run all fuzz tests in a package
+go test -fuzz=. -fuzztime=30s ./internal/ingest
+```
+
+**Fuzz test locations:**
+
+| Package           | Test Function        | Target               |
+| ----------------- | -------------------- | -------------------- |
+| `internal/ingest` | `FuzzJSON`           | JSON parser          |
+| `internal/ingest` | `FuzzPulumiPlanParse`| Full plan parsing    |
+| `internal/spec`   | `FuzzYAML`           | YAML spec parsing    |
+| `internal/spec`   | `FuzzSpecFilename`   | Spec filename parser |
+
+**Seed corpus:**
+
+Fuzz tests use seed corpora in `testdata/fuzz/` directories. Add new
+interesting inputs discovered during fuzzing to these directories.
+
+**CI integration:**
+
+- PRs run 30-second fuzz smoke tests
+- Nightly builds run 6-hour deep fuzzing sessions
+
+### Running Benchmarks
+
+PulumiCost includes performance benchmarks for scalability testing:
+
+```bash
+# Run all benchmarks
+go test -bench=. -benchmem ./test/benchmarks/...
+
+# Run specific scale benchmarks
+go test -bench=BenchmarkScale -benchmem ./test/benchmarks/...
+
+# Run with specific iteration count
+go test -bench=BenchmarkScale1K -benchtime=10x -benchmem ./test/benchmarks/...
+```
+
+**Available benchmarks:**
+
+| Benchmark                    | Description             | Target    |
+| ---------------------------- | ----------------------- | --------- |
+| `BenchmarkScale1K`           | 1,000 resources         | < 1s      |
+| `BenchmarkScale10K`          | 10,000 resources        | < 30s     |
+| `BenchmarkScale100K`         | 100,000 resources       | < 5min    |
+| `BenchmarkDeeplyNested`      | Deep nesting complexity | < 1s      |
+| `BenchmarkJSONParsing`       | JSON parsing at scale   | Baseline  |
+| `BenchmarkGeneratorOverhead` | Generator overhead      | Baseline  |
+
+**Benchmark guidelines:**
+
+- Run benchmarks on a quiet system for consistent results
+- Use `-benchtime=10x` for quick checks, `-benchtime=1m` for accurate results
+- Compare results between commits to detect performance regressions
+- CI runs smoke benchmarks (1x) on every PR
+
 ### Commit Message Format
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):

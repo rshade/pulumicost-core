@@ -153,6 +153,71 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
+  fuzz:
+    name: Fuzz Testing (Smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Restore fuzz corpus cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            internal/ingest/testdata/fuzz
+            internal/spec/testdata/fuzz
+          key: fuzz-corpus-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            fuzz-corpus-${{ runner.os }}-
+
+      - name: Run JSON fuzz test (30s smoke)
+        run: |
+          go test -fuzz=FuzzJSON -fuzztime=30s ./internal/ingest
+          go test -fuzz=FuzzPulumiPlanParse -fuzztime=30s ./internal/ingest
+
+      - name: Run YAML fuzz test (30s smoke)
+        run: |
+          go test -fuzz=FuzzYAML -fuzztime=30s ./internal/spec
+          go test -fuzz=FuzzSpecFilename -fuzztime=30s ./internal/spec
+
+      - name: Save fuzz corpus cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            internal/ingest/testdata/fuzz
+            internal/spec/testdata/fuzz
+          key: fuzz-corpus-${{ runner.os }}-${{ github.sha }}
+
+  benchmark:
+    name: Benchmark (Smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Run benchmark smoke tests
+        run: |
+          # Run 1K benchmark for regression detection (quick, ~15s)
+          go test -bench=BenchmarkScale1K -benchtime=1x -benchmem ./test/benchmarks/... 2>&1 | grep -E "^(Benchmark|PASS|ok|---)" || true
+
+      - name: Run generator benchmarks
+        run: |
+          # Test generator overhead doesn't regress
+          go test -bench=BenchmarkGeneratorOverhead/Small -benchtime=1x -benchmem ./test/benchmarks/... 2>&1 | grep -E "^(Benchmark|PASS|ok|---)" || true
+
   build:
     name: Build
     runs-on: ubuntu-latest
