@@ -45,12 +45,74 @@ func (h TracingHook) Run(e *zerolog.Event, _ zerolog.Level, _ string) {
 //nolint:revive // Backward compatibility alias intentionally uses stuttering name
 type LoggingConfig = Config
 
-// NewLogger creates a new zerolog logger with the provided configuration.
-// The logger writes to stderr by default and includes a TracingHook for automatic
-// trace ID injection.
+// LogPathResult contains the result of logger creation with file path information.
+// This allows the CLI to communicate log file location to operators.
+// Callers should call Close() when done to release any file handles.
+type LogPathResult struct {
+	Logger         zerolog.Logger // The created logger
+	FilePath       string         // Path to log file (empty if not using file)
+	UsingFile      bool           // True if logging to file
+	FallbackUsed   bool           // True if fallback to stderr occurred
+	FallbackReason string         // Reason for fallback (if any)
+	file           *os.File       // Internal: file handle for cleanup
+}
+
+// NewLoggerWithPath creates a zerolog logger according to cfg and reports the chosen log destination.
+//
+// If cfg.Output is "file" and cfg.File is non-empty, NewLoggerWithPath attempts to open or create
+// the specified file and, on success, returns a logger that writes to that file and sets LogPathResult.FilePath
+// and LogPathResult.UsingFile = true. If opening the file fails, the function falls back to stderr,
+// sets LogPathResult.FallbackUsed = true and LogPathResult.FallbackReason to the error string, and
+// returns a logger that writes to stderr. If cfg.File is empty the function uses stderr.
+//
+// If cfg.Output is "stdout" the returned logger writes to stdout. For any other cfg.Output value
+// the returned logger writes to stderr.
+//
+// The returned LogPathResult contains the constructed Logger and metadata describing whether a file
+// was used, the file path (if any), and whether a fallback to stderr occurred with its reason.
+func NewLoggerWithPath(cfg Config) LogPathResult {
+	result := LogPathResult{}
+
+	switch cfg.Output {
+	case "file":
+		if cfg.File != "" {
+			file, err := os.OpenFile(cfg.File, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+			if err != nil {
+				// Fall back to stderr.
+				result.FallbackUsed = true
+				result.FallbackReason = err.Error()
+				result.Logger = newLoggerWithWriter(cfg, os.Stderr)
+			} else {
+				result.Logger = newLoggerWithWriter(cfg, file)
+				result.FilePath = cfg.File
+				result.UsingFile = true
+				result.file = file // Store file handle for cleanup
+			}
+		} else {
+			result.Logger = newLoggerWithWriter(cfg, os.Stderr)
+		}
+	case "stdout":
+		result.Logger = newLoggerWithWriter(cfg, os.Stdout)
+	default:
+		result.Logger = newLoggerWithWriter(cfg, os.Stderr)
+	}
+
+	return result
+}
+
+// Close releases any resources held by the logger (e.g., file handles).
+func (r *LogPathResult) Close() error {
+	if r.file != nil {
+		return r.file.Close()
+	}
+	return nil
+}
+
+// NewLogger creates a logger configured according to cfg.
+// The logger includes timestamps and trace ID injection, respects cfg.Level, cfg.Format, cfg.Caller and cfg.StackTrace, and writes to the destination specified by cfg.Output (file, stdout, or stderr). If a file destination is selected but cannot be opened, the logger falls back to stderr.
 func NewLogger(cfg Config) zerolog.Logger {
-	writer := createWriter(cfg)
-	return newLoggerWithWriter(cfg, writer)
+	result := NewLoggerWithPath(cfg)
+	return result.Logger
 }
 
 // NewLoggerWithWriter creates a logger writing to the specified writer.
@@ -87,7 +149,12 @@ func newLoggerWithWriter(cfg Config, writer io.Writer) zerolog.Logger {
 	return logger
 }
 
-// createWriter creates the appropriate io.Writer based on configuration.
+// createWriter selects an io.Writer based on the provided LoggingConfig.
+// If cfg.Output is "stdout" it returns os.Stdout. If cfg.Output is "file" and
+// cfg.File is a non-empty path it attempts to open (or create) the file for
+// appending and returns the opened *os.File. If opening the file fails or
+// cfg.File is empty, it falls back to os.Stderr and emits a warning to stderr.
+// For any other cfg.Output value it returns os.Stderr.
 func createWriter(cfg LoggingConfig) io.Writer {
 	switch cfg.Output {
 	case "stdout":
@@ -114,20 +181,29 @@ func createWriter(cfg LoggingConfig) io.Writer {
 }
 
 // parseLevel converts a string log level to zerolog.Level.
-// Invalid levels default to InfoLevel.
+// parseLevel converts a case-insensitive level string into the corresponding zerolog.Level.
+// It accepts "trace", "debug", "info" (or empty), "warn"/"warning", and "error".
+// For any other value it emits a warning to stderr indicating the provided and fallback levels
+// and returns zerolog.InfoLevel.
 func parseLevel(level string) zerolog.Level {
 	switch strings.ToLower(level) {
 	case "trace":
 		return zerolog.TraceLevel
 	case "debug":
 		return zerolog.DebugLevel
-	case "info":
+	case "info", "":
 		return zerolog.InfoLevel
 	case "warn", "warning":
 		return zerolog.WarnLevel
 	case "error":
 		return zerolog.ErrorLevel
 	default:
+		// Log warning for invalid level and fall back to info
+		warnLogger := zerolog.New(os.Stderr)
+		warnLogger.Warn().
+			Str("provided_level", level).
+			Str("fallback_level", "info").
+			Msg("invalid log level, falling back to info")
 		return zerolog.InfoLevel
 	}
 }
@@ -213,7 +289,30 @@ func SafeStr(e *zerolog.Event, key, value string) *zerolog.Event {
 	return e.Str(key, value)
 }
 
-// ComponentLogger creates a sub-logger with the component field set.
+// ComponentLogger creates a logger derived from the provided logger with the
+// `component` field set to the given component name.
+// It returns the derived logger that will include `component` in all emitted entries.
 func ComponentLogger(logger zerolog.Logger, component string) zerolog.Logger {
 	return logger.With().Str("component", component).Logger()
+}
+
+// PrintLogPathMessage writes a "Logging to: <path>" message to the writer.
+// PrintLogPathMessage writes "Logging to: <path>" followed by a newline to w.
+// If path is empty, PrintLogPathMessage does nothing.
+func PrintLogPathMessage(w io.Writer, path string) {
+	if path == "" {
+		return
+	}
+	_, _ = io.WriteString(w, "Logging to: "+path+"\n")
+}
+
+// PrintFallbackWarning writes a single-line warning to w indicating that logging
+// has fallen back to stderr. If reason is non-empty it is appended in
+// parentheses after the message. The function ignores any write error.
+func PrintFallbackWarning(w io.Writer, reason string) {
+	msg := "Warning: Could not write to log file, falling back to stderr"
+	if reason != "" {
+		msg += " (" + reason + ")"
+	}
+	_, _ = io.WriteString(w, msg+"\n")
 }

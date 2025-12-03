@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog"
+	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/spf13/cobra"
 )
@@ -15,8 +16,18 @@ var logger zerolog.Logger //nolint:gochecknoglobals // Required for zerolog cont
 // The returned command has its Version set from ver, a persistent "debug" flag, usage examples, and
 // - config: init, set, get, list, and validate configuration commands.
 //
-//nolint:funlen // Comprehensive logging setup and subcommand registration requires additional lines
+// NewRootCmd creates the root cobra.Command for the pulumicost CLI, configures logging and runtime context, and registers the cost, plugin, and config subcommands.
+//
+// The provided ver string is used as the command version and included in startup logs.
+// The command's persistent pre-run configures logging (including --debug and environment overrides), initializes a component-scoped logger, prints log path or fallback messages to stderr when appropriate, generates or retrieves a trace ID and attaches it to the context, initializes an audit logger and attaches it to the context, and logs the command start.
+//
+// It returns the fully constructed *cobra.Command ready to be executed.
+//
+//nolint:funlen // CLI root command requires comprehensive configuration
 func NewRootCmd(ver string) *cobra.Command {
+	// Track log result for cleanup in PersistentPostRunE.
+	var logResult *logging.LogPathResult
+
 	cmd := &cobra.Command{
 		Use:     "pulumicost",
 		Short:   "PulumiCost CLI and plugin host",
@@ -46,38 +57,55 @@ func NewRootCmd(ver string) *cobra.Command {
 	  # Set configuration values
 	  pulumicost config set output.default_format json`,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			// Initialize logging based on --debug flag
-			debug, _ := cmd.Flags().GetBool("debug")
+			// Get logging configuration from config file (includes env var overrides)
+			loggingCfg := config.GetLoggingConfig()
 
-			level := "info"
-			format := "json"
+			// Check --debug flag (highest priority override)
+			debug, _ := cmd.Flags().GetBool("debug")
 			if debug {
-				level = "debug"
-				format = "console"
+				loggingCfg.Level = "debug"
+				loggingCfg.Format = "console"
+				loggingCfg.File = "" // Clear file to force stderr output for immediate visibility
 			}
 
-			// Check environment variable overrides
-			if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
-				level = envLevel
+			// Check environment variable overrides (between config file and --debug)
+			// Note: PULUMICOST_LOG_FORMAT can override even in debug mode for CI/scripting needs
+			if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" && !debug {
+				loggingCfg.Level = envLevel
 			}
 			if envFormat := os.Getenv("PULUMICOST_LOG_FORMAT"); envFormat != "" {
-				format = envFormat
+				loggingCfg.Format = envFormat
 			}
 
-			cfg := logging.LoggingConfig{
-				Level:  level,
-				Format: format,
-				Output: "stderr",
-			}
+			// Convert config to logging package format and create logger.
+			logCfg := loggingCfg.ToLoggingConfig()
+			result := logging.NewLoggerWithPath(logCfg)
+			logResult = &result // Store for cleanup in PersistentPostRunE
+			logger = logging.ComponentLogger(logResult.Logger, "cli")
 
-			logger = logging.NewLogger(cfg)
-			logger = logging.ComponentLogger(logger, "cli")
+			// Display log path to operator (T020, T021, T022).
+			// Print to stderr to avoid polluting command output (JSON, tables, etc.).
+			if logResult.UsingFile {
+				logging.PrintLogPathMessage(cmd.ErrOrStderr(), logResult.FilePath)
+			} else if logResult.FallbackUsed {
+				logging.PrintFallbackWarning(cmd.ErrOrStderr(), logResult.FallbackReason)
+			}
+			// When using stderr/stdout directly, no message is printed (T022)
 
 			// Generate trace ID and store in context
 			ctx := cmd.Context()
 			traceID := logging.GetOrGenerateTraceID(ctx)
 			ctx = logging.ContextWithTraceID(ctx, traceID)
 			ctx = logger.WithContext(ctx)
+
+			// Initialize audit logger (T032)
+			auditCfg := logging.AuditLoggerConfig{
+				Enabled: loggingCfg.Audit.Enabled,
+				File:    loggingCfg.Audit.File,
+			}
+			auditLogger := logging.NewAuditLogger(auditCfg)
+			ctx = logging.ContextWithAuditLogger(ctx, auditLogger)
+
 			cmd.SetContext(ctx)
 
 			// Log command start
@@ -87,6 +115,20 @@ func NewRootCmd(ver string) *cobra.Command {
 				Str("version", ver).
 				Msg("command started")
 
+			return nil
+		},
+		PersistentPostRunE: func(cmd *cobra.Command, _ []string) error {
+			// Close audit logger to release any file handles.
+			ctx := cmd.Context()
+			auditLogger := logging.AuditLoggerFromContext(ctx)
+			if err := auditLogger.Close(); err != nil {
+				return err
+			}
+
+			// Close log file handle if one was opened.
+			if logResult != nil {
+				return logResult.Close()
+			}
 			return nil
 		},
 	}

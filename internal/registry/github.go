@@ -39,17 +39,21 @@ type ReleaseAsset struct {
 
 // GitHubClient provides GitHub API access for releases.
 type GitHubClient struct {
-	httpClient *http.Client
+	HTTPClient *http.Client
+	BaseURL    string
 	token      string
 }
 
 // NewGitHubClient returns a GitHubClient configured with a 30-second HTTP timeout.
 // The client will include an authentication token obtained from the GITHUB_TOKEN
-// environment variable or the `gh` CLI if available.
+// NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
+// The client has an HTTP client with a 30-second timeout and BaseURL set to https://api.github.com.
+// It initializes the authentication token by reading GITHUB_TOKEN or, if unset, attempting to obtain it from the `gh` CLI.
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{
-		httpClient: &http.Client{Timeout: 30 * time.Second}, //nolint:mnd // timeout in seconds
+		HTTPClient: &http.Client{Timeout: 30 * time.Second}, //nolint:mnd // timeout in seconds
+		BaseURL:    "https://api.github.com",
 		token:      token,
 	}
 }
@@ -73,13 +77,13 @@ func getGitHubToken() string {
 
 // GetLatestRelease returns the latest release for a repository.
 func (c *GitHubClient) GetLatestRelease(owner, repo string) (*GitHubRelease, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
+	url := fmt.Sprintf("%s/repos/%s/%s/releases/latest", c.BaseURL, owner, repo)
 	return c.fetchRelease(url)
 }
 
 // GetReleaseByTag returns a specific release by tag name.
 func (c *GitHubClient) GetReleaseByTag(owner, repo, tag string) (*GitHubRelease, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/tags/%s", owner, repo, tag)
+	url := fmt.Sprintf("%s/repos/%s/%s/releases/tags/%s", c.BaseURL, owner, repo, tag)
 	return c.fetchRelease(url)
 }
 
@@ -104,7 +108,7 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 			req.Header.Set("Authorization", "token "+c.token)
 		}
 
-		resp, err := c.httpClient.Do(req)
+		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
 			lastErr = fmt.Errorf("request failed: %w", err)
 			continue
@@ -187,7 +191,7 @@ func (c *GitHubClient) DownloadAsset(url, destPath string, progress func(downloa
 		req.Header.Set("Authorization", "token "+c.token)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}

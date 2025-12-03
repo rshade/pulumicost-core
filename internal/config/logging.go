@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rshade/pulumicost-core/internal/logging"
 )
 
 // Logger is the global zerolog logger instance.
@@ -13,7 +14,6 @@ import (
 //nolint:gochecknoglobals // Logger is intentionally global for application-wide structured logging
 var Logger zerolog.Logger
 
-// InitLogger initializes the global zerolog logger with the specified configuration.
 // InitLogger initializes the package-level Logger with the specified log level and optional file output.
 // It sets the global Logger, configures console output, and—when logToFile is true—ensures the log directory
 // exists and opens the configured log file (falling back to "/tmp/pulumicost.log" if none is set).
@@ -93,9 +93,43 @@ func GetLogger() zerolog.Logger {
 
 // init initializes the package-level default logger to info level with console output only.
 // It calls InitLogger("info", false) and deliberately ignores any returned error.
+// This init is intentional: the package requires a logger to be available before any
+// configuration is loaded.
 //
-//nolint:gochecknoinits // Package-level logger initialization required for default setup
+//nolint:gochecknoinits // intentional: package-level logger must be initialized before use
 func init() {
 	// Default to info level, console only
 	_ = InitLogger("info", false)
+}
+
+// ToLoggingConfig converts config.LoggingConfig to logging.Config for use with
+// the internal/logging package. This bridges the configuration system to the
+// logging infrastructure.
+//
+// The conversion applies these rules:
+//   - Level, Format are copied directly
+//   - If File is set, Output becomes "file" and File is passed through
+//   - If File is empty, Output defaults to "stderr"
+func (lc *LoggingConfig) ToLoggingConfig() logging.Config {
+	output := "stderr"
+	if lc.File != "" {
+		output = outputTypeFile
+	}
+
+	return logging.Config{
+		Level:  lc.Level,
+		Format: lc.Format,
+		Output: output,
+		File:   lc.File,
+		Caller: false, // Default, can be extended if needed
+	}
+}
+
+// GetLoggingConfig returns the Logging section of the global configuration.
+// The returned value is a copy of the current global config's Logging settings.
+// Any environment-level overrides (for example a --debug flag) are expected to
+// be applied by the caller after retrieving this value.
+func GetLoggingConfig() LoggingConfig {
+	cfg := GetGlobalConfig()
+	return cfg.Logging
 }

@@ -40,7 +40,10 @@ type Installer struct {
 // NewInstaller creates a new Installer configured to install plugins into pluginDir.
 // If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the home
 // directory cannot be determined, the default is "./.pulumicost/plugins" relative to
-// the current directory. The returned Installer contains an initialized GitHub client.
+// NewInstaller creates an Installer configured to install plugins into pluginDir.
+// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; when the user
+// home directory cannot be determined it falls back to the current directory.
+// The returned Installer contains an initialized GitHub client.
 func NewInstaller(pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -52,6 +55,25 @@ func NewInstaller(pluginDir string) *Installer {
 	}
 	return &Installer{
 		client:    NewGitHubClient(),
+		pluginDir: pluginDir,
+	}
+}
+
+// NewInstallerWithClient creates a new Installer using the provided GitHub client.
+// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; if the home
+// directory cannot be determined it falls back to the current directory.
+// The returned Installer uses the given client and the resolved plugin directory.
+func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
+	if pluginDir == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			// Fallback to current directory if home cannot be determined
+			homeDir = "."
+		}
+		pluginDir = filepath.Join(homeDir, ".pulumicost", "plugins")
+	}
+	return &Installer{
+		client:    client,
 		pluginDir: pluginDir,
 	}
 }
@@ -161,7 +183,7 @@ func (i *Installer) installFromURL(
 
 // installRelease downloads and installs a specific release.
 //
-//nolint:gocognit // Complex but necessary installation logic
+//nolint:gocognit,funlen // Complex but necessary installation logic with many steps
 func (i *Installer) installRelease(
 	name string,
 	release *GitHubRelease,
@@ -193,8 +215,21 @@ func (i *Installer) installRelease(
 		progress(fmt.Sprintf("Downloading %s (%d bytes)...", asset.Name, asset.Size))
 	}
 
+	// Determine extension for temp file
+	pattern := "pulumicost-plugin-*"
+	switch {
+	case strings.HasSuffix(asset.Name, extZip):
+		pattern += extZip
+	case strings.HasSuffix(asset.Name, extTarGz):
+		pattern += extTarGz
+	case strings.HasSuffix(asset.Name, ".tgz"):
+		pattern += ".tgz"
+	default:
+		pattern += filepath.Ext(asset.Name)
+	}
+
 	// Create temp file for download
-	tmpFile, err := os.CreateTemp("", "pulumicost-plugin-*")
+	tmpFile, err := os.CreateTemp("", pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
