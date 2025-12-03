@@ -311,13 +311,11 @@ func TestSafeStr_WithAuditContext(t *testing.T) {
 		t.Run(tc.key, func(t *testing.T) {
 			t.Parallel()
 
-			// Use IsSensitiveKey helper if exported, or test through logging behavior
+			// Use IsSensitiveKey helper if exported, or test through logging behavior.
 			params := map[string]string{tc.key: tc.value}
-			entry := logging.AuditEntry{
-				Parameters: params,
-			}
+			entry := logging.AuditEntry{Parameters: params}
 
-			// The entry should have the parameter, redaction happens at log time
+			// The entry should have the parameter; redaction is applied at log time.
 			assert.Equal(t, tc.value, entry.Parameters[tc.key])
 		})
 	}

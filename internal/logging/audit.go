@@ -26,7 +26,8 @@ type AuditEntry struct {
 }
 
 // NewAuditEntry creates a new AuditEntry with the given command and trace ID.
-// Use the With* methods to populate additional fields.
+// NewAuditEntry creates a new AuditEntry with Timestamp set to the current UTC time and the provided command and traceID.
+// It initializes Parameters as an empty map so callers can populate additional fields; use the With* builder methods to set duration, success, error, or parameters.
 func NewAuditEntry(command, traceID string) *AuditEntry {
 	return &AuditEntry{
 		Timestamp:  time.Now().UTC(),
@@ -65,11 +66,14 @@ func (e *AuditEntry) WithDuration(start time.Time) *AuditEntry {
 
 // AuditLogger writes audit entries.
 type AuditLogger interface {
-	// Log writes an audit entry
+	// Log writes an audit entry.
 	Log(ctx context.Context, entry AuditEntry)
 
-	// Enabled returns whether audit logging is active
+	// Enabled returns whether audit logging is active.
 	Enabled() bool
+
+	// Close releases any resources held by the logger (e.g., file handles).
+	Close() error
 }
 
 // AuditLoggerConfig holds configuration for creating an AuditLogger.
@@ -83,30 +87,31 @@ type AuditLoggerConfig struct {
 type zerologAuditLogger struct {
 	logger  zerolog.Logger
 	enabled bool
+	file    *os.File // Track file handle for cleanup
 }
 
 // NewAuditLogger creates a new AuditLogger with the given configuration.
 //
-//nolint:nestif // Writer initialization has acceptable complexity for configuration logic
+// NewAuditLogger creates an AuditLogger according to cfg.
+// If cfg.Enabled is false, NewAuditLogger returns a no-op logger.
+// If cfg.Writer is provided it is used as the destination; otherwise, if cfg.File is set
+// the file is opened for append and used as the destination. If opening cfg.File fails
+// or neither Writer nor File are provided, stderr is used as the destination.
+// The returned logger emits structured audit records and reports Enabled() == true when
+// auditing is active.
+// Callers should call Close() when done to release any file handles.
 func NewAuditLogger(cfg AuditLoggerConfig) AuditLogger {
 	if !cfg.Enabled {
 		return &noOpAuditLogger{}
 	}
 
-	writer := cfg.Writer
-	if writer == nil {
-		// Try to open the audit file if specified
-		if cfg.File != "" {
-			file, err := os.OpenFile(cfg.File, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-			if err != nil {
-				// Fall back to stderr
-				writer = os.Stderr
-			} else {
-				writer = file
-			}
-		} else {
-			writer = os.Stderr
-		}
+	var writer io.Writer
+	var file *os.File
+
+	if cfg.Writer != nil {
+		writer = cfg.Writer
+	} else {
+		writer, file = getAuditWriterWithFile(cfg.File)
 	}
 
 	logger := zerolog.New(writer).
@@ -118,6 +123,7 @@ func NewAuditLogger(cfg AuditLoggerConfig) AuditLogger {
 	return &zerologAuditLogger{
 		logger:  logger,
 		enabled: true,
+		file:    file,
 	}
 }
 
@@ -160,6 +166,14 @@ func (a *zerologAuditLogger) Enabled() bool {
 	return a.enabled
 }
 
+// Close releases any resources held by the logger.
+func (a *zerologAuditLogger) Close() error {
+	if a.file != nil {
+		return a.file.Close()
+	}
+	return nil
+}
+
 // noOpAuditLogger is a no-operation implementation of AuditLogger.
 type noOpAuditLogger struct{}
 
@@ -171,12 +185,19 @@ func (n *noOpAuditLogger) Enabled() bool {
 	return false
 }
 
-// NoOpAuditLogger returns a no-op audit logger for when auditing is disabled.
+// Close does nothing for the no-op logger.
+func (n *noOpAuditLogger) Close() error {
+	return nil
+}
+
+// NoOpAuditLogger returns an AuditLogger that performs no operations.
+// The returned logger's Log method is a no-op and Enabled reports false.
 func NoOpAuditLogger() AuditLogger {
 	return &noOpAuditLogger{}
 }
 
-// SafeParams creates a copy of parameters with sensitive values redacted.
+// SafeParams returns a shallow copy of params where values for keys identified as sensitive are replaced with "[REDACTED]".
+// The returned map preserves all original keys; non-sensitive values are copied unchanged.
 func SafeParams(params map[string]string) map[string]string {
 	safe := make(map[string]string, len(params))
 	for k, v := range params {
@@ -190,21 +211,37 @@ func SafeParams(params map[string]string) map[string]string {
 }
 
 // IsSensitiveKey checks if a key name contains sensitive patterns.
-// This is exported to allow callers to check before logging.
+// IsSensitiveKey reports whether the provided parameter key is considered sensitive and should be redacted.
+// It returns true if the key identifies sensitive data (for example, passwords, tokens, or keys), false otherwise.
 func IsSensitiveKey(key string) bool {
 	return isSensitiveKey(key)
 }
 
-// ContextWithAuditLogger stores an AuditLogger in the context.
+// ContextWithAuditLogger returns a copy of ctx that carries the provided AuditLogger under an internal package key.
 func ContextWithAuditLogger(ctx context.Context, logger AuditLogger) context.Context {
 	return context.WithValue(ctx, auditLoggerKey{}, logger)
 }
 
 // AuditLoggerFromContext extracts the AuditLogger from context.
-// Returns a no-op logger if none is stored.
+// AuditLoggerFromContext retrieves the AuditLogger stored in ctx.
+// It returns the AuditLogger found in the context, or a no-op AuditLogger if none is present.
 func AuditLoggerFromContext(ctx context.Context) AuditLogger {
 	if logger, ok := ctx.Value(auditLoggerKey{}).(AuditLogger); ok {
 		return logger
 	}
 	return &noOpAuditLogger{}
+}
+
+// getAuditWriterWithFile returns the appropriate writer for audit logging along with the file handle.
+// If file is specified and can be opened, it returns a file writer and the file handle.
+// Otherwise, it falls back to stderr with a nil file handle.
+func getAuditWriterWithFile(file string) (io.Writer, *os.File) {
+	if file == "" {
+		return os.Stderr, nil
+	}
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return os.Stderr, nil
+	}
+	return f, f
 }

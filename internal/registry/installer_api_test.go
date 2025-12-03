@@ -22,9 +22,9 @@ func TestInstall_FromRegistry(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
 	configDir := filepath.Join(tmpHome, ".pulumicost")
-	os.MkdirAll(configDir, 0755)
-	
-	// Initialize global config (needed for AddInstalledPlugin)
+	_ = os.MkdirAll(configDir, 0755)
+
+	// Initialize global config (needed for AddInstalledPlugin).
 	config.InitGlobalConfig()
 
 	// Mock server
@@ -56,7 +56,7 @@ func TestInstall_FromRegistry(t *testing.T) {
 
 		// Match download URL
 		if r.URL.Path == fmt.Sprintf("/download/aws-public_v1.0.0_%s_%s.tar.gz", runtime.GOOS, runtime.GOARCH) ||
-		   r.URL.Path == fmt.Sprintf("/download/aws-public_v1.0.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH) {
+			r.URL.Path == fmt.Sprintf("/download/aws-public_v1.0.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH) {
 			// Return asset content
 			w.Write(createMockArchive(t, "aws-public"))
 			return
@@ -116,18 +116,22 @@ func TestRemove(t *testing.T) {
 	pluginDir := filepath.Join(tmpHome, "plugins")
 	installer := NewInstaller(pluginDir)
 
-	// Manually "install" a plugin
+	// Manually "install" a plugin.
 	name := "test-plugin"
 	version := "v1.0.0"
 	installPath := filepath.Join(pluginDir, name, version)
-	os.MkdirAll(installPath, 0755)
-	
-	// Add to config
-	config.AddInstalledPlugin(config.InstalledPlugin{
-		Name: name,
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatalf("Failed to create install path: %v", err)
+	}
+
+	// Add to config.
+	if err := config.AddInstalledPlugin(config.InstalledPlugin{
+		Name:    name,
 		Version: version,
-		URL: "github.com/owner/repo",
-	})
+		URL:     "github.com/owner/repo",
+	}); err != nil {
+		t.Fatalf("Failed to add installed plugin: %v", err)
+	}
 
 	// Remove
 	err := installer.Remove(name, RemoveOptions{}, nil)
@@ -147,10 +151,10 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-// Helper to create a mock archive with a binary inside
+// createMockArchive creates a mock archive with a binary inside.
 func createMockArchive(t *testing.T, binaryName string) []byte {
 	tmpDir := t.TempDir()
-	
+
 	// Create binary content
 	binName := binaryName
 	if runtime.GOOS == "windows" {

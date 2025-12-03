@@ -14,7 +14,6 @@ import (
 //nolint:gochecknoglobals // Logger is intentionally global for application-wide structured logging
 var Logger zerolog.Logger
 
-// InitLogger initializes the global zerolog logger with the specified configuration.
 // InitLogger initializes the package-level Logger with the specified log level and optional file output.
 // It sets the global Logger, configures console output, and—when logToFile is true—ensures the log directory
 // exists and opens the configured log file (falling back to "/tmp/pulumicost.log" if none is set).
@@ -94,8 +93,10 @@ func GetLogger() zerolog.Logger {
 
 // init initializes the package-level default logger to info level with console output only.
 // It calls InitLogger("info", false) and deliberately ignores any returned error.
+// This init is intentional: the package requires a logger to be available before any
+// configuration is loaded.
 //
-//nolint:gochecknoinits // Package-level logger initialization required for default setup
+//nolint:gochecknoinits // intentional: package-level logger must be initialized before use
 func init() {
 	// Default to info level, console only
 	_ = InitLogger("info", false)
@@ -124,12 +125,10 @@ func (lc *LoggingConfig) ToLoggingConfig() logging.Config {
 	}
 }
 
-// GetLoggingConfig returns the logging configuration from the global config,
-// applying environment variable overrides in priority order:
-//
-//	config file < PULUMICOST_LOG_LEVEL/PULUMICOST_LOG_FORMAT < --debug flag
-//
-// The --debug flag override should be applied by the caller after this function.
+// GetLoggingConfig returns the Logging section of the global configuration.
+// The returned value is a copy of the current global config's Logging settings.
+// Any environment-level overrides (for example a --debug flag) are expected to
+// be applied by the caller after retrieving this value.
 func GetLoggingConfig() LoggingConfig {
 	cfg := GetGlobalConfig()
 	return cfg.Logging

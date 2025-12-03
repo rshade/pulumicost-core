@@ -56,10 +56,10 @@ func TestCreateWriter_FallbackOnPermissionError(t *testing.T) {
 	// Capture stderr to verify warning
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
-	os.Stderr = w
+	os.Stderr = w //nolint:reassign // intentional: capturing stderr for test verification
 
 	defer func() {
-		os.Stderr = oldStderr
+		os.Stderr = oldStderr //nolint:reassign // intentional: restoring stderr after test
 		_ = r.Close()
 	}()
 

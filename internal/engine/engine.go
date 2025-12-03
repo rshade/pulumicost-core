@@ -880,7 +880,9 @@ func getDefaultMonthlyByType(resourceType string) float64 {
 	resourceTypeLower := strings.ToLower(resourceType)
 	switch {
 	case strings.Contains(resourceTypeLower, "database") ||
-		strings.Contains(resourceTypeLower, "rds"):
+		strings.Contains(resourceTypeLower, "rds") ||
+		strings.Contains(resourceTypeLower, ":db:") ||
+		strings.Contains(resourceTypeLower, "sql"):
 		return defaultDatabaseMonthlyCost
 	case strings.Contains(resourceTypeLower, "storage") ||
 		strings.Contains(resourceTypeLower, "s3"):

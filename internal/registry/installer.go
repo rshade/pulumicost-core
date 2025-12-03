@@ -40,7 +40,10 @@ type Installer struct {
 // NewInstaller creates a new Installer configured to install plugins into pluginDir.
 // If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the home
 // directory cannot be determined, the default is "./.pulumicost/plugins" relative to
-// the current directory. The returned Installer contains an initialized GitHub client.
+// NewInstaller creates an Installer configured to install plugins into pluginDir.
+// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; when the user
+// home directory cannot be determined it falls back to the current directory.
+// The returned Installer contains an initialized GitHub client.
 func NewInstaller(pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -56,7 +59,10 @@ func NewInstaller(pluginDir string) *Installer {
 	}
 }
 
-// NewInstallerWithClient creates a new Installer with a custom GitHub client.
+// NewInstallerWithClient creates a new Installer using the provided GitHub client.
+// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; if the home
+// directory cannot be determined it falls back to the current directory.
+// The returned Installer uses the given client and the resolved plugin directory.
 func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -177,7 +183,7 @@ func (i *Installer) installFromURL(
 
 // installRelease downloads and installs a specific release.
 //
-//nolint:gocognit // Complex but necessary installation logic
+//nolint:gocognit,funlen // Complex but necessary installation logic with many steps
 func (i *Installer) installRelease(
 	name string,
 	release *GitHubRelease,
@@ -211,16 +217,16 @@ func (i *Installer) installRelease(
 
 	// Determine extension for temp file
 	pattern := "pulumicost-plugin-*"
-	if strings.HasSuffix(asset.Name, ".zip") {
-		pattern += ".zip"
-	} else if strings.HasSuffix(asset.Name, ".tar.gz") {
-		pattern += ".tar.gz"
-	} else if strings.HasSuffix(asset.Name, ".tgz") {
+	switch {
+	case strings.HasSuffix(asset.Name, extZip):
+		pattern += extZip
+	case strings.HasSuffix(asset.Name, extTarGz):
+		pattern += extTarGz
+	case strings.HasSuffix(asset.Name, ".tgz"):
 		pattern += ".tgz"
-	} else {
+	default:
 		pattern += filepath.Ext(asset.Name)
 	}
-	fmt.Printf("DEBUG: asset.Name=%s, pattern=%s\n", asset.Name, pattern)
 
 	// Create temp file for download
 	tmpFile, err := os.CreateTemp("", pattern)

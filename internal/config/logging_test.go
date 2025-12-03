@@ -2,12 +2,10 @@ package config_test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // T007: Unit test for config bridge function.
@@ -75,47 +73,37 @@ func TestLoggingConfig_ToLoggingConfig(t *testing.T) {
 
 // T008: Unit test for config override precedence (file < env < flag).
 func TestLoggingConfig_OverridePrecedence(t *testing.T) {
-	// Test that environment variables override config file values
-	// Note: The --debug flag override is handled in CLI, not in config package
+	// Test that environment variables override default config values.
+	// Note: The --debug flag override is handled in CLI, not in config package.
+	// Note: This test validates env var precedence over defaults; file-based
+	// overrides are tested in config_test.go which has access to stubHome().
 
-	// Save and restore environment
+	// Save and restore environment.
 	origLevel := os.Getenv("PULUMICOST_LOG_LEVEL")
 	origFormat := os.Getenv("PULUMICOST_LOG_FORMAT")
 	t.Cleanup(func() {
 		if origLevel != "" {
-			os.Setenv("PULUMICOST_LOG_LEVEL", origLevel)
+			_ = os.Setenv("PULUMICOST_LOG_LEVEL", origLevel)
 		} else {
-			os.Unsetenv("PULUMICOST_LOG_LEVEL")
+			_ = os.Unsetenv("PULUMICOST_LOG_LEVEL")
 		}
 		if origFormat != "" {
-			os.Setenv("PULUMICOST_LOG_FORMAT", origFormat)
+			_ = os.Setenv("PULUMICOST_LOG_FORMAT", origFormat)
 		} else {
-			os.Unsetenv("PULUMICOST_LOG_FORMAT")
+			_ = os.Unsetenv("PULUMICOST_LOG_FORMAT")
 		}
 	})
 
-	t.Run("env vars override config file values", func(t *testing.T) {
-		// Create a temporary config file with specific values
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "config.yaml")
+	t.Run("env vars override default values", func(t *testing.T) {
+		// Set environment variables to override defaults.
+		_ = os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
+		_ = os.Setenv("PULUMICOST_LOG_FORMAT", "text")
 
-		configContent := `
-logging:
-  level: info
-  format: json
-`
-		err := os.WriteFile(configPath, []byte(configContent), 0600)
-		require.NoError(t, err)
-
-		// Set environment variables to override
-		os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-		os.Setenv("PULUMICOST_LOG_FORMAT", "text")
-
-		// Load config - env vars should take precedence
+		// Load config - env vars should take precedence over defaults.
 		cfg := config.New()
 
-		assert.Equal(t, "debug", cfg.Logging.Level, "Env var should override config file level")
-		assert.Equal(t, "text", cfg.Logging.Format, "Env var should override config file format")
+		assert.Equal(t, "debug", cfg.Logging.Level, "Env var should override default level")
+		assert.Equal(t, "text", cfg.Logging.Format, "Env var should override default format")
 	})
 }
 

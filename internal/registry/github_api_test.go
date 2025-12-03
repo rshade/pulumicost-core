@@ -2,11 +2,11 @@ package registry
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -80,7 +80,7 @@ func TestGetReleaseByTag(t *testing.T) {
 func TestDownloadAsset(t *testing.T) {
 	content := "binary content"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(content)))
+		w.Header().Set("Content-Length", strconv.Itoa(len(content)))
 		w.Write([]byte(content))
 	}))
 	defer server.Close()
