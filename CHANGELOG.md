@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2](https://github.com/rshade/pulumicost-core/compare/v0.1.1...v0.1.2) (2025-12-03)
+
+
+### Added
+
+* **logging:** integrate zerolog logging across all components ([#206](https://github.com/rshade/pulumicost-core/issues/206)) ([c152d05](https://github.com/rshade/pulumicost-core/commit/c152d0537c394ffd4a0f07554ec12116cb5dc4a2))
+
+
+### Fixed
+
+* comprehensive input validation and error handling improvements ([#196](https://github.com/rshade/pulumicost-core/issues/196)) ([47b0e36](https://github.com/rshade/pulumicost-core/commit/47b0e369db86f6268a5e9d0aba87ae5f77773379))
+* **deps:** update module github.com/masterminds/semver/v3 to v3.4.0 ([#199](https://github.com/rshade/pulumicost-core/issues/199)) ([be86a7e](https://github.com/rshade/pulumicost-core/commit/be86a7ef047d938b4a2c87ad7fff8f727be693ee))
+* **pluginhost:** prevent race condition in plugin port allocation ([#192](https://github.com/rshade/pulumicost-core/issues/192)) ([42c4a0a](https://github.com/rshade/pulumicost-core/commit/42c4a0a488a0aa3f528579640e49ba77c3198d71))
+
 ## [0.1.1](https://github.com/rshade/pulumicost-core/compare/v0.1.0...v0.1.1) (2025-11-29)
 
 
