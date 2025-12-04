@@ -29,6 +29,10 @@ test-race:
 	@echo "Running tests with race detector..."
 	go test -v -race ./...
 
+test-e2e:
+	@echo "Running E2E tests..."
+	cd test/e2e && go test -v -tags e2e -timeout 60m ./... $(TEST_ARGS)
+
 lint:
 	@echo "Running golangci-lint (expected version $(GOLANGCI_LINT_VERSION))..."
 	@$(GOLANGCI_LINT) --version | grep -q "$(GOLANGCI_LINT_VERSION)" || \
