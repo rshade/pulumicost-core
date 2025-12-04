@@ -3,6 +3,7 @@ package e2e
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -16,13 +17,12 @@ type ComparisonReport struct {
 	Message     string
 }
 
-// String returns a formatted string representation of the comparison report.
 func (r ComparisonReport) String() string {
 	status := "PASS"
 	if !r.WithinLimit {
 		status = "FAIL"
 	}
-	return fmt.Sprintf("[%s] Expected: $%.4f, Actual: $%.4f, Diff: $%.4f (%.2f%%) - %s",
+	return fmt.Sprintf("[%s] Expected: $%.4f, Actual: $%.4f, Diff: $%.4f (%.2f%%) - %s", 
 		status, r.Expected, r.Actual, r.Diff, r.PercentDiff, r.Message)
 }
 
@@ -56,7 +56,7 @@ func (v *DefaultCostValidator) Compare(actual float64, expected float64) Compari
 	}
 
 	withinLimit := percentDiff <= v.TolerancePercent
-
+	
 	msg := "Within tolerance"
 	if !withinLimit {
 		msg = fmt.Sprintf("Exceeds tolerance of %.2f%%", v.TolerancePercent)
@@ -84,16 +84,10 @@ func (v *DefaultCostValidator) ValidateProjected(actual float64, expected float6
 // ValidateActual checks if the calculated actual cost is proportional to runtime.
 // Fallback formula: projected_cost * runtime_hours / 730
 func (v *DefaultCostValidator) ValidateActual(calculated float64, runtime time.Duration, expectedHourly float64) error {
-	// Note: AWS EC2 has per-second billing with a 1-minute minimum.
-	// This validator enforces a 1-minute minimum billing period for testing purposes.
+	// Minimum billing of 1 hour logic (simplified for now, assuming runtime is sufficient)
 	// For this validator, we'll compare against the expected hourly rate * runtime
-
+	
 	runtimeHours := runtime.Hours()
-	// Enforce minimum billing period of 1 minute for testing
-	minBillingHours := 1.0 / 60.0 // 1 minute minimum
-	if runtimeHours < minBillingHours {
-		runtimeHours = minBillingHours
-	}
 	expectedTotal := expectedHourly * runtimeHours
 
 	// Use a slightly looser tolerance for actual costs due to timing variations

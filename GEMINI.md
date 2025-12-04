@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ## Active Technologies
+
 - Local Pulumi state (ephemeral), no persistent DB. (010-e2e-cost-testing)
 - N/A (Stateless operation) (008-analyzer-plugin)
 
@@ -41,6 +42,7 @@ make run
 Go 1.24.10: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
+
 ## Workflow Restrictions
 
 - **NEVER COMMIT**: Do not execute `git commit`. Always stop after `git add` and ask the user to review/commit.
@@ -54,6 +56,7 @@ Go 1.24.10: Follow standard conventions
 - **Property Extraction**: Core (`adapter.go`) relies on populated `Inputs` to extract SKU and Region. If `Inputs` are empty (due to ingest issues), pricing lookup fails.
 
 ## Recent Changes
+
 - 010-e2e-cost-testing: Fixed E2E test failure by parsing `newState` in Pulumi plan JSON.
 - 010-e2e-cost-testing: Patched `aws-public` plugin to support `aws:ec2/instance:Instance` resource type.
 - 010-e2e-cost-testing: Verified cost calculation accuracy ($7.59/month for t3.micro).
