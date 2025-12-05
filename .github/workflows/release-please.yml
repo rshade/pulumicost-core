@@ -17,10 +17,10 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4.4.0
         with:
-          # Token for GitHub API access
-          # Uses the default GITHUB_TOKEN, but you can use a custom PAT if needed
-          # For custom PAT, create a secret and reference it: token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT to allow release events to trigger other workflows (e.g., GoReleaser)
+          # GITHUB_TOKEN events don't trigger other workflows by design
+          # See: https://github.com/googleapis/release-please-action#github-credentials
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           # Note: Using manifest-based configuration
           # The release-please-config.json and .release-please-manifest.json files
           # in the repo root will be used automatically
