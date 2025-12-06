@@ -7,14 +7,49 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// Duration is a wrapper around time.Duration that supports YAML/JSON parsing.
+//
+//nolint:recvcheck // MarshalYAML returns value, UnmarshalYAML needs pointer - this is standard YAML pattern
+type Duration time.Duration
+
+// UnmarshalYAML implements yaml.Unmarshaler for Duration.
+func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
+	var s string
+	if err := value.Decode(&s); err != nil {
+		return err
+	}
+	parsed, err := time.ParseDuration(s)
+	if err != nil {
+		return fmt.Errorf("invalid duration %q: %w", s, err)
+	}
+	*d = Duration(parsed)
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler for Duration.
+func (d Duration) MarshalYAML() (interface{}, error) {
+	return time.Duration(d).String(), nil
+}
+
+// Duration returns the underlying time.Duration value.
+func (d Duration) Duration() time.Duration {
+	return time.Duration(d)
+}
 
 const (
 	defaultPrecision     = 2
 	envKeySeparatorCount = 2
 	minPluginKeyParts    = 2
+
+	// Analyzer timeout defaults.
+	defaultPerResourceTimeout   = 5 * time.Second
+	defaultTotalTimeout         = 60 * time.Second
+	defaultWarnThresholdTimeout = 30 * time.Second
 )
 
 // ErrConfigCorrupted is returned in strict mode when the config file exists but cannot be parsed.
@@ -27,9 +62,10 @@ type Config struct {
 	SpecDir   string `yaml:"-" json:"-"`
 
 	// New comprehensive configuration
-	Output  OutputConfig            `yaml:"output"  json:"output"`
-	Plugins map[string]PluginConfig `yaml:"plugins" json:"plugins"`
-	Logging LoggingConfig           `yaml:"logging" json:"logging"`
+	Output   OutputConfig            `yaml:"output"   json:"output"`
+	Plugins  map[string]PluginConfig `yaml:"plugins"  json:"plugins"`
+	Logging  LoggingConfig           `yaml:"logging"  json:"logging"`
+	Analyzer AnalyzerConfig          `yaml:"analyzer" json:"analyzer"`
 
 	// Internal fields
 	configPath string
@@ -71,6 +107,26 @@ type LogOutput struct {
 	MaxFiles  int    `yaml:"max_files,omitempty"   json:"max_files,omitempty"`   // File rotation
 }
 
+// AnalyzerConfig defines analyzer-specific configuration for the Pulumi Analyzer plugin.
+type AnalyzerConfig struct {
+	Timeout AnalyzerTimeout           `yaml:"timeout" json:"timeout"`
+	Plugins map[string]AnalyzerPlugin `yaml:"plugins" json:"plugins"`
+}
+
+// AnalyzerTimeout defines timeout settings for cost analysis operations.
+type AnalyzerTimeout struct {
+	PerResource   Duration `yaml:"per_resource"   json:"per_resource"`   // Per-resource timeout (default: 5s)
+	Total         Duration `yaml:"total"          json:"total"`          // Overall analysis timeout (default: 60s)
+	WarnThreshold Duration `yaml:"warn_threshold" json:"warn_threshold"` // Warning threshold (default: 30s)
+}
+
+// AnalyzerPlugin defines a cost plugin configuration for the analyzer.
+type AnalyzerPlugin struct {
+	Path    string            `yaml:"path"    json:"path"`    // Path to plugin binary
+	Enabled bool              `yaml:"enabled" json:"enabled"` // Whether plugin is enabled
+	Env     map[string]string `yaml:"env"     json:"env"`     // Environment variables for plugin
+}
+
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
 // By default, config errors are logged as warnings and defaults are used.
@@ -100,6 +156,14 @@ func New() *Config {
 					Format: "text",
 				},
 			},
+		},
+		Analyzer: AnalyzerConfig{
+			Timeout: AnalyzerTimeout{
+				PerResource:   Duration(defaultPerResourceTimeout),
+				Total:         Duration(defaultTotalTimeout),
+				WarnThreshold: Duration(defaultWarnThresholdTimeout),
+			},
+			Plugins: make(map[string]AnalyzerPlugin),
 		},
 
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
@@ -166,6 +230,14 @@ func NewStrict() (*Config, error) {
 					Format: "text",
 				},
 			},
+		},
+		Analyzer: AnalyzerConfig{
+			Timeout: AnalyzerTimeout{
+				PerResource:   Duration(defaultPerResourceTimeout),
+				Total:         Duration(defaultTotalTimeout),
+				WarnThreshold: Duration(defaultWarnThresholdTimeout),
+			},
+			Plugins: make(map[string]AnalyzerPlugin),
 		},
 
 		configPath: filepath.Join(pulumicostDir, "config.yaml"),
@@ -262,9 +334,10 @@ func (c *Config) Get(key string) (interface{}, error) {
 // List returns all configuration as a map.
 func (c *Config) List() map[string]interface{} {
 	return map[string]interface{}{
-		"output":  c.Output,
-		"plugins": c.Plugins,
-		"logging": c.Logging,
+		"output":   c.Output,
+		"plugins":  c.Plugins,
+		"logging":  c.Logging,
+		"analyzer": c.Analyzer,
 	}
 }
 

@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ## Active Technologies
+- Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra` (008-analyzer-plugin)
+- N/A (Stateless operation) (008-analyzer-plugin)
 
 - Go 1.25
 - `github.com/rshade/pulumicost-spec`
@@ -43,3 +45,7 @@ Go 1.24.10: Follow standard conventions
 
 - **NEVER COMMIT**: Do not execute `git commit`. Always stop after `git add` and ask the user to review/commit.
 <!-- MANUAL ADDITIONS END -->
+
+## Recent Changes
+- 008-analyzer-plugin: Added Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra`
+- 008-analyzer-plugin: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
