@@ -169,7 +169,9 @@ func NewRootCmd(ver string) *cobra.Command {
 		NewConfigValidateCmd(),
 	)
 
-	cmd.AddCommand(costCmd, pluginCmd, configCmd)
+	analyzerCmd := NewAnalyzerCmd()
+
+	cmd.AddCommand(costCmd, pluginCmd, configCmd, analyzerCmd)
 
 	return cmd
 }

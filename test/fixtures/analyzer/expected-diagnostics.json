@@ -1,0 +1,57 @@
+{
+  "description": "Expected diagnostics for sample-stack.json",
+  "diagnostics": [
+    {
+      "policyName": "cost-estimate",
+      "policyPackName": "pulumicost",
+      "urn": "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+      "enforcementLevel": "ADVISORY",
+      "severity": "LOW",
+      "message_pattern": "Estimated Monthly Cost: \\$[0-9]+\\.[0-9]{2} USD"
+    },
+    {
+      "policyName": "cost-estimate",
+      "policyPackName": "pulumicost",
+      "urn": "urn:pulumi:dev::myapp::aws:rds/instance:Instance::database",
+      "enforcementLevel": "ADVISORY",
+      "severity": "LOW",
+      "message_pattern": "Estimated Monthly Cost: \\$[0-9]+\\.[0-9]{2} USD"
+    },
+    {
+      "policyName": "cost-estimate",
+      "policyPackName": "pulumicost",
+      "urn": "urn:pulumi:dev::myapp::aws:s3/bucket:Bucket::assets",
+      "enforcementLevel": "ADVISORY",
+      "severity": "LOW",
+      "message_pattern": "Estimated Monthly Cost: \\$[0-9]+\\.[0-9]{2} USD"
+    },
+    {
+      "policyName": "cost-estimate",
+      "policyPackName": "pulumicost",
+      "urn": "urn:pulumi:prod::api::azure:compute/virtualMachine:VirtualMachine::apiserver",
+      "enforcementLevel": "ADVISORY",
+      "severity": "LOW",
+      "message_pattern": "Estimated Monthly Cost: \\$[0-9]+\\.[0-9]{2} USD"
+    },
+    {
+      "policyName": "stack-cost-summary",
+      "policyPackName": "pulumicost",
+      "urn": "",
+      "enforcementLevel": "ADVISORY",
+      "severity": "LOW",
+      "message_pattern": "Total Estimated Monthly Cost: \\$[0-9]+\\.[0-9]{2} USD \\([0-9]+ resources analyzed\\)"
+    }
+  ],
+  "notes": {
+    "pulumi_stack_ignored": "pulumi:pulumi:Stack resources are infrastructure metadata and not costed",
+    "severity_levels": {
+      "LOW": "Successful cost calculation",
+      "MEDIUM": "Fallback or partial data used",
+      "HIGH": "Future: significant cost increase warning",
+      "CRITICAL": "Future: budget threshold exceeded"
+    },
+    "enforcement_levels": {
+      "ADVISORY": "All cost diagnostics in MVP (never blocks deployment)"
+    }
+  }
+}

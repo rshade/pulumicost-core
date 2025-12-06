@@ -4,8 +4,9 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ## Active Technologies
 - Local Pulumi state (ephemeral), no persistent DB. (010-e2e-cost-testing)
+- N/A (Stateless operation) (008-analyzer-plugin)
 
-- Go 1.25
+- Go 1.25.5
 - `github.com/rshade/pulumicost-spec`
 - `google.golang.org/grpc` (002-implement-supports-handler)
 
@@ -59,3 +60,5 @@ Go 1.24.10: Follow standard conventions
 - 010-e2e-cost-testing: Added Go 1.25
 - 010-e2e-cost-testing: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 010-e2e-cost-testing: Added Go 1.25
+- 008-analyzer-plugin: Added Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra`
+- 008-analyzer-plugin: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
