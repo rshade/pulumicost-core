@@ -62,7 +62,9 @@ type MappingResult struct {
 //   - Type: Direct copy from r.Type
 //   - ID: Extracted from URN (last :: segment)
 //   - Provider: Extracted from provider resource type or resource type prefix
-//   - Properties: Converted from protobuf Struct to Go map
+// MapResource converts a Pulumi analyzer resource into an engine.ResourceDescriptor.
+// The returned ResourceDescriptor has Type set from the resource type, ID extracted from the resource URN, Provider derived from the resource provider or type, and Properties converted from the resource's protobuf Struct.
+// The input r must be non-nil.
 func MapResource(r *pulumirpc.AnalyzerResource) engine.ResourceDescriptor {
 	return engine.ResourceDescriptor{
 		Type:       r.GetType(),
@@ -79,7 +81,9 @@ func MapResource(r *pulumirpc.AnalyzerResource) engine.ResourceDescriptor {
 // (the resource is included with best-effort field extraction).
 //
 // Note: This function skips nil resources silently. Use MapResourcesWithErrors
-// for explicit error tracking.
+// MapResources converts a slice of Pulumi analyzer resources into a slice of engine.ResourceDescriptor.
+// It maps each non-nil resource in the input in order and skips any nil entries.
+// If the input slice is empty, MapResources returns nil.
 func MapResources(resources []*pulumirpc.AnalyzerResource) []engine.ResourceDescriptor {
 	if len(resources) == 0 {
 		return nil
@@ -102,7 +106,11 @@ func MapResources(resources []*pulumirpc.AnalyzerResource) []engine.ResourceDesc
 // for diagnostics or debugging.
 //
 // Graceful degradation: nil resources are skipped and counted, valid
-// resources are always processed regardless of failures on other resources.
+// MapResourcesWithErrors maps a slice of AnalyzerResource values into a MappingResult containing successfully mapped
+// resource descriptors and per-resource mapping errors.
+// MapResourcesWithErrors treats nil slice entries as skipped: each nil entry increments Skipped and appends a
+// MappingError (with Err set to ErrNilResource and Index set to the entry position). Non-nil entries are converted
+// via MapResource and appended to Resources. The Errors slice records any per-item issues with their input index.
 func MapResourcesWithErrors(resources []*pulumirpc.AnalyzerResource) MappingResult {
 	result := MappingResult{
 		Resources: make([]engine.ResourceDescriptor, 0, len(resources)),
@@ -134,7 +142,10 @@ func MapResourcesWithErrors(resources []*pulumirpc.AnalyzerResource) MappingResu
 //   - "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver" → "webserver"
 //   - "urn:pulumi:prod::api::azure:compute/vm:VM::api-server-01" → "api-server-01"
 //   - "" → ""
-//   - "no-separators" → "no-separators"
+// extractResourceID extracts the resource name portion from a Pulumi URN.
+// If urn is empty it returns an empty string. If urn contains "::" separators,
+// it returns the last segment after the final "::"; otherwise it returns the
+// original urn.
 func extractResourceID(urn string) string {
 	if urn == "" {
 		return ""
@@ -155,7 +166,13 @@ func extractResourceID(urn string) string {
 //  2. Fall back to extracting from the resource type prefix
 //     (format: "aws:ec2/instance:Instance" → "aws")
 //
-// If neither extraction succeeds, returns "unknown".
+// extractProvider extracts the provider name for the given AnalyzerResource.
+// It first attempts to read the resource's Provider.Type and, if formatted like "pulumi:providers:aws",
+// returns the third colon-separated segment ("aws").
+// If that fails, it falls back to the resource type prefix (the substring before the first ":" in the resource type,
+// e.g. "aws" from "aws:ec2/instance:Instance").
+// If neither method yields a provider, it returns "unknown".
+// r is the AnalyzerResource to inspect.
 func extractProvider(r *pulumirpc.AnalyzerResource) string {
 	// Try provider resource first
 	if p := r.GetProvider(); p != nil {
@@ -194,7 +211,9 @@ func extractProvider(r *pulumirpc.AnalyzerResource) string {
 //   - ListValue → []interface{}
 //   - Struct → map[string]interface{}
 //
-// Returns an empty map if the input is nil.
+// structToMap converts a protobuf Struct into a native Go map[string]interface{}.
+// If s is nil, it returns an empty map.
+// The returned map contains native Go representations of protobuf values (nil as nil, booleans, numbers, strings, lists as []interface{}, and nested structs as map[string]interface{}).
 func structToMap(s *structpb.Struct) map[string]interface{} {
 	if s == nil {
 		return make(map[string]interface{})

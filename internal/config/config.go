@@ -129,7 +129,7 @@ type AnalyzerPlugin struct {
 
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
-// By default, config errors are logged as warnings and defaults are used.
+// Environment variable overrides are applied to the configuration before it is returned.
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
@@ -200,7 +200,8 @@ func New() *Config {
 }
 
 // NewStrict creates a new configuration with strict error handling.
-// It returns an error instead of using defaults if the config file exists but cannot be parsed.
+// NewStrict creates a default Config initialized from the user's home directory, attempts to load and parse the config file at ~/.pulumicost/config.yaml, applies environment overrides, and validates the result.
+// If the config file is missing, defaults are used; if the file cannot be parsed or validation fails, NewStrict returns an error. Permission errors when reading the file also cause an immediate error.
 func NewStrict() (*Config, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

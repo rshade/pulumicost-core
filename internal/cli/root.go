@@ -23,7 +23,10 @@ var logger zerolog.Logger //nolint:gochecknoglobals // Required for zerolog cont
 //
 // It returns the fully constructed *cobra.Command ready to be executed.
 //
-//nolint:funlen // CLI root command requires comprehensive configuration
+// NewRootCmd creates the root Cobra command for the pulumicost CLI, configures logging and runtime
+// context (trace and audit loggers), and registers top-level subcommands (cost, plugin, config, analyzer).
+// The ver argument is used as the command's version string. The returned *cobra.Command is ready for
+// execution and includes persistent pre- and post-run hooks to initialize and clean up logging resources.
 func NewRootCmd(ver string) *cobra.Command {
 	// Track log result for cleanup in PersistentPostRunE.
 	var logResult *logging.LogPathResult

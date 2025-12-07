@@ -7,7 +7,10 @@ import (
 // NewAnalyzerCmd creates the analyzer command group for Pulumi Analyzer plugin functionality.
 //
 // The analyzer command provides subcommands for running PulumiCost as a Pulumi Analyzer plugin.
-// This enables zero-click cost estimation during `pulumi preview` operations.
+// NewAnalyzerCmd creates the "analyzer" Cobra command group for the Pulumi Analyzer plugin.
+// The command provides help text and examples for running PulumiCost as an analyzer (for
+// example, the "serve" subcommand) so the analyzer can perform cost estimation during
+// `pulumi preview` operations. It returns a configured *cobra.Command containing those subcommands.
 func NewAnalyzerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "analyzer",

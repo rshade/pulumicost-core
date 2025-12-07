@@ -23,7 +23,20 @@ const (
 //   - Severity based on data availability
 //
 // Per FR-005, all diagnostics use ADVISORY enforcement level to ensure
-// cost estimation never blocks deployments in MVP mode.
+// CostToDiagnostic converts a CostResult into a Pulumi AnalyzeDiagnostic for a single resource.
+// 
+// The diagnostic uses the "pulumicost" policy pack and the "cost-estimate" policy name, is emitted
+// at the ADVISORY enforcement level, and is attributed to the provided resource URN. By default the
+// diagnostic severity is POLICY_SEVERITY_LOW; if the cost has no monthly estimate but contains notes,
+// severity is elevated to POLICY_SEVERITY_MEDIUM to indicate partial or fallback estimation.
+// 
+// Parameters:
+//   - cost: the engine.CostResult to represent in the diagnostic.
+//   - urn: the resource URN to attribute the diagnostic to.
+//   - version: the policy pack version to include in the diagnostic metadata.
+// 
+// Returns:
+//   - A pointer to a pulumirpc.AnalyzeDiagnostic describing the estimated resource cost.
 func CostToDiagnostic(cost engine.CostResult, urn string, version string) *pulumirpc.AnalyzeDiagnostic {
 	message := formatCostMessage(cost)
 	severity := pulumirpc.PolicySeverity_POLICY_SEVERITY_LOW
@@ -53,7 +66,16 @@ func CostToDiagnostic(cost engine.CostResult, urn string, version string) *pulum
 //   - Count of resources successfully analyzed
 //   - Currency (defaults to USD)
 //
-// The summary diagnostic has no URN (it's stack-level, not resource-specific).
+// StackSummaryDiagnostic returns a stack-level AnalyzeDiagnostic that summarizes the total estimated
+// monthly cost across the provided CostResult slice.
+// 
+// The `costs` parameter is a slice of engine.CostResult used to compute the aggregated monthly total,
+// the currency (the last non-empty currency encountered), and the number of resources with a monthly
+// estimate greater than zero. The `version` parameter is recorded as the PolicyPackVersion in the
+// resulting diagnostic.
+// 
+// The returned *pulumirpc.AnalyzeDiagnostic represents a stack-level summary (no URN), uses an
+// ADVISORY enforcement level, and is assigned low policy severity.
 func StackSummaryDiagnostic(costs []engine.CostResult, version string) *pulumirpc.AnalyzeDiagnostic {
 	var totalMonthly float64
 	currency := "USD"
@@ -89,7 +111,8 @@ func StackSummaryDiagnostic(costs []engine.CostResult, version string) *pulumirp
 // Message formats:
 //   - With cost: "Estimated Monthly Cost: $X.XX USD (source: adapter-name)"
 //   - Zero cost with notes: Returns the notes directly
-//   - Zero cost no notes: "Unable to estimate cost"
+// formatCostMessage returns a human-readable message describing the estimated monthly cost for the given CostResult.
+// If `Monthly` is greater than zero the message includes the dollar amount, currency, and adapter source; if `Monthly` is zero and `Notes` is non-empty it returns `Notes`; otherwise it returns "Unable to estimate cost".
 func formatCostMessage(cost engine.CostResult) string {
 	if cost.Monthly > 0 {
 		return fmt.Sprintf("Estimated Monthly Cost: $%.2f %s (source: %s)",
@@ -111,7 +134,12 @@ func formatCostMessage(cost engine.CostResult) string {
 //   - Invalid resource data
 //
 // Per FR-005, all diagnostics use ADVISORY enforcement to never block
-// deployments in MVP mode.
+// WarningDiagnostic creates an AnalyzeDiagnostic representing a non-critical cost estimation warning.
+// WarningDiagnostic sets the policy name to "cost-estimate", the policy pack name to "pulumicost",
+// the enforcement level to ADVISORY, and the severity to MEDIUM.
+// message is the user-facing diagnostic message, urn is the resource URN to attribute the diagnostic to,
+// and version is the policy pack version used in the diagnostic.
+// The returned value is a configured *pulumirpc.AnalyzeDiagnostic ready to be reported by the Pulumi engine.
 func WarningDiagnostic(message, urn, version string) *pulumirpc.AnalyzeDiagnostic {
 	return &pulumirpc.AnalyzeDiagnostic{
 		PolicyName:        policyNameCost,

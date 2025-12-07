@@ -25,7 +25,14 @@ import (
 // It binds to a random TCP port and prints ONLY the port number to stdout
 // (this is the handshake protocol with Pulumi engine).
 //
-// All logging goes to stderr to avoid breaking the handshake.
+// NewAnalyzerServeCmd returns a Cobra command that starts the Pulumi Analyzer gRPC server.
+// 
+// The command is intended to be invoked by the Pulumi engine when the analyzer is
+// configured in a project's Pulumi.yaml. It binds to a random available TCP port,
+// prints only the chosen port number to stdout for the Pulumi handshake, starts the
+// gRPC server to serve analyzer requests, and handles SIGINT/SIGTERM for graceful
+// shutdown. All logging is written to stderr so stdout remains reserved for the
+// port handshake.
 func NewAnalyzerServeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
@@ -55,7 +62,7 @@ All logging output goes to stderr.`,
 	return cmd
 }
 
-// runAnalyzerServe executes the analyzer serve command.
+// encounters a serving error.
 func runAnalyzerServe(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 

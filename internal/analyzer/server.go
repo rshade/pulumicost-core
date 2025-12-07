@@ -62,7 +62,7 @@ type Server struct {
 //   - calculator: The cost calculation engine to use for estimating costs
 //   - version: The version string for this analyzer plugin
 //
-// If version is empty, it defaults to "0.0.0-dev".
+// version is an empty string, it defaults to "0.0.0-dev".
 func NewServer(calculator CostCalculator, version string) *Server {
 	if version == "" {
 		version = defaultVersion
