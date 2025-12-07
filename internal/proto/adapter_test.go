@@ -509,3 +509,169 @@ func TestClientAdapter_GetActualCost(t *testing.T) {
 		}
 	})
 }
+
+// TestExtractSKUFromProperties tests the SKU extraction function.
+func TestExtractSKUFromProperties(t *testing.T) {
+	tests := []struct {
+		name       string
+		properties map[string]string
+		expected   string
+	}{
+		{
+			name:       "EC2 instance with instanceType",
+			properties: map[string]string{"instanceType": "t3.micro"},
+			expected:   "t3.micro",
+		},
+		{
+			name:       "EBS volume with type",
+			properties: map[string]string{"type": "gp3"},
+			expected:   "gp3",
+		},
+		{
+			name:       "EBS volume with volumeType",
+			properties: map[string]string{"volumeType": "gp2"},
+			expected:   "gp2",
+		},
+		{
+			name:       "RDS instance with instanceClass",
+			properties: map[string]string{"instanceClass": "db.t3.micro"},
+			expected:   "db.t3.micro",
+		},
+		{
+			name:       "explicit sku property",
+			properties: map[string]string{"sku": "Standard_DS1_v2"},
+			expected:   "Standard_DS1_v2",
+		},
+		{
+			name:       "Azure size property",
+			properties: map[string]string{"size": "Standard_B1s"},
+			expected:   "Standard_B1s",
+		},
+		{
+			name:       "Lambda runtime",
+			properties: map[string]string{"runtime": "python3.9"},
+			expected:   "python3.9",
+		},
+		{
+			name:       "tier property",
+			properties: map[string]string{"tier": "Premium"},
+			expected:   "Premium",
+		},
+		{
+			name:       "instanceType takes precedence over type",
+			properties: map[string]string{"instanceType": "t3.micro", "type": "gp3"},
+			expected:   "t3.micro",
+		},
+		{
+			name:       "empty properties returns empty string",
+			properties: map[string]string{},
+			expected:   "",
+		},
+		{
+			name:       "nil properties returns empty string",
+			properties: nil,
+			expected:   "",
+		},
+		{
+			name:       "empty value for instanceType skips to next",
+			properties: map[string]string{"instanceType": "", "type": "gp3"},
+			expected:   "gp3",
+		},
+		{
+			name:       "irrelevant properties returns empty string",
+			properties: map[string]string{"bucketName": "my-bucket", "acl": "private"},
+			expected:   "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSKUFromProperties(tt.properties)
+			if result != tt.expected {
+				t.Errorf("extractSKUFromProperties() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestExtractRegionFromProperties tests the region extraction function.
+func TestExtractRegionFromProperties(t *testing.T) {
+	tests := []struct {
+		name       string
+		properties map[string]string
+		envVars    map[string]string
+		expected   string
+	}{
+		{
+			name:       "extract from availabilityZone with suffix",
+			properties: map[string]string{"availabilityZone": "us-east-1a"},
+			expected:   "us-east-1",
+		},
+		{
+			name:       "extract from availabilityZone with suffix b",
+			properties: map[string]string{"availabilityZone": "eu-west-2b"},
+			expected:   "eu-west-2",
+		},
+		{
+			name:       "extract from availabilityZone with suffix f",
+			properties: map[string]string{"availabilityZone": "ap-southeast-1f"},
+			expected:   "ap-southeast-1",
+		},
+		{
+			name:       "extract from availabilityZone with suffix g",
+			properties: map[string]string{"availabilityZone": "us-east-1g"},
+			expected:   "us-east-1",
+		},
+		{
+			name:       "explicit region property",
+			properties: map[string]string{"region": "us-west-2"},
+			expected:   "us-west-2",
+		},
+		{
+			name:       "availabilityZone takes precedence over region",
+			properties: map[string]string{"availabilityZone": "us-east-1a", "region": "us-west-2"},
+			expected:   "us-east-1",
+		},
+		{
+			name:       "fallback to AWS_REGION env var",
+			properties: map[string]string{},
+			envVars:    map[string]string{"AWS_REGION": "eu-central-1"},
+			expected:   "eu-central-1",
+		},
+		{
+			name:       "fallback to AWS_DEFAULT_REGION env var",
+			properties: map[string]string{},
+			envVars:    map[string]string{"AWS_DEFAULT_REGION": "ap-northeast-1"},
+			expected:   "ap-northeast-1",
+		},
+		{
+			name:       "empty properties and no env vars returns empty string",
+			properties: map[string]string{},
+			expected:   "",
+		},
+		{
+			name:       "availabilityZone without letter suffix returns as-is",
+			properties: map[string]string{"availabilityZone": "local-zone-1"},
+			expected:   "local-zone-1",
+		},
+		{
+			name:       "empty availabilityZone falls back to region",
+			properties: map[string]string{"availabilityZone": "", "region": "us-east-1"},
+			expected:   "us-east-1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up environment variables for this test
+			for key, val := range tt.envVars {
+				t.Setenv(key, val)
+			}
+
+			result := extractRegionFromProperties(tt.properties)
+			if result != tt.expected {
+				t.Errorf("extractRegionFromProperties() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}

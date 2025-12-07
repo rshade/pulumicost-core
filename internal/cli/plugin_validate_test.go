@@ -14,6 +14,8 @@ import (
 )
 
 func TestNewPluginValidateCmd(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -56,6 +58,8 @@ func TestNewPluginValidateCmd(t *testing.T) {
 }
 
 func TestPluginValidateCmdFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginValidateCmd()
 
 	// Check plugin flag
@@ -67,6 +71,8 @@ func TestPluginValidateCmdFlags(t *testing.T) {
 }
 
 func TestPluginValidateCmdHelp(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginValidateCmd()
 	cmd.SetOut(&buf)
@@ -83,6 +89,8 @@ func TestPluginValidateCmdHelp(t *testing.T) {
 }
 
 func TestPluginValidateCmdExamples(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginValidateCmd()
 
 	// Check that examples are present
@@ -94,6 +102,8 @@ func TestPluginValidateCmdExamples(t *testing.T) {
 }
 
 func TestValidatePlugin(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 

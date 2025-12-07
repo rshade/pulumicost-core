@@ -13,6 +13,8 @@ import (
 
 // TestPluginListCmd_NoPlugins tests listing with no plugins installed.
 func TestPluginListCmd_NoPlugins(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	var out bytes.Buffer
@@ -29,6 +31,8 @@ func TestPluginListCmd_NoPlugins(t *testing.T) {
 
 // TestPluginListCmd_WithPlugins tests listing with mock plugins.
 func TestPluginListCmd_WithPlugins(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create temporary plugin directory structure
 	tempDir := t.TempDir()
 	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
@@ -61,6 +65,8 @@ func TestPluginListCmd_WithPlugins(t *testing.T) {
 
 // TestPluginValidateCmd_NoPlugins tests validation with no plugins.
 func TestPluginValidateCmd_NoPlugins(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginValidateCmd()
 
 	var out bytes.Buffer
@@ -77,6 +83,8 @@ func TestPluginValidateCmd_NoPlugins(t *testing.T) {
 
 // TestPluginValidateCmd_ValidPlugin tests validation with valid plugin.
 func TestPluginValidateCmd_ValidPlugin(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
 	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
@@ -107,6 +115,8 @@ func TestPluginValidateCmd_ValidPlugin(t *testing.T) {
 
 // TestPluginValidateCmd_NonExecutable tests validation skips non-executable files.
 func TestPluginValidateCmd_NonExecutable(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
 	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
@@ -137,6 +147,8 @@ func TestPluginValidateCmd_NonExecutable(t *testing.T) {
 
 // TestPluginListCmd_VerboseOutput tests verbose output for plugin list.
 func TestPluginListCmd_VerboseOutput(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
 	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")

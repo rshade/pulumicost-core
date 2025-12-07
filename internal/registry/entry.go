@@ -11,16 +11,31 @@ import (
 //
 //nolint:revive // type stuttering is acceptable for clarity
 type RegistryEntry struct {
-	Name               string   `json:"name"`
-	Description        string   `json:"description"`
-	Repository         string   `json:"repository"`
-	Author             string   `json:"author"`
-	License            string   `json:"license"`
-	Homepage           string   `json:"homepage"`
-	SupportedProviders []string `json:"supported_providers"`
-	Capabilities       []string `json:"capabilities"`
-	SecurityLevel      string   `json:"security_level"`
-	MinSpecVersion     string   `json:"min_spec_version"`
+	Name               string              `json:"name"`
+	Description        string              `json:"description"`
+	Repository         string              `json:"repository"`
+	Author             string              `json:"author"`
+	License            string              `json:"license"`
+	Homepage           string              `json:"homepage"`
+	SupportedProviders []string            `json:"supported_providers"`
+	Capabilities       []string            `json:"capabilities"`
+	SecurityLevel      string              `json:"security_level"`
+	MinSpecVersion     string              `json:"min_spec_version"`
+	AssetHints         *RegistryAssetHints `json:"asset_hints,omitempty"`
+}
+
+// RegistryAssetHints provides hints for asset naming conventions specific to a plugin.
+//
+//nolint:revive // name matches JSON field convention in registry.json
+type RegistryAssetHints struct {
+	// AssetPrefix is the project name prefix used in asset filenames
+	// (e.g., "pulumicost-plugin-aws-public" for assets named
+	// "pulumicost-plugin-aws-public_0.0.6_Linux_x86_64.tar.gz")
+	AssetPrefix string `json:"asset_prefix,omitempty"`
+	// DefaultRegion is the region suffix to use when downloading (e.g., "us-east-1")
+	DefaultRegion string `json:"default_region,omitempty"`
+	// VersionPrefix indicates if the version in asset names has a "v" prefix
+	VersionPrefix bool `json:"version_prefix,omitempty"`
 }
 
 // PluginSpecifier represents a parsed plugin specifier (name or URL with optional version).

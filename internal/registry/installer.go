@@ -37,6 +37,18 @@ type Installer struct {
 	pluginDir string
 }
 
+// convertToAssetNamingHints converts registry asset hints to the GitHub client format.
+func convertToAssetNamingHints(hints *RegistryAssetHints) *AssetNamingHints {
+	if hints == nil {
+		return nil
+	}
+	return &AssetNamingHints{
+		AssetPrefix:   hints.AssetPrefix,
+		Region:        hints.DefaultRegion,
+		VersionPrefix: hints.VersionPrefix,
+	}
+}
+
 // NewInstaller creates a new Installer configured to install plugins into pluginDir.
 // If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the home
 // directory cannot be determined, the default is "./.pulumicost/plugins" relative to
@@ -135,8 +147,11 @@ func (i *Installer) installFromRegistry(
 		return nil, fmt.Errorf("failed to get release: %w", err)
 	}
 
+	// Convert registry hints to asset hints
+	assetHints := convertToAssetNamingHints(entry.AssetHints)
+
 	// Install the release
-	result, err := i.installRelease(spec.Name, release, entry.Repository, opts, progress)
+	result, err := i.installRelease(spec.Name, release, entry.Repository, opts, progress, assetHints)
 	if err != nil {
 		return nil, err
 	}
@@ -169,9 +184,9 @@ func (i *Installer) installFromURL(
 		return nil, fmt.Errorf("failed to get release: %w", err)
 	}
 
-	// Install the release
+	// Install the release (no hints for URL-based installs)
 	repository := fmt.Sprintf("%s/%s", spec.Owner, spec.Repo)
-	result, err := i.installRelease(spec.Name, release, repository, opts, progress)
+	result, err := i.installRelease(spec.Name, release, repository, opts, progress, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +205,7 @@ func (i *Installer) installRelease(
 	repository string,
 	opts InstallOptions,
 	progress func(msg string),
+	hints *AssetNamingHints,
 ) (*InstallResult, error) {
 	version := release.TagName
 
@@ -205,8 +221,8 @@ func (i *Installer) installRelease(
 		return nil, fmt.Errorf("plugin %s@%s already installed. Use --force to reinstall", name, version)
 	}
 
-	// Find platform-specific asset
-	asset, err := FindPlatformAsset(release, name)
+	// Find platform-specific asset (use hints if provided)
+	asset, err := FindPlatformAssetWithHints(release, name, hints)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +401,7 @@ type UpdateResult struct {
 
 // Update updates an installed plugin to the latest or specified version.
 //
-//nolint:gocognit,funlen // Complex but necessary update logic with version comparison
+//nolint:gocognit // Complex but necessary update logic with version comparison
 func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg string)) (*UpdateResult, error) {
 	// Get installed plugin info
 	installed, err := config.GetInstalledPlugin(name)
@@ -394,22 +410,9 @@ func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg st
 	}
 
 	// Look up in registry first, then try as URL
-	var owner, repo string
-	entry, err := GetPlugin(name)
-	if err == nil { //nolint:gocritic // if-else chain is clear here
-		owner, repo, err = parseOwnerRepo(entry.Repository)
-		if err != nil {
-			return nil, err
-		}
-	} else if installed.URL != "" {
-		// Parse URL from installed config
-		urlParts := strings.TrimPrefix(installed.URL, "github.com/")
-		owner, repo, err = parseOwnerRepo(urlParts)
-		if err != nil {
-			return nil, fmt.Errorf("cannot determine repository for plugin %q", name)
-		}
-	} else {
-		return nil, fmt.Errorf("cannot find repository for plugin %q", name)
+	owner, repo, assetHints, err := i.resolvePluginSource(name, installed.URL)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get target version
@@ -482,7 +485,7 @@ func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg st
 	}
 
 	repository := fmt.Sprintf("%s/%s", owner, repo)
-	result, err := i.installRelease(name, release, repository, installOpts, progress)
+	result, err := i.installRelease(name, release, repository, installOpts, progress, assetHints)
 	if err != nil {
 		return nil, err
 	}
@@ -506,6 +509,39 @@ func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg st
 		NewVersion: newVersion,
 		Path:       result.Path,
 	}, nil
+}
+
+// resolvePluginSource resolves the GitHub owner, repo, and asset hints for a plugin.
+// It first looks up the plugin in the embedded registry. If not found, it parses
+// the installed URL to extract owner and repo. Returns an error if neither lookup
+// succeeds.
+func (i *Installer) resolvePluginSource(name, installedURL string) (string, string, *AssetNamingHints, error) {
+	// Try registry first
+	entry, err := GetPlugin(name)
+	if err == nil {
+		// Found in registry - parse owner/repo and get hints
+		owner, repo, parseErr := parseOwnerRepo(entry.Repository)
+		if parseErr != nil {
+			return "", "", nil, parseErr
+		}
+		hints := convertToAssetNamingHints(entry.AssetHints)
+		return owner, repo, hints, nil
+	}
+
+	// Not in registry - try parsing installed URL
+	if installedURL == "" {
+		return "", "", nil, fmt.Errorf("plugin %q not found in registry and no URL available", name)
+	}
+
+	// Remove github.com/ prefix if present
+	urlPath := strings.TrimPrefix(installedURL, "github.com/")
+	owner, repo, parseErr := parseOwnerRepo(urlPath)
+	if parseErr != nil {
+		return "", "", nil, fmt.Errorf("failed to parse plugin URL %q: %w", installedURL, parseErr)
+	}
+
+	// URL-based plugins have no hints
+	return owner, repo, nil, nil
 }
 
 // RemoveOptions configures plugin removal behavior.

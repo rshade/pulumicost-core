@@ -12,7 +12,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
+.PHONY: all build test test-race test-e2e lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
 
 all: build
 
@@ -31,7 +31,7 @@ test-race:
 
 test-e2e:
 	@echo "Running E2E tests..."
-	cd test/e2e && go test -v -tags e2e -timeout 60m ./... $(TEST_ARGS)
+	./test/e2e/run-e2e-tests.sh $(TEST_ARGS)
 
 lint:
 	@echo "Running golangci-lint (expected version $(GOLANGCI_LINT_VERSION))..."
@@ -103,6 +103,8 @@ help:
 	@echo "Available targets:"
 	@echo "  build        - Build the binary"
 	@echo "  test         - Run tests"
+	@echo "  test-race    - Run tests with race detector"
+	@echo "  test-e2e     - Run E2E tests against real AWS infrastructure"
 	@echo "  lint         - Run Go + Markdown linters"
 	@echo "  validate     - Run validation (go mod, vet, format)"
 	@echo "  clean        - Clean build artifacts"
@@ -115,5 +117,10 @@ help:
 	@echo "  docs-build   - Build documentation site"
 	@echo "  docs-serve   - Serve documentation locally (http://localhost:4000)"
 	@echo "  docs-validate- Validate documentation structure"
+	@echo ""
+	@echo "E2E test options (make test-e2e TEST_ARGS='...'):"
+	@echo "  -run TestName - Run specific test"
+	@echo "  -short        - Run without verbose output"
+	@echo "  -timeout N    - Set timeout to N minutes"
 	@echo ""
 	@echo "  help         - Show this help message"

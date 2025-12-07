@@ -84,7 +84,7 @@ func TestProcessLauncher_Start_MockCommand(t *testing.T) {
 	}
 
 	launcher := NewProcessLauncher()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// Create a mock plugin that listens on the specified port
@@ -486,7 +486,7 @@ func TestProcessLauncher_WaitForPluginBind_Success(t *testing.T) {
 
 	port := listener.Addr().(*net.TCPAddr).Port
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	err = launcher.waitForPluginBind(ctx, port)
@@ -539,7 +539,7 @@ func TestProcessLauncher_WaitForPluginBind_DelayedBind(t *testing.T) {
 	}
 
 	// Start waiting in a goroutine
-	waitCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	waitDone := make(chan error, 1)

@@ -11,6 +11,9 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -44,15 +47,15 @@ type GitHubClient struct {
 	token      string
 }
 
-// NewGitHubClient returns a GitHubClient configured with a 30-second HTTP timeout.
-// The client will include an authentication token obtained from the GITHUB_TOKEN
 // NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
-// The client has an HTTP client with a 30-second timeout and BaseURL set to https://api.github.com.
-// It initializes the authentication token by reading GITHUB_TOKEN or, if unset, attempting to obtain it from the `gh` CLI.
+// The client has an HTTP client with a 5-minute timeout (for large plugin downloads) and
+// BaseURL set to https://api.github.com. It initializes the authentication token by reading
+// GITHUB_TOKEN or, if unset, attempting to obtain it from the `gh` CLI.
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{
-		HTTPClient: &http.Client{Timeout: 30 * time.Second}, //nolint:mnd // timeout in seconds
+		// Use 5 minute timeout for large plugin downloads (15MB+)
+		HTTPClient: &http.Client{Timeout: 5 * time.Minute}, //nolint:mnd // timeout for large downloads
 		BaseURL:    "https://api.github.com",
 		token:      token,
 	}
@@ -94,8 +97,9 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 	var lastErr error
 	for attempt := range 3 {
 		if attempt > 0 {
-			// Exponential backoff: 1s, 2s, 4s
-			time.Sleep(time.Duration(1<<attempt) * time.Second / 2) //nolint:mnd // backoff calculation
+			// Exponential backoff: 500ms, 1s, 2s
+			backoffDivisor := 2
+			time.Sleep(time.Duration(1<<attempt) * time.Second / time.Duration(backoffDivisor))
 		}
 
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -120,7 +124,9 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 		}
 		if resp.StatusCode == http.StatusForbidden {
 			_ = resp.Body.Close()
-			return nil, errors.New("GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits")
+			return nil, errors.New(
+				"GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits",
+			)
 		}
 		if resp.StatusCode >= http.StatusInternalServerError {
 			_ = resp.Body.Close()
@@ -144,10 +150,35 @@ func (c *GitHubClient) fetchRelease(url string) (*GitHubRelease, error) {
 }
 
 // FindPlatformAsset locates the release asset matching the current OS and architecture for the given project.
-// It expects assets named "{project}_{version}_{os}_{arch}.{ext}" where ext is ".zip" on Windows and ".tar.gz" otherwise.
+// It tries multiple naming conventions to handle different GoReleaser configurations:
+//   - Standard: {project}_{version}_{os}_{arch}.{ext}
+//   - Capitalized OS: {project}_{version}_{Os}_{arch}.{ext}
+//   - x86_64 arch: {project}_{version}_{os}_x86_64.{ext}
+//   - Region-specific: {project}_{version}_{Os}_{arch}_{region}.{ext}
+//
 // release is the GitHubRelease to search; projectName is the project name used in asset filenames.
 // It returns the matching ReleaseAsset or an error that includes the available asset names when no match is found.
 func FindPlatformAsset(release *GitHubRelease, projectName string) (*ReleaseAsset, error) {
+	return FindPlatformAssetWithHints(release, projectName, nil)
+}
+
+// AssetNamingHints provides hints for matching assets with non-standard naming conventions.
+type AssetNamingHints struct {
+	// AssetPrefix is the project name prefix used in asset filenames
+	// (e.g., "pulumicost-plugin-aws-public" instead of just "aws-public")
+	AssetPrefix string
+	// Region specifies a region suffix to match (e.g., "us-east-1")
+	Region string
+	// VersionPrefix if false, version in asset name has no "v" prefix
+	VersionPrefix bool
+}
+
+// FindPlatformAssetWithHints locates the release asset with custom naming hints.
+func FindPlatformAssetWithHints(
+	release *GitHubRelease,
+	projectName string,
+	hints *AssetNamingHints,
+) (*ReleaseAsset, error) {
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 
@@ -157,14 +188,17 @@ func FindPlatformAsset(release *GitHubRelease, projectName string) (*ReleaseAsse
 		ext = extZip
 	}
 
-	// Build expected asset name pattern
-	// Format: {projectname}_{version}_{os}_{arch}.{format}
 	version := release.TagName
-	expectedName := fmt.Sprintf("%s_%s_%s_%s%s", projectName, version, goos, goarch, ext)
 
-	for i := range release.Assets {
-		if release.Assets[i].Name == expectedName {
-			return &release.Assets[i], nil
+	// Build list of patterns to try (in order of preference)
+	patterns := buildAssetPatterns(projectName, version, goos, goarch, ext, hints)
+
+	// Try each pattern
+	for _, pattern := range patterns {
+		for i := range release.Assets {
+			if matchesAssetPattern(release.Assets[i].Name, pattern) {
+				return &release.Assets[i], nil
+			}
 		}
 	}
 
@@ -177,10 +211,93 @@ func FindPlatformAsset(release *GitHubRelease, projectName string) (*ReleaseAsse
 	return nil, fmt.Errorf("no asset found for %s/%s. Available: %v", goos, goarch, available)
 }
 
+// buildAssetPatterns generates a list of asset name patterns to try.
+//
+//nolint:gocognit // Complexity is necessary to handle all naming convention variations
+func buildAssetPatterns(
+	projectName, version, goos, goarch, ext string,
+	hints *AssetNamingHints,
+) []string {
+	// Project name variations (use asset prefix if provided)
+	projectNames := []string{projectName}
+	if hints != nil && hints.AssetPrefix != "" && hints.AssetPrefix != projectName {
+		// Try asset prefix first (more specific)
+		projectNames = []string{hints.AssetPrefix, projectName}
+	}
+
+	// OS name variations
+	titleCaser := cases.Title(language.Und)
+	osNames := []string{
+		goos,                                 // linux, darwin, windows
+		titleCaser.String(goos),              // Linux, Darwin, Windows
+		strings.ToUpper(goos[:1]) + goos[1:], // Linux, Darwin, Windows (manual title case)
+	}
+	if goos == "darwin" {
+		osNames = append(osNames, "Darwin", "macos", "macOS", "MacOS")
+	}
+
+	// Architecture variations
+	archNames := []string{goarch} // amd64, arm64
+	if goarch == "amd64" {
+		archNames = append(archNames, "x86_64", "X86_64", "AMD64")
+	}
+	if goarch == "arm64" {
+		archNames = append(archNames, "ARM64", "aarch64", "AARCH64")
+	}
+
+	// Version variations (with and without v prefix)
+	versions := []string{version}
+	if strings.HasPrefix(version, "v") {
+		versions = append(versions, strings.TrimPrefix(version, "v"))
+	} else {
+		versions = append(versions, "v"+version)
+	}
+
+	// Region suffixes
+	regions := []string{""}
+	if hints != nil && hints.Region != "" {
+		regions = []string{"_" + hints.Region, ""} // Try with region first
+	}
+
+	// Generate all combinations
+	var patterns []string
+	for _, pName := range projectNames {
+		for _, ver := range versions {
+			for _, osName := range osNames {
+				for _, arch := range archNames {
+					for _, region := range regions {
+						pattern := fmt.Sprintf(
+							"%s_%s_%s_%s%s%s",
+							pName,
+							ver,
+							osName,
+							arch,
+							region,
+							ext,
+						)
+						patterns = append(patterns, pattern)
+					}
+				}
+			}
+		}
+	}
+
+	return patterns
+}
+
+// matchesAssetPattern checks if an asset name matches a pattern.
+// Currently uses exact match but could be extended for glob/regex support.
+func matchesAssetPattern(assetName, pattern string) bool {
+	return assetName == pattern
+}
+
 // DownloadAsset downloads a release asset to a local file.
 //
 //nolint:mnd,noctx // magic numbers for buffer size, context not needed for downloads
-func (c *GitHubClient) DownloadAsset(url, destPath string, progress func(downloaded, total int64)) error {
+func (c *GitHubClient) DownloadAsset(
+	url, destPath string,
+	progress func(downloaded, total int64),
+) error {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

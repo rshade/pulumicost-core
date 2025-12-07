@@ -275,6 +275,28 @@ Key plugin methods:
 - `examples/plans/aws-simple-plan.json` - Sample Pulumi plan for testing
 - `examples/specs/aws-ec2-t3-micro.yaml` - Sample pricing specification
 
+## E2E Testing Implementation Details
+
+**Crucial Learnings for E2E Tests:**
+
+1.  **Pulumi Plan JSON Structure**: The `pulumi preview --json` output nests resource details (including `inputs` and `type`) under a `newState` object for operations like `create`, `update`, and `same`. The ingestion logic (`internal/ingest/pulumi_plan.go`) **MUST** inspect `newState` to correctly extract these fields. Failing to do so results in empty `Inputs`, which causes property extraction to fail.
+
+2.  **Property Extraction Dependencies**: The Core (`internal/proto/adapter.go`) relies on the `Inputs` map being populated to extract `SKU` (from `instanceType`, `type`, etc.) and `Region` (from `availabilityZone`, `region`). If ingestion fails to populate `Inputs`, these fields will be empty, leading to `InvalidArgument` errors from strict plugins.
+
+3.  **Plugin Resource Type Compatibility**: Plugins may have strict validation on `ResourceType`. Pulumi typically provides types like `aws:ec2/instance:Instance` (Type Token), while some plugins (or pricing APIs) might expect `aws:ec2:Instance` or just `ec2`.
+    - **Current Strategy**: Plugins should handle the standard Pulumi Type Token format (`pkg:module:type`).
+    - **Patching**: If a plugin rejects a valid type, it likely needs a patch to normalize or map the type string to its internal service identifier (e.g., `detectService` helper).
+
+**Local Plugin Development Workflow:**
+
+To debug or fix plugin issues during Core development:
+
+1.  Clone the plugin repository (e.g., `pulumicost-plugin-aws-public`).
+2.  Modify the plugin code (e.g., add logging, fix type mapping).
+3.  Build the plugin: `make build-region REGION=us-east-1`.
+4.  Install locally: Overwrite the binary in `~/.pulumicost/plugins/<plugin>/<version>/...`.
+5.  Run Core E2E tests to verify the fix.
+
 ## Project Management
 
 ### Cross-Repository Project
@@ -560,6 +582,78 @@ go tool cover -html=coverage.out
 go test -race ./test/...
 ```
 
+### E2E Testing (Real AWS Infrastructure)
+
+The E2E test framework validates cost calculations against real AWS infrastructure using the Pulumi Automation API.
+
+**Location**: `test/e2e/` (separate Go module)
+
+**Running E2E Tests:**
+
+```bash
+# Set required environment variables
+eval "$(aws configure export-credentials --format env)"
+export PATH="$HOME/.pulumi/bin:$PATH"
+export PULUMI_CONFIG_PASSPHRASE="e2e-test-passphrase"
+export AWS_REGION=us-east-1
+
+# Run all E2E tests
+make test-e2e
+
+# Run specific E2E test
+make test-e2e TEST_ARGS="-run TestProjectedCost_EC2"
+
+# Direct go test invocation
+go test -v -tags e2e -timeout 60m ./...
+```
+
+**Prerequisites:**
+
+- AWS credentials configured (via AWS CLI or environment variables)
+- Pulumi CLI installed (`~/.pulumi/bin/pulumi`)
+- Go 1.24.10+
+- pulumicost binary built (`make build`)
+
+**Environment Variables:**
+
+| Variable                   | Description                               | Default     |
+| -------------------------- | ----------------------------------------- | ----------- |
+| `AWS_ACCESS_KEY_ID`        | AWS access key                            | Required    |
+| `AWS_SECRET_ACCESS_KEY`    | AWS secret key                            | Required    |
+| `AWS_SESSION_TOKEN`        | AWS session token (if using SSO/MFA)      | Optional    |
+| `AWS_REGION`               | AWS region for tests                      | `us-east-1` |
+| `E2E_REGION`               | Override AWS region                       | `us-east-1` |
+| `E2E_TIMEOUT_MINS`         | Maximum test duration                     | `60`        |
+| `PULUMI_CONFIG_PASSPHRASE` | Passphrase for local state encryption     | Required    |
+| `PATH`                     | Must include Pulumi CLI (`~/.pulumi/bin`) | Required    |
+
+**Test Categories:**
+
+- `TestProjectedCost_EC2` - Validates EC2 projected cost against AWS pricing
+- `TestProjectedCost_EBS` - Validates EBS projected cost against AWS pricing
+- `TestActualCost_Runtime` - Validates actual cost calculation over time
+- `TestCleanupVerification` - Verifies resource cleanup
+- `TestUnsupportedResourceTypes` - Validates graceful handling of unsupported resources
+- `TestCLIExecution` - Black-box CLI binary testing
+
+**Safety Features:**
+
+- ULID-prefixed stack names for test isolation
+- Automatic cleanup on test completion
+- Signal handling for cleanup on interrupt (Ctrl+C)
+- 60-minute timeout with retry logic for AWS operations
+
+**CRITICAL: No Simulation/Stubbing in E2E Tests:**
+
+E2E tests MUST call the actual pulumicost CLI binary and validate real cost calculations. Never:
+
+- Simulate cost values (e.g., `calculatedCost := expectedCost * 1.01`)
+- Stub CLI execution with hardcoded responses
+- Skip real infrastructure deployment
+- Use mock pricing data in E2E tests
+
+The purpose of E2E tests is to validate the complete system works correctly. Tests that simulate behavior defeat this purpose. If you need faster feedback during development, use unit tests or integration tests instead.
+
 **Test Fixtures Available:**
 
 - AWS, Azure, GCP Pulumi plans (`test/fixtures/plans/`)
@@ -675,12 +769,12 @@ log.Info().
 
 ### Standard Log Fields
 
-| Field         | Purpose                  | Example                      |
-| ------------- | ------------------------ | ---------------------------- |
-| `trace_id`    | Request correlation      | "01HQ7X2J3K4M5N6P7Q8R9S0T1U" |
-| `component`   | Package identifier       | "cli", "engine", "registry"  |
-| `operation`   | Current operation        | "get_projected_cost"         |
-| `duration_ms` | Operation timing         | 245                          |
+| Field         | Purpose             | Example                      |
+| ------------- | ------------------- | ---------------------------- |
+| `trace_id`    | Request correlation | "01HQ7X2J3K4M5N6P7Q8R9S0T1U" |
+| `component`   | Package identifier  | "cli", "engine", "registry"  |
+| `operation`   | Current operation   | "get_projected_cost"         |
+| `duration_ms` | Operation timing    | 245                          |
 
 ### Log Levels
 

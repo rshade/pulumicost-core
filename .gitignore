@@ -12,7 +12,7 @@
 *.test
 
 # Built binaries
-bin/*t
+bin/*
 
 # Code coverage profiles and other test artifacts
 *.out

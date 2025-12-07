@@ -11,6 +11,9 @@ import (
 )
 
 func TestNewCostActualCmd(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
 	tests := []struct {
 		name        string
 		args        []string
@@ -81,6 +84,8 @@ func TestNewCostActualCmd(t *testing.T) {
 }
 
 func TestCostActualCmdFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewCostActualCmd()
 
 	// Check required flags
@@ -114,6 +119,8 @@ func TestCostActualCmdFlags(t *testing.T) {
 }
 
 func TestCostActualCmdHelp(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewCostActualCmd()
 	cmd.SetOut(&buf)
@@ -133,6 +140,8 @@ func TestCostActualCmdHelp(t *testing.T) {
 }
 
 func TestCostActualCmdExamples(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewCostActualCmd()
 
 	// Check that examples are present
@@ -145,6 +154,8 @@ func TestCostActualCmdExamples(t *testing.T) {
 }
 
 func TestParseTimeRange(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		fromStr     string
@@ -205,6 +216,8 @@ func TestParseTimeRange(t *testing.T) {
 }
 
 func TestParseTime(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		input       string

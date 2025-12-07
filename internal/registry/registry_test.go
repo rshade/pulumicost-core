@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 )
@@ -134,7 +135,8 @@ func TestRegistry_Open(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rootDir := tt.setupDir(t)
 			reg := &Registry{root: rootDir, launcher: pluginhost.NewProcessLauncher()}
-			ctx := context.Background()
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 			clients, cleanup, err := reg.Open(ctx, tt.onlyName)
 			verifyRegistryOpenResult(t, clients, cleanup, err, tt.wantErr, tt.wantClients)
 		})
@@ -174,7 +176,7 @@ func createMultiplePluginsDir(t *testing.T) string {
 		if runtime.GOOS == "windows" {
 			binPath += ".exe"
 		}
-		if err := os.WriteFile(binPath, []byte("#!/bin/bash\necho "+p.name), 0755); err != nil {
+		if err := os.WriteFile(binPath, []byte("#!/bin/bash\necho "+p.name+"\nexit 1"), 0755); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -185,6 +185,17 @@ Any violation of principles MUST be explicitly justified with:
 2. Description of simpler alternatives considered and rejected
 3. Documented plan to remediate in future versions
 
+**Implementation Completeness**:
+
+Code changes MUST be complete implementations, not stubs or placeholders:
+
+1. TODO comments are FORBIDDEN in committed code - implement the feature or
+   create a tracked issue
+2. Stub implementations that bypass actual functionality are FORBIDDEN
+3. All task list items MUST be fully implemented before marking complete
+4. Tests MUST exercise real behavior, not simulated/mocked results where
+   real implementation is required
+
 **Runtime Development Guidance**:
 
 For day-to-day development conventions, tooling preferences, and

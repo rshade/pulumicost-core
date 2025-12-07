@@ -1,0 +1,75 @@
+name: pulumicost-e2e-ec2
+runtime: yaml
+description: E2E test project for EC2 cost validation
+
+variables:
+  # Look up the latest Amazon Linux 2 AMI
+  ami:
+    fn::invoke:
+      function: aws:ec2/getAmi:getAmi
+      arguments:
+        mostRecent: true
+        owners:
+          - amazon
+        filters:
+          - name: name
+            values:
+              - amzn2-ami-hvm-*-x86_64-gp2
+
+resources:
+  # Create a VPC for the E2E test
+  e2e-vpc:
+    type: aws:ec2:Vpc
+    properties:
+      cidrBlock: "10.0.0.0/16"
+      enableDnsHostnames: true
+      enableDnsSupport: true
+      tags:
+        Name: e2e-test-vpc
+
+  # Create a subnet
+  e2e-subnet:
+    type: aws:ec2:Subnet
+    properties:
+      vpcId: ${e2e-vpc.id}
+      cidrBlock: "10.0.1.0/24"
+      availabilityZone: us-east-1a
+      mapPublicIpOnLaunch: true
+      tags:
+        Name: e2e-test-subnet
+
+  # Create a security group
+  web-secgrp:
+    type: aws:ec2:SecurityGroup
+    properties:
+      vpcId: ${e2e-vpc.id}
+      ingress:
+        - protocol: tcp
+          fromPort: 80
+          toPort: 80
+          cidrBlocks:
+            - "0.0.0.0/0"
+      egress:
+        - protocol: "-1"
+          fromPort: 0
+          toPort: 0
+          cidrBlocks:
+            - "0.0.0.0/0"
+      tags:
+        Name: e2e-test-sg
+
+  # Create an EC2 instance (t3.micro for cost testing)
+  web-server-www:
+    type: aws:ec2:Instance
+    properties:
+      instanceType: t3.micro
+      vpcSecurityGroupIds:
+        - ${web-secgrp.id}
+      subnetId: ${e2e-subnet.id}
+      ami: ${ami.id}
+      associatePublicIpAddress: false
+      tags:
+        Name: e2e-test-instance
+
+outputs:
+  instanceId: ${web-server-www.id}

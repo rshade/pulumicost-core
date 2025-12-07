@@ -14,6 +14,8 @@ import (
 
 // TestCLIIntegration tests the full CLI workflow with realistic scenarios.
 func TestCLIIntegration(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create a temporary directory for test files
 	tmpDir := t.TempDir()
 
@@ -158,6 +160,8 @@ func TestCLIIntegration(t *testing.T) {
 
 // TestErrorHandlingEdgeCases tests various error conditions and edge cases.
 func TestErrorHandlingEdgeCases(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -215,7 +219,10 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 		{
 			name:        "plugin validate specific nonexistent plugin",
 			args:        []string{"plugin", "validate", "--plugin", "nonexistent-plugin"},
-			expectError: false, // When no plugins directory exists, it won't find the plugin but returns success
+			expectError: true, // Plugin not found returns an error
+			errorCheck: func(t *testing.T, err error) {
+				assert.Contains(t, err.Error(), "plugin 'nonexistent-plugin' not found")
+			},
 		},
 	}
 
@@ -243,6 +250,8 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 
 // TestDateParsingEdgeCases tests edge cases in date parsing.
 func TestDateParsingEdgeCases(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		fromDate    string
@@ -320,6 +329,8 @@ func TestDateParsingEdgeCases(t *testing.T) {
 
 // TestOutputFormats tests different output format validation.
 func TestOutputFormats(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 
@@ -371,6 +382,8 @@ func TestOutputFormats(t *testing.T) {
 
 // TestFlagCombinations tests various flag combinations.
 func TestFlagCombinations(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 

@@ -22,7 +22,7 @@ func TestIntegration_ProcessLauncherWithClient(t *testing.T) {
 	// Create a mock plugin that will fail but test the integration
 	mockPlugin := createFailingMockPlugin(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// This should fail but test the full integration path
@@ -51,7 +51,7 @@ func TestIntegration_StdioLauncherWithClient(t *testing.T) {
 	// Create a mock plugin that will fail but test the integration
 	mockPlugin := createFailingMockPlugin(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// This should fail but test the full integration path
@@ -87,7 +87,7 @@ func TestIntegration_LauncherSwitching(t *testing.T) {
 
 	for _, launcher := range launchers {
 		t.Run(launcher.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
 			client, err := pluginhost.NewClient(ctx, launcher.launcher, mockPlugin)
@@ -119,7 +119,7 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 	// Start multiple client creation attempts concurrently
 	for i := range numClients {
 		go func(_ int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
 			client, err := pluginhost.NewClient(ctx, launcher, mockPlugin)

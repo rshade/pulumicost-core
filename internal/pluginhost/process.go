@@ -18,19 +18,30 @@ import (
 )
 
 const (
-	defaultTimeout    = 10 * time.Second
-	connectionDelay   = 100 * time.Millisecond
-	connectionTimeout = 100 * time.Millisecond
-	processWaitDelay  = 100 * time.Millisecond // Time to wait for I/O after killing process
-	pluginBindTimeout = 5 * time.Second        // Time to wait for plugin to bind to port
-	bindCheckInterval = 100 * time.Millisecond // Interval between bind checks
+	defaultTimeout      = 10 * time.Second
+	connectionDelay     = 100 * time.Millisecond
+	connectionTimeout   = 100 * time.Millisecond
+	processWaitDelay    = 100 * time.Millisecond // Time to wait for I/O after killing process
+	pluginBindTimeout   = 60 * time.Second       // Time to wait for plugin to bind (large plugins need more time)
+	ciPluginBindTimeout = 120 * time.Second      // Increased timeout for CI environments
+	bindCheckInterval   = 100 * time.Millisecond // Interval between bind checks
 
 	// Retry configuration for port collision handling.
 	maxPortRetries    = 5
+	ciMaxPortRetries  = 10 // Increased retries for CI environments
 	initialBackoff    = 100 * time.Millisecond
 	maxBackoff        = 2 * time.Second
 	backoffMultiplier = 2
 )
+
+// getPluginBindTimeout returns the timeout for plugin binding, with increased timeout in CI environments.
+func getPluginBindTimeout() time.Duration {
+	// Increase timeout in CI environments where resources may be constrained
+	if os.Getenv("CI") == "true" {
+		return ciPluginBindTimeout
+	}
+	return pluginBindTimeout
+}
 
 // portListener holds a reference to an open listener for port reservation.
 // It is used to prevent race conditions during plugin startup by keeping
@@ -47,13 +58,29 @@ type ProcessLauncher struct {
 	timeout       time.Duration
 	portListeners map[int]*portListener
 	mu            sync.Mutex
+	maxRetries    int // Maximum number of launch retries
 }
 
 // NewProcessLauncher creates a new ProcessLauncher configured with the package default timeout and an initialized map for tracking reserved port listeners.
 func NewProcessLauncher() *ProcessLauncher {
+	maxRetries := maxPortRetries
+	// Increase retries in CI environments
+	if os.Getenv("CI") == "true" {
+		maxRetries = ciMaxPortRetries
+	}
 	return &ProcessLauncher{
 		timeout:       defaultTimeout,
 		portListeners: make(map[int]*portListener),
+		maxRetries:    maxRetries,
+	}
+}
+
+// NewProcessLauncherWithRetries creates a new ProcessLauncher with configurable retry attempts.
+func NewProcessLauncherWithRetries(maxRetries int) *ProcessLauncher {
+	return &ProcessLauncher{
+		timeout:       defaultTimeout,
+		portListeners: make(map[int]*portListener),
+		maxRetries:    maxRetries,
 	}
 }
 
@@ -77,13 +104,13 @@ func (p *ProcessLauncher) StartWithRetry(
 	var lastErr error
 	backoff := initialBackoff
 
-	for attempt := range maxPortRetries {
+	for attempt := range p.maxRetries {
 		if attempt > 0 {
 			log.Debug().
 				Ctx(ctx).
 				Str("component", "pluginhost").
 				Int("attempt", attempt+1).
-				Int("max_attempts", maxPortRetries).
+				Int("max_attempts", p.maxRetries).
 				Dur("backoff", backoff).
 				Msg("retrying plugin launch after port collision")
 			time.Sleep(backoff)
@@ -105,7 +132,7 @@ func (p *ProcessLauncher) StartWithRetry(
 		return nil, nil, err
 	}
 
-	return nil, nil, fmt.Errorf("failed after %d attempts: %w", maxPortRetries, lastErr)
+	return nil, nil, fmt.Errorf("failed after %d attempts: %w", p.maxRetries, lastErr)
 }
 
 // startOnce performs a single attempt to start the plugin.
@@ -169,7 +196,7 @@ func (p *ProcessLauncher) startOnce(
 		Msg("plugin process started")
 
 	// Wait for plugin to bind to port
-	bindCtx, bindCancel := context.WithTimeout(ctx, pluginBindTimeout)
+	bindCtx, bindCancel := context.WithTimeout(ctx, getPluginBindTimeout())
 	defer bindCancel()
 
 	if bindErr := p.waitForPluginBind(bindCtx, port); bindErr != nil {
@@ -329,7 +356,15 @@ func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int
 		ctx,
 		path,
 		append(args, fmt.Sprintf("--port=%d", port))...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port))
+	// Set environment variables for plugin port communication.
+	// Currently we set both PORT and PULUMICOST_PLUGIN_PORT for compatibility.
+	// TODO: Remove PORT env var once plugins support --port flag.
+	// See: https://github.com/rshade/pulumicost-spec/issues/129 (Add --port flag to pluginsdk)
+	// See: https://github.com/rshade/pulumicost-core/issues/232 (Remove PORT from core)
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("PORT=%d", port),
+		fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+	)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	// Set WaitDelay before Start to avoid race condition with watchCtx goroutine

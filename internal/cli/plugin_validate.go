@@ -79,6 +79,9 @@ func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 
 	cfg := config.New()
 	if _, err := os.Stat(cfg.PluginDir); os.IsNotExist(err) {
+		if targetPlugin != "" {
+			return fmt.Errorf("plugin '%s' not found: plugin directory does not exist", targetPlugin)
+		}
 		cmd.Printf("Plugin directory does not exist: %s\n", cfg.PluginDir)
 		cmd.Println("No plugins to validate.")
 		return nil
@@ -91,6 +94,9 @@ func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 	}
 
 	if len(plugins) == 0 {
+		if targetPlugin != "" {
+			return fmt.Errorf("plugin '%s' not found: no plugins installed", targetPlugin)
+		}
 		cmd.Println("No plugins found to validate.")
 		return nil
 	}

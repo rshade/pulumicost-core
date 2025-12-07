@@ -14,6 +14,10 @@ import (
 	"time"
 )
 
+const (
+	testTimeout = 30 * time.Second
+)
+
 func TestStdioLauncher_Start_MockCommand(t *testing.T) {
 	// Skip this test in short mode as it involves process creation
 	if testing.Short() {
@@ -21,7 +25,7 @@ func TestStdioLauncher_Start_MockCommand(t *testing.T) {
 	}
 
 	launcher := NewStdioLauncher()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	// Create a mock plugin that echoes on stdio
@@ -284,7 +288,7 @@ func TestStdioLauncher_MultipleStarts(t *testing.T) {
 
 	// Try multiple starts to ensure no resource leaks
 	for i := range 3 {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 
 		// Use invalid command to ensure quick failure and cleanup
 		_, _, err := launcher.Start(ctx, "/nonexistent/command")

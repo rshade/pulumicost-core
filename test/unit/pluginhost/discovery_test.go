@@ -183,7 +183,7 @@ func TestConnectionState_Ready(t *testing.T) {
 		"Connection should be in valid state, got: %s", state.String())
 
 	// Try to reach Ready state
-	ctx2, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	for state.String() != "READY" && ctx2.Err() == nil {

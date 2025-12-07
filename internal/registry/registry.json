@@ -23,7 +23,12 @@
       "supported_providers": ["aws"],
       "capabilities": ["cost_projection", "pricing_specs"],
       "security_level": "official",
-      "min_spec_version": "0.1.0"
+      "min_spec_version": "0.1.0",
+      "asset_hints": {
+        "asset_prefix": "pulumicost-plugin-aws-public",
+        "default_region": "us-east-1",
+        "version_prefix": false
+      }
     }
   }
 }

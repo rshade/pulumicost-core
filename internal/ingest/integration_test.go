@@ -406,6 +406,7 @@ func getEdgeCaseTestData() []struct {
 					}
 				]
 			}`,
+			// When type is empty in plan, it gets extracted from URN as fallback
 			expectError: false,
 			validate: func(t *testing.T, descriptors []engine.ResourceDescriptor) {
 				if len(descriptors) != 1 {
@@ -413,11 +414,11 @@ func getEdgeCaseTestData() []struct {
 				}
 
 				desc := descriptors[0]
-				if desc.Provider != "unknown" {
-					t.Errorf("expected provider 'unknown' for empty type, got %s", desc.Provider)
+				if desc.Provider != "malformed" {
+					t.Errorf("expected provider 'malformed' extracted from URN, got %s", desc.Provider)
 				}
-				if desc.Type != "" {
-					t.Errorf("expected empty type preserved, got %s", desc.Type)
+				if desc.Type != "malformed" {
+					t.Errorf("expected type 'malformed' extracted from URN, got %s", desc.Type)
 				}
 			},
 		},
