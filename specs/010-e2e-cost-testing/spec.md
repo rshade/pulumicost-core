@@ -15,6 +15,11 @@
 - Q: What is the maximum cleanup timeout for E2E tests? → A: The maximum cleanup timeout for E2E tests will be 60 minutes by default, but it will be configurable to allow for flexibility.
 - Q: How should the AWS region be configured for E2E tests? → A: The AWS region will be configurable via Pulumi stack configuration, with a fallback to the `AWS_REGION` environment variable.
 
+### Session 2025-12-04
+- Q: How should E2E tests generate preview JSON for pulumicost validation? → A: **E2E tests MUST follow the exact user workflow**: create a real Pulumi project directory (Pulumi.yaml), run `pulumi preview --json > preview.json` via CLI, then pass that file to `pulumicost cost projected --pulumi-json preview.json`. This matches how users and GitHub Actions will use the tool. Do NOT use Automation API inline programs (no JSON output available) or state hacking approaches that users cannot replicate.
+- Q: What Pulumi runtime should E2E test projects use? → A: Use **Pulumi YAML** for E2E test projects. YAML projects are much faster (~2.5 min vs 10+ min) because they don't require Go compilation or dependency downloads. The `pulumicost` tool only needs the preview JSON output - it doesn't care what language generated it.
+- Q: Why not use Go projects for E2E tests? → A: Go projects require downloading ~100MB+ of SDK dependencies and compiling for each test. YAML projects are interpreted directly by Pulumi with no compilation step, making tests significantly faster.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Validate Projected Cost Accuracy (Priority: P1)
@@ -97,6 +102,26 @@ A developer receives detailed cost comparison reports from E2E tests, showing pr
 
 ---
 
+### User Story 6 - Plugin Integration E2E Testing (Priority: P1)
+
+A developer runs E2E tests that validate the complete cost calculation chain including plugin installation, configuration, and cost retrieval. This ensures the entire system works as users would experience it.
+
+**Why this priority**: Testing without the AWS pricing plugin validates CLI parsing but not real cost accuracy. The full chain test with `pulumicost-plugin-aws-public` is required to validate actual cost values against expected AWS pricing.
+
+**Independent Test**: Can be tested by:
+1. Installing `aws-public` plugin via `pulumicost plugin install aws-public`
+2. Running cost calculation with the plugin
+3. Validating cost output matches expected AWS pricing (~$7.59/month for t3.micro)
+
+**Acceptance Scenarios**:
+
+1. **Given** no plugins installed, **When** the E2E test runs cost calculation, **Then** the system returns $0.00 (validates CLI parsing works correctly)
+2. **Given** the `aws-public` plugin is installed, **When** the E2E test runs cost calculation on a t3.micro EC2 instance, **Then** the calculated monthly cost is within ±5% of $7.59
+3. **Given** a plugin installation fails, **When** the E2E test detects the failure, **Then** it provides a clear error message and skips cost validation tests
+4. **Given** the E2E test completes (pass or fail), **When** cleanup runs, **Then** the plugin is optionally uninstalled to avoid test pollution
+
+---
+
 ### Edge Cases
 
 - What happens when AWS API calls fail during resource provisioning?
@@ -131,6 +156,10 @@ A developer receives detailed cost comparison reports from E2E tests, showing pr
 - **FR-015**: System MUST generate unique stack names using a ULID (Universally Unique Lexicographically Sortable Identifier) appended to a prefix like `e2e-test-` for isolation and traceability.
 - **FR-016**: System MUST execute E2E tests within a dedicated, isolated AWS account to prevent interference with other environments.
 - **FR-017**: System MUST configure the AWS region via Pulumi stack configuration, falling back to the `AWS_REGION` environment variable if not set.
+- **FR-018**: System MUST support testing without plugins installed to validate CLI parsing and JSON output generation.
+- **FR-019**: System MUST support testing with `aws-public` plugin installed to validate full cost calculation chain.
+- **FR-020**: System MUST install plugins programmatically via CLI command (`pulumicost plugin install aws-public`) during E2E test setup.
+- **FR-021**: System MUST optionally cleanup installed plugins after E2E tests to prevent test pollution.
 
 ### Key Entities
 
