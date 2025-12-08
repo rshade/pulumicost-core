@@ -7,7 +7,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/rs/zerolog v1.34.0
 	github.com/rshade/pulumicost-spec v0.4.3
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
