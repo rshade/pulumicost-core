@@ -60,9 +60,7 @@ Go 1.25.5: Follow standard conventions
 - 010-e2e-cost-testing: Fixed E2E test failure by parsing `newState` in Pulumi plan JSON.
 - 010-e2e-cost-testing: Patched `aws-public` plugin to support `aws:ec2/instance:Instance` resource type.
 - 010-e2e-cost-testing: Verified cost calculation accuracy ($7.59/month for t3.micro).
-- 010-e2e-cost-testing: Added Go 1.25
-- 010-e2e-cost-testing: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 010-e2e-cost-testing: Added Go 1.25
+- 010-e2e-cost-testing: Added Go 1.25.5 support and updated all documentation and CI workflows accordingly
 - 008-analyzer-plugin: Added Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra`
 - 008-analyzer-plugin: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
@@ -74,7 +72,7 @@ Based on recent development sessions, consider adding:
 
 - **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
 - **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
-- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root level documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root-level documentation
 - **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
 
 ### Systematic Version Updates

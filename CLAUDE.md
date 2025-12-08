@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## CRITICAL INSTRUCTIONS
 
-**DO NOT RUN `git commit`** - This is explicitly forbidden. You may use `git add`, `git status`, `git diff`, and `git log`, but you are NOT allowed to run commit commands. The user will commit manually.
+**DO NOT RUN `git commit`** - This is explicitly forbidden. Use `git add`, `git status`, `git diff`, and `git log` only. The user will commit manually.
 
 ## Project Overview
 
@@ -170,6 +170,7 @@ All documentation is in the `docs/` directory with GitHub Pages deployed from th
 ### Directory Structure
 
 ```
+
 docs/
 ├── guides/                # Audience-specific guides (User, Engineer, Architect, CEO)
 ├── getting-started/       # Quick onboarding and examples
@@ -967,7 +968,7 @@ Based on recent development sessions, consider adding:
 
 - **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
 - **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
-- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root level documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root-level documentation
 - **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
 
 ### Systematic Version Updates
