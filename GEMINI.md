@@ -84,3 +84,41 @@ Based on recent development sessions, consider adding:
 - **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
 
 This ensures complete version consistency across the entire codebase and documentation.
+
+## AI Agent File Maintenance
+
+This file (GEMINI.md) provides guidance for Gemini AI assistants. To maintain its effectiveness:
+
+### Update Requirements:
+
+- **Review regularly** when significant codebase changes occur
+- **Update version information** immediately when technologies change
+- **Document new active technologies** as they are introduced
+- **Update workflow restrictions** if development processes change
+- **Maintain current project structure** documentation
+- **Keep build and test commands** accurate and functional
+
+### When to Update:
+
+- New technologies are adopted
+- Build processes change
+- Project structure evolves
+- Workflow restrictions change
+- New dependencies are added
+- Testing frameworks change
+
+### Integration with GitHub Copilot:
+
+- This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
+- Use it as reference for Gemini AI assistants
+- Follow the documented workflow restrictions
+- Keep information current for consistent AI assistance
+
+### Maintenance Checklist:
+
+- [ ] Active technologies list is current
+- [ ] Project structure reflects reality
+- [ ] Build commands work as documented
+- [ ] Workflow restrictions are accurate
+- [ ] Integration and testing information is up to date
+- [ ] Recent changes section is maintained

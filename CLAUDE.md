@@ -946,6 +946,7 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+
 - Go 1.25.4 (008-analyzer-plugin)
 - `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
 
@@ -976,3 +977,42 @@ Based on recent development sessions, consider adding:
 - **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
 
 This ensures complete version consistency across the entire codebase and documentation.
+
+## AI Agent File Maintenance
+
+This file (CLAUDE.md) provides guidance for Claude Code and other AI assistants. To maintain its effectiveness:
+
+### Update Requirements:
+
+- **Review regularly** when significant codebase changes occur
+- **Update version information** immediately when Go versions change
+- **Document new patterns** and conventions as they emerge
+- **Include new technologies** and dependencies as they are added
+- **Update build/test commands** when processes change
+- **Maintain architecture documentation** as the system evolves
+
+### When to Update:
+
+- New major features are implemented
+- Build or testing processes change
+- New dependencies are added
+- Coding standards evolve
+- Project structure changes significantly
+- New tools or workflows are introduced
+
+### Integration with GitHub Copilot:
+
+- This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
+- Use it as the authoritative source for development practices
+- Reference these instructions when working with AI assistants
+- Keep instructions current to ensure consistent AI assistance
+
+### Maintenance Checklist:
+
+- [ ] Go version information is current
+- [ ] Build commands work as documented
+- [ ] Test commands produce expected results
+- [ ] Architecture documentation reflects current state
+- [ ] Dependencies are accurately listed
+- [ ] Security practices are up to date
+- [ ] Performance guidelines remain relevant

@@ -84,3 +84,42 @@ Based on recent development sessions, consider adding:
 - **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
 
 This ensures complete version consistency across the entire codebase and documentation.
+
+## AI Agent File Maintenance
+
+This file (AGENTS.md) provides general repository guidelines for AI agents. To maintain its effectiveness:
+
+### Update Requirements:
+
+- **Review regularly** when repository structure or processes change
+- **Update Go version references** immediately when versions change
+- **Maintain current project structure** documentation
+- **Keep build/test/lint commands** accurate and functional
+- **Update coding standards** as conventions evolve
+- **Refresh testing guidelines** when practices change
+
+### When to Update:
+
+- Repository structure changes
+- Go versions are updated
+- Build or development commands change
+- Coding standards evolve
+- Testing practices change
+- New security or configuration requirements emerge
+
+### Integration with GitHub Copilot:
+
+- This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
+- Use it as the source of truth for repository guidelines
+- Follow the documented standards and conventions
+- Keep guidelines current for consistent AI assistance
+
+### Maintenance Checklist:
+
+- [ ] Project structure documentation is accurate
+- [ ] Build, test, and development commands work
+- [ ] Go version information is current
+- [ ] Coding style guidelines reflect current practices
+- [ ] Testing guidelines are up to date
+- [ ] Security and configuration tips remain relevant
+- [ ] Commit and PR guidelines are followed

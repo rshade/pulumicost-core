@@ -30,7 +30,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.25.5'
           cache: true
 
       - name: Build plugin binaries for integration tests
@@ -86,7 +86,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.25.5'
           cache: true
 
       - name: Run golangci-lint
@@ -111,16 +111,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.25.5'
           cache: true
 
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Run govulncheck
-        # TODO: Remove continue-on-error once Go 1.25.5 is available in actions/setup-go
-        # Tracking: GO-2025-4155 (crypto/x509 HostnameError) - stdlib vuln fixed in Go 1.25.5
-        continue-on-error: true
         run: govulncheck ./...
 
   validate:
@@ -133,7 +130,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.25.5'
           cache: true
 
       - name: Check gofmt
@@ -173,7 +170,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.25.5'
           cache: true
 
       - name: Build binary

@@ -466,6 +466,53 @@ func TestGetActualCost(t *testing.T) {
 }
 ```
 
+### Platform-Specific Test Requirements
+
+#### macOS Integration Test Tooling
+
+The `internal/pluginhost` integration tests simulate realistic plugin behavior by attempting
+actual port binding and timeout handling. On macOS, you need to install GNU utilities via Homebrew:
+
+**Required Tools:**
+
+- `nc` (netcat) — for port binding simulation
+- `timeout` (GNU coreutils) — for timing control
+
+**Installation:**
+
+```bash
+# Install GNU timeout via coreutils
+brew install coreutils
+
+# Install netcat (modern variant via nmap)
+brew install nmap
+
+# Verify installation
+which timeout    # Should show /opt/homebrew/bin/timeout or /usr/local/bin/timeout
+which nc         # Built-in BSD nc is sufficient, but nmap's ncat is more reliable
+```
+
+Why These Tools Are Required:
+
+The integration tests prioritize test fidelity over portability. Tests create mock plugin processes that:
+
+Bind to ephemeral TCP ports (simulating ProcessLauncher behavior)
+Timeout after brief intervals (simulating plugin startup/failure scenarios)
+Exercise real process lifecycle paths rather than simplified stubs
+This approach validates:
+
+Port allocation doesn't conflict across concurrent clients
+Cleanup doesn't affect other clients
+Connection retry logic works with actual network behavior
+Running Without These Tools:
+
+```bash
+# Skip integration tests on macOS without tooling
+go test -short ./internal/pluginhost/...
+```
+
+The `-short` flag skips integration tests that require platform-specific tools.
+
 ### Integration Testing
 
 For testing with real plugins:
