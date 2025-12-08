@@ -203,6 +203,22 @@ func TestExtractArchiveNonExistent(t *testing.T) {
 	}
 }
 
+func TestMaxFileSizeBoundary(t *testing.T) {
+	// Test that maxFileSize constant is set to 500MB
+	expectedSize := int64(500 * 1024 * 1024)
+	if maxFileSize != expectedSize {
+		t.Errorf("maxFileSize = %d, want %d (500MB)", maxFileSize, expectedSize)
+	}
+
+	// Test that the boundary is reasonable (greater than 100MB, less than 1GB)
+	if maxFileSize <= 100*1024*1024 {
+		t.Error("maxFileSize should be greater than 100MB for plugin compatibility")
+	}
+	if maxFileSize >= 1024*1024*1024 {
+		t.Error("maxFileSize should be less than 1GB to prevent excessive memory usage")
+	}
+}
+
 // Helper to create test tar.gz archives.
 func createTestTarGz(t *testing.T, path string, files map[string]string) {
 	t.Helper()

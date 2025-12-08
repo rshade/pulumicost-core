@@ -3,6 +3,7 @@ package proto
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -228,6 +229,84 @@ func (c *clientAdapter) Name(ctx context.Context, _ *Empty, opts ...grpc.CallOpt
 	return &NameResponse{Name: resp.GetName()}, nil
 }
 
+// extractSKUFromProperties extracts the SKU/instance type from Pulumi resource properties.
+// Different cloud resources use different property names for the instance/resource type:
+//   - EC2 instances: "instanceType" (e.g., "t3.micro")
+//   - EBS volumes: "type" or "volumeType" (e.g., "gp3")
+//   - RDS instances: "instanceClass" (e.g., "db.t3.micro")
+//   - Lambda functions: "runtime" (partial, e.g., "python3.9")
+//
+// The function tries each known property name in order of preference.
+//
+// TODO: Migrate to pluginsdk/mapping package once available.
+// See: https://github.com/rshade/pulumicost-spec/issues/128 (Create pluginsdk/mapping)
+// See: https://github.com/rshade/pulumicost-core/issues/231 (Migrate to pluginsdk/mapping).
+func extractSKUFromProperties(properties map[string]string) string {
+	// Try common property names in order of preference for various resource types
+	skuPropertyKeys := []string{
+		"instanceType",  // EC2 instances
+		"type",          // EBS volumes, generic
+		"volumeType",    // EBS volumes (alternative)
+		"instanceClass", // RDS instances
+		"sku",           // Explicit SKU field
+		"size",          // Azure/generic sizing
+		"runtime",       // Lambda (partial match)
+		"tier",          // Service tiers
+	}
+
+	for _, key := range skuPropertyKeys {
+		if val, ok := properties[key]; ok && val != "" {
+			return val
+		}
+	}
+	return ""
+}
+
+// extractRegionFromProperties extracts the AWS region from Pulumi resource properties.
+// Pulumi resources typically have an "availabilityZone" property (e.g., "us-east-1a")
+// rather than a direct region. This function:
+//  1. Extracts from "availabilityZone" and strips the AZ suffix (a-z)
+//  2. Falls back to explicit "region" property
+//  3. Falls back to AWS_REGION environment variable
+//
+// TODO: Migrate to pluginsdk/mapping package once available.
+// See: https://github.com/rshade/pulumicost-spec/issues/128 (Create pluginsdk/mapping)
+// See: https://github.com/rshade/pulumicost-core/issues/231 (Migrate to pluginsdk/mapping)
+// Examples:
+//   - "us-east-1a" → "us-east-1"
+//   - "eu-west-2b" → "eu-west-2"
+func extractRegionFromProperties(properties map[string]string) string {
+	// Try availability zone first (most common in Pulumi AWS resources)
+	if az, ok := properties["availabilityZone"]; ok && az != "" {
+		// Strip the AZ suffix (a-z) to get the region
+		// "us-east-1a" → "us-east-1"
+		if len(az) > 0 {
+			lastChar := az[len(az)-1]
+			if lastChar >= 'a' && lastChar <= 'z' {
+				return az[:len(az)-1]
+			}
+		}
+		return az
+	}
+
+	// Try explicit region property
+	if region, ok := properties["region"]; ok && region != "" {
+		return region
+	}
+
+	// Fallback to AWS_REGION environment variable
+	if envRegion := os.Getenv("AWS_REGION"); envRegion != "" {
+		return envRegion
+	}
+
+	// Last resort: try AWS_DEFAULT_REGION
+	if envRegion := os.Getenv("AWS_DEFAULT_REGION"); envRegion != "" {
+		return envRegion
+	}
+
+	return ""
+}
+
 func (c *clientAdapter) GetProjectedCost(
 	ctx context.Context,
 	in *GetProjectedCostRequest,
@@ -237,22 +316,18 @@ func (c *clientAdapter) GetProjectedCost(
 	var results []*CostResult
 
 	for _, resource := range in.Resources {
+		// Extract SKU and region from properties using intelligent mapping
+		sku := extractSKUFromProperties(resource.Properties)
+		region := extractRegionFromProperties(resource.Properties)
+
 		req := &pbc.GetProjectedCostRequest{
 			Resource: &pbc.ResourceDescriptor{
 				Provider:     resource.Provider,
 				ResourceType: resource.Type,
-				Sku:          "", // Will be filled from properties if available
-				Region:       "", // Will be filled from properties if available
+				Sku:          sku,
+				Region:       region,
 				Tags:         resource.Properties,
 			},
-		}
-
-		// Extract SKU and region from properties if available
-		if sku, ok := resource.Properties["sku"]; ok {
-			req.Resource.Sku = sku
-		}
-		if region, ok := resource.Properties["region"]; ok {
-			req.Resource.Region = region
 		}
 
 		resp, err := c.client.GetProjectedCost(ctx, req, opts...)

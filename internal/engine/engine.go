@@ -158,7 +158,7 @@ func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescr
 					Str("resource_id", resource.ID).
 					Msg("no plugin data, trying spec fallback")
 
-				if specRes := e.getProjectedCostFromSpec(resource); specRes != nil {
+				if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
 					log.Debug().
 						Ctx(ctx).
 						Str("component", "engine").
@@ -255,7 +255,7 @@ func (e *Engine) GetProjectedCostWithErrors(
 		// If no results from plugins, try spec fallback
 		if len(resourceResults) == 0 {
 			if e.loader != nil {
-				if specRes := e.getProjectedCostFromSpec(resource); specRes != nil {
+				if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
 					result.Results = append(result.Results, *specRes)
 					result.Errors = append(result.Errors, resourceErrors...)
 					continue
@@ -588,11 +588,11 @@ func (e *Engine) getProjectedCostFromPlugin(
 	return nil, ErrNoCostData
 }
 
-func (e *Engine) getProjectedCostFromSpec(resource ResourceDescriptor) *CostResult {
+func (e *Engine) getProjectedCostFromSpec(ctx context.Context, resource ResourceDescriptor) *CostResult {
 	service := extractService(resource.Type)
 	sku := extractSKU(resource)
 
-	spec := e.loadSpecWithFallback(resource.Provider, service, sku)
+	spec := e.loadSpecWithFallback(ctx, resource.Provider, service, sku)
 	if spec == nil {
 		return nil
 	}
@@ -601,23 +601,23 @@ func (e *Engine) getProjectedCostFromSpec(resource ResourceDescriptor) *CostResu
 	return e.createSpecBasedResult(resource, spec, monthly, hourly)
 }
 
-func (e *Engine) loadSpecWithFallback(provider, service, sku string) *PricingSpec {
+func (e *Engine) loadSpecWithFallback(ctx context.Context, provider, service, sku string) *PricingSpec {
 	// Try provider-service-sku pattern first
 	if sku != "" {
-		if spec := e.tryLoadSpec(provider, service, sku); spec != nil {
+		if spec := e.tryLoadSpec(ctx, provider, service, sku); spec != nil {
 			return spec
 		}
 	}
 
 	// Fallback to provider-service-default pattern
-	if spec := e.tryLoadSpec(provider, service, defaultServiceName); spec != nil {
+	if spec := e.tryLoadSpec(ctx, provider, service, defaultServiceName); spec != nil {
 		return spec
 	}
 
 	// Last resort: try common resource patterns
 	commonSKUs := []string{"standard", "basic"}
 	for _, commonSKU := range commonSKUs {
-		if spec := e.tryLoadSpec(provider, service, commonSKU); spec != nil {
+		if spec := e.tryLoadSpec(ctx, provider, service, commonSKU); spec != nil {
 			return spec
 		}
 	}
@@ -625,12 +625,25 @@ func (e *Engine) loadSpecWithFallback(provider, service, sku string) *PricingSpe
 	return nil
 }
 
-func (e *Engine) tryLoadSpec(provider, service, sku string) *PricingSpec {
+func (e *Engine) tryLoadSpec(ctx context.Context, provider, service, sku string) *PricingSpec {
+	if loader, ok := e.loader.(interface {
+		LoadSpecWithContext(ctx context.Context, provider, service, sku string) (interface{}, error)
+	}); ok {
+		specData, err := loader.LoadSpecWithContext(ctx, provider, service, sku)
+		if err != nil {
+			return nil
+		}
+		if spec, isSpec := specData.(*PricingSpec); isSpec {
+			return spec
+		}
+		return nil
+	}
+
 	specData, err := e.loader.LoadSpec(provider, service, sku)
 	if err != nil {
 		return nil
 	}
-	if spec, ok := specData.(*PricingSpec); ok {
+	if spec, isSpec := specData.(*PricingSpec); isSpec {
 		return spec
 	}
 	return nil

@@ -3,6 +3,7 @@ package logging
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -251,7 +252,17 @@ func FromContext(ctx context.Context) *zerolog.Logger {
 	logger := zerolog.Ctx(ctx)
 	if logger.GetLevel() == zerolog.Disabled {
 		// No logger in context, create a default one
-		defaultLogger := zerolog.New(os.Stderr).With().Timestamp().Logger().Hook(TracingHook{})
+		// Check environment variable for log level
+		level := zerolog.InfoLevel
+		if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
+			if parsedLevel, err := zerolog.ParseLevel(envLevel); err == nil {
+				level = parsedLevel
+			} else {
+				// Log invalid log level values at error level
+				fmt.Fprintf(os.Stderr, "Invalid PULUMICOST_LOG_LEVEL '%s': %v, using default info level\n", envLevel, err)
+			}
+		}
+		defaultLogger := zerolog.New(os.Stderr).Level(level).With().Timestamp().Logger().Hook(TracingHook{})
 		return &defaultLogger
 	}
 	return logger

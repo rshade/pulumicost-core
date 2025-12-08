@@ -10,6 +10,8 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -93,6 +95,8 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestRootCmdExamples(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check that examples are present
@@ -104,6 +108,8 @@ func TestRootCmdExamples(t *testing.T) {
 }
 
 func TestRootCmdStructure(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check that main subcommands exist
@@ -135,6 +141,8 @@ func TestRootCmdStructure(t *testing.T) {
 }
 
 func TestRootCmdFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check persistent flags

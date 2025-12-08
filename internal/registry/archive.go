@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	// maxFileSize limits decompression to prevent zip bombs (100MB).
-	maxFileSize = 100 * 1024 * 1024
+	// maxFileSize limits decompression to prevent zip bombs (500MB).
+	// Plugins with embedded data (e.g., aws-public with pricing data) can be large.
+	maxFileSize = 500 * 1024 * 1024
 	// dirPerm is the permission for directories.
 	dirPerm = 0750
 	// execPerm is the permission for executable files.

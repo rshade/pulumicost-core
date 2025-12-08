@@ -10,6 +10,8 @@ import (
 )
 
 func TestNewPluginListCmd(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -52,6 +54,8 @@ func TestNewPluginListCmd(t *testing.T) {
 }
 
 func TestPluginListCmdFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check verbose flag
@@ -63,6 +67,8 @@ func TestPluginListCmdFlags(t *testing.T) {
 }
 
 func TestPluginListCmdHelp(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginListCmd()
 	cmd.SetOut(&buf)
@@ -79,6 +85,8 @@ func TestPluginListCmdHelp(t *testing.T) {
 }
 
 func TestPluginListCmdExamples(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check that examples are present
@@ -89,6 +97,8 @@ func TestPluginListCmdExamples(t *testing.T) {
 }
 
 func TestPluginListCmdOutput(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// The command should execute without error even when no plugins exist
@@ -97,6 +107,8 @@ func TestPluginListCmdOutput(t *testing.T) {
 }
 
 func TestPluginListCmdAvailable(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginListCmd()
 	cmd.SetOut(&buf)
@@ -118,6 +130,8 @@ func TestPluginListCmdAvailable(t *testing.T) {
 }
 
 func TestPluginListCmdAvailableFlag(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check available flag

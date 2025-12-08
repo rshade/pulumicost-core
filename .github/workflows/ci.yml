@@ -2,10 +2,10 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, reopened ]
+    branches: [main]
+    types: [opened, synchronize, reopened]
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -32,6 +32,13 @@ jobs:
         with:
           go-version: '1.25'
           cache: true
+
+      - name: Build plugin binaries for integration tests
+        run: |
+          # Build example plugin binaries that may be used by tests
+          if [ -d "examples/plugins/aws-example" ]; then
+            go build -o bin/aws-example-plugin ./examples/plugins/aws-example
+          fi
 
       - name: Run tests with coverage
         run: |
@@ -178,12 +185,12 @@ jobs:
           COMMIT=$(git rev-parse HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           LDFLAGS="-ldflags \"-X 'github.com/rshade/pulumicost-core/pkg/version.version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}'\""
-          
+
           BINARY_NAME="pulumicost"
           if [ "${GOOS}" = "windows" ]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
-          
+
           mkdir -p dist
           eval go build ${LDFLAGS} -o dist/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/pulumicost
 

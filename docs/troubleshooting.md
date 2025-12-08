@@ -221,13 +221,18 @@ Resource type 'custom:provider/resource:Type' not supported
    # aws:rds/instance:Instance
    ```
 
-2. **Use resource filtering**:
+2. **Plugin Compatibility**:
+   Some plugins may require specific resource type formats (e.g., `aws:ec2:Instance` vs `aws:ec2/instance:Instance`). 
+   - Check plugin documentation for supported types.
+   - Ensure your Pulumi provider versions are compatible with the plugin.
+
+3. **Use resource filtering**:
    ```bash
    # Filter to supported resources only
    pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2"
    ```
 
-3. **Create custom pricing spec**:
+4. **Create custom pricing spec**:
    ```bash
    mkdir -p ~/.pulumicost/specs
    # Create YAML spec for custom resource type
@@ -384,6 +389,18 @@ aws:ec2/instance:Instance    none    $0.00    USD    No pricing information avai
    # Verify resource has necessary properties
    jq '.steps[0].inputs' plan.json
    ```
+
+### Missing Cost Data (Empty Inputs)
+
+**Problem**: Logs show "resource descriptor missing required fields (sku, region)" or plugins return "not supported" because properties are missing.
+
+**Diagnosis**:
+This often happens when `pulumi preview --json` structure changes (e.g., nesting inputs under `newState`).
+
+**Solution**:
+Ensure you are using a compatible version of `pulumicost` that handles the JSON structure of your Pulumi CLI version.
+- Update `pulumicost` to the latest version.
+- Check `pulumi version` and ensure compatibility.
 
 ### Inaccurate Cost Estimates
 

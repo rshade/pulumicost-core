@@ -27,6 +27,16 @@ type PulumiStep struct {
 	Provider string                 `json:"provider"`
 	Inputs   map[string]interface{} `json:"inputs"`
 	Outputs  map[string]interface{} `json:"outputs"`
+	NewState *PulumiState           `json:"newState,omitempty"`
+	OldState *PulumiState           `json:"oldState,omitempty"`
+}
+
+// PulumiState represents the state of a resource in a Pulumi step.
+type PulumiState struct {
+	Type     string                 `json:"type"`
+	URN      string                 `json:"urn"`
+	Inputs   map[string]interface{} `json:"inputs"`
+	Provider string                 `json:"provider"`
 }
 
 // PulumiResource contains the detailed information about a resource in a Pulumi step.
@@ -101,17 +111,36 @@ func (p *PulumiPlan) GetResourcesWithContext(ctx context.Context) []PulumiResour
 	var skippedOps []string
 
 	for _, step := range p.Steps {
+		//nolint:nestif // Complexity is acceptable for this resource extraction logic
 		if step.Op == "create" || step.Op == "update" || step.Op == "same" {
+			resType := step.Type
+			inputs := step.Inputs
+
+			// Prioritize NewState for Create/Update operations if available
+			if step.NewState != nil {
+				if resType == "" {
+					resType = step.NewState.Type
+				}
+				if inputs == nil {
+					inputs = step.NewState.Inputs
+				}
+			}
+
+			if resType == "" {
+				resType = extractTypeFromURN(step.URN)
+			}
+
 			resources = append(resources, PulumiResource{
-				Type:     step.Type,
+				Type:     resType,
 				URN:      step.URN,
 				Provider: extractProviderFromURN(step.URN),
-				Inputs:   step.Inputs,
+				Inputs:   inputs,
 			})
 			log.Debug().
 				Ctx(ctx).
 				Str("component", "ingest").
 				Str("resource_type", step.Type).
+				Str("extracted_type", resType).
 				Str("operation", step.Op).
 				Str("urn", step.URN).
 				Msg("extracted resource from plan")
@@ -129,6 +158,14 @@ func (p *PulumiPlan) GetResourcesWithContext(ctx context.Context) []PulumiResour
 		Msg("resource extraction complete")
 
 	return resources
+}
+
+func extractTypeFromURN(urn string) string {
+	parts := strings.Split(urn, "::")
+	if len(parts) >= minURNParts {
+		return parts[2]
+	}
+	return ""
 }
 
 func extractProviderFromURN(urn string) string {

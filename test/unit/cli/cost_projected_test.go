@@ -35,6 +35,8 @@ func createTestPlan(t *testing.T, resources []map[string]interface{}) string {
 
 // TestCostProjectedCmd_Success tests basic projected cost calculation.
 func TestCostProjectedCmd_Success(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -71,6 +73,8 @@ func TestCostProjectedCmd_Success(t *testing.T) {
 
 // TestCostProjectedCmd_MissingPlanFile tests error handling for missing file.
 func TestCostProjectedCmd_MissingPlanFile(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewCostProjectedCmd()
 	cmd.SetArgs([]string{"--pulumi-json", "/nonexistent/plan.json"})
 
@@ -86,6 +90,8 @@ func TestCostProjectedCmd_MissingPlanFile(t *testing.T) {
 
 // TestCostProjectedCmd_InvalidJSON tests error handling for invalid JSON.
 func TestCostProjectedCmd_InvalidJSON(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	tempDir := t.TempDir()
 	planPath := filepath.Join(tempDir, "invalid.json")
 
@@ -107,6 +113,8 @@ func TestCostProjectedCmd_InvalidJSON(t *testing.T) {
 
 // TestCostProjectedCmd_MultipleResources tests calculation with multiple resources.
 func TestCostProjectedCmd_MultipleResources(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -142,6 +150,8 @@ func TestCostProjectedCmd_MultipleResources(t *testing.T) {
 
 // TestCostProjectedCmd_TableOutput tests table format output.
 func TestCostProjectedCmd_TableOutput(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -167,6 +177,8 @@ func TestCostProjectedCmd_TableOutput(t *testing.T) {
 
 // TestCostProjectedCmd_NDJSONOutput tests NDJSON format output.
 func TestCostProjectedCmd_NDJSONOutput(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -196,6 +208,8 @@ func TestCostProjectedCmd_NDJSONOutput(t *testing.T) {
 
 // TestCostProjectedCmd_FilterByType tests resource filtering.
 func TestCostProjectedCmd_FilterByType(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -232,6 +246,8 @@ func TestCostProjectedCmd_FilterByType(t *testing.T) {
 
 // TestCostProjectedCmd_FilterByProvider tests provider-level filtering.
 func TestCostProjectedCmd_FilterByProvider(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -268,6 +284,8 @@ func TestCostProjectedCmd_FilterByProvider(t *testing.T) {
 
 // TestCostProjectedCmd_EmptyPlan tests handling of plan with no resources.
 func TestCostProjectedCmd_EmptyPlan(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{}
 	planPath := createTestPlan(t, resources)
 
@@ -290,6 +308,8 @@ func TestCostProjectedCmd_EmptyPlan(t *testing.T) {
 
 // TestCostProjectedCmd_MissingRequiredFlag tests error when required flag missing.
 func TestCostProjectedCmd_MissingRequiredFlag(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewCostProjectedCmd()
 	cmd.SetArgs([]string{}) // No --pulumi-json flag
 
@@ -305,6 +325,8 @@ func TestCostProjectedCmd_MissingRequiredFlag(t *testing.T) {
 
 // TestCostProjectedCmd_InvalidOutputFormat tests handling of invalid output format.
 func TestCostProjectedCmd_InvalidOutputFormat(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -329,6 +351,8 @@ func TestCostProjectedCmd_InvalidOutputFormat(t *testing.T) {
 
 // TestCostProjectedCmd_ComplexResourceProperties tests resources with complex properties.
 func TestCostProjectedCmd_ComplexResourceProperties(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",

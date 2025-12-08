@@ -11,6 +11,8 @@ import (
 
 // TestFlags_CostProjected_AllFlags tests all flag combinations for cost projected.
 func TestFlags_CostProjected_AllFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -37,6 +39,8 @@ func TestFlags_CostProjected_AllFlags(t *testing.T) {
 
 // TestFlags_CostActual_AllFlags tests all flag combinations for cost actual.
 func TestFlags_CostActual_AllFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -65,6 +69,8 @@ func TestFlags_CostActual_AllFlags(t *testing.T) {
 
 // TestFlags_OutputFormat_Values tests all valid output format values.
 func TestFlags_OutputFormat_Values(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -95,6 +101,8 @@ func TestFlags_OutputFormat_Values(t *testing.T) {
 
 // TestFlags_GroupBy_Values tests all valid group-by values.
 func TestFlags_GroupBy_Values(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -141,6 +149,8 @@ func TestFlags_GroupBy_Values(t *testing.T) {
 
 // TestFlags_Filter_Expressions tests various filter expression formats.
 func TestFlags_Filter_Expressions(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -183,6 +193,8 @@ func TestFlags_Filter_Expressions(t *testing.T) {
 
 // TestFlags_DateFormats tests various date format inputs.
 func TestFlags_DateFormats(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -230,6 +242,8 @@ func TestFlags_DateFormats(t *testing.T) {
 
 // TestFlags_BooleanFlags tests boolean flag handling.
 func TestFlags_BooleanFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Test with no flags (default values)
@@ -242,6 +256,8 @@ func TestFlags_BooleanFlags(t *testing.T) {
 
 // TestFlags_EmptyStringFlags tests handling of empty string flags.
 func TestFlags_EmptyStringFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -267,6 +283,8 @@ func TestFlags_EmptyStringFlags(t *testing.T) {
 
 // TestFlags_InvalidFlagValue tests handling of invalid flag values.
 func TestFlags_InvalidFlagValue(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -292,6 +310,8 @@ func TestFlags_InvalidFlagValue(t *testing.T) {
 
 // TestFlags_UnknownFlag tests handling of unknown flags.
 func TestFlags_UnknownFlag(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewCostProjectedCmd()
 	cmd.SetArgs([]string{
 		"--unknown-flag", "value",
@@ -308,6 +328,8 @@ func TestFlags_UnknownFlag(t *testing.T) {
 
 // TestFlags_FlagAliases tests handling of flag aliases if any.
 func TestFlags_FlagAliases(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -334,6 +356,8 @@ func TestFlags_FlagAliases(t *testing.T) {
 
 // TestFlags_RepeatableFlags tests if flags can be repeated (if applicable).
 func TestFlags_RepeatableFlags(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -360,6 +384,8 @@ func TestFlags_RepeatableFlags(t *testing.T) {
 
 // TestFlags_CaseSensitivity tests flag value case sensitivity.
 func TestFlags_CaseSensitivity(t *testing.T) {
+	// Set log level to error to avoid cluttering test output with debug logs
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
