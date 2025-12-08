@@ -13,7 +13,7 @@ and adds audit capabilities.
 
 ## Technical Context
 
-**Language/Version**: Go 1.25
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: zerolog v1.34.0 (already integrated), cobra v1.10.1, yaml.v3
 **Storage**: File system (`~/.pulumicost/config.yaml`, log files)
 **Testing**: go test with testify, race detection required
@@ -25,7 +25,7 @@ and adds audit capabilities.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
 

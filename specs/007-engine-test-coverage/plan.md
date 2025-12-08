@@ -13,7 +13,7 @@ benchmarks to 1K, 10K, 100K resource scales.
 
 ## Technical Context
 
-**Language/Version**: Go 1.24.10
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: testing (stdlib), github.com/stretchr/testify
 **Storage**: N/A (testing framework, no persistence)
 **Testing**: `go test` with `-coverprofile`, `-race`, `-bench`
@@ -25,28 +25,28 @@ benchmarks to 1K, 10K, 100K resource scales.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution:
 
 - [x] **Plugin-First Architecture**: N/A - tests are internal to core,
-  not a plugin implementation
+      not a plugin implementation
 - [x] **Test-Driven Development**: Tests are the primary deliverable; 80%
-  coverage target aligns with Constitution requirement
+      coverage target aligns with Constitution requirement
 - [x] **Cross-Platform Compatibility**: Go tests run on all platforms;
-  no platform-specific test code planned
+      no platform-specific test code planned
 - [x] **Documentation as Code**: Test files serve as living documentation;
-  each test comment documents purpose
+      each test comment documents purpose
 - [x] **Protocol Stability**: N/A - no protocol changes, testing existing
-  functionality
+      functionality
 - [x] **Quality Gates**: Tests must pass with `-race`, coverage threshold
-  enforced, linting required
+      enforced, linting required
 - [x] **Multi-Repo Coordination**: N/A - contained within pulumicost-core
 
 **Violations Requiring Justification**:
 
-| Principle | Deviation | Justification |
-|-----------|-----------|---------------|
+| Principle                   | Deviation                        | Justification                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | II. TDD (95% critical path) | Target is 80% not 95% for engine | Anti-slop constraints explicitly prohibit coverage-chasing tests. Quality over quantity is a feature requirement. Achieving 95% would require testing simple delegations (GetActualCost, getStorageSize, tryFallbackNumericValue) which violates spec's anti-slop rules. The 80% target meets overall project threshold while maintaining test quality. |
 
 ## Project Structure

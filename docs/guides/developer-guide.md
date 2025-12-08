@@ -24,7 +24,7 @@ This guide is for **engineers and developers** who want to extend PulumiCost by 
 
 ### Prerequisites
 
-- Go 1.24+ (for core development)
+- Go 1.25.5+ (for core development)
 - Git
 - Make
 - Node.js 18+ (for documentation tools)
@@ -90,15 +90,15 @@ make test
 
 ### Key Packages
 
-| Package | Purpose |
-|---------|---------|
-| `internal/cli` | Command-line interface (Cobra) |
-| `internal/engine` | Cost calculation logic |
-| `internal/ingest` | Pulumi plan parsing |
-| `internal/pluginhost` | Plugin gRPC communication |
-| `internal/registry` | Plugin discovery |
-| `internal/spec` | Local pricing specifications |
-| `pkg/pluginsdk` | Plugin SDK for developers |
+| Package               | Purpose                        |
+| --------------------- | ------------------------------ |
+| `internal/cli`        | Command-line interface (Cobra) |
+| `internal/engine`     | Cost calculation logic         |
+| `internal/ingest`     | Pulumi plan parsing            |
+| `internal/pluginhost` | Plugin gRPC communication      |
+| `internal/registry`   | Plugin discovery               |
+| `internal/spec`       | Local pricing specifications   |
+| `pkg/pluginsdk`       | Plugin SDK for developers      |
 
 ---
 
@@ -143,6 +143,7 @@ make docs-lint
 ### IDE Setup
 
 **VS Code:**
+
 ```json
 {
   "go.lintOnSave": "package",
@@ -212,6 +213,7 @@ func calculateCost(resource *pb.Resource) float64 {
 ### Full Plugin Development
 
 See [Plugin Development Guide](../plugins/plugin-development.md) for:
+
 - Complete implementation walkthrough
 - gRPC service setup
 - Error handling patterns
@@ -252,6 +254,7 @@ make docs-validate
 ### Code Style
 
 **Go:**
+
 - Follow [Effective Go](https://golang.org/doc/effective_go)
 - Run `gofmt` on your code
 - Use `golangci-lint` for linting
@@ -259,6 +262,7 @@ make docs-validate
 - Add godoc comments for exported functions
 
 **Example:**
+
 ```go
 // GetActualCost retrieves actual historical costs for resources.
 // It supports filtering by tags and grouping by dimension.
@@ -269,6 +273,7 @@ func (e *Engine) GetActualCost(ctx context.Context,
 ```
 
 **Markdown:**
+
 - Follow [Google style guide](https://developers.google.com/style)
 - Use clear headings
 - Provide code examples
@@ -308,12 +313,12 @@ log.Info().
 
 **Standard Log Fields:**
 
-| Field         | Purpose                             | Example                              |
-| ------------- | ----------------------------------- | ------------------------------------ |
-| `component`   | Package identifier                  | "cli", "engine", "registry"          |
-| `operation`   | Current operation                   | "get_projected_cost", "load_plan"    |
-| `trace_id`    | Request correlation (auto-injected) | "01HQ7X2J3K4M5N6P7Q8R9S0T1U"         |
-| `duration_ms` | Operation timing                    | `Dur("duration_ms", elapsed)`        |
+| Field         | Purpose                             | Example                           |
+| ------------- | ----------------------------------- | --------------------------------- |
+| `component`   | Package identifier                  | "cli", "engine", "registry"       |
+| `operation`   | Current operation                   | "get_projected_cost", "load_plan" |
+| `trace_id`    | Request correlation (auto-injected) | "01HQ7X2J3K4M5N6P7Q8R9S0T1U"      |
+| `duration_ms` | Operation timing                    | `Dur("duration_ms", elapsed)`     |
 
 **Logging Levels:**
 
@@ -366,6 +371,7 @@ Closes #123
 ```
 
 **Types:**
+
 - `feature` - New functionality
 - `fix` - Bug fixes
 - `docs` - Documentation
@@ -392,12 +398,14 @@ go test -run TestActualCost ./internal/engine/...
 ### Pull Request Process
 
 1. **Update from main:**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Run all checks:**
+
    ```bash
    make test
    make lint
@@ -406,6 +414,7 @@ go test -run TestActualCost ./internal/engine/...
    ```
 
 3. **Push and create PR:**
+
    ```bash
    git push origin feature/my-feature
    # Create PR on GitHub
@@ -491,6 +500,7 @@ git push origin v0.1.0
 Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
 
 **Structure:**
+
 ```
 ~/.pulumicost/plugins/
 ├── myplugin/
@@ -502,7 +512,7 @@ Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
 ### Docker Deployment
 
 ```dockerfile
-FROM golang:1.24 as builder
+FROM golang:1.25.5 as builder
 WORKDIR /app
 COPY . .
 RUN make build

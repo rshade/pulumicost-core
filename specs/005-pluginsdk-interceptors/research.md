@@ -122,19 +122,19 @@ Criteria is easily met.
 
 ## Summary of Decisions
 
-| Topic | Decision | Rationale |
-|-------|----------|-----------|
-| Config API | Add `UnaryInterceptors []grpc.UnaryServerInterceptor` | Idiomatic Go, matches existing pattern |
-| Chaining order | Tracing first, user interceptors after | Trace IDs available to all interceptors |
-| Nil handling | No special handling | Follow gRPC conventions |
-| Backward compat | Zero-value = no change | Go struct semantics |
-| Performance | No concern | One-time startup cost |
+| Topic           | Decision                                              | Rationale                               |
+| --------------- | ----------------------------------------------------- | --------------------------------------- |
+| Config API      | Add `UnaryInterceptors []grpc.UnaryServerInterceptor` | Idiomatic Go, matches existing pattern  |
+| Chaining order  | Tracing first, user interceptors after                | Trace IDs available to all interceptors |
+| Nil handling    | No special handling                                   | Follow gRPC conventions                 |
+| Backward compat | Zero-value = no change                                | Go struct semantics                     |
+| Performance     | No concern                                            | One-time startup cost                   |
 
 ## Open Questions Resolved
 
 All NEEDS CLARIFICATION items from Technical Context have been resolved:
 
-- ✅ Language/Version: Go 1.24.10 (from go.mod)
+- ✅ Language/Version: Go 1.25.5 (from go.mod)
 - ✅ Dependencies: gRPC v1.74.2, zerolog (from go.mod)
 - ✅ Testing: go test with race detection (from constitution)
 - ✅ Platform: Linux, macOS, Windows (from constitution)

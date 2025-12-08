@@ -11,7 +11,7 @@ Detailed steps to install PulumiCost on your system.
 ## Prerequisites
 
 - Pulumi CLI installed
-- Go 1.24+ (if building from source)
+- Go 1.25.5+ (if building from source)
 - Git (if building from source)
 - 5-10 minutes
 
@@ -20,12 +20,14 @@ Detailed steps to install PulumiCost on your system.
 ### Option 1: Build from Source (Recommended)
 
 **Step 1: Clone the repository**
+
 ```bash
 git clone https://github.com/rshade/pulumicost-core
 cd pulumicost-core
 ```
 
 **Step 2: Build**
+
 ```bash
 make build
 ```
@@ -33,6 +35,7 @@ make build
 Binary will be created at: `bin/pulumicost`
 
 **Step 3: Add to PATH (optional)**
+
 ```bash
 # macOS/Linux
 export PATH="$PWD/bin:$PATH"
@@ -42,6 +45,7 @@ sudo cp bin/pulumicost /usr/local/bin/
 ```
 
 **Step 4: Verify**
+
 ```bash
 pulumicost --version
 pulumicost --help
@@ -83,4 +87,3 @@ pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 - [Quick Start Guide](quickstart.md)
 - [User Guide](../guides/user-guide.md)
 - [Plugin Setup](../plugins/vantage/setup.md)
-

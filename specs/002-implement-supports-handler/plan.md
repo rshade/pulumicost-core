@@ -9,7 +9,7 @@ This plan outlines the implementation of a `Supports` gRPC handler in the `plugi
 
 ## Technical Context
 
-**Language/Version**: Go 1.24.10
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: `github.com/rshade/pulumicost-spec v0.1.0`, `google.golang.org/grpc v1.77.0`
 **Storage**: N/A
 **Testing**: Go `testing` package with `stretchr/testify`
@@ -21,7 +21,7 @@ This plan outlines the implementation of a `Supports` gRPC handler in the `plugi
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
 
@@ -44,11 +44,12 @@ specs/002-implement-supports-handler/
 ├── plan.md              # This file
 ├── research.md          # Research on the gRPC server implementation
 ├── data-model.md        # Description of the Resource entity
-└── contracts/           
+└── contracts/
     └── grpc.md          # Description of the Supports() gRPC contract
 ```
 
 ### Source Code (repository root)
+
 ```text
 pkg/pluginsdk/
 ├── sdk.go               # Add SupportsProvider interface and Supports() handler

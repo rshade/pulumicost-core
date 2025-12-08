@@ -39,7 +39,7 @@ make run
 
 ## Code Style
 
-Go 1.24.10: Follow standard conventions
+Go 1.25.5: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 
@@ -65,3 +65,22 @@ Go 1.24.10: Follow standard conventions
 - 010-e2e-cost-testing: Added Go 1.25
 - 008-analyzer-plugin: Added Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra`
 - 008-analyzer-plugin: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+## Session Analysis - Recommended Updates
+
+Based on recent development sessions, consider adding:
+
+### Go Version Management
+
+- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
+- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root level documentation
+- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
+
+### Systematic Version Updates
+
+- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update each file systematically, 4) Verify with final grep search
+- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum requirements (Go 1.24+ → Go 1.25.5+)
+- **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
+
+This ensures complete version consistency across the entire codebase and documentation.

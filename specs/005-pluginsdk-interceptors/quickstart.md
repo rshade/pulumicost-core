@@ -10,7 +10,7 @@ when serving a PulumiCost plugin.
 
 ## Prerequisites
 
-- Go 1.24+
+- Go 1.25.5+
 - `github.com/rshade/pulumicost-spec/sdk/go/pluginsdk` v0.2.0+
 
 ## Basic Usage

@@ -29,6 +29,7 @@ This guide is for anyone who wants to **use PulumiCost** to see costs for their 
 PulumiCost is a command-line tool that calculates cloud infrastructure costs from your Pulumi infrastructure definitions.
 
 **Key Features:**
+
 - 📊 **Projected Costs** - Estimate costs before deploying
 - 💰 **Actual Costs** - See what you're actually paying
 - 🔌 **Multiple Cost Sources** - Works with Vantage, local specs, and more
@@ -43,7 +44,7 @@ PulumiCost is a command-line tool that calculates cloud infrastructure costs fro
 ### Prerequisites
 
 - **Pulumi CLI** installed and working
-- **Go 1.24+** (if building from source)
+- **Go 1.25.5+** (if building from source)
 - **Cloud credentials** configured (AWS, Azure, GCP, etc.)
 
 ### Option 1: Download Binary (Recommended)
@@ -84,6 +85,7 @@ pulumicost cost projected --pulumi-json plan.json
 ```
 
 **Output:**
+
 ```
 RESOURCE                          TYPE                MONTHLY   CURRENCY
 aws:ec2/instance:Instance         aws:ec2:Instance    $7.50     USD
@@ -110,11 +112,13 @@ pulumicost cost actual --pulumi-json plan.json --from 2024-01-01
 **What it is:** Estimated costs based on your infrastructure definitions
 
 **When to use:**
+
 - Before deploying infrastructure
 - During planning and design phases
 - Comparing different infrastructure options
 
 **Command:**
+
 ```bash
 pulumicost cost projected --pulumi-json plan.json
 ```
@@ -124,11 +128,13 @@ pulumicost cost projected --pulumi-json plan.json
 **What it is:** Real costs from your cloud provider's billing system
 
 **When to use:**
+
 - After infrastructure is deployed and running
 - Cost optimization and analysis
 - Budget tracking and reporting
 
 **Command:**
+
 ```bash
 pulumicost cost actual --pulumi-json plan.json --from 2024-01-01 --to 2024-01-31
 ```
@@ -209,11 +215,13 @@ pulumicost cost actual --filter "tag:env=dev" --from 2024-01-01
 Vantage provides unified cost data from multiple cloud providers.
 
 **Setup:**
+
 1. Get Vantage API key from https://vantage.sh
 2. Configure plugin (see [Vantage Plugin Setup](../plugins/vantage/setup.md))
 3. Run commands with Vantage data
 
 **Commands:**
+
 ```bash
 pulumicost cost actual --from 2024-01-01 --to 2024-01-31
 ```
@@ -223,11 +231,13 @@ pulumicost cost actual --from 2024-01-01 --to 2024-01-31
 Use local YAML files for cost estimates without external services.
 
 **Setup:**
+
 1. Create YAML spec file: `~/.pulumicost/specs/my-specs.yaml`
 2. Add resource pricing definitions
 3. PulumiCost automatically uses them
 
 **Example spec file:**
+
 ```yaml
 ---
 resources:
@@ -252,6 +262,7 @@ pulumicost cost projected --pulumi-json plan.json
 ```
 
 **Output:**
+
 ```
 RESOURCE                      TYPE              MONTHLY   CURRENCY
 aws:ec2/instance:Instance     aws:ec2:Instance  $7.50     USD
@@ -265,16 +276,17 @@ pulumicost cost projected --pulumi-json plan.json --output json
 ```
 
 **Output:**
+
 ```json
 {
   "summary": {
-    "totalMonthly": 7.50,
+    "totalMonthly": 7.5,
     "currency": "USD"
   },
   "resources": [
     {
       "type": "aws:ec2:Instance",
-      "estimatedCost": 7.50,
+      "estimatedCost": 7.5,
       "currency": "USD"
     }
   ]
@@ -290,6 +302,7 @@ pulumicost cost projected --pulumi-json plan.json --output ndjson
 ```
 
 **Output:**
+
 ```
 {"type": "aws:ec2:Instance", "estimatedCost": 7.50}
 {"type": "aws:s3:Bucket", "estimatedCost": 0.00}
@@ -495,7 +508,7 @@ logging:
   "duration_ms": 245,
   "success": true,
   "result_count": 3,
-  "total_cost": 7.50,
+  "total_cost": 7.5,
   "parameters": {
     "pulumi_json": "plan.json",
     "output": "table"
@@ -505,15 +518,15 @@ logging:
 
 **Audit Entry Fields:**
 
-| Field          | Description                                               |
-| -------------- | --------------------------------------------------------- |
+| Field          | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
 | `command`      | CLI command executed (e.g., "cost projected", "cost actual") |
-| `trace_id`     | Unique request identifier for correlation                 |
-| `duration_ms`  | Command execution time in milliseconds                    |
-| `success`      | Whether the command completed successfully                |
-| `result_count` | Number of resources processed                             |
-| `total_cost`   | Sum of all calculated costs                               |
-| `parameters`   | Command parameters (sensitive values redacted)            |
+| `trace_id`     | Unique request identifier for correlation                    |
+| `duration_ms`  | Command execution time in milliseconds                       |
+| `success`      | Whether the command completed successfully                   |
+| `result_count` | Number of resources processed                                |
+| `total_cost`   | Sum of all calculated costs                                  |
+| `parameters`   | Command parameters (sensitive values redacted)               |
 
 **Security:** Sensitive parameter values (API keys, passwords, tokens) are automatically redacted in audit logs.
 
@@ -552,6 +565,7 @@ journalctl -u pulumicost --since today
 **Problem:** No pricing information found for resources
 
 **Solutions:**
+
 - Check if plugin is configured correctly
 - Verify API credentials are valid
 - Some resources may not have pricing data - this is normal
@@ -562,6 +576,7 @@ journalctl -u pulumicost --since today
 **Problem:** Date format not recognized
 
 **Solutions:**
+
 - Use format: `YYYY-MM-DD` (e.g., `2024-01-01`)
 - Or RFC3339: `2024-01-01T00:00:00Z`
 - Example: `--from 2024-01-01 --to 2024-01-31`
@@ -571,6 +586,7 @@ journalctl -u pulumicost --since today
 **Problem:** Cost source plugin not installed
 
 **Solutions:**
+
 ```bash
 # List installed plugins
 pulumicost plugin list

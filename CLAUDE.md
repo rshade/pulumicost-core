@@ -23,7 +23,7 @@ PulumiCost Core is a CLI tool and plugin host system for calculating cloud infra
 
 ## Go Version Information
 
-**Project Go Version**: 1.24.10
+**Project Go Version**: 1.25.5
 
 ### Dependencies
 
@@ -346,7 +346,7 @@ Triggered on pull requests and pushes to main branch:
 
 **Test Job:**
 
-- Go 1.24.10 setup with caching
+- Go 1.25.5 setup with caching
 - Unit tests with race detection and coverage reporting
 - Coverage threshold check (minimum 20%)
 - Artifacts uploaded for coverage reports
@@ -611,7 +611,7 @@ go test -v -tags e2e -timeout 60m ./...
 
 - AWS credentials configured (via AWS CLI or environment variables)
 - Pulumi CLI installed (`~/.pulumi/bin/pulumi`)
-- Go 1.24.10+
+- Go 1.25.5+
 - pulumicost binary built (`make build`)
 
 **Environment Variables:**
@@ -949,11 +949,30 @@ CodeRabbit now:
 - Go 1.25.4 (008-analyzer-plugin)
 - `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
 
-- Go 1.24.10 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
-- Go 1.24.10 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
+- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
+- Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
 - File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
 
 ## Recent Changes
 
-- 001-engine-test-coverage: Added Go 1.24.10 + testing (stdlib), github.com/stretchr/testify
+- 001-engine-test-coverage: Added Go 1.25.5 + testing (stdlib), github.com/stretchr/testify
 - 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
+
+## Session Analysis - Recommended Updates
+
+Based on recent development sessions, consider adding:
+
+### Go Version Management
+
+- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
+- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root level documentation
+- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
+
+### Systematic Version Updates
+
+- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update each file systematically, 4) Verify with final grep search
+- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum requirements (Go 1.24+ → Go 1.25.5+)
+- **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
+
+This ensures complete version consistency across the entire codebase and documentation.

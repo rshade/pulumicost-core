@@ -5,7 +5,7 @@
 **Status**: Draft
 **Input**: Epic: Engine Test Coverage Completion - Complete the engine package test coverage to meet the 80% threshold with comprehensive edge case and integration testing.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Core Calculation Reliability (Priority: P1)
 
@@ -85,7 +85,7 @@ As a quality engineer, I need integration tests that verify engine components wo
 - What happens when resource properties contain special characters in keys?
 - How does currency validation handle case sensitivity (USD vs usd)?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -119,7 +119,7 @@ As a quality engineer, I need integration tests that verify engine components wo
 - **GroupBy**: Type-safe enumeration for grouping strategies
 - **ErrorDetail**: Structured error information for failed calculations
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
@@ -166,7 +166,7 @@ As a quality engineer, I need integration tests that verify engine components wo
 
 ### Assumptions
 
-- Go 1.24.10 is the target runtime environment
+- Go 1.25.5 is the target runtime environment
 - Test coverage is measured using standard `go tool cover` tooling
 - Benchmark baselines will be established during initial test implementation
 - Mock plugin implementations from `test/mocks/plugin/` will be used for integration testing

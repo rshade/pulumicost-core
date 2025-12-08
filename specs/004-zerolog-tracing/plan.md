@@ -12,7 +12,7 @@ configurable log levels, JSON/console output formats, and a `--debug` CLI flag.
 
 ## Technical Context
 
-**Language/Version**: Go 1.24.10
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: github.com/rs/zerolog v1.34.0, github.com/oklog/ulid/v2 (for trace IDs)
 **Storage**: N/A (logs to stderr/file, no persistence)
 **Testing**: go test with -race flag, testify assertions
@@ -24,25 +24,25 @@ configurable log levels, JSON/console output formats, and a `--debug` CLI flag.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic (logging infrastructure), not a
-  cost data source. Plugins receive trace IDs via gRPC metadata but implement their own logging.
+      cost data source. Plugins receive trace IDs via gRPC metadata but implement their own logging.
 - [x] **Test-Driven Development**: Tests planned before implementation. Target 90% coverage for
-  logging package (SC-007), 80% minimum overall.
+      logging package (SC-007), 80% minimum overall.
 - [x] **Cross-Platform Compatibility**: zerolog is pure Go, cross-platform. File output uses
-  standard os package. No platform-specific code required.
+      standard os package. No platform-specific code required.
 - [x] **Documentation as Code**: Audience-specific docs planned:
   - User Guide: --debug flag, environment variables, config file options
   - Developer Guide: How to add logging to new code, trace context propagation
   - Architect Guide: Logging architecture, gRPC interceptor design
 - [x] **Protocol Stability**: No protocol buffer changes required. Trace ID propagation uses
-  standard gRPC metadata (not proto definitions).
+      standard gRPC metadata (not proto definitions).
 - [x] **Quality Gates**: All CI checks will pass (tests, lint, security, formatting, docs).
 - [x] **Multi-Repo Coordination**: pulumicost-spec provides SDK logging utilities (issue #75).
-  Core implementation is independent; plugins adopt separately.
+      Core implementation is independent; plugins adopt separately.
 
 **Violations Requiring Justification**: None
 
