@@ -1,0 +1,71 @@
+{
+  "resources": [
+    {
+      "type": "aws:ec2/instance:Instance",
+      "urn": "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+      "name": "webserver",
+      "properties": {
+        "instanceType": "t3.micro",
+        "ami": "ami-0123456789abcdef0",
+        "availabilityZone": "us-east-1a",
+        "tags": {
+          "Name": "webserver",
+          "Environment": "dev"
+        }
+      },
+      "provider": {
+        "type": "pulumi:providers:aws",
+        "urn": "urn:pulumi:dev::myapp::pulumi:providers:aws::default"
+      }
+    },
+    {
+      "type": "aws:rds/instance:Instance",
+      "urn": "urn:pulumi:dev::myapp::aws:rds/instance:Instance::database",
+      "name": "database",
+      "properties": {
+        "instanceClass": "db.t3.micro",
+        "engine": "mysql",
+        "engineVersion": "8.0",
+        "allocatedStorage": 20,
+        "storageType": "gp2"
+      },
+      "provider": {
+        "type": "pulumi:providers:aws",
+        "urn": "urn:pulumi:dev::myapp::pulumi:providers:aws::default"
+      }
+    },
+    {
+      "type": "aws:s3/bucket:Bucket",
+      "urn": "urn:pulumi:dev::myapp::aws:s3/bucket:Bucket::assets",
+      "name": "assets",
+      "properties": {
+        "bucket": "myapp-assets-bucket",
+        "acl": "private",
+        "region": "us-east-1"
+      },
+      "provider": {
+        "type": "pulumi:providers:aws",
+        "urn": "urn:pulumi:dev::myapp::pulumi:providers:aws::default"
+      }
+    },
+    {
+      "type": "azure:compute/virtualMachine:VirtualMachine",
+      "urn": "urn:pulumi:prod::api::azure:compute/virtualMachine:VirtualMachine::apiserver",
+      "name": "apiserver",
+      "properties": {
+        "vmSize": "Standard_B2s",
+        "location": "eastus"
+      },
+      "provider": {
+        "type": "pulumi:providers:azure",
+        "urn": "urn:pulumi:prod::api::pulumi:providers:azure::default"
+      }
+    },
+    {
+      "type": "pulumi:pulumi:Stack",
+      "urn": "urn:pulumi:dev::myapp::pulumi:pulumi:Stack::myapp-dev",
+      "name": "myapp-dev",
+      "properties": {}
+    }
+  ]
+}

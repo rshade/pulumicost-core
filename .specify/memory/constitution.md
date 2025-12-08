@@ -203,4 +203,17 @@ project-specific patterns, refer to `CLAUDE.md` in the repository root. That
 file provides operational context while this constitution defines
 non-negotiable architectural principles.
 
-**Version**: 1.1.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-11-24
+## Dependency Version Policy
+
+### Pulumi SDK
+
+When using the Pulumi SDK (`github.com/pulumi/pulumi/sdk/v3`):
+
+- **ALWAYS use v3.210.0 or later** for Analyzer plugin development
+- The correct import path for protobuf types is:
+  `pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"`
+  (NOT `github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc`)
+- Earlier versions may have different package structures or missing types
+- This ensures compatibility with the current Pulumi Analyzer protocol
+
+**Version**: 1.2.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-12-06

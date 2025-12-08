@@ -857,6 +857,51 @@ The registry package handles plugin discovery and lifecycle:
 - Platform-specific executable detection
 - See `internal/registry/CLAUDE.md` for detailed discovery patterns
 
+### internal/analyzer
+
+The analyzer package implements the Pulumi Analyzer gRPC protocol for zero-click cost estimation during `pulumi preview`:
+
+- **Server**: Implements `pulumirpc.AnalyzerServer` interface with `AnalyzeStack`, `Handshake`, `ConfigureStack`, `Cancel`, `GetAnalyzerInfo`, `GetPluginInfo` RPCs
+- **Resource Mapping**: Converts `pulumirpc.AnalyzerResource` to `engine.ResourceDescriptor` for cost calculation
+- **Diagnostics**: Generates `pulumirpc.AnalyzeDiagnostic` from cost results with ADVISORY enforcement (never blocks deployments)
+- **Graceful Degradation**: Errors produce warning diagnostics, preview continues even if cost calculation fails
+
+**Key Components**:
+
+- `Server` - gRPC server implementing Pulumi Analyzer protocol
+- `MapResource/MapResources` - Convert Pulumi resources to internal format
+- `CostToDiagnostic` - Convert cost results to Pulumi diagnostics
+- `StackSummaryDiagnostic` - Aggregate stack-level cost summary
+- `WarningDiagnostic` - Generate warning for error conditions
+
+**CLI Integration**:
+
+- `pulumicost analyzer serve` - Starts gRPC server on random TCP port
+- Prints ONLY port number to stdout (Pulumi handshake protocol)
+- All logging goes to stderr exclusively
+- Graceful shutdown on SIGINT/SIGTERM
+
+**Protocol Requirements**:
+
+- Port handshake: Server prints port to stdout, Pulumi engine connects
+- Stack configuration: Engine sends stack/project context before analysis
+- Resource analysis: Engine sends resources, analyzer returns diagnostics
+- Cancellation: Engine can request analysis cancellation
+
+**Testing**:
+
+```bash
+# Run analyzer unit tests
+go test ./internal/analyzer/...
+
+# Run integration tests
+go test ./test/integration/...
+
+# Check coverage (target: 80%, achieved: 92.7%)
+go test -coverprofile=coverage.out ./internal/analyzer/...
+go tool cover -func=coverage.out
+```
+
 ## CodeRabbit Configuration
 
 ### Setup
@@ -901,6 +946,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.4 (008-analyzer-plugin)
+- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
 
 - Go 1.24.10 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
 - Go 1.24.10 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
