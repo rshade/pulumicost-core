@@ -62,7 +62,7 @@ jobs:
           gocover-cobertura < coverage.out > coverage.xml
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: |
@@ -92,7 +92,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.5.0
+          version: v2.6.2
           args: --timeout=5m
 
       - name: Run markdownlint
@@ -192,7 +192,7 @@ jobs:
           eval go build ${LDFLAGS} -o dist/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/pulumicost
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: pulumicost-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/pulumicost*

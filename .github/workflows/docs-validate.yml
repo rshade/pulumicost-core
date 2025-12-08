@@ -64,7 +64,7 @@ jobs:
       - name: Check links in documentation
         run: |
           find docs -type f -name "*.md" ! -path "docs/_site/*" ! -path "docs/node_modules/*" | \
-          while read file; do
+          while IFS= read -r file; do
             echo "Checking links in: $file"
             npx markdown-link-check \
               --config docs/.markdown-link-check.json \
@@ -88,7 +88,7 @@ jobs:
       - name: Validate YAML frontmatter
         run: |
           find docs -type f -name "*.md" ! -path "docs/_site/*" | \
-          while read file; do
+          while IFS= read -r file; do
             # Check if file starts with ---
             if head -1 "$file" | grep -q "^---"; then
               echo "✓ Frontmatter found in: $file"
@@ -144,7 +144,6 @@ jobs:
             "docs/support"
           )
 
-          missing=0
           for dir in "${required_dirs[@]}"; do
             if [ -d "$dir" ]; then
               echo "✓ $dir/"
@@ -202,17 +201,19 @@ jobs:
     steps:
       - name: Check results
         run: |
-          echo "## Documentation Validation Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Documentation Validation Summary"
+            echo ""
 
-          echo "- Markdown Linting: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Link Checking: ${{ needs.link-check.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontmatter Validation: ${{ needs.frontmatter.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Structure Validation: ${{ needs.structure.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- llms.txt Validation: ${{ needs.llms-txt.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Markdown Linting: ${{ needs.lint.result }}"
+            echo "- Link Checking: ${{ needs.link-check.result }}"
+            echo "- Frontmatter Validation: ${{ needs.frontmatter.result }}"
+            echo "- Structure Validation: ${{ needs.structure.result }}"
+            echo "- llms.txt Validation: ${{ needs.llms-txt.result }}"
 
-          if [ "${{ needs.structure.result }}" != "success" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ **Note:** Some validation checks failed, but this is expected during development." >> $GITHUB_STEP_SUMMARY
-            echo "Please review the logs above for details." >> $GITHUB_STEP_SUMMARY
-          fi
+            if [ "${{ needs.structure.result }}" != "success" ]; then
+              echo ""
+              echo "⚠️ **Note:** Some validation checks failed, but this is expected during development."
+              echo "Please review the logs above for details."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

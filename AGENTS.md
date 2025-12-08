@@ -72,24 +72,32 @@ Based on recent development sessions, consider adding:
 
 ### Go Version Management
 
-- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
-- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
-- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root level documentation
-- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
+- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL
+  markdown files simultaneously
+- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version
+  references in documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and
+  root-level documentation
+- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`)
+  in documentation examples
 
 ### Systematic Version Updates
 
-- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update each file systematically, 4) Verify with final grep search
-- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum requirements (Go 1.24+ → Go 1.25.5+)
-- **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
+- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update
+  each file systematically, 4) Verify with final grep search
+- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum
+  requirements (Go 1.24+ → Go 1.25.5+)
+- **CI Workflows**: Update GitHub Actions go-version parameters in documentation
+  examples
 
 This ensures complete version consistency across the entire codebase and documentation.
 
 ## AI Agent File Maintenance
 
-This file (AGENTS.md) provides general repository guidelines for AI agents. To maintain its effectiveness:
+This file (AGENTS.md) provides general repository guidelines for AI agents. To
+maintain its effectiveness:
 
-### Update Requirements:
+### Update Requirements
 
 - **Review regularly** when repository structure or processes change
 - **Update Go version references** immediately when versions change
@@ -98,7 +106,7 @@ This file (AGENTS.md) provides general repository guidelines for AI agents. To m
 - **Update coding standards** as conventions evolve
 - **Refresh testing guidelines** when practices change
 
-### When to Update:
+### When to Update
 
 - Repository structure changes
 - Go versions are updated
@@ -107,14 +115,14 @@ This file (AGENTS.md) provides general repository guidelines for AI agents. To m
 - Testing practices change
 - New security or configuration requirements emerge
 
-### Integration with GitHub Copilot:
+### Integration with GitHub Copilot
 
 - This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
 - Use it as the source of truth for repository guidelines
 - Follow the documented standards and conventions
 - Keep guidelines current for consistent AI assistance
 
-### Maintenance Checklist:
+### Maintenance Checklist
 
 - [ ] Project structure documentation is accurate
 - [ ] Build, test, and development commands work

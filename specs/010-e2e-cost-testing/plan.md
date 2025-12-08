@@ -21,13 +21,13 @@ Implement an End-to-End (E2E) testing framework for PulumiCost using the Pulumi 
 - `github.com/pulumi/pulumi-aws/sdk/v7` (AWS Provider v7)
 - `github.com/pulumi/pulumi/sdk/v3 v3.210.0` (Pulumi SDK)
 - `github.com/stretchr/testify` (Assertions)
-  **Storage**: Local Pulumi state (ephemeral), no persistent DB.
-  **Testing**: `go test` with `//go:build e2e` tag.
-  **Target Platform**: Linux, macOS, Windows.
-  **Project Type**: CLI Tool / Testing Framework.
-  **Performance Goals**: Tests must complete within 60 minutes (default, configurable).
-  **Constraints**: Must not leave orphaned resources. Must run in CI environment. E2E test runner script (run-e2e-tests.sh) requires Bash (Linux/macOS/WSL). Native Windows PowerShell support is deferred to a future release.
-  **Scale/Scope**: Covers EC2 and EBS initially.
+- **Storage**: Local Pulumi state (ephemeral), no persistent DB.
+- **Testing**: `go test` with `//go:build e2e` tag.
+- **Target Platform**: Linux, macOS, Windows.
+- **Project Type**: CLI Tool / Testing Framework.
+- **Performance Goals**: Tests must complete within 60 minutes (default, configurable).
+- **Constraints**: Must not leave orphaned resources. Must run in CI environment. E2E test runner script (run-e2e-tests.sh) requires Bash (Linux/macOS/WSL). Native Windows PowerShell support is deferred to a future release.
+- **Scale/Scope**: Covers EC2 and EBS initially.
 
 ### Critical Design Decision: Real User Workflow with YAML Projects
 

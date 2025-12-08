@@ -30,10 +30,12 @@ jobs:
       - name: Get PR Details
         id: pr-details
         run: |
-          PR_BODY=$(gh pr view ${{ github.event.number }} --json body,title,files -q '.body + "\n\nTitle: " + .title + "\n\nFiles changed:\n" + (.files | map(.path) | join("\n"))')
-          echo "pr_body<<EOF" >> $GITHUB_OUTPUT
-          echo "$PR_BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          PR_BODY="$(gh pr view "${{ github.event.number }}" --json body,title,files -q '.body + "\n\nTitle: " + .title + "\n\nFiles changed:\n" + (.files | map(.path) | join("\n"))')"
+          {
+            echo "pr_body<<EOF"
+            echo "$PR_BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Run OpenCode Code Review
         run: |
@@ -61,4 +63,4 @@ jobs:
       - name: Post Review Comment
         run: |
           REVIEW=$(cat review_output.txt)
-          gh pr comment ${{ github.event.number }} --body "$REVIEW"
+          gh pr comment "${{ github.event.number }}" --body "$REVIEW"

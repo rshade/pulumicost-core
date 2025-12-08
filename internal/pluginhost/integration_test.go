@@ -117,8 +117,8 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 
 	// Start multiple client creation attempts concurrently
 	// Each goroutine gets its own mock plugin to avoid conflicts
-	for i := range numClients {
-		go func(clientID int) {
+	for range numClients {
+		go func() {
 			// Create a unique mock plugin for this client to avoid conflicts
 			mockPlugin := createFailingMockPlugin(t)
 
@@ -132,7 +132,7 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 			}
 
 			results <- err
-		}(i)
+		}()
 	}
 
 	// Collect results
@@ -166,7 +166,6 @@ func TestIntegration_RapidCreateDestroy(t *testing.T) {
 		if client != nil {
 			client.Close()
 		}
-
 		cancel()
 
 		if err != nil {
@@ -202,11 +201,9 @@ func TestIntegration_ContextCancellation(t *testing.T) {
 		client.Close()
 	}
 
-	// Should handle cancellation gracefully
-	if err != nil {
-		t.Logf("Context cancellation error (expected): %v", err)
-	} else {
-		t.Log("Context cancellation test unexpectedly succeeded")
+	// Should handle cancellation gracefully by surfacing an error
+	if err == nil {
+		t.Fatalf("expected error from NewClient after context cancellation, got nil")
 	}
 }
 
@@ -300,7 +297,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 			}
 
 			if err == nil {
-				t.Errorf("expected error for %s (binPath: %s)", tc.name, tc.binPath)
+				t.Fatalf("expected error for %s (binPath: %s), got nil", tc.name, tc.binPath)
 			} else {
 				t.Logf("Expected error for %s (binPath: %s): %v", tc.name, tc.binPath, err)
 			}
