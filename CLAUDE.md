@@ -6,1076 +6,296 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **DO NOT RUN `git commit`** - This is explicitly forbidden. Use `git add`, `git status`, `git diff`, and `git log` only. The user will commit manually.
 
+**ALWAYS run `make lint` and `make test`** before claiming success.
+
+**DO NOT modify `.golangci.yml`** without explicit approval.
+
 ## Project Overview
 
 PulumiCost Core is a CLI tool and plugin host system for calculating cloud infrastructure costs from Pulumi infrastructure definitions. It provides both projected cost estimates and actual historical cost analysis through a plugin-based architecture.
 
 ## Build Commands
 
-- `make build` - Build the pulumicost binary to bin/pulumicost
-- `make test` - Run all tests
-- `make lint` - Run golangci-lint (requires installation)
-- `make run` - Build and run with --help
-- `make dev` - Build and run without arguments
-- `make clean` - Remove build artifacts
+```bash
+make build         # Build binary to bin/pulumicost
+make test          # Run unit tests (default, fast)
+make test-race     # Run with race detector
+make test-integration  # Integration tests (slower)
+make test-e2e      # E2E tests (requires AWS credentials)
+make lint          # Run golangci-lint + markdownlint
+make validate      # go mod tidy, go vet
+make clean         # Remove build artifacts
+make run           # Build and run with --help
+make dev           # Build and run without args
+```
 
-**IMPORTANT** Always run `make lint` and `make test` before claiming success. See `.specify/memory/constitution.md` for quality gate requirements.
-
-## Go Version Information
-
-**Project Go Version**: 1.25.5
-
-### Dependencies
-
-- `github.com/spf13/cobra` - CLI framework
-- `google.golang.org/grpc` - Plugin communication
-- `gopkg.in/yaml.v3` - YAML spec parsing
-- `github.com/rshade/pulumicost-spec` - Protocol definitions (via replace directive to ../pulumicost-spec)
-- archive/tar
-- archive/zip
-- compress/gzip
-- net/http
-- github.com/spf13/cobra
-- github.com/rs/zerolog
-- github.com/oklog/ulid/v2
-- gopkg.in/yaml.v3
-- google.golang.org/grpc v1.77.0
-- File system
-  - ~/.pulumicost/plugins/
-  - ~/.pulumicost/config.yaml
-
-### Version Verification Protocol
-
-**CRITICAL**: Before claiming any Go version "doesn't exist" or suggesting version changes:
-
-1. **ALWAYS verify on <https://go.dev/dl/>** using WebFetch
-2. Check `go.mod` for the project's actual Go version
-3. Trust the versions specified in the repository
-4. Never assume based on training data - Go releases frequently after knowledge cutoffs
-
-Do NOT suggest version downgrades without explicit verification from go.dev.
-
-## Documentation Commands
-
-- `make docs-lint` - Lint documentation markdown files
-- `make docs-build` - Build documentation site with Jekyll
-- `make docs-serve` - Serve documentation locally (http://localhost:4000/pulumicost-core/)
-- `make docs-validate` - Validate documentation structure and completeness
-
-### GitHub Actions Workflow Best Practices
-
-**1. npm Cache Configuration:**
-
-- Only use `cache: 'npm'` if `package-lock.json` exists
-- For dynamic npm installs without lockfile, omit the cache parameter
-- Example fix:
-  ```yaml
-  - name: Setup Node.js
-    uses: actions/setup-node@v6
-    with:
-      node-version: '24'
-      # cache: 'npm'  # Remove if no package-lock.json
-  ```
-
-**2. Job Naming Conflicts:**
-
-- Avoid reserved keywords like `summary`, `status`, `output`
-- Use descriptive prefixes: `validation-summary`, `build-status`, etc.
-- Proper indentation is critical for YAML:
-  ```yaml
-  validation-summary: # Good: specific and unique
-    runs-on: ubuntu-latest
-    if: always() # Proper indentation under job
-    needs: [build]
-  ```
-
-**3. Testing Jekyll Builds Locally:**
-
-- Always test Jekyll builds before committing changes
-- Use Playwright MCP to verify the deployed site visually
-- Check browser console for 404 errors or missing resources
-- Workflow: Local build → Deploy → Playwright test → Commit
-
-### Jekyll + GitHub Pages Testing Workflow
-
-**Complete testing workflow using Playwright MCP:**
+### Single Package/Test Commands
 
 ```bash
-# 1. Test local Jekyll build first (if possible)
-# make docs-serve
+go test -v ./internal/cli/...           # Test specific package
+go test -v ./internal/engine/...        # Test engine package
+go test -run TestSpecificFunction ./... # Run specific test
 
-# 2. After deployment, test live site
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
-
-# 3. Take screenshot to verify visual appearance
-mcp__playwright__browser_take_screenshot(filename: "docs-check.png", fullPage: true)
-
-# 4. Check network requests for 404s or missing CSS
-mcp__playwright__browser_network_requests()
-# Look for: HTTP 200 on style.css, fonts, and JavaScript files
-
-# 5. Verify no duplicate content or layout issues in snapshot
-mcp__playwright__browser_snapshot()
+# Coverage
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out        # View in browser
 ```
 
-### Documentation Styling Best Practices
+## Go Version
 
-**Custom SCSS Structure:**
+**Project Go Version**: 1.25.5 (see `go.mod`)
 
-```scss
----
----
+**CRITICAL**: Before claiming any Go version "doesn't exist" or suggesting version
+changes, verify on <https://go.dev/dl/> first.
 
-@import '{{ site.theme }}'; // Import base theme first
+## SpecKit Feature Development Workflow
 
-/* Then add custom overrides */
-table {
-  /* Enhanced table styling */
-}
-.wrapper {
-  /* Layout adjustments */
-}
-```
+This project uses SpecKit for structured feature development. Features are developed in numbered branches with specifications, plans, and task lists.
 
-**Common Styling Improvements:**
+### Slash Commands
 
-- Table borders, padding, and alternating row colors
-- Wider content area (1200px max-width vs default 860px)
-- Better link colors and hover states
-- GitHub-style code blocks with proper syntax highlighting
-- Responsive breakpoints for mobile devices
-
-### Key Learnings from GitHub Pages Issues
-
-1. **Always create index.md explicitly** - Don't rely on README.md conversion
-2. **Test plugins before using template tags** - Jekyll fails silently in builds but errors in Actions
-3. **Use Playwright MCP for visual verification** - Screenshot + network requests catch most issues
-4. **Avoid duplicate titles** - Check both layout and content files
-5. **Test locally when possible** - Catches issues before CI/CD failures
-6. **Monitor GitHub Actions logs** - Liquid syntax errors show exact file and line number
-
-## Documentation Architecture
-
-### Location
-
-All documentation is in the `docs/` directory with GitHub Pages deployed from that folder.
-
-### Key Files
-
-- **docs/README.md** - Documentation home page with navigation
-- **docs/plan.md** - Complete documentation architecture and strategy
-- **docs/llms.txt** - Machine-readable index for LLM/AI tools
-- **docs/\_config.yml** - Jekyll configuration
+- `/speckit.specify [description]` - Create feature specification from natural language
+- `/speckit.clarify` - Identify underspecified areas and ask clarification questions
+- `/speckit.plan` - Generate technical implementation plan
+- `/speckit.tasks` - Generate actionable task list from plan
+- `/speckit.implement` - Execute tasks from tasks.md
+- `/speckit.analyze` - Cross-artifact consistency analysis
+- `/speckit.checklist` - Generate custom validation checklist
+- `/speckit.taskstoissues` - Convert tasks to GitHub issues
 
 ### Directory Structure
 
+```text
+specs/
+└── NNN-feature-name/
+    ├── spec.md          # Feature specification (what/why)
+    ├── plan.md          # Technical plan (how)
+    ├── tasks.md         # Actionable task list
+    └── checklists/      # Validation checklists
 ```
 
-docs/
-├── guides/                # Audience-specific guides (User, Engineer, Architect, CEO)
-├── getting-started/       # Quick onboarding and examples
-├── architecture/          # System design and diagrams
-├── plugins/              # Plugin documentation and development
-├── reference/            # CLI, API, and configuration reference
-├── deployment/           # Installation, configuration, and operations
-└── support/              # FAQ, troubleshooting, contributing, support
-```
+### Constitution
 
-### Audience-Specific Guides
+See `.specify/memory/constitution.md` for non-negotiable principles:
 
-- **guides/user-guide.md** - For end users: "How do I use this?"
-- **guides/developer-guide.md** - For engineers: "How do I extend this?"
-- **guides/architect-guide.md** - For architects: "How is this designed?"
-- **guides/business-value.md** - For CEO/product: "What problem does this solve?"
-
-### Plugin Documentation
-
-- **plugins/plugin-development.md** - How to build a PulumiCost plugin
-- **plugins/plugin-sdk.md** - Plugin SDK reference
-- **plugins/vantage/** - Vantage plugin example (IN PROGRESS)
-- **plugins/kubecost/** - Kubecost plugin docs (PLANNED)
-- **plugins/flexera/** - Flexera plugin docs (FUTURE)
-- **plugins/cloudability/** - Cloudability plugin docs (FUTURE)
-
-### Documentation Standards
-
-- Follow Google style guide for markdown
-- All code examples must be tested
-- Keep llms.txt updated (updated automatically by GitHub Actions)
-- Run `make docs-lint` before committing documentation changes
-- Use frontmatter YAML with `title`, `description`, and `layout` fields
-
-#### Jekyll Frontmatter and H1 Requirements
-
-**CRITICAL**: Files with Jekyll frontmatter must NOT have a duplicate H1 heading in the
-content. The frontmatter `title` field serves as the page H1.
-
-**Correct Pattern** (frontmatter title = H1, content starts with H2 or text):
-
-```markdown
----
-title: User Guide
-description: Complete guide for end users
-layout: default
----
-
-This guide is for anyone who wants to use PulumiCost...
-
-## Installation
-
-...
-```
-
-**Incorrect Pattern** (duplicate H1 causes MD025 lint error):
-
-```markdown
----
-title: User Guide
-description: Complete guide for end users
-layout: default
----
-
-# User Guide  ← ERROR: Duplicate H1!
-
-This guide is for anyone who wants to use PulumiCost...
-```
-
-**Markdownlint Configuration**: The `docs/.markdownlint-cli2.jsonc` file configures MD025
-to detect frontmatter titles as H1 headings via the `front_matter_title` pattern.
-
-### GitHub Actions for Docs
-
-- **docs-build-deploy.yml** - Builds and deploys docs to GitHub Pages on main branch
-- **docs-validate.yml** - Validates markdown, links, and structure on every commit
-- Automated linting prevents documentation drift
-- Link checking catches broken documentation references
+- Plugin-First Architecture
+- Test-Driven Development (80% coverage minimum, 95% for critical paths)
+- Cross-Platform Compatibility
+- Documentation as Code
+- Protocol Stability
 
 ## Architecture
 
 ### Core Components
 
-1. **CLI Layer** (`internal/cli/`) - Cobra-based command interface with subcommands:
-   - `cost projected` - Calculate projected costs from Pulumi preview JSON
-   - `cost actual` - Fetch actual historical costs with time ranges
-   - `plugin list` - List installed plugins
-   - `plugin validate` - Validate plugin setup
-   - `plugin init` - Initialize a new plugin project
-   - `plugin install` - Install a plugin from a registry or URL
-   - `plugin update` - Update an installed plugin
-   - `plugin remove` - Remove an installed plugin
-   - `analyzer serve` - Start the Pulumi Analyzer gRPC server
+1. **CLI Layer** (`internal/cli/`) - Cobra-based commands:
+   - `cost projected` - Estimate costs from Pulumi preview JSON
+   - `cost actual` - Fetch historical costs with time ranges/grouping
+   - `plugin list/validate/install/remove/update` - Plugin management
+   - `analyzer serve` - Pulumi Analyzer gRPC server for zero-click cost estimation
 
-2. **Engine** (`internal/engine/`) - Core cost calculation logic:
-   - Orchestrates between plugins and local pricing specs
-   - Handles resource mapping and cost aggregation
-   - Supports multiple output formats (table, JSON, NDJSON)
-   - **Actual Cost Pipeline**: Advanced cost querying with time ranges, filtering, and grouping
-     - `GetActualCostWithOptions()` - Flexible actual cost queries with filtering
-     - Tag-based filtering using `tag:key=value` syntax
-     - Grouping by resource, type, provider, or date dimensions
-     - Daily and monthly cost aggregation
-   - **Cross-Provider Aggregation Features**:
-     - `CreateCrossProviderAggregation()` - Time-based multi-provider cost analysis
-     - Currency validation system with `ErrMixedCurrencies` protection
-     - Advanced input validation (`ErrEmptyResults`, `ErrInvalidGroupBy`, `ErrInvalidDateRange`)
-     - GroupBy type safety with `IsValid()`, `IsTimeBasedGrouping()`, `String()` methods
-     - Intelligent cost calculation (actual vs projected with time period conversion)
-     - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
-     - Sorted chronological output for trend analysis
+2. **Engine** (`internal/engine/`) - Core cost calculation:
+   - Orchestrates between plugins and local specs
+   - Output formats: table, JSON, NDJSON
+   - Cross-provider aggregation with time-based grouping
+   - `hoursPerMonth = 730` for monthly calculations
 
-3. **Plugin Host System** (`internal/pluginhost/`) - gRPC plugin management:
-   - `Client` - Wraps plugin gRPC connections
-   - `ProcessLauncher` - Launches plugins as TCP processes
-   - `StdioLauncher` - Alternative stdio-based plugin communication
+3. **Plugin Host** (`internal/pluginhost/`) - gRPC plugin management:
+   - `ProcessLauncher` (TCP) and `StdioLauncher` (stdin/stdout)
+   - 10-second timeout with 100ms retry delays
+   - Always call `cmd.Wait()` after `Kill()` to prevent zombies
 
-4. **Registry** (`internal/registry/`) - Plugin discovery and lifecycle:
-   - Scans `~/.pulumicost/plugins/<name>/<version>/` for binaries
-   - Manages plugin manifests and metadata
+4. **Registry** (`internal/registry/`) - Plugin discovery:
+   - Scans `~/.pulumicost/plugins/<name>/<version>/`
+   - Optional `plugin.manifest.json` validation
 
 5. **Ingestion** (`internal/ingest/`) - Pulumi plan parsing:
-   - Converts `pulumi preview --json` output to resource descriptors
-   - Extracts provider and resource type information
+   - Converts `pulumi preview --json` to resource descriptors
+   - **CRITICAL**: Must inspect `newState` to extract `Inputs` correctly
 
-6. **Spec System** (`internal/spec/`) - Local pricing specification:
-   - YAML-based pricing specs in `~/.pulumicost/specs/`
-   - Fallback when plugins don't provide pricing
+6. **Analyzer** (`internal/analyzer/`) - Pulumi Analyzer protocol:
+   - Implements `pulumirpc.AnalyzerServer` for zero-click cost estimation
+   - ADVISORY enforcement (never blocks deployments)
+   - Prints ONLY port number to stdout (Pulumi handshake protocol)
 
-7. **Analyzer** (`internal/analyzer/`) - Implements Pulumi Analyzer gRPC protocol:
-   - **Server**: Implements `pulumirpc.AnalyzerServer` interface
-   - **Resource Mapping**: Converts `pulumirpc.AnalyzerResource` to `engine.ResourceDescriptor`
-   - **Diagnostics**: Generates `pulumirpc.AnalyzeDiagnostic` from cost results (ADVISORY enforcement)
-   - **Graceful Degradation**: Errors produce warning diagnostics, preview continues even if cost calculation fails
-   - **CLI Integration**: `pulumicost analyzer serve` starts gRPC server for Pulumi CLI handshake
+7. **TUI** (`internal/tui/`) - Shared Terminal UI components:
+   - Built on Bubble Tea and Lip Gloss
+   - Adaptive color schemes (light/dark terminal detection)
+   - Reusable progress indicators, styled text, and tables
 
+### Data Flow
 
-### Plugin Protocol
+```text
+Pulumi JSON → Ingestion → Resource Descriptors → Engine
+                                                    ↓
+                                        Plugins (gRPC) or Local Specs
+                                                    ↓
+                                              Cost Results → Output Rendering
+```
 
-Plugins communicate via gRPC using protocol buffers defined in the `pulumicost-spec` repository. Current implementation uses mock protobuf definitions (`internal/proto/mock.go`) until the spec repository is fully implemented.
+### Plugin Communication
 
-Key plugin methods:
+Plugins communicate via gRPC using protocol buffers from `pulumicost-spec`:
 
 - `Name()` - Plugin identification
-- `GetProjectedCost()` - Calculate estimated costs for resources
-- `GetActualCost()` - Retrieve historical costs from cloud APIs
+- `GetProjectedCost()` - Estimated costs for resources
+- `GetActualCost()` - Historical costs from cloud APIs
 
-## Development Workflow
+## Documentation
 
-1. **Resource Flow**: Pulumi JSON → Resource Descriptors → Plugin Queries → Cost Results → Output Rendering
+All documentation lives in `docs/` with GitHub Pages deployment.
 
-2. **Plugin Discovery**: Registry scans plugin directories → Launches processes → Establishes gRPC connections → Makes API calls
-
-3. **Cost Calculation**: Try plugins first → Fallback to local specs → Aggregate results → Render output
-
-## Key Files
-
-- `cmd/pulumicost/main.go` - CLI entry point
-- `internal/engine/engine.go` - Core orchestration logic
-- `internal/pluginhost/host.go` - Plugin client management
-- `internal/ingest/pulumi_plan.go` - Pulumi plan parsing
-- `examples/plans/aws-simple-plan.json` - Sample Pulumi plan for testing
-- `examples/specs/aws-ec2-t3-micro.yaml` - Sample pricing specification
-
-## E2E Testing Implementation Details
-
-**Crucial Learnings for E2E Tests:**
-
-1.  **Pulumi Plan JSON Structure**: The `pulumi preview --json` output nests resource details (including `inputs` and `type`) under a `newState` object for operations like `create`, `update`, and `same`. The ingestion logic (`internal/ingest/pulumi_plan.go`) **MUST** inspect `newState` to correctly extract these fields. Failing to do so results in empty `Inputs`, which causes property extraction to fail.
-
-2.  **Property Extraction Dependencies**: The Core (`internal/proto/adapter.go`) relies on the `Inputs` map being populated to extract `SKU` (from `instanceType`, `type`, etc.) and `Region` (from `availabilityZone`, `region`). If ingestion fails to populate `Inputs`, these fields will be empty, leading to `InvalidArgument` errors from strict plugins.
-
-3.  **Plugin Resource Type Compatibility**: Plugins may have strict validation on `ResourceType`. Pulumi typically provides types like `aws:ec2/instance:Instance` (Type Token), while some plugins (or pricing APIs) might expect `aws:ec2:Instance` or just `ec2`.
-    - **Current Strategy**: Plugins should handle the standard Pulumi Type Token format (`pkg:module:type`).
-    - **Patching**: If a plugin rejects a valid type, it likely needs a patch to normalize or map the type string to its internal service identifier (e.g., `detectService` helper).
-
-**Local Plugin Development Workflow:**
-
-To debug or fix plugin issues during Core development:
-
-1.  Clone the plugin repository (e.g., `pulumicost-plugin-aws-public`).
-2.  Modify the plugin code (e.g., add logging, fix type mapping).
-3.  Build the plugin: `make build-region REGION=us-east-1`.
-4.  Install locally: Overwrite the binary in `~/.pulumicost/plugins/<plugin>/<version>/...`.
-5.  Run Core E2E tests to verify the fix.
-
-## Project Management
-
-### Cross-Repository Project
-
-- **GitHub Project**: https://github.com/users/rshade/projects/3
-- **Scope**: Manages issues across three repositories:
-  - `pulumicost-core` (this repository) - CLI tool and plugin host
-  - `pulumicost-spec` - Protocol buffer definitions and specifications
-  - `pulumicost-plugin` - Plugin implementations and SDK
-
-### Product Manager Responsibilities
-
-- Keep issues synchronized across all three repositories
-- Manage cross-repo dependencies and coordination
-- Track feature development across the entire ecosystem
-- Ensure consistent issue labeling and milestone alignment
-
-### GitHub CLI Commands for Project Management
+### Commands
 
 ```bash
-# View project overview
-gh project view 3 --owner rshade
-
-# Add issues to project (when creating cross-repo issues)
-gh issue edit ISSUE --repo OWNER/REPO --add-project "PulumiCost Development"
+make docs-lint     # Lint markdown
+make docs-build    # Build Jekyll site
+make docs-serve    # Serve at http://localhost:4000/pulumicost-core/
+make docs-validate # Validate structure
 ```
+
+### Structure
+
+```text
+docs/
+├── guides/           # Audience-specific (User, Developer, Architect, Business)
+├── getting-started/  # Quickstart, installation, examples
+├── architecture/     # System design, core concepts, roadmap
+├── plugins/          # Plugin development, SDK, per-plugin docs
+├── reference/        # CLI, API, configuration, error codes
+├── deployment/       # Installation, Docker, CI/CD, security
+└── support/          # FAQ, troubleshooting, contributing
+```
+
+### Key Files
+
+- `docs/README.md` - Documentation hub with navigation
+- `docs/llms.txt` - Machine-readable index for AI tools
+- `docs/_config.yml` - Jekyll configuration
+
+## Key Patterns
+
+### CLI Package (`internal/cli/`)
+
+- Use `RunE` not `Run` for error handling
+- Use `cmd.Printf()` for output (not `fmt.Printf()`)
+- Defer cleanup functions immediately after obtaining resources
+- Support multiple date formats: "2006-01-02", RFC3339
+
+### Logging (Zerolog)
 
 ```go
-var (
-    ErrNoCostData       = errors.New("no cost data available")
-    ErrMixedCurrencies  = errors.New("mixed currencies not supported in cross-provider aggregation")
-    ErrInvalidGroupBy   = errors.New("invalid groupBy type for cross-provider aggregation")
-    ErrEmptyResults     = errors.New("empty results provided for aggregation")
-    ErrInvalidDateRange = errors.New("invalid date range: end date must be after start date")
-)
+// Get logger from context (includes trace_id)
+log := logging.FromContext(ctx)
+log.Debug().Ctx(ctx).Str("component", "engine").Msg("starting")
 ```
 
-## CI/CD Pipeline
+Enable debug: `--debug` flag or `PULUMICOST_LOG_LEVEL=debug`
 
-### Overview
+**Log Levels**: TRACE (property extraction) → DEBUG (function entry/exit) →
+INFO (high-level ops) → WARN (recoverable issues) → ERROR (failures)
 
-Complete CI/CD pipeline setup with GitHub Actions for automated testing, building, and release management.
-
-### CI Pipeline (.github/workflows/ci.yml)
-
-Triggered on pull requests and pushes to main branch:
-
-**Test Job:**
-
-- Go 1.25.5 setup with caching
-- Unit tests with race detection and coverage reporting
-- Coverage threshold check (minimum 20%)
-- Artifacts uploaded for coverage reports
-
-**Lint Job:**
-
-- golangci-lint with project-specific configuration
-- Security scanning with gosec included
-- Timeout set to 5 minutes
-
-**Security Job:**
-
-- govulncheck for dependency vulnerability scanning
-- Checks for known vulnerabilities in Go dependencies
-
-**Validation Job:**
-
-- gofmt formatting checks
-- go mod tidy verification
-- go vet static analysis
-
-**Build Job:**
-
-- Cross-platform builds (Linux, macOS, Windows)
-- Support for amd64 and arm64 architectures
-- Build artifacts uploaded with proper naming
-
-### Release Pipeline (.github/workflows/release.yml)
-
-Triggered on version tags (v\*):
-
-**Multi-Platform Binaries:**
-
-- Linux: amd64, arm64
-- macOS: amd64, arm64
-- Windows: amd64
-- Naming convention: `pulumicost-v{version}-{os}-{arch}`
-
-**Release Features:**
-
-- Automatic changelog generation from git history
-- SHA256 checksums for all binaries
-- GitHub Release creation with proper metadata
-- Asset upload with verification instructions
-- Pre-release detection for tags containing hyphens
-
-### Quality Gates
-
-**Code Quality:**
-
-- golangci-lint with essential linters (errcheck, govet, staticcheck, gosec, etc.)
-- Security scanning integrated into CI pipeline
-- Formatting and import organization enforced
-
-**Coverage Requirements:**
-
-- Minimum 20% code coverage (adjustable as project matures)
-- Coverage reports generated and uploaded as artifacts
-- Automatic threshold validation in CI
-
-**Build Verification:**
-
-- Cross-platform compilation verification
-- Binary naming consistency
-- Version information embedded in binaries
-
-### Commands for Local Development
-
-```bash
-# Basic development workflow
-make build       # Build binary
-make test        # Run all unit tests
-make lint        # Code linting
-make validate    # Go vet and formatting checks
-make dev         # Build and run binary without args
-make run         # Build and run with --help
-make clean       # Remove build artifacts
-
-# Single package testing
-go test -v ./internal/cli/...           # Test only CLI package
-go test -v ./internal/engine/...        # Test only engine package
-go test -run TestSpecificFunction ./... # Run specific test function
-
-# Coverage analysis
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out  # View in browser
-go tool cover -func=coverage.out | grep total  # Check total coverage
-
-# Development testing with examples
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
-./bin/pulumicost cost actual --start-date 2024-01-01 --end-date 2024-01-31
-./bin/pulumicost cost actual --group-by resource --filter "tag:env=prod"
-./bin/pulumicost cost actual --output json --start-date 2024-01-01T00:00:00Z
-./bin/pulumicost plugin list
-./bin/pulumicost plugin validate
-```
-
-## CI/CD Implementation Learnings
-
-### golangci-lint Configuration
-
-- **Issue**: Original .golangci.yml was overly complex (449 lines) with deprecated/invalid linters
-- **Solution**: Simplified to essential linters (errcheck, govet, staticcheck, gosec, revive, unused, ineffassign)
-- **Key learnings**:
-  - `typecheck` and `gofmt` are not valid linters in newer golangci-lint versions
-  - `goimports` is a formatter, not a linter in v2+
-  - Use `--allow-parallel-runners` flag in Makefile to prevent conflicts
-  - Project-specific configuration should match codebase maturity
-
-### Coverage Thresholds
-
-
-- **Threshold Set**: 20% (adjusted from initial 80% for realistic expectations)
-- **Strategy**: Start conservative, increase as project matures and more tests added
-- **Command**: `go tool cover -func=coverage.out | grep total` for threshold checking
-
-### Security Scanning Integration
-
-- **gosec**: Already included in golangci-lint configuration
-- **govulncheck**: Separate step for dependency vulnerability scanning
-- **Common Issues**: File permissions (G306), potential file inclusion (G304), subprocess usage (G204)
-- **Test exclusions**: Security issues in test files are often acceptable and should be excluded
-
-### Cross-Platform Build Patterns
-
-- **Binary naming**: `pulumicost-v{version}-{os}-{arch}` with `.exe` for Windows
-- **Architecture matrix**: Linux/macOS (amd64, arm64), Windows (amd64 only)
-- **LDFLAGS**: Proper shell escaping needed for version embedding
-- **Build verification**: All platforms should compile successfully in CI
-
-### GitHub Actions Best Practices
-
-- **Deprecated actions**: Avoid `actions/create-release@v1`, use `softprops/action-gh-release@v2`
-- **Artifact management**: Use `actions/upload-artifact@v4` with proper naming
-- **HEREDOC usage**: Essential for multiline strings in workflow files
-- **Matrix excludes**: Use to skip unsupported combinations (e.g., Windows ARM64)
-
-### Release Automation Patterns
-
-- **Tag detection**: `${GITHUB_REF#refs/tags/}` pattern for version extraction
-- **Changelog generation**: Git history works well with `git log ${PREV_TAG}..${CURRENT_TAG}`
-- **Checksums**: SHA256 for all binaries with verification instructions
-- **Pre-release detection**: Use `contains(steps.version.outputs.tag, '-')` for beta/alpha tags
-
-### Dependency Management Strategy
-
-- **Dual approach**: Renovate + Dependabot with different schedules (avoid conflicts)
-- **Rate limiting**: Prevent PR spam with `prConcurrentLimit` and `prHourlyLimit`
-- **Semantic commits**: Enable conventional commit format for changelog automation
-- **Security alerts**: Immediate notification for vulnerability PRs
-
-### Common Linting Issues Found
-
-- **errcheck (23 issues)**: Unchecked error returns, especially in defer statements and fmt functions
-- **gosec (8 issues)**: File permissions, subprocess usage, file inclusion patterns
-- **revive (50 issues)**: Missing package comments, exported type documentation
-- **staticcheck (4 issues)**: Deprecated gRPC functions (grpc.DialContext, grpc.WithBlock)
-
-### Testing Strategy Insights
-
-- **Race detection**: Use `-race` flag for concurrent code testing
-- **Coverage modes**: `atomic` mode recommended for accurate concurrent coverage
-- **Integration testing**: Include CLI workflow testing in CI pipeline
-- **Test exclusions**: Some linting rules should be relaxed for test files
-
-### Project-Specific Notes
-
-- **Test distribution**: CLI package well-tested (67.2%), other packages need attention
-- **Architecture**: Plugin system will need careful testing as it develops
-- **Proto integration**: Real protobuf definitions working, mock phase complete
-- **Build system**: Well-structured with proper version/commit embedding
-
-### Troubleshooting Commands
-
-```bash
-# Fix parallel linting conflicts
-pkill golangci-lint || true
-
-# Check coverage details
-go tool cover -html=coverage.out
-
-# Test release build locally
-GOOS=linux GOARCH=amd64 make build
-
-# Validate workflow syntax
-gh workflow validate .github/workflows/ci.yml
-
-```
+**Standard Fields**: `trace_id`, `component`, `operation`, `duration_ms`
 
 ## Testing
 
-### Comprehensive Testing Framework
+### Test Directory Structure
 
-The project includes a comprehensive testing framework organized in the `/test` directory:
-
-```
-/test
-├── unit/              # Unit tests by package (engine, config, spec)
-├── integration/       # Cross-component tests (plugin communication, e2e)
-├── fixtures/          # Test data (plans, specs, configs, responses)
-├── mocks/             # Mock implementations (plugin server)
-└── benchmarks/        # Performance tests
-```
-
-**Test Categories:**
-
-- **Unit Tests** (80% coverage target): Individual component logic
-- **Integration Tests**: Plugin communication, CLI workflows
-- **End-to-End Tests**: Complete CLI workflows with real binaries
-- **Performance Tests**: Benchmarks for cost calculations
-- **Mock Tests**: Configurable plugin server for testing
-
-**Running Tests:**
-
-```bash
-# All tests (including existing + new framework)
-make test
-
-# New testing framework only
-go test ./test/...
-
-# Specific categories
-go test ./test/unit/...           # Unit tests
-go test ./test/integration/...     # Integration tests
-go test ./test/benchmarks/...      # Performance benchmarks
-go test ./test/mocks/plugin/...    # Mock plugin tests
-
-# With coverage
-go test -coverprofile=coverage.out ./test/...
-go tool cover -html=coverage.out
-
-# With race detection
-go test -race ./test/...
+```text
+test/
+├── unit/           # Unit tests by package (engine, config, spec)
+├── integration/    # Cross-component tests (plugin communication)
+├── e2e/            # End-to-end tests (separate Go module)
+├── fixtures/       # Test data (plans, specs, configs, responses)
+├── mocks/          # Mock implementations (plugin server)
+└── benchmarks/     # Performance tests
 ```
 
-### E2E Testing (Real AWS Infrastructure)
-
-The E2E test framework validates cost calculations against real AWS infrastructure using the Pulumi Automation API.
+### E2E Testing
 
 **Location**: `test/e2e/` (separate Go module)
 
-**Running E2E Tests:**
+**Prerequisites**: AWS credentials, Pulumi CLI, `make build`
 
 ```bash
-# Set required environment variables
 eval "$(aws configure export-credentials --format env)"
 export PATH="$HOME/.pulumi/bin:$PATH"
 export PULUMI_CONFIG_PASSPHRASE="e2e-test-passphrase"
-export AWS_REGION=us-east-1
-
-# Run all E2E tests
 make test-e2e
-
-# Run specific E2E test
-make test-e2e TEST_ARGS="-run TestProjectedCost_EC2"
-
-# Direct go test invocation
-go test -v -tags e2e -timeout 60m ./...
 ```
 
-**Prerequisites:**
+**CRITICAL**: E2E tests MUST call actual pulumicost CLI binary.
+Never simulate cost values or stub CLI execution.
 
-- AWS credentials configured (via AWS CLI or environment variables)
-- Pulumi CLI installed (`~/.pulumi/bin/pulumi`)
-- Go 1.25.5+
-- pulumicost binary built (`make build`)
+### Local Plugin Development
 
-**Environment Variables:**
+To debug plugin issues during Core development:
 
-| Variable                   | Description                               | Default     |
-| -------------------------- | ----------------------------------------- | ----------- |
-| `AWS_ACCESS_KEY_ID`        | AWS access key                            | Required    |
-| `AWS_SECRET_ACCESS_KEY`    | AWS secret key                            | Required    |
-| `AWS_SESSION_TOKEN`        | AWS session token (if using SSO/MFA)      | Optional    |
-| `AWS_REGION`               | AWS region for tests                      | `us-east-1` |
-| `E2E_REGION`               | Override AWS region                       | `us-east-1` |
-| `E2E_TIMEOUT_MINS`         | Maximum test duration                     | `60`        |
-| `PULUMI_CONFIG_PASSPHRASE` | Passphrase for local state encryption     | Required    |
-| `PATH`                     | Must include Pulumi CLI (`~/.pulumi/bin`) | Required    |
+1. Clone the plugin repository (e.g., `pulumicost-plugin-aws-public`)
+2. Modify the plugin code (add logging, fix type mapping)
+3. Build: `make build-region REGION=us-east-1`
+4. Install: Copy binary to `~/.pulumicost/plugins/<plugin>/<version>/`
+5. Run Core E2E tests to verify
 
-**Test Categories:**
+## Important Files
 
-- `TestProjectedCost_EC2` - Validates EC2 projected cost against AWS pricing
-- `TestProjectedCost_EBS` - Validates EBS projected cost against AWS pricing
-- `TestActualCost_Runtime` - Validates actual cost calculation over time
-- `TestCleanupVerification` - Verifies resource cleanup
-- `TestUnsupportedResourceTypes` - Validates graceful handling of unsupported resources
-- `TestCLIExecution` - Black-box CLI binary testing
+- `cmd/pulumicost/main.go` - CLI entry point
+- `internal/engine/engine.go` - Core orchestration
+- `internal/pluginhost/host.go` - Plugin client management
+- `internal/ingest/pulumi_plan.go` - Pulumi plan parsing
+- `.specify/memory/constitution.md` - Project principles and quality gates
+- `examples/plans/aws-simple-plan.json` - Sample plan for testing
 
-**Safety Features:**
+## Pulumi Integration Notes
 
-- ULID-prefixed stack names for test isolation
-- Automatic cleanup on test completion
-- Signal handling for cleanup on interrupt (Ctrl+C)
-- 60-minute timeout with retry logic for AWS operations
+### Plan JSON Parsing
 
-**CRITICAL: No Simulation/Stubbing in E2E Tests:**
+The `pulumi preview --json` output nests resource details under `newState`.
+Ingestion MUST inspect `newState` to extract `inputs` and `type`. Without this,
+property extraction fails and plugins return `InvalidArgument` errors.
 
-E2E tests MUST call the actual pulumicost CLI binary and validate real cost calculations. Never:
+### Property Extraction
 
-- Simulate cost values (e.g., `calculatedCost := expectedCost * 1.01`)
-- Stub CLI execution with hardcoded responses
-- Skip real infrastructure deployment
-- Use mock pricing data in E2E tests
+The adapter (`internal/proto/adapter.go`) relies on the `Inputs` map to extract:
 
-The purpose of E2E tests is to validate the complete system works correctly. Tests that simulate behavior defeat this purpose. If you need faster feedback during development, use unit tests or integration tests instead.
+- **SKU**: from `instanceType`, `type`, etc.
+- **Region**: from `availabilityZone`, `region`
 
-**Test Fixtures Available:**
+If ingestion fails to populate `Inputs`, these fields are empty.
 
-- AWS, Azure, GCP Pulumi plans (`test/fixtures/plans/`)
-- Pricing specifications (`test/fixtures/specs/`)
-- Mock API responses (`test/fixtures/responses/`)
-- Configuration examples (`test/fixtures/configs/`)
+### Resource Type Compatibility
 
-**Mock Plugin Server:**
-The testing framework includes a configurable gRPC plugin server for testing plugin communication:
+Pulumi provides types like `aws:ec2/instance:Instance` (Type Token). Plugins may
+expect `aws:ec2:Instance` or just `ec2`. Plugins should handle the standard
+Pulumi format or normalize internally.
+
+### Pulumi SDK Import Path
+
+For Analyzer development, use the correct import:
 
 ```go
-mockPlugin := plugin.NewMockPlugin("test-plugin")
-mockPlugin.SetProjectedCostResponse("aws_instance", customResponse)
-mockPlugin.SetError("GetActualCost", simulatedError)
+pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
+// NOT: github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc
 ```
 
-### Manual Testing Commands
+## Multi-Repository Ecosystem
 
-Use the provided example files for manual testing:
+PulumiCost operates across three repositories:
 
-```bash
-# Projected cost calculation
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+- **pulumicost-core** (this repo) - CLI tool, plugin host, orchestration
+- **pulumicost-spec** - Protocol buffer definitions, SDK generation
+- **pulumicost-plugin** - Plugin implementations (Kubecost, Vantage, etc.)
 
-# Actual cost queries with time ranges
-./bin/pulumicost cost actual --start-date 2024-01-01 --end-date 2024-01-31
+Cross-repo changes follow the protocol in `.specify/memory/constitution.md`.
 
-# Actual cost with filtering and grouping
-./bin/pulumicost cost actual --group-by resource --filter "tag:env=prod" --output table
-./bin/pulumicost cost actual --group-by daily --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
+## Dependencies
 
-# Cross-provider aggregation (NEW)
-./bin/pulumicost cost actual --group-by daily --start-date 2024-01-01 --end-date 2024-01-31 --output json
-./bin/pulumicost cost actual --group-by monthly --start-date 2024-01-01 --end-date 2024-12-31 --filter "tag:env=prod"
-./bin/pulumicost cost actual --group-by daily --output table  # Shows cross-provider daily breakdown
+Key dependencies (see `go.mod` for versions):
 
-# Plugin management
-./bin/pulumicost plugin list
-./bin/pulumicost plugin validate
-```
-
-### Test Requirements
-
-- **Unit tests**: Must achieve 80% coverage minimum
-- **Critical paths**: Must achieve 95% coverage
-- **All error paths**: Must be tested
-- **Performance regressions**: Must be detected via benchmarks
-- **Integration scenarios**: Must include plugin communication flows
-- **End-to-end workflows**: Must test complete CLI usage
-
-### CI/CD Integration
-
-The existing CI/CD pipeline automatically runs all tests including the new framework:
-
-- Unit tests with coverage reporting
-- Integration tests with timeout handling
-- Linting and security scanning
-- Cross-platform build verification
-
-**Never complete a project without running:**
-
-```bash
-make test    # Run all tests
-make lint    # Run linting
-```
-
-## Logging (Zerolog)
-
-PulumiCost uses zerolog for structured logging with distributed tracing support.
-
-### Enabling Debug Output
-
-```bash
-# CLI flag
-pulumicost cost projected --debug --pulumi-json plan.json
-
-# Environment variable
-export PULUMICOST_LOG_LEVEL=debug
-export PULUMICOST_LOG_FORMAT=json    # json or console
-export PULUMICOST_TRACE_ID=external-trace-123  # inject external trace ID
-```
-
-### Configuration Precedence
-
-1. CLI flags (`--debug`)
-2. Environment variables (`PULUMICOST_LOG_LEVEL`)
-3. Config file (`~/.pulumicost/config.yaml`)
-4. Default (info level, console format)
-
-### Logging Patterns for Developers
-
-```go
-// Get logger from context (preferred - includes trace_id)
-log := logging.FromContext(ctx)
-log.Debug().
-    Ctx(ctx).
-    Str("component", "engine").
-    Str("operation", "get_projected_cost").
-    Int("resource_count", len(resources)).
-    Msg("starting projected cost calculation")
-
-// Create component sub-logger
-logger = logging.ComponentLogger(logger, "registry")
-
-// Log with duration
-start := time.Now()
-// ... operation ...
-log.Info().
-    Ctx(ctx).
-    Dur("duration_ms", time.Since(start)).
-    Msg("operation complete")
-```
-
-### Standard Log Fields
-
-| Field         | Purpose             | Example                      |
-| ------------- | ------------------- | ---------------------------- |
-| `trace_id`    | Request correlation | "01HQ7X2J3K4M5N6P7Q8R9S0T1U" |
-| `component`   | Package identifier  | "cli", "engine", "registry"  |
-| `operation`   | Current operation   | "get_projected_cost"         |
-| `duration_ms` | Operation timing    | 245                          |
-
-### Log Levels
-
-- **TRACE**: Property extraction, detailed calculations
-- **DEBUG**: Function entry/exit, retries, intermediate values
-- **INFO**: High-level operations (command start/end)
-- **WARN**: Recoverable issues (fallbacks, deprecations)
-- **ERROR**: Failures needing attention
-
-### Trace ID Management
-
-```go
-// Generate trace ID at entry point (usually in CLI PersistentPreRunE)
-traceID := logging.GetOrGenerateTraceID(ctx)
-ctx = logging.ContextWithTraceID(ctx, traceID)
-
-// TracingHook automatically injects trace_id when using .Ctx(ctx)
-```
-
-## Package-Specific Documentation
-
-### internal/cli
-
-The CLI package implements the Cobra-based command-line interface. Key patterns:
-
-- Use `RunE` not `Run` for error handling
-- Always use `cmd.Printf()` for output (not `fmt.Printf()`)
-- Defer cleanup functions immediately after obtaining resources
-- Support multiple date formats: "2006-01-02", RFC3339
-- See `internal/cli/CLAUDE.md` for detailed CLI architecture and patterns
-
-### internal/engine
-
-The engine package orchestrates cost calculations between plugins and specs:
-
-- Tries plugins first, falls back to local YAML specs
-- Supports three output formats: table, JSON, NDJSON
-- Uses `hoursPerMonth = 730` for monthly calculations
-- Always returns some result, even if placeholder
-- **Actual Cost Pipeline Features**:
-  - `GetActualCostWithOptions()` - Advanced querying with time ranges and filters
-  - Resource filtering with `matchesTags()` helper for tag-based filtering
-  - Cost aggregation logic for daily/monthly breakdowns
-  - Grouping support (resource, type, provider, date)
-  - Multiple date format parsing ("2006-01-02", RFC3339)
-- **Cross-Provider Aggregation Features** (NEW):
-  - `CreateCrossProviderAggregation()` - Time-based multi-provider cost analysis
-  - Currency validation system with `ErrMixedCurrencies` protection
-  - Advanced input validation (empty results, invalid date ranges, grouping types)
-  - GroupBy type safety with `IsValid()`, `IsTimeBasedGrouping()`, `String()` methods
-  - Intelligent cost calculation (actual vs projected with time period conversion)
-  - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
-  - Sorted chronological output for trend analysis
-- See `internal/engine/CLAUDE.md` for detailed calculation flows
-
-## Common Error Types
-
-- `ErrNoCostData`: No cost data available for a resource.
-- `ErrMixedCurrencies`: Multiple currencies detected in cross-provider aggregation.
-- `ErrInvalidGroupBy`: Invalid grouping type used for time-based aggregation.
-- `ErrEmptyResults`: Attempted aggregation on empty results.
-- `ErrInvalidDateRange`: Invalid date range (end date before start date).
-- `ErrResourceValidation`: Internal resource validation failed.
-- `ErrConfigCorrupted`: Configuration file is malformed.
-
-### internal/pluginhost
-
-The pluginhost package manages plugin communication via gRPC:
-
-- Two launcher types: ProcessLauncher (TCP) and StdioLauncher (stdin/stdout)
-- 10-second timeout with 100ms retry delays
-- Platform-specific binary detection (Unix permissions vs Windows .exe)
-- Always call `cmd.Wait()` after `Kill()` to prevent zombies
-- See `internal/pluginhost/CLAUDE.md` for detailed plugin lifecycle
-
-### internal/registry
-
-The registry package handles plugin discovery and lifecycle:
-
-- Scans `~/.pulumicost/plugins/<name>/<version>/` structure
-- Optional `plugin.manifest.json` validation
-- Graceful handling of missing directories and invalid binaries
-- Platform-specific executable detection
-- See `internal/registry/CLAUDE.md` for detailed discovery patterns
-
-### internal/analyzer
-
-The analyzer package implements the Pulumi Analyzer gRPC protocol for zero-click cost estimation during `pulumi preview`:
-
-- **Server**: Implements `pulumirpc.AnalyzerServer` interface with `AnalyzeStack`, `Handshake`, `ConfigureStack`, `Cancel`, `GetAnalyzerInfo`, `GetPluginInfo` RPCs
-- **Resource Mapping**: Converts `pulumirpc.AnalyzerResource` to `engine.ResourceDescriptor` for cost calculation
-- **Diagnostics**: Generates `pulumirpc.AnalyzeDiagnostic` from cost results with ADVISORY enforcement (never blocks deployments)
-- **Graceful Degradation**: Errors produce warning diagnostics, preview continues even if cost calculation fails
-
-**Key Components**:
-
-- `Server` - gRPC server implementing Pulumi Analyzer protocol
-- `MapResource/MapResources` - Convert Pulumi resources to internal format
-- `CostToDiagnostic` - Convert cost results to Pulumi diagnostics
-- `StackSummaryDiagnostic` - Aggregate stack-level cost summary
-- `WarningDiagnostic` - Generate warning for error conditions
-
-**CLI Integration**:
-
-- `pulumicost analyzer serve` - Starts gRPC server on random TCP port
-- Prints ONLY port number to stdout (Pulumi handshake protocol)
-- All logging goes to stderr exclusively
-- Graceful shutdown on SIGINT/SIGTERM
-
-**Protocol Requirements**:
-
-- Port handshake: Server prints port to stdout, Pulumi engine connects
-- Stack configuration: Engine sends stack/project context before analysis
-- Resource analysis: Engine sends resources, analyzer returns diagnostics
-- Cancellation: Engine can request analysis cancellation
-
-**Testing**:
-
-```bash
-# Run analyzer unit tests
-go test ./internal/analyzer/...
-
-# Run integration tests
-go test ./test/integration/...
-
-# Check coverage (target: 80%, achieved: 92.7%)
-go test -coverprofile=coverage.out ./internal/analyzer/...
-go tool cover -func=coverage.out
-```
-
-## CodeRabbit Configuration
-
-### Setup
-
-The repository includes a comprehensive `.coderabbit.yaml` configuration optimized for Go development with the following key settings:
-
-**PR Blocking Configuration:**
-
-- `fail_commit_status: true` - Blocks PR merging on critical issues
-- `request_changes_workflow: true` - Formally requests changes for issues
-- `profile: assertive` - Uses stricter analysis profile
-
-**Comment Management:**
-
-- `auto_reply: true` - Enables automatic comment responses
-- `abort_on_close: true` - Stops processing when PR is closed
-- `auto_incremental_review: true` - Reviews new commits automatically
-
-**Go-Specific Settings:**
-
-- Custom path instructions for `**/*.go` files focusing on Go best practices
-- Enhanced test review instructions for `**/*_test.go` files
-- Enabled golangci-lint, gitleaks, yamllint, and markdownlint
-- Docstring and unit test generation enabled
-
-**Tool Configuration:**
-
-- `golangci-lint: enabled: false` - Integrates with project's existing linting
-- `markdownlint: enabled: true` - Validates documentation
-- `gitleaks: enabled: true` - Scans for secrets
-- `actionlint: enabled: true` - Validates GitHub Actions
-- `semgrep: enabled: true` - Advanced security analysis
-
-### Usage
-
-CodeRabbit now:
-
-1. **Blocks PRs** with critical issues by setting commit status to failed
-2. **Updates comments** automatically on new commits
-3. **Resolves outdated comments** when issues are fixed
-4. **Provides detailed Go-specific feedback** on code quality
-5. **Integrates with existing CI/CD** tools and workflows
-
-## Active Technologies
-
-- Go 1.25.4 (008-analyzer-plugin)
-- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
-
-- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
-- Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
-- File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
-
-## Recent Changes
-
-- 001-engine-test-coverage: Added Go 1.25.5 + testing (stdlib), github.com/stretchr/testify
-- 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
-
-## Session Analysis - Recommended Updates
-
-Based on recent development sessions, consider adding:
-
-### Go Version Management
-
-- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
-- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
-- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root-level documentation
-- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
-
-### Systematic Version Updates
-
-- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update each file systematically, 4) Verify with final grep search
-- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum requirements (Go 1.24+ → Go 1.25.5+)
-- **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
-
-This ensures complete version consistency across the entire codebase and documentation.
-
-## AI Agent File Maintenance
-
-This file (CLAUDE.md) provides guidance for Claude Code and other AI assistants. To maintain its effectiveness:
-
-### Update Requirements:
-
-- **Review regularly** when significant codebase changes occur
-- **Update version information** immediately when Go versions change
-- **Document new patterns** and conventions as they emerge
-- **Include new technologies** and dependencies as they are added
-- **Update build/test commands** when processes change
-- **Maintain architecture documentation** as the system evolves
-
-### When to Update:
-
-- New major features are implemented
-- Build or testing processes change
-- New dependencies are added
-- Coding standards evolve
-- Project structure changes significantly
-- New tools or workflows are introduced
-
-### Integration with GitHub Copilot:
-
-- This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
-- Use it as the authoritative source for development practices
-- Reference these instructions when working with AI assistants
-- Keep instructions current to ensure consistent AI assistance
-
-### Maintenance Checklist:
-
-- [ ] Go version information is current
-- [ ] Build commands work as documented
-- [ ] Test commands produce expected results
-- [ ] Architecture documentation reflects current state
-- [ ] Dependencies are accurately listed
-- [ ] Security practices are up to date
-- [ ] Performance guidelines remain relevant
+- `github.com/spf13/cobra` - CLI framework
+- `google.golang.org/grpc` - Plugin communication
+- `github.com/rs/zerolog` - Structured logging
+- `github.com/rshade/pulumicost-spec` - Protocol definitions
+- `github.com/pulumi/pulumi/sdk/v3` - Pulumi SDK for Analyzer (v3.210.0+)
+- `github.com/charmbracelet/bubbletea` - TUI framework
+- `github.com/charmbracelet/lipgloss` - TUI styling

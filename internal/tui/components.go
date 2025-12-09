@@ -1,0 +1,127 @@
+package tui
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+// Status text constants.
+const (
+	StatusOK       = "OK"
+	StatusWarning  = "WARNING"
+	StatusCritical = "CRITICAL"
+	StatusExceeded = "EXCEEDED"
+	StatusSuccess  = "SUCCESS"
+)
+
+// Priority text constants.
+const (
+	PriorityCritical = "CRITICAL"
+	PriorityHigh     = "HIGH"
+	PriorityMedium   = "MEDIUM"
+	PriorityLow      = "LOW"
+)
+
+// Status icons for different states.
+// These Unicode icons are used throughout the TUI for consistent visual indicators.
+const (
+	IconOK         = "✓" // Success/completion indicator.
+	IconWarning    = "⚠" // Warning/caution indicator.
+	IconCritical   = "🚨" // Critical/error indicator.
+	IconPending    = "○" // Pending/inactive state.
+	IconProgress   = "◉" // In-progress/active state.
+	IconArrowUp    = "↑" // Increase/upward trend.
+	IconArrowDown  = "↓" // Decrease/downward trend.
+	IconArrowRight = "→" // Neutral/no change.
+)
+
+// RenderStatus renders a styled status indicator with icon and color.
+func RenderStatus(status string) string {
+	status = strings.ToUpper(status)
+
+	var icon, text string
+	var color lipgloss.Color
+
+	switch status {
+	case StatusOK, StatusSuccess:
+		icon = IconOK
+		text = StatusOK
+		color = ColorOK
+	case StatusWarning:
+		icon = IconWarning
+		text = StatusWarning
+		color = ColorWarning
+	case StatusCritical, StatusExceeded:
+		icon = IconCritical
+		text = StatusCritical
+		color = ColorCritical
+	default:
+		icon = IconPending
+		text = strings.ToLower(status)
+		color = ColorMuted
+	}
+
+	style := lipgloss.NewStyle().Foreground(color).Bold(true)
+	return style.Render(fmt.Sprintf("%s %s", icon, text))
+}
+
+// RenderDelta renders a styled cost delta indicator with icon and sign.
+func RenderDelta(delta float64) string {
+	var icon, sign string
+	var color lipgloss.Color
+
+	switch {
+	case delta > 0:
+		icon = IconArrowUp
+		sign = "+"
+		color = ColorWarning
+	case delta < 0:
+		icon = IconArrowDown
+		sign = ""
+		color = ColorOK
+	default:
+		icon = IconArrowRight
+		sign = ""
+		color = ColorMuted
+	}
+
+	formatted := FormatMoneyShort(delta)
+	style := lipgloss.NewStyle().Foreground(color).Bold(true)
+	return style.Render(fmt.Sprintf("%s%s %s", sign, formatted, icon))
+}
+
+// RenderPriority renders a styled priority indicator with icon and color.
+func RenderPriority(priority string) string {
+	priority = strings.ToUpper(priority)
+
+	var icon, text string
+	var color lipgloss.Color
+
+	switch priority {
+	case PriorityCritical:
+		icon = IconCritical
+		text = PriorityCritical
+		color = ColorPriorityCritical
+	case PriorityHigh:
+		icon = IconWarning
+		text = PriorityHigh
+		color = ColorPriorityHigh
+	case PriorityMedium:
+		icon = IconProgress
+		text = PriorityMedium
+		color = ColorPriorityMedium
+	case PriorityLow:
+		icon = IconOK
+		text = PriorityLow
+		color = ColorPriorityLow
+	default:
+		icon = IconPending
+		text = strings.ToLower(priority)
+		color = ColorMuted
+	}
+
+	style := lipgloss.NewStyle().Foreground(color).Bold(true)
+	return style.Render(fmt.Sprintf("%s %s", icon, text))
+}

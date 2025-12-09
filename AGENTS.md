@@ -143,3 +143,15 @@ maintain its effectiveness:
 - [ ] Testing guidelines are up to date
 - [ ] Security and configuration tips remain relevant
 - [ ] Commit and PR guidelines are followed
+
+## Active Technologies
+
+- Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.27.0
+  (104-shared-tui-package)
+- N/A (in-memory UI components) (104-shared-tui-package)
+- N/A (UI rendering package) (104-shared-tui-package)
+
+## Recent Changes
+
+- 104-shared-tui-package: Added charmbracelet/lipgloss v1.0.0 and
+  golang.org/x/term for TUI components

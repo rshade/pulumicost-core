@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with documentation in this repository.
+
 ## Playwright MCP Integration
 
 ### Overview
