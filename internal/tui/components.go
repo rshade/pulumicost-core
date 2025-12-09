@@ -37,7 +37,11 @@ const (
 	IconArrowRight = "→" // Neutral/no change.
 )
 
-// RenderStatus renders a styled status indicator with icon and color.
+// RenderStatus renders a styled status indicator consisting of an icon and label
+// corresponding to the provided status. Recognized statuses (OK, SUCCESS, WARNING,
+// CRITICAL, EXCEEDED) map to predefined icons and color themes; unrecognized
+// statuses are shown in a muted color with the provided text lowercased.
+// The returned string is the icon and label formatted with the selected style.
 func RenderStatus(status string) string {
 	status = strings.ToUpper(status)
 
@@ -67,7 +71,9 @@ func RenderStatus(status string) string {
 	return style.Render(fmt.Sprintf("%s %s", icon, text))
 }
 
-// RenderDelta renders a styled cost delta indicator with icon and sign.
+// RenderDelta renders a styled indicator for a monetary delta.
+// 
+// The returned string contains a sign ("+" for positive, empty for negative or zero), a formatted amount, and an arrow icon: up for positive, down for negative, and right for zero. The text is bold and colorized (warning color for positive, OK color for negative, muted for zero).
 func RenderDelta(delta float64) string {
 	var icon, sign string
 	var color lipgloss.Color

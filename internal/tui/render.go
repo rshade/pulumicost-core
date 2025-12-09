@@ -19,7 +19,9 @@ const (
 // Usage:
 //
 //	FormatMoney(1234.56, "USD") // "$1,234.56 USD"
-//	FormatMoney(-999.99, "EUR") // "-$999.99 EUR"
+// FormatMoney formats a monetary amount with a currency symbol and optionally appends a currency code.
+// If the currency string is non-empty, a space and the currency code are appended to the formatted amount.
+// The returned string contains two decimal places and thousands separators where appropriate, for example "$1,234.56" or "-$999.99 EUR".
 func FormatMoney(amount float64, currency string) string {
 	formatted := FormatMoneyShort(amount)
 	if currency == "" {
@@ -35,7 +37,9 @@ func FormatMoney(amount float64, currency string) string {
 //
 //	FormatMoneyShort(1234.56)  // "$1,234.56"
 //	FormatMoneyShort(-999.99)  // "-$999.99"
-//	FormatMoneyShort(0)        // "$0.00"
+// FormatMoneyShort formats a monetary amount with a leading "$", thousands separators, and exactly two decimal places.
+// If amount is NaN it returns "$0.00". Negative amounts are prefixed with "-" before the dollar sign (for example, -$1,234.56).
+// If the formatted value cannot be split into integer and fractional parts, the function returns the formatted value prefixed with "$" while preserving the sign.
 func FormatMoneyShort(amount float64) string {
 	// Handle special cases
 	if amount != amount { // NaN
@@ -91,7 +95,8 @@ func FormatMoneyShort(amount float64) string {
 //
 //	FormatPercent(85.7)  // "85.7%"
 //	FormatPercent(100)   // "100.0%"
-//	FormatPercent(0.123) // "0.1%"
+// FormatPercent formats a percentage value with one decimal place and a trailing percent sign.
+// If value is NaN, it returns "0.0%". The returned string contains the value rounded to one decimal place followed by "%".
 func FormatPercent(value float64) string {
 	// Handle special cases
 	if value != value { // NaN

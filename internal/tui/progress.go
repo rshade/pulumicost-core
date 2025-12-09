@@ -25,7 +25,7 @@ type ProgressBar struct {
 	ShowPct bool
 }
 
-// DefaultProgressBar returns a progress bar with default settings.
+// DefaultProgressBar returns a ProgressBar configured with the package defaults: Width set to DefaultProgressBarWidth, Filled set to "█", Empty set to "░", and ShowPct enabled.
 func DefaultProgressBar() ProgressBar {
 	return ProgressBar{
 		Width:   DefaultProgressBarWidth,

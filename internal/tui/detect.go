@@ -50,7 +50,7 @@ const (
 //	    // ANSI styled output
 //	case OutputModeInteractive:
 //	    // Full TUI
-//	}
+//  The chosen OutputMode according to the above precedence.
 func DetectOutputMode(forceColor, noColor, plain bool) OutputMode {
 	// Explicit plain/noColor flags take highest precedence.
 	if plain || noColor {
@@ -95,7 +95,8 @@ func DetectOutputMode(forceColor, noColor, plain bool) OutputMode {
 //	    // Safe to use interactive features
 //	} else {
 //	    // Output is being redirected, use plain text
-//	}
+// IsTTY reports whether the process standard output is a terminal (TTY).
+// It returns true if stdout is connected to a terminal, false otherwise.
 func IsTTY() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }
@@ -111,7 +112,8 @@ func IsTTY() bool {
 // Common terminal widths:
 //   - 80: Traditional terminal width
 //   - 120-160: Modern wide terminals
-//   - 40+: Minimum usable width
+// TerminalWidth returns the current terminal width in columns.
+// If the width cannot be determined or is not greater than zero, TerminalWidth returns DefaultTerminalWidth.
 func TerminalWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil || width <= 0 {
