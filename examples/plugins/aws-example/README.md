@@ -12,16 +12,19 @@ This is a reference implementation of a PulumiCost plugin for AWS cost calculati
 ## Supported Resources
 
 ### EC2 Instances (`aws:ec2:Instance`)
+
 - Instance types: t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge, m5.large, m5.xlarge, c5.large, c5.xlarge
 - Regional pricing support
 - Properties: `instanceType`, `region`
 
 ### S3 Buckets (`aws:s3:Bucket`)
+
 - Storage classes: STANDARD, STANDARD_IA, ONEZONE_IA, GLACIER, DEEP_ARCHIVE
 - Pricing per GB per month
 - Properties: `storageClass`, `region`
 
 ### RDS Instances (`aws:rds:Instance`)
+
 - Instance classes: db.t3.micro, db.t3.small, db.t3.medium, db.m5.large, db.m5.xlarge
 - Engine support: mysql, postgres, oracle, sqlserver
 - Properties: `instanceClass`, `engine`, `region`
@@ -30,7 +33,7 @@ This is a reference implementation of a PulumiCost plugin for AWS cost calculati
 
 ### Prerequisites
 
-- Go 1.21+
+- Go 1.25.5+
 - PulumiCost Core development environment
 
 ### Build the Plugin
@@ -91,6 +94,7 @@ With a Pulumi plan containing AWS resources:
 ```
 
 Calculate projected costs:
+
 ```bash
 pulumicost cost projected --pulumi-json plan.json
 ```
@@ -135,11 +139,13 @@ regionalMultiplier := map[string]float64{
 ### Adding New Resource Types
 
 1. Register the resource type in the constructor:
+
 ```go
 base.Matcher().AddResourceType("aws:lambda:Function")
 ```
 
 2. Add case in `GetProjectedCost`:
+
 ```go
 case "aws:lambda:Function":
     unitPrice = p.calculateLambdaCost(req.Resource)
@@ -147,6 +153,7 @@ case "aws:lambda:Function":
 ```
 
 3. Implement the calculation function:
+
 ```go
 func (p *AWSExamplePlugin) calculateLambdaCost(resource *pbc.ResourceDescriptor) float64 {
     // Implementation here
@@ -177,10 +184,10 @@ Use the PulumiCost SDK testing utilities:
 func TestAWSPlugin(t *testing.T) {
     plugin := NewAWSExamplePlugin()
     testPlugin := pluginsdk.NewTestPlugin(t, plugin)
-    
+
     // Test plugin name
     testPlugin.TestName("aws-example")
-    
+
     // Test supported resource
     resource := pluginsdk.CreateTestResource("aws", "aws:ec2:Instance", map[string]string{
         "instanceType": "t3.micro",

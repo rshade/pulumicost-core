@@ -12,7 +12,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test test-race test-e2e lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
+.PHONY: all build test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
 
 all: build
 
@@ -21,17 +21,32 @@ build:
 	@mkdir -p bin
 	go build $(LDFLAGS) -o bin/$(BINARY) ./cmd/pulumicost
 
-test:
-	@echo "Running tests..."
-	go test -v ./...
+# Default test target - runs unit tests only (fast, for CI and local dev)
+# Note: ./test/unit/... excluded as some tests are environment-dependent
+test: test-unit
+
+test-unit:
+	@echo "Running unit tests..."
+	go test -v ./internal/... ./pkg/...
 
 test-race:
-	@echo "Running tests with race detector..."
-	go test -v -race ./...
+	@echo "Running unit tests with race detector..."
+	go test -v -race ./internal/... ./pkg/...
 
+# Integration tests - slower, requires more setup
+test-integration:
+	@echo "Running integration tests..."
+	go test -v -timeout 10m ./test/integration/...
+
+# E2E tests - requires AWS credentials and real infrastructure
 test-e2e:
 	@echo "Running E2E tests..."
 	./test/e2e/run-e2e-tests.sh $(TEST_ARGS)
+
+# Run all tests (unit + integration, excludes E2E which requires special setup)
+test-all:
+	@echo "Running all tests (unit + integration)..."
+	go test -v -timeout 15m ./internal/... ./pkg/... ./test/integration/...
 
 lint:
 	@echo "Running golangci-lint (expected version $(GOLANGCI_LINT_VERSION))..."
@@ -101,26 +116,29 @@ docs-validate: docs-lint
 
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build the binary"
-	@echo "  test         - Run tests"
-	@echo "  test-race    - Run tests with race detector"
-	@echo "  test-e2e     - Run E2E tests against real AWS infrastructure"
-	@echo "  lint         - Run Go + Markdown linters"
-	@echo "  validate     - Run validation (go mod, vet, format)"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  run          - Build and run with --help"
-	@echo "  dev          - Build and run"
-	@echo "  inspect      - Launch MCP Inspector for interactive testing"
+	@echo "  build            - Build the binary"
+	@echo "  test             - Run unit tests (fast, default)"
+	@echo "  test-unit        - Run unit tests only"
+	@echo "  test-race        - Run unit tests with race detector"
+	@echo "  test-integration - Run integration tests (slower)"
+	@echo "  test-e2e         - Run E2E tests (requires AWS credentials)"
+	@echo "  test-all         - Run all tests except E2E"
+	@echo "  lint             - Run Go + Markdown linters"
+	@echo "  validate         - Run validation (go mod, vet, format)"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  run              - Build and run with --help"
+	@echo "  dev              - Build and run"
+	@echo "  inspect          - Launch MCP Inspector for interactive testing"
 	@echo ""
 	@echo "Documentation targets:"
-	@echo "  docs-lint    - Lint documentation markdown"
-	@echo "  docs-build   - Build documentation site"
-	@echo "  docs-serve   - Serve documentation locally (http://localhost:4000)"
-	@echo "  docs-validate- Validate documentation structure"
+	@echo "  docs-lint        - Lint documentation markdown"
+	@echo "  docs-build       - Build documentation site"
+	@echo "  docs-serve       - Serve documentation locally (http://localhost:4000)"
+	@echo "  docs-validate    - Validate documentation structure"
 	@echo ""
 	@echo "E2E test options (make test-e2e TEST_ARGS='...'):"
-	@echo "  -run TestName - Run specific test"
-	@echo "  -short        - Run without verbose output"
-	@echo "  -timeout N    - Set timeout to N minutes"
+	@echo "  -run TestName    - Run specific test"
+	@echo "  -short           - Run without verbose output"
+	@echo "  -timeout N       - Set timeout to N minutes"
 	@echo ""
-	@echo "  help         - Show this help message"
+	@echo "  help             - Show this help message"

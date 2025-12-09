@@ -57,7 +57,7 @@ type MappingResult struct {
 //
 // The mapping extracts cost-relevant fields from the Pulumi resource representation
 // and normalizes them to the internal format used by the cost calculation engine.
-//
+// This function performs the core mapping logic for individual resources.
 // Field mappings:
 //   - Type: Direct copy from r.Type
 //   - ID: Extracted from URN (last :: segment)

@@ -34,7 +34,7 @@ func TestIntegration_ProcessLauncherWithClient(t *testing.T) {
 			client.Close()
 		}
 	} else {
-		t.Logf("Expected integration error: %v", err)
+		t.Logf("Expected integration error for ProcessLauncher (plugin: %s): %v", mockPlugin, err)
 	}
 
 	// Should not panic or leave hanging processes
@@ -63,7 +63,7 @@ func TestIntegration_StdioLauncherWithClient(t *testing.T) {
 			client.Close()
 		}
 	} else {
-		t.Logf("Expected integration error: %v", err)
+		t.Logf("Expected integration error for StdioLauncher (plugin: %s): %v", mockPlugin, err)
 	}
 
 	// Should not panic or leave hanging processes
@@ -111,15 +111,19 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 
 	// Test creating multiple clients concurrently
 	launcher := pluginhost.NewProcessLauncher()
-	mockPlugin := createFailingMockPlugin(t)
 
 	const numClients = 5
 	results := make(chan error, numClients)
 
 	// Start multiple client creation attempts concurrently
-	for i := range numClients {
-		go func(_ int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// Each goroutine gets its own mock plugin to avoid conflicts
+	for range numClients {
+		go func() {
+			// Create a unique mock plugin for this client to avoid conflicts
+			mockPlugin := createFailingMockPlugin(t)
+
+			// Use shorter timeout for concurrent stress test
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
 			client, err := pluginhost.NewClient(ctx, launcher, mockPlugin)
@@ -128,14 +132,16 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 			}
 
 			results <- err
-		}(i)
+		}()
 	}
 
 	// Collect results
 	for i := range numClients {
 		err := <-results
 		if err != nil {
-			t.Logf("Client %d error (expected): %v", i, err)
+			t.Logf("Concurrent client %d error (expected with mock plugin): %v", i, err)
+		} else {
+			t.Logf("Concurrent client %d unexpectedly succeeded", i)
 		}
 	}
 
@@ -149,24 +155,27 @@ func TestIntegration_RapidCreateDestroy(t *testing.T) {
 
 	// Test rapid creation and destruction of clients
 	launcher := pluginhost.NewProcessLauncher()
-	mockPlugin := createFailingMockPlugin(t)
 
 	for i := range 10 {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		// Create a unique mock plugin for each iteration to avoid conflicts
+		mockPlugin := createFailingMockPlugin(t)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 
 		client, err := pluginhost.NewClient(ctx, launcher, mockPlugin)
 		if client != nil {
 			client.Close()
 		}
-
 		cancel()
 
 		if err != nil {
-			t.Logf("Iteration %d error (expected): %v", i, err)
+			t.Logf("Rapid create/destroy iteration %d error (expected with mock plugin): %v", i, err)
+		} else {
+			t.Logf("Rapid create/destroy iteration %d unexpectedly succeeded", i)
 		}
 
-		// Brief pause between iterations
-		time.Sleep(10 * time.Millisecond)
+		// Brief pause between iterations to allow cleanup
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
@@ -192,9 +201,9 @@ func TestIntegration_ContextCancellation(t *testing.T) {
 		client.Close()
 	}
 
-	// Should handle cancellation gracefully
-	if err != nil {
-		t.Logf("Cancellation error (expected): %v", err)
+	// Should handle cancellation gracefully by surfacing an error
+	if err == nil {
+		t.Fatalf("expected error from NewClient after context cancellation, got nil")
 	}
 }
 
@@ -236,7 +245,7 @@ func TestIntegration_PluginDirectoryStructure(t *testing.T) {
 
 	// Test with launcher (will fail but shouldn't panic)
 	launcher := pluginhost.NewProcessLauncher()
-	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	client, err := pluginhost.NewClient(ctx, launcher, binPath)
@@ -245,7 +254,9 @@ func TestIntegration_PluginDirectoryStructure(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Logf("Expected error with test plugin: %v", err)
+		t.Logf("Expected error with test plugin binary (%s): %v", binPath, err)
+	} else {
+		t.Logf("Test plugin binary unexpectedly succeeded: %s", binPath)
 	}
 }
 
@@ -277,7 +288,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 
 			client, err := pluginhost.NewClient(ctx, launcher, tc.binPath)
@@ -286,9 +297,9 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 			}
 
 			if err == nil {
-				t.Errorf("expected error for %s", tc.name)
+				t.Fatalf("expected error for %s (binPath: %s), got nil", tc.name, tc.binPath)
 			} else {
-				t.Logf("Expected error for %s: %v", tc.name, err)
+				t.Logf("Expected error for %s (binPath: %s): %v", tc.name, tc.binPath, err)
 			}
 		})
 	}
@@ -298,9 +309,32 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 
 func createFailingMockPlugin(t *testing.T) string {
 	// Create a plugin that will start but fail to serve gRPC
-	script := "#!/bin/bash\nexit 1"
+	// For ProcessLauncher: try to bind to port but exit immediately
+	// For StdioLauncher: just exit
+	script := `#!/bin/bash
+if [ "$1" = "--stdio" ]; then
+    # Stdio mode - just exit
+    exit 1
+else
+    # Process mode - try to bind to port briefly then exit
+    PORT="${PORT:-${PULUMICOST_PLUGIN_PORT}}"
+    if [ -n "$PORT" ]; then
+        # Try to bind to port for a moment (will fail to serve gRPC)
+        timeout 0.1 nc -l 127.0.0.1 "$PORT" 2>/dev/null || true
+    fi
+    exit 1
+fi`
 	if runtime.GOOS == "windows" {
-		script = "exit 1"
+		script = `if "%1"=="--stdio" (
+    exit 1
+) else (
+    set PORT=%PORT%
+    if "%PORT%"=="" set PORT=%PULUMICOST_PLUGIN_PORT%
+    if defined PORT (
+        timeout 1 >nul 2>nul
+    )
+    exit 1
+)`
 	}
 
 	return createTestScript(t, script, ".sh")
@@ -308,9 +342,38 @@ func createFailingMockPlugin(t *testing.T) string {
 
 func createWorkingMockPlugin(t *testing.T) string {
 	// Create a plugin that will run but not serve gRPC
-	script := "#!/bin/bash\nsleep 10"
+	// For ProcessLauncher: bind to port and keep running briefly
+	// For StdioLauncher: keep stdin/stdout open briefly
+	script := `#!/bin/bash
+if [ "$1" = "--stdio" ]; then
+    # Stdio mode - keep pipes open briefly then exit
+    sleep 2
+    exit 0
+else
+    # Process mode - bind to port and keep listening briefly
+    PORT="${PORT:-${PULUMICOST_PLUGIN_PORT}}"
+    if [ -n "$PORT" ]; then
+        # Bind to port and keep listening for a short time
+        timeout 2 nc -l 127.0.0.1 "$PORT" 2>/dev/null || sleep 2
+    else
+        sleep 2
+    fi
+    exit 0
+fi`
 	if runtime.GOOS == "windows" {
-		script = "timeout 10"
+		script = `if "%1"=="--stdio" (
+    timeout 2 >nul
+    exit 0
+) else (
+    set PORT=%PORT%
+    if "%PORT%"=="" set PORT=%PULUMICOST_PLUGIN_PORT%
+    if defined PORT (
+        timeout 2 >nul 2>nul
+    ) else (
+        timeout 2 >nul
+    )
+    exit 0
+)`
 	}
 
 	return createTestScript(t, script, ".sh")
@@ -335,10 +398,14 @@ func createTestScript(t *testing.T, content, ext string) string {
 		t.Fatalf("failed to make script executable: %v", chmodErr)
 	}
 
-	// Clean up after test
+	fileName := tmpfile.Name()
+
+	// Clean up after test - ensure file is removed even if test fails
 	t.Cleanup(func() {
-		os.Remove(tmpfile.Name())
+		if removeErr := os.Remove(fileName); removeErr != nil && !os.IsNotExist(removeErr) {
+			t.Logf("Warning: failed to cleanup test script %s: %v", fileName, removeErr)
+		}
 	})
 
-	return tmpfile.Name()
+	return fileName
 }

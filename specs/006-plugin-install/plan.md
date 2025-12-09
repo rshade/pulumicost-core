@@ -9,7 +9,7 @@ Implement a comprehensive plugin installation system enabling users to install, 
 
 ## Technical Context
 
-**Language/Version**: Go 1.25.4
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: archive/tar, archive/zip, compress/gzip, net/http, github.com/spf13/cobra, gopkg.in/yaml.v3
 **Storage**: File system (~/.pulumicost/plugins/, ~/.pulumicost/config.yaml)
 **Testing**: go test with race detection, 80% minimum coverage
@@ -21,7 +21,7 @@ Implement a comprehensive plugin installation system enabling users to install, 
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
 

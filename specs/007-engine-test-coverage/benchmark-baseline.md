@@ -2,7 +2,7 @@
 
 **Date**: 2025-12-02
 **System**: Intel Core i7-6600U @ 2.60GHz, Linux
-**Go Version**: 1.24.10
+**Go Version**: 1.25.5
 
 ## Summary
 
@@ -13,17 +13,17 @@ at enterprise scale (1K, 10K, 100K resources).
 
 ### Core Operations
 
-| Benchmark | Ops/sec | ns/op | B/op | allocs/op |
-|-----------|---------|-------|------|-----------|
-| Properties_Conversion | 142,045 | 7,690 | 1,144 | 24 |
-| ResourceDescriptor_Allocation | 9,926 | 192,602 | 72,017 | 700 |
+| Benchmark                     | Ops/sec | ns/op   | B/op   | allocs/op |
+| ----------------------------- | ------- | ------- | ------ | --------- |
+| Properties_Conversion         | 142,045 | 7,690   | 1,144  | 24        |
+| ResourceDescriptor_Allocation | 9,926   | 192,602 | 72,017 | 700       |
 
 ### Cross-Provider Aggregation
 
-| Scale | Ops/sec | ns/op | B/op | allocs/op |
-|-------|---------|-------|------|-----------|
-| 1K results | 2,276 | 675,571 | 78,672 | 2,078 |
-| 10K results | 154 | 10,257,162 | 654,672 | 20,078 |
+| Scale       | Ops/sec | ns/op      | B/op    | allocs/op |
+| ----------- | ------- | ---------- | ------- | --------- |
+| 1K results  | 2,276   | 675,571    | 78,672  | 2,078     |
+| 10K results | 154     | 10,257,162 | 654,672 | 20,078    |
 
 ### Observations
 

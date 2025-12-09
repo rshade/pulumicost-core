@@ -39,11 +39,12 @@ pulumi --version
 For projected costs, you don't need cloud credentials.
 
 For actual costs (with plugins), you need:
+
 - **AWS:** AWS access key or IAM role
 - **Azure:** Azure credentials or service principal
 - **GCP:** GCP service account
 
-### Optional: Go 1.24+ (for building from source)
+### Optional: Go 1.25.5+ (for building from source)
 
 ```bash
 # Check if installed
@@ -64,6 +65,7 @@ go version
 ### Firewall
 
 If behind corporate firewall:
+
 - Allow HTTPS outbound (443)
 - Allow gRPC outbound (variable ports)
 - Contact your IT team for exceptions
@@ -79,10 +81,12 @@ No credentials needed - works with Pulumi definitions.
 Requires plugin credentials:
 
 **Vantage:**
+
 - API key from https://vantage.sh
 - Read-only access sufficient
 
 **Kubecost (future):**
+
 - Kubecost cluster access
 - Metrics endpoint
 
@@ -96,15 +100,18 @@ Requires plugin credentials:
 ## Troubleshooting
 
 **"pulumi command not found"**
+
 - Install Pulumi: https://www.pulumi.com/docs/install/
 - Add to PATH
 
 **"Permission denied" on binary**
+
 ```bash
 chmod +x pulumicost
 ```
 
 **"No space left on device"**
+
 - Free up disk space
 - Install to different location
 

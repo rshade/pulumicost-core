@@ -24,7 +24,7 @@ This guide is for **engineers and developers** who want to extend PulumiCost by 
 
 ### Prerequisites
 
-- Go 1.24+ (for core development)
+- Go 1.25.5+ (for core development)
 - Git
 - Make
 - Node.js 18+ (for documentation tools)
@@ -90,15 +90,15 @@ make test
 
 ### Key Packages
 
-| Package | Purpose |
-|---------|---------|
-| `internal/cli` | Command-line interface (Cobra) |
-| `internal/engine` | Cost calculation logic |
-| `internal/ingest` | Pulumi plan parsing |
-| `internal/pluginhost` | Plugin gRPC communication |
-| `internal/registry` | Plugin discovery |
-| `internal/spec` | Local pricing specifications |
-| `pkg/pluginsdk` | Plugin SDK for developers |
+| Package               | Purpose                        |
+| --------------------- | ------------------------------ |
+| `internal/cli`        | Command-line interface (Cobra) |
+| `internal/engine`     | Cost calculation logic         |
+| `internal/ingest`     | Pulumi plan parsing            |
+| `internal/pluginhost` | Plugin gRPC communication      |
+| `internal/registry`   | Plugin discovery               |
+| `internal/spec`       | Local pricing specifications   |
+| `pkg/pluginsdk`       | Plugin SDK for developers      |
 
 ---
 
@@ -143,6 +143,7 @@ make docs-lint
 ### IDE Setup
 
 **VS Code:**
+
 ```json
 {
   "go.lintOnSave": "package",
@@ -212,6 +213,7 @@ func calculateCost(resource *pb.Resource) float64 {
 ### Full Plugin Development
 
 See [Plugin Development Guide](../plugins/plugin-development.md) for:
+
 - Complete implementation walkthrough
 - gRPC service setup
 - Error handling patterns
@@ -252,6 +254,7 @@ make docs-validate
 ### Code Style
 
 **Go:**
+
 - Follow [Effective Go](https://golang.org/doc/effective_go)
 - Run `gofmt` on your code
 - Use `golangci-lint` for linting
@@ -259,6 +262,7 @@ make docs-validate
 - Add godoc comments for exported functions
 
 **Example:**
+
 ```go
 // GetActualCost retrieves actual historical costs for resources.
 // It supports filtering by tags and grouping by dimension.
@@ -269,6 +273,7 @@ func (e *Engine) GetActualCost(ctx context.Context,
 ```
 
 **Markdown:**
+
 - Follow [Google style guide](https://developers.google.com/style)
 - Use clear headings
 - Provide code examples
@@ -308,12 +313,12 @@ log.Info().
 
 **Standard Log Fields:**
 
-| Field         | Purpose                             | Example                              |
-| ------------- | ----------------------------------- | ------------------------------------ |
-| `component`   | Package identifier                  | "cli", "engine", "registry"          |
-| `operation`   | Current operation                   | "get_projected_cost", "load_plan"    |
-| `trace_id`    | Request correlation (auto-injected) | "01HQ7X2J3K4M5N6P7Q8R9S0T1U"         |
-| `duration_ms` | Operation timing                    | `Dur("duration_ms", elapsed)`        |
+| Field         | Purpose                             | Example                           |
+| ------------- | ----------------------------------- | --------------------------------- |
+| `component`   | Package identifier                  | "cli", "engine", "registry"       |
+| `operation`   | Current operation                   | "get_projected_cost", "load_plan" |
+| `trace_id`    | Request correlation (auto-injected) | "01HQ7X2J3K4M5N6P7Q8R9S0T1U"      |
+| `duration_ms` | Operation timing                    | `Dur("duration_ms", elapsed)`     |
 
 **Logging Levels:**
 
@@ -366,6 +371,7 @@ Closes #123
 ```
 
 **Types:**
+
 - `feature` - New functionality
 - `fix` - Bug fixes
 - `docs` - Documentation
@@ -392,12 +398,14 @@ go test -run TestActualCost ./internal/engine/...
 ### Pull Request Process
 
 1. **Update from main:**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Run all checks:**
+
    ```bash
    make test
    make lint
@@ -406,6 +414,7 @@ go test -run TestActualCost ./internal/engine/...
    ```
 
 3. **Push and create PR:**
+
    ```bash
    git push origin feature/my-feature
    # Create PR on GitHub
@@ -457,6 +466,53 @@ func TestGetActualCost(t *testing.T) {
 }
 ```
 
+### Platform-Specific Test Requirements
+
+#### macOS Integration Test Tooling
+
+The `internal/pluginhost` integration tests simulate realistic plugin behavior by attempting
+actual port binding and timeout handling. On macOS, you need to install GNU utilities via Homebrew:
+
+**Required Tools:**
+
+- `nc` (netcat) — for port binding simulation
+- `timeout` (GNU coreutils) — for timing control
+
+**Installation:**
+
+```bash
+# Install GNU timeout via coreutils
+brew install coreutils
+
+# Install netcat (modern variant via nmap)
+brew install nmap
+
+# Verify installation
+which timeout    # Should show /opt/homebrew/bin/timeout or /usr/local/bin/timeout
+which nc         # Built-in BSD nc is sufficient, but nmap's ncat is more reliable
+```
+
+Why These Tools Are Required:
+
+The integration tests prioritize test fidelity over portability. Tests create mock plugin processes that:
+
+Bind to ephemeral TCP ports (simulating ProcessLauncher behavior)
+Timeout after brief intervals (simulating plugin startup/failure scenarios)
+Exercise real process lifecycle paths rather than simplified stubs
+This approach validates:
+
+Port allocation doesn't conflict across concurrent clients
+Cleanup doesn't affect other clients
+Connection retry logic works with actual network behavior
+Running Without These Tools:
+
+```bash
+# Skip integration tests on macOS without tooling
+go test -short ./internal/pluginhost/...
+```
+
+The `-short` flag skips integration tests that require platform-specific tools.
+
 ### Integration Testing
 
 For testing with real plugins:
@@ -491,6 +547,7 @@ git push origin v0.1.0
 Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
 
 **Structure:**
+
 ```
 ~/.pulumicost/plugins/
 ├── myplugin/
@@ -502,7 +559,7 @@ Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
 ### Docker Deployment
 
 ```dockerfile
-FROM golang:1.24 as builder
+FROM golang:1.25.5 as builder
 WORKDIR /app
 COPY . .
 RUN make build

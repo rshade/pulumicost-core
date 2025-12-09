@@ -34,7 +34,7 @@ graph TD
     A[PulumiCost Core] -->|gRPC| B[Plugin Process]
     B -->|CostSource API| C[Cloud Provider]
     B -->|Response| A
-    
+
     D[Plugin Registry] --> A
     E[Plugin Manifest] --> D
     F[Plugin Binary] --> B
@@ -76,6 +76,7 @@ pulumicost plugin list
 ```
 
 **Sample Output:**
+
 ```
 NAME        VERSION  STATUS    SUPPORTS                    BINARY
 kubecost    1.0.0    ready     projected,actual           pulumicost-kubecost
@@ -94,6 +95,7 @@ pulumicost plugin validate --adapter kubecost
 ```
 
 **Validation Checks:**
+
 - Binary exists and is executable
 - Plugin responds to gRPC health checks
 - Required capabilities are supported
@@ -145,7 +147,7 @@ Most plugins use environment variables for configuration:
 export KUBECOST_API_URL="http://kubecost.example.com:9090"
 export KUBECOST_API_TOKEN="your-api-token"
 
-# AWS plugin configuration  
+# AWS plugin configuration
 export AWS_ACCESS_KEY_ID="your-access-key"
 export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_REGION="us-west-2"
@@ -162,15 +164,15 @@ Some plugins support configuration files:
 
 ```yaml
 # ~/.pulumicost/plugins/kubecost/1.0.0/config.yaml
-api_url: "http://kubecost.example.com:9090"
-api_token: "your-api-token"
+api_url: 'http://kubecost.example.com:9090'
+api_token: 'your-api-token'
 timeout: 30s
 retry_attempts: 3
 clusters:
-  - name: "production"
-    context: "prod-k8s"
-  - name: "staging" 
-    context: "staging-k8s"
+  - name: 'production'
+    context: 'prod-k8s'
+  - name: 'staging'
+    context: 'staging-k8s'
 ```
 
 ## Available Plugins
@@ -180,18 +182,21 @@ clusters:
 **Repository**: [pulumicost-plugin-kubecost](https://github.com/rshade/pulumicost-plugin-kubecost)
 
 **Capabilities:**
+
 - Actual cost data from Kubecost API
 - Kubernetes workload cost attribution
 - Pod, namespace, and cluster-level costs
 - Multi-cluster support
 
 **Configuration:**
+
 ```bash
 export KUBECOST_API_URL="http://kubecost.example.com:9090"
 export KUBECOST_API_TOKEN="optional-api-token"
 ```
 
 **Usage:**
+
 ```bash
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
 ```
@@ -201,15 +206,17 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubec
 **Repository**: [pulumicost-plugin-aws](https://github.com/rshade/pulumicost-plugin-aws) (planned)
 
 **Capabilities:**
+
 - AWS Cost Explorer integration
 - EC2, RDS, S3 pricing data
 - Reserved instance optimization
 - Multi-account cost aggregation
 
 **Configuration:**
+
 ```bash
 export AWS_ACCESS_KEY_ID="your-access-key"
-export AWS_SECRET_ACCESS_KEY="your-secret-key" 
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_REGION="us-west-2"
 ```
 
@@ -218,6 +225,7 @@ export AWS_REGION="us-west-2"
 **Repository**: [pulumicost-plugin-azure](https://github.com/rshade/pulumicost-plugin-azure) (planned)
 
 **Capabilities:**
+
 - Azure Cost Management API integration
 - Resource group cost breakdown
 - Azure subscription analysis
@@ -228,6 +236,7 @@ export AWS_REGION="us-west-2"
 **Repository**: [pulumicost-plugin-gcp](https://github.com/rshade/pulumicost-plugin-gcp) (planned)
 
 **Capabilities:**
+
 - Google Cloud Billing API integration
 - Project and folder cost attribution
 - Committed use discount tracking
@@ -239,7 +248,7 @@ export AWS_REGION="us-west-2"
 
 #### Prerequisites
 
-- **Go**: Version 1.21 or later
+- **Go**: Version 1.25.5 or later
 - **Protocol Buffers**: For gRPC service definitions
 - **pulumicost-spec**: Protocol definitions repository
 
@@ -267,7 +276,7 @@ package main
 import (
     "context"
     "fmt"
-    
+
     pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
     "google.golang.org/grpc"
 )
@@ -288,13 +297,13 @@ func (p *MyCloudPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProject
     // Implement projected cost logic
     resources := req.GetResources()
     var costItems []*pb.CostItem
-    
+
     for _, resource := range resources {
         cost, err := p.calculateProjectedCost(resource)
         if err != nil {
             continue // Skip resources we can't price
         }
-        
+
         costItems = append(costItems, &pb.CostItem{
             ResourceId: resource.GetId(),
             ResourceType: resource.GetType(),
@@ -304,7 +313,7 @@ func (p *MyCloudPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProject
             Notes: cost.Notes,
         })
     }
-    
+
     return &pb.GetProjectedCostResponse{
         CostItems: costItems,
     }, nil
@@ -315,15 +324,15 @@ func (p *MyCloudPlugin) GetActualCost(ctx context.Context, req *pb.GetActualCost
     resources := req.GetResources()
     fromTime := req.GetFromTime().AsTime()
     toTime := req.GetToTime().AsTime()
-    
+
     var costItems []*pb.CostItem
-    
+
     for _, resource := range resources {
         cost, err := p.getActualCost(resource, fromTime, toTime)
         if err != nil {
             continue
         }
-        
+
         costItems = append(costItems, &pb.CostItem{
             ResourceId: resource.GetId(),
             ResourceType: resource.GetType(),
@@ -334,7 +343,7 @@ func (p *MyCloudPlugin) GetActualCost(ctx context.Context, req *pb.GetActualCost
             DailyCosts: cost.Daily,
         })
     }
-    
+
     return &pb.GetActualCostResponse{
         CostItems: costItems,
     }, nil
@@ -350,19 +359,19 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to listen: %v", err)
     }
-    
+
     // Print the port for PulumiCost Core to connect to
     addr := lis.Addr().(*net.TCPAddr)
     fmt.Printf("PLUGIN_PORT=%d\n", addr.Port)
-    
+
     // Create and register plugin
     s := grpc.NewServer()
     plugin := &MyCloudPlugin{
         client: NewMyCloudClient(), // Initialize your API client
     }
-    
+
     pb.RegisterCostSourceServiceServer(s, plugin)
-    
+
     // Start serving
     log.Printf("Plugin serving on port %d", addr.Port)
     if err := s.Serve(lis); err != nil {
@@ -392,13 +401,13 @@ func (p *MyCloudPlugin) getComputeCost(resource *pb.ResourceDescriptor) (*Cost, 
     // Extract instance size from resource properties
     properties := resource.GetProperties()
     instanceSize := properties["instanceSize"]
-    
+
     // Query pricing API
     pricing, err := p.client.GetInstancePricing(instanceSize)
     if err != nil {
         return nil, err
     }
-    
+
     return &Cost{
         Hourly:  pricing.HourlyRate,
         Monthly: pricing.HourlyRate * 730, // 730 hours per month
@@ -416,7 +425,7 @@ func TestMyCloudPlugin(t *testing.T) {
     plugin := &MyCloudPlugin{
         client: &MockMyCloudClient{}, // Mock client for testing
     }
-    
+
     req := &pb.GetProjectedCostRequest{
         Resources: []*pb.ResourceDescriptor{
             {
@@ -428,7 +437,7 @@ func TestMyCloudPlugin(t *testing.T) {
             },
         },
     }
-    
+
     resp, err := plugin.GetProjectedCost(context.Background(), req)
     assert.NoError(t, err)
     assert.Len(t, resp.CostItems, 1)
@@ -460,7 +469,7 @@ pulumicost cost projected --pulumi-json test-plan.json --adapter mycloud
 ```bash
 # Build for multiple platforms
 GOOS=linux GOARCH=amd64 go build -o pulumicost-mycloud-linux-amd64
-GOOS=darwin GOARCH=amd64 go build -o pulumicost-mycloud-darwin-amd64  
+GOOS=darwin GOARCH=amd64 go build -o pulumicost-mycloud-darwin-amd64
 GOOS=windows GOARCH=amd64 go build -o pulumicost-mycloud-windows-amd64.exe
 ```
 
@@ -479,14 +488,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      
+          go-version: '1.25.5'
+
       - name: Build binaries
         run: |
           GOOS=linux GOARCH=amd64 go build -o pulumicost-mycloud-linux-amd64
           GOOS=darwin GOARCH=amd64 go build -o pulumicost-mycloud-darwin-amd64
           GOOS=windows GOARCH=amd64 go build -o pulumicost-mycloud-windows-amd64.exe
-      
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -503,7 +512,7 @@ Optional `plugin.manifest.json` file provides metadata:
 ```json
 {
   "name": "mycloud",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "description": "MyCloud cost integration plugin",
   "binary": "pulumicost-mycloud",
   "supports": ["projected_cost", "actual_cost"],
@@ -532,18 +541,18 @@ export MYCLOUD_REGION="us-west-2"
 ```yaml
 # ~/.pulumicost/plugins/mycloud/1.0.0/config.yaml
 api:
-  key: "your-api-key"
-  secret: "your-api-secret"
-  endpoint: "https://api.mycloud.com"
+  key: 'your-api-key'
+  secret: 'your-api-secret'
+  endpoint: 'https://api.mycloud.com'
   timeout: 30s
-  
+
 regions:
-  - "us-west-2"
-  - "us-east-1"
-  
+  - 'us-west-2'
+  - 'us-east-1'
+
 cache:
   enabled: true
-  ttl: "1h"
+  ttl: '1h'
 ```
 
 #### Credential Providers
@@ -565,7 +574,7 @@ func (p *EnvCredentialProvider) GetCredentials(ctx context.Context) (*Credential
     }, nil
 }
 
-// Configuration file provider  
+// Configuration file provider
 type FileCredentialProvider struct {
     ConfigPath string
 }
@@ -576,10 +585,10 @@ func (p *FileCredentialProvider) GetCredentials(ctx context.Context) (*Credentia
     if err != nil {
         return nil, err
     }
-    
+
     return &Credentials{
         APIKey:    config.API.Key,
-        APISecret: config.API.Secret, 
+        APISecret: config.API.Secret,
         Region:    config.API.Region,
     }, nil
 }
@@ -647,11 +656,11 @@ import "log"
 
 func (p *MyCloudPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProjectedCostRequest) (*pb.GetProjectedCostResponse, error) {
     log.Printf("GetProjectedCost called with %d resources", len(req.GetResources()))
-    
+
     for _, resource := range req.GetResources() {
         log.Printf("Processing resource: %s (%s)", resource.GetId(), resource.GetType())
     }
-    
+
     // ... implementation
 }
 ```

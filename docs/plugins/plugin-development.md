@@ -65,7 +65,7 @@ Build a plugin when you need to:
 
 ### Prerequisites
 
-- **Go 1.24+** installed
+- **Go 1.25.5+** installed
 - **Protocol Buffers** compiler (`protoc`)
 - **PulumiCost Core** repository cloned
 - Basic understanding of gRPC and protocol buffers

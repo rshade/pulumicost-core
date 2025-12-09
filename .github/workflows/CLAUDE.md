@@ -18,7 +18,7 @@ This directory contains GitHub Actions workflows for CI/CD, automated code revie
 - **Validation Job**: gofmt formatting checks, go mod tidy verification, go vet static analysis
 - **Build Job**: Cross-platform builds (Linux/macOS/Windows, amd64/arm64), artifact upload
 
-**release.yml** - Multi-platform binary releases triggered on version tags (v*):
+**release.yml** - Multi-platform binary releases triggered on version tags (v\*):
 
 - Builds for Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 - Automatic changelog generation, SHA256 checksums, GitHub Release creation
@@ -185,7 +185,7 @@ gh auth status
 
 **Go Setup**:
 
-- ✅ **Standard**: `actions/setup-go@v5` with `go-version: '1.24.5'` and `cache: true`
+- ✅ **Standard**: `actions/setup-go@v5` with `go-version: '1.25.5'` and `cache: true`
 - **Consistency**: All workflows should use identical Go version and caching
 
 **Checkout**:
@@ -199,7 +199,7 @@ Always add concurrency control to prevent resource conflicts:
 
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.number }}  # For PR-based workflows
+  group: ${{ github.workflow }}-${{ github.event.issue.number }} # For PR-based workflows
   cancel-in-progress: true
 ```
 

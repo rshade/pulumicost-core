@@ -32,7 +32,7 @@ Before installing the Vantage plugin, ensure you have:
 
 ### System Requirements
 
-- Go 1.24.7 or later
+- Go 1.25.5 or later
 - `make` (for building from source)
 - Docker (optional, for running mock tests)
 
@@ -137,13 +137,13 @@ credentials:
 
 params:
   # Use Cost Report Token (preferred) or Workspace Token
-  cost_report_token: "cr_your_report_token_here"
+  cost_report_token: 'cr_your_report_token_here'
 
   # Date range (ISO 8601 format)
-  start_date: "2024-01-01"
+  start_date: '2024-01-01'
 
   # Granularity: "day" or "month"
-  granularity: "day"
+  granularity: 'day'
 
   # Dimensions to group by
   group_bys:
@@ -409,13 +409,13 @@ Error: failed to parse config.yaml
 2. Check required fields:
 
    ```yaml
-   version: 0.1          # Required
-   source: vantage       # Required
+   version: 0.1 # Required
+   source: vantage # Required
    credentials:
-     token: ${...}       # Required
+     token: ${...} # Required
    params:
-     cost_report_token: "cr_..."  # Required
-     granularity: "day"           # Required
+     cost_report_token: 'cr_...' # Required
+     granularity: 'day' # Required
    ```
 
 ### Issue: No Cost Data Returned
@@ -433,7 +433,7 @@ No cost records found
 
    ```yaml
    params:
-     cost_report_token: "cr_valid_token_here"
+     cost_report_token: 'cr_valid_token_here'
    ```
 
 3. Ensure Cost Report has data for selected providers

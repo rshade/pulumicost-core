@@ -27,9 +27,9 @@ func TestNewPluginValidateCmd(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "plugin flag",
+			name:        "plugin flag with nonexistent plugin",
 			args:        []string{"--plugin", "test-plugin"},
-			expectError: false,
+			expectError: true, // Plugin doesn't exist, so command should error
 		},
 		{
 			name:        "help flag",

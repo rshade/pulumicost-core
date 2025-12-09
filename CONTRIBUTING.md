@@ -60,7 +60,7 @@ submit a pull request directly.
 
 | Tool             | Version    | Purpose             |
 | ---------------- | ---------- | ------------------- |
-| Go               | 1.25+      | Core development    |
+| Go               | 1.25.5+    | Core development    |
 | golangci-lint    | v2.6.2     | Go linting          |
 | markdownlint-cli | v0.45.0    | Markdown linting    |
 | Git              | Latest     | Version control     |
@@ -110,17 +110,17 @@ Run `make help` for a complete list. All available targets:
 
 #### Core Development Targets
 
-| Target            | Description                                         |
-| ----------------- | --------------------------------------------------- |
-| `make build`      | Build the `pulumicost` binary to `bin/pulumicost`   |
-| `make test`       | Run all unit tests                                  |
-| `make test-race`  | Run tests with Go race detector enabled             |
-| `make lint`       | Run Go linters (golangci-lint) and Markdown linters |
-| `make validate`   | Run `go mod tidy`, `go vet`, and format validation  |
-| `make clean`      | Remove build artifacts (`bin/` directory)           |
-| `make run`        | Build and run binary with `--help` flag             |
-| `make dev`        | Build and run binary without arguments              |
-| `make inspect`    | Launch MCP Inspector for interactive testing        |
+| Target           | Description                                         |
+| ---------------- | --------------------------------------------------- |
+| `make build`     | Build the `pulumicost` binary to `bin/pulumicost`   |
+| `make test`      | Run all unit tests                                  |
+| `make test-race` | Run tests with Go race detector enabled             |
+| `make lint`      | Run Go linters (golangci-lint) and Markdown linters |
+| `make validate`  | Run `go mod tidy`, `go vet`, and format validation  |
+| `make clean`     | Remove build artifacts (`bin/` directory)           |
+| `make run`       | Build and run binary with `--help` flag             |
+| `make dev`       | Build and run binary without arguments              |
+| `make inspect`   | Launch MCP Inspector for interactive testing        |
 
 #### Documentation Targets
 
@@ -354,11 +354,11 @@ All pull requests must pass:
 
 PulumiCost operates as a three-repository ecosystem:
 
-| Repository | Purpose |
-| ---------- | ------- |
-| [pulumicost-core][core] | CLI tool, plugin host, orchestration engine |
-| [pulumicost-spec][spec] | Protocol buffer definitions, SDK generation |
-| [pulumicost-plugin][plugin] | Plugin implementations (Kubecost, Vantage) |
+| Repository                  | Purpose                                     |
+| --------------------------- | ------------------------------------------- |
+| [pulumicost-core][core]     | CLI tool, plugin host, orchestration engine |
+| [pulumicost-spec][spec]     | Protocol buffer definitions, SDK generation |
+| [pulumicost-plugin][plugin] | Plugin implementations (Kubecost, Vantage)  |
 
 [core]: https://github.com/rshade/pulumicost-core
 [spec]: https://github.com/rshade/pulumicost-spec

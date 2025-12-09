@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
@@ -112,11 +111,8 @@ func (s *Server) AnalyzeStack(
 	// Add per-resource diagnostics using URN-based correlation
 	for _, resource := range req.GetResources() {
 		urn := resource.GetUrn()
-		// Extract resource ID from URN (same logic as extractResourceID)
-		resourceID := urn
-		if parts := strings.Split(urn, "::"); len(parts) >= 3 {
-			resourceID = parts[len(parts)-1]
-		}
+		// Extract resource ID from URN using the same logic as extractResourceID
+		resourceID := extractResourceID(urn)
 
 		// Look up cost by resource ID, fallback to zero cost if not found
 		cost, found := costMap[resourceID]

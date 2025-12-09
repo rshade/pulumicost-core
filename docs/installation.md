@@ -35,6 +35,7 @@ Complete installation instructions for PulumiCost Core across different platform
 Download the latest release for your platform:
 
 #### Linux (x86_64)
+
 ```bash
 curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
 chmod +x pulumicost
@@ -42,6 +43,7 @@ sudo mv pulumicost /usr/local/bin/
 ```
 
 #### Linux (ARM64)
+
 ```bash
 curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-arm64 -o pulumicost
 chmod +x pulumicost
@@ -49,6 +51,7 @@ sudo mv pulumicost /usr/local/bin/
 ```
 
 #### macOS (Intel)
+
 ```bash
 curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-amd64 -o pulumicost
 chmod +x pulumicost
@@ -56,6 +59,7 @@ sudo mv pulumicost /usr/local/bin/
 ```
 
 #### macOS (Apple Silicon)
+
 ```bash
 curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-arm64 -o pulumicost
 chmod +x pulumicost
@@ -63,6 +67,7 @@ sudo mv pulumicost /usr/local/bin/
 ```
 
 #### Windows (x86_64)
+
 ```powershell
 # Download using PowerShell
 Invoke-WebRequest -Uri "https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-windows-amd64.exe" -OutFile "pulumicost.exe"
@@ -75,18 +80,21 @@ $env:PATH += ";$env:USERPROFILE\bin"
 ### 2. Package Managers
 
 #### Homebrew (macOS/Linux)
+
 ```bash
 # Coming soon - not yet available
 brew install pulumicost
 ```
 
 #### Chocolatey (Windows)
+
 ```powershell
-# Coming soon - not yet available  
+# Coming soon - not yet available
 choco install pulumicost
 ```
 
 #### APT (Ubuntu/Debian)
+
 ```bash
 # Coming soon - not yet available
 sudo apt update
@@ -98,6 +106,7 @@ sudo apt install pulumicost
 ### Linux
 
 #### Ubuntu/Debian
+
 ```bash
 # Install dependencies
 sudo apt update
@@ -113,6 +122,7 @@ pulumicost --version
 ```
 
 #### CentOS/RHEL/Fedora
+
 ```bash
 # Install dependencies
 sudo yum install curl  # or dnf install curl
@@ -127,6 +137,7 @@ pulumicost --version
 ```
 
 #### Alpine Linux
+
 ```bash
 # Install dependencies
 apk add curl
@@ -143,6 +154,7 @@ pulumicost --version
 ### macOS
 
 #### Using curl (Recommended)
+
 ```bash
 # Download for your architecture
 # Intel Macs
@@ -160,6 +172,7 @@ pulumicost --version
 ```
 
 #### Bypass Gatekeeper (if needed)
+
 ```bash
 # If macOS blocks the binary due to security settings
 sudo spctl --add /usr/local/bin/pulumicost
@@ -169,6 +182,7 @@ sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
 ### Windows
 
 #### PowerShell Installation
+
 ```powershell
 # Create bin directory
 New-Item -ItemType Directory -Force -Path $env:USERPROFILE\bin
@@ -187,6 +201,7 @@ pulumicost --version
 ```
 
 #### Windows Subsystem for Linux (WSL)
+
 ```bash
 # Use Linux installation instructions inside WSL
 curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
@@ -222,7 +237,7 @@ services:
       - ./plans:/workspace/plans:ro
       - ./specs:/workspace/specs:ro
       - ~/.pulumicost:/root/.pulumicost
-    command: ["cost", "projected", "--pulumi-json", "/workspace/plans/plan.json"]
+    command: ['cost', 'projected', '--pulumi-json', '/workspace/plans/plan.json']
 ```
 
 ### Building Docker Image
@@ -243,7 +258,7 @@ docker run --rm pulumicost-core --version
 
 ### Prerequisites for Building
 
-- **Go**: Version 1.21 or later
+- **Go**: Version 1.25.5 or later
   - Install from: https://golang.org/dl/
 - **Git**: For cloning the repository
 - **Make**: For using build scripts (optional)
@@ -293,7 +308,7 @@ go run ./cmd/pulumicost --help
 ```bash
 # Build for different platforms
 GOOS=linux GOARCH=amd64 go build -o pulumicost-linux-amd64 ./cmd/pulumicost
-GOOS=darwin GOARCH=arm64 go build -o pulumicost-darwin-arm64 ./cmd/pulumicost  
+GOOS=darwin GOARCH=arm64 go build -o pulumicost-darwin-arm64 ./cmd/pulumicost
 GOOS=windows GOARCH=amd64 go build -o pulumicost-windows-amd64.exe ./cmd/pulumicost
 ```
 
@@ -314,6 +329,7 @@ mkdir -p ~/.pulumicost/specs
 ### Installing Plugins
 
 #### Kubecost Plugin Example
+
 ```bash
 # Download plugin binary (example)
 curl -L https://github.com/rshade/pulumicost-plugin-kubecost/releases/latest/download/pulumicost-kubecost-linux-amd64 \
@@ -334,6 +350,7 @@ EOF
 ```
 
 #### Plugin Directory Structure
+
 ```
 ~/.pulumicost/plugins/
 ├── kubecost/
@@ -422,6 +439,7 @@ pulumicost cost projected --pulumi-json plan.json
 ### Common Issues
 
 #### Binary Not Found
+
 ```bash
 # Check if binary is in PATH
 which pulumicost
@@ -434,6 +452,7 @@ export PATH=$PATH:/usr/local/bin
 ```
 
 #### Permission Denied (Linux/macOS)
+
 ```bash
 # Make binary executable
 chmod +x /usr/local/bin/pulumicost
@@ -443,6 +462,7 @@ ls -la /usr/local/bin/pulumicost
 ```
 
 #### macOS Security Warning
+
 ```bash
 # Allow the binary to run
 sudo spctl --add /usr/local/bin/pulumicost
@@ -450,6 +470,7 @@ sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
 ```
 
 #### Plugin Not Found
+
 ```bash
 # Check plugin directory structure
 ls -la ~/.pulumicost/plugins/
@@ -459,6 +480,7 @@ chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
 ```
 
 #### Network Issues
+
 ```bash
 # Use proxy if needed
 export HTTP_PROXY=http://proxy.company.com:8080

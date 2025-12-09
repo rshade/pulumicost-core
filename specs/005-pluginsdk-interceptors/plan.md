@@ -14,7 +14,7 @@ as the first in the chain.
 
 ## Technical Context
 
-**Language/Version**: Go 1.24.10
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: google.golang.org/grpc v1.74.2, github.com/rs/zerolog
 **Storage**: N/A (stateless configuration)
 **Testing**: go test with race detection
@@ -26,7 +26,7 @@ as the first in the chain.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with PulumiCost Core Constitution:
 
