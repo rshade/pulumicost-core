@@ -110,32 +110,6 @@ func (tc *TestContext) SetupProject(ctx context.Context, projectPath string) err
 	if err := tc.copyDir(absProjectPath, workDir); err != nil {
 		return fmt.Errorf("failed to copy project: %w", err)
 	}
-	tc.ProjectDir = absProjectPath
-
-	// Clean up any existing work directory
-	if tc.WorkDir != "" {
-		if err := os.RemoveAll(tc.WorkDir); err != nil {
-			tc.T.Logf("Warning: failed to clean up previous work dir: %v", err)
-		}
-	}
-
-	// Create a temp directory and copy the project there
-	workDir, err := os.MkdirTemp("", "pulumi-e2e-")
-	if err != nil {
-		return fmt.Errorf("failed to create temp dir: %w", err)
-	}
-	tc.WorkDir = workDir
-	tc.PreviewJSON = filepath.Join(workDir, "preview.json")
-
-	// Copy project files to work directory
-	tc.T.Log("Copying project files...")
-	if err := tc.copyDir(absProjectPath, workDir); err != nil {
-		// Clean up temp directory on failure
-		if cleanupErr := os.RemoveAll(workDir); cleanupErr != nil {
-			tc.T.Logf("Warning: failed to clean up temp dir on error: %v", cleanupErr)
-		}
-		return fmt.Errorf("failed to copy project: %w", err)
-	}
 
 	// Check if this is a Go project (has go.mod) - skip go mod tidy for YAML projects
 	goModPath := filepath.Join(workDir, "go.mod")
