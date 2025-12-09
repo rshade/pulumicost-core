@@ -101,7 +101,7 @@ func IsTTY() bool {
 }
 
 // TerminalWidth returns the current terminal width in characters.
-// Falls back to 80 characters if the width cannot be determined.
+// Falls back to DefaultTerminalWidth (80) if the width cannot be determined.
 //
 // Usage:
 //
@@ -111,7 +111,6 @@ func IsTTY() bool {
 // Common terminal widths:
 //   - 80: Traditional terminal width
 //   - 120-160: Modern wide terminals
-//   - 40+: Minimum usable width
 func TerminalWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil || width <= 0 {

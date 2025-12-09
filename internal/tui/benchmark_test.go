@@ -16,14 +16,12 @@ func BenchmarkFormatMoneyShort(b *testing.B) {
 }
 
 func BenchmarkFormatMoney(b *testing.B) {
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = FormatMoney(1234.56, "USD")
 	}
 }
 
 func BenchmarkFormatPercent(b *testing.B) {
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = FormatPercent(85.7)
 	}
@@ -71,7 +69,6 @@ func BenchmarkProgressBarRender(b *testing.B) {
 }
 
 func BenchmarkDetectOutputMode(b *testing.B) {
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = DetectOutputMode(false, false, false)
 	}

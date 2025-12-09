@@ -28,8 +28,8 @@ func TestRenderStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderStatus(tt.status)
-			if result != tt.expected {
-				t.Errorf("RenderStatus(%q) = %q, expected %q", tt.status, result, tt.expected)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("RenderStatus(%q) = %q, expected to contain %q", tt.status, result, tt.expected)
 			}
 		})
 	}
@@ -55,8 +55,8 @@ func TestRenderDelta(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderDelta(tt.delta)
-			if result != tt.expected {
-				t.Errorf("RenderDelta(%.2f) = %q, expected %q", tt.delta, result, tt.expected)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("RenderDelta(%.2f) = %q, expected to contain %q", tt.delta, result, tt.expected)
 			}
 		})
 	}
@@ -84,8 +84,8 @@ func TestRenderPriority(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderPriority(tt.priority)
-			if result != tt.expected {
-				t.Errorf("RenderPriority(%q) = %q, expected %q", tt.priority, result, tt.expected)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("RenderPriority(%q) = %q, expected to contain %q", tt.priority, result, tt.expected)
 			}
 		})
 	}

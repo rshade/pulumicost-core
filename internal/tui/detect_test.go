@@ -86,14 +86,11 @@ func TestDetectOutputMode_EnvironmentVariables(t *testing.T) {
 				}
 			}()
 
-			// Set test environment
-			for key, value := range tt.envVars {
-				os.Setenv(key, value)
-			}
-			// Clear other relevant env vars
+			// Clear all relevant env vars first
 			os.Unsetenv("NO_COLOR")
 			os.Unsetenv("TERM")
 			os.Unsetenv("CI")
+			// Set test environment
 			for key, value := range tt.envVars {
 				os.Setenv(key, value)
 			}

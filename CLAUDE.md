@@ -299,3 +299,4 @@ Key dependencies (see `go.mod` for versions):
 - `github.com/pulumi/pulumi/sdk/v3` - Pulumi SDK for Analyzer (v3.210.0+)
 - `github.com/charmbracelet/bubbletea` - TUI framework
 - `github.com/charmbracelet/lipgloss` - TUI styling
+- `golang.org/x/term` - Terminal detection utilities

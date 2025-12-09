@@ -25,7 +25,7 @@ type ProgressBar struct {
 	ShowPct bool
 }
 
-// DefaultProgressBar returns a progress bar with default settings.
+// DefaultProgressBar returns a ProgressBar configured with the package defaults: Width set to DefaultProgressBarWidth, Filled set to "█", Empty set to "░", and ShowPct enabled.
 func DefaultProgressBar() ProgressBar {
 	return ProgressBar{
 		Width:   DefaultProgressBarWidth,
@@ -42,6 +42,14 @@ func (p ProgressBar) Render(percent float64) string {
 	}
 	if percent > ProgressThresholdCritical {
 		percent = ProgressThresholdCritical
+	}
+
+	// Guard against negative or zero width to prevent panic.
+	if p.Width <= 0 {
+		if p.ShowPct {
+			return fmt.Sprintf("%.0f%%", percent)
+		}
+		return ""
 	}
 
 	filled := int(percent / ProgressThresholdCritical * float64(p.Width))

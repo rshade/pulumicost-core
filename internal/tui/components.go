@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -37,7 +38,14 @@ const (
 	IconArrowRight = "→" // Neutral/no change.
 )
 
-// RenderStatus renders a styled status indicator with icon and color.
+// centsMultiplier is used for rounding monetary values to cents (2 decimal places).
+const centsMultiplier = 100
+
+// RenderStatus renders a styled status indicator consisting of an icon and label
+// corresponding to the provided status. Recognized statuses (OK, SUCCESS, WARNING,
+// CRITICAL, EXCEEDED) map to predefined icons and color themes; unrecognized
+// statuses are shown in a muted color with the provided text lowercased.
+// The returned string is the icon and label formatted with the selected style.
 func RenderStatus(status string) string {
 	status = strings.ToUpper(status)
 
@@ -67,17 +75,28 @@ func RenderStatus(status string) string {
 	return style.Render(fmt.Sprintf("%s %s", icon, text))
 }
 
-// RenderDelta renders a styled cost delta indicator with icon and sign.
+// RenderDelta renders a styled indicator for a monetary delta.
+//
+// The returned string contains a sign ("+" for positive, empty for negative or
+// zero), a formatted amount, and an arrow icon: up for positive, down for
+// negative, and right for zero. The text is bold and colorized (warning color
+// for positive, OK color for negative, muted for zero).
+//
+// The sign and icon are based on the rounded value (to cents) to ensure visual
+// consistency between the displayed amount and the directional indicator.
 func RenderDelta(delta float64) string {
+	// Round to cents so sign/icon match what we display.
+	rounded := math.Round(delta*centsMultiplier) / centsMultiplier
+
 	var icon, sign string
 	var color lipgloss.Color
 
 	switch {
-	case delta > 0:
+	case rounded > 0:
 		icon = IconArrowUp
 		sign = "+"
 		color = ColorWarning
-	case delta < 0:
+	case rounded < 0:
 		icon = IconArrowDown
 		sign = ""
 		color = ColorOK
@@ -87,7 +106,7 @@ func RenderDelta(delta float64) string {
 		color = ColorMuted
 	}
 
-	formatted := FormatMoneyShort(delta)
+	formatted := FormatMoneyShort(rounded)
 	style := lipgloss.NewStyle().Foreground(color).Bold(true)
 	return style.Render(fmt.Sprintf("%s%s %s", sign, formatted, icon))
 }

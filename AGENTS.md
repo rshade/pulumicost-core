@@ -146,7 +146,7 @@ maintain its effectiveness:
 
 ## Active Technologies
 
-- Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.27.0
+- Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.37.0
   (104-shared-tui-package)
 - N/A (in-memory UI components) (104-shared-tui-package)
 - N/A (UI rendering package) (104-shared-tui-package)

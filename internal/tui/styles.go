@@ -81,6 +81,6 @@ var (
 	// TableSelectedStyle highlights selected table rows with background color.
 	// Use for indicating the currently selected or active row in interactive tables.
 	TableSelectedStyle = lipgloss.NewStyle().
-				Background(lipgloss.Color("237")).
+				Background(ColorSelectedBg).
 				Foreground(ColorHighlight)
 )
