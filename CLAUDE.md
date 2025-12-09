@@ -205,6 +205,44 @@ docs/
 - Run `make docs-lint` before committing documentation changes
 - Use frontmatter YAML with `title`, `description`, and `layout` fields
 
+#### Jekyll Frontmatter and H1 Requirements
+
+**CRITICAL**: Files with Jekyll frontmatter must NOT have a duplicate H1 heading in the
+content. The frontmatter `title` field serves as the page H1.
+
+**Correct Pattern** (frontmatter title = H1, content starts with H2 or text):
+
+```markdown
+---
+title: User Guide
+description: Complete guide for end users
+layout: default
+---
+
+This guide is for anyone who wants to use PulumiCost...
+
+## Installation
+
+...
+```
+
+**Incorrect Pattern** (duplicate H1 causes MD025 lint error):
+
+```markdown
+---
+title: User Guide
+description: Complete guide for end users
+layout: default
+---
+
+# User Guide  ← ERROR: Duplicate H1!
+
+This guide is for anyone who wants to use PulumiCost...
+```
+
+**Markdownlint Configuration**: The `docs/.markdownlint-cli2.jsonc` file configures MD025
+to detect frontmatter titles as H1 headings via the `front_matter_title` pattern.
+
 ### GitHub Actions for Docs
 
 - **docs-build-deploy.yml** - Builds and deploys docs to GitHub Pages on main branch
@@ -220,7 +258,12 @@ docs/
    - `cost projected` - Calculate projected costs from Pulumi preview JSON
    - `cost actual` - Fetch actual historical costs with time ranges
    - `plugin list` - List installed plugins
-   - `plugin validate` - Validate plugin installations
+   - `plugin validate` - Validate plugin setup
+   - `plugin init` - Initialize a new plugin project
+   - `plugin install` - Install a plugin from a registry or URL
+   - `plugin update` - Update an installed plugin
+   - `plugin remove` - Remove an installed plugin
+   - `analyzer serve` - Start the Pulumi Analyzer gRPC server
 
 2. **Engine** (`internal/engine/`) - Core cost calculation logic:
    - Orchestrates between plugins and local pricing specs
@@ -231,6 +274,14 @@ docs/
      - Tag-based filtering using `tag:key=value` syntax
      - Grouping by resource, type, provider, or date dimensions
      - Daily and monthly cost aggregation
+   - **Cross-Provider Aggregation Features**:
+     - `CreateCrossProviderAggregation()` - Time-based multi-provider cost analysis
+     - Currency validation system with `ErrMixedCurrencies` protection
+     - Advanced input validation (`ErrEmptyResults`, `ErrInvalidGroupBy`, `ErrInvalidDateRange`)
+     - GroupBy type safety with `IsValid()`, `IsTimeBasedGrouping()`, `String()` methods
+     - Intelligent cost calculation (actual vs projected with time period conversion)
+     - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
+     - Sorted chronological output for trend analysis
 
 3. **Plugin Host System** (`internal/pluginhost/`) - gRPC plugin management:
    - `Client` - Wraps plugin gRPC connections
@@ -248,6 +299,14 @@ docs/
 6. **Spec System** (`internal/spec/`) - Local pricing specification:
    - YAML-based pricing specs in `~/.pulumicost/specs/`
    - Fallback when plugins don't provide pricing
+
+7. **Analyzer** (`internal/analyzer/`) - Implements Pulumi Analyzer gRPC protocol:
+   - **Server**: Implements `pulumirpc.AnalyzerServer` interface
+   - **Resource Mapping**: Converts `pulumirpc.AnalyzerResource` to `engine.ResourceDescriptor`
+   - **Diagnostics**: Generates `pulumirpc.AnalyzeDiagnostic` from cost results (ADVISORY enforcement)
+   - **Graceful Degradation**: Errors produce warning diagnostics, preview continues even if cost calculation fails
+   - **CLI Integration**: `pulumicost analyzer serve` starts gRPC server for Pulumi CLI handshake
+
 
 ### Plugin Protocol
 
@@ -459,7 +518,7 @@ go tool cover -func=coverage.out | grep total  # Check total coverage
 
 ### Coverage Thresholds
 
-- **Current State**: 24.2% overall coverage, 67.2% in CLI package
+
 - **Threshold Set**: 20% (adjusted from initial 80% for realistic expectations)
 - **Strategy**: Start conservative, increase as project matures and more tests added
 - **Command**: `go tool cover -func=coverage.out | grep total` for threshold checking
@@ -831,12 +890,15 @@ The engine package orchestrates cost calculations between plugins and specs:
   - Sorted chronological output for trend analysis
 - See `internal/engine/CLAUDE.md` for detailed calculation flows
 
-**Error Types for Cross-Provider Aggregation**:
+## Common Error Types
 
-- `ErrMixedCurrencies`: Different currencies detected (USD vs EUR)
-- `ErrInvalidGroupBy`: Non-time-based grouping used for cross-provider aggregation
-- `ErrEmptyResults`: Empty or nil results provided for aggregation
-- `ErrInvalidDateRange`: EndDate before StartDate in cost results
+- `ErrNoCostData`: No cost data available for a resource.
+- `ErrMixedCurrencies`: Multiple currencies detected in cross-provider aggregation.
+- `ErrInvalidGroupBy`: Invalid grouping type used for time-based aggregation.
+- `ErrEmptyResults`: Attempted aggregation on empty results.
+- `ErrInvalidDateRange`: Invalid date range (end date before start date).
+- `ErrResourceValidation`: Internal resource validation failed.
+- `ErrConfigCorrupted`: Configuration file is malformed.
 
 ### internal/pluginhost
 

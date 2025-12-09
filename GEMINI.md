@@ -3,6 +3,10 @@
 Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ## Active Technologies
+- Markdown, Go 1.25.5 (for code verification) + Jekyll (for docs site), GitHub Pages (011-sync-docs-codebase)
+- Git repository (docs folder) (011-sync-docs-codebase)
+- Pulumi Analyzer integration (pulumicost analyzer serve)
+- Plugin management commands (pulumicost plugin init/install/update/remove)
 
 - Local Pulumi state (ephemeral), no persistent DB. (010-e2e-cost-testing)
 - N/A (Stateless operation) (008-analyzer-plugin)
@@ -15,7 +19,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ```text
 cmd/
-internal/
+internal/ (now includes analyzer package)
 pkg/
 test/
 testdata/
@@ -35,11 +39,27 @@ make lint
 
 # Run
 make run
+
+# Plugin Management
+pulumicost plugin init
+pulumicost plugin install
+pulumicost plugin update
+pulumicost plugin remove
+
+# Analyzer
+pulumicost analyzer serve
 ```
 
 ## Code Style
 
 Go 1.25.5: Follow standard conventions
+
+## Documentation Standards
+
+- Run `make docs-lint` before committing documentation changes
+- Use frontmatter YAML with `title`, `description`, and `layout` fields
+- **CRITICAL**: Files with frontmatter must NOT have duplicate H1 - the frontmatter
+  `title` serves as the page H1, content should start with H2 or text
 
 <!-- MANUAL ADDITIONS START -->
 
@@ -56,13 +76,10 @@ Go 1.25.5: Follow standard conventions
 - **Property Extraction**: Core (`adapter.go`) relies on populated `Inputs` to extract SKU and Region. If `Inputs` are empty (due to ingest issues), pricing lookup fails.
 
 ## Recent Changes
+- 011-sync-docs-codebase: Added Markdown, Go 1.25.5 (for code verification) + Jekyll (for docs site), GitHub Pages
 
 - 010-e2e-cost-testing: Fixed E2E test failure by parsing `newState` in Pulumi plan JSON.
 - 010-e2e-cost-testing: Patched `aws-public` plugin to support `aws:ec2/instance:Instance` resource type.
-- 010-e2e-cost-testing: Verified cost calculation accuracy ($7.59/month for t3.micro).
-- 010-e2e-cost-testing: Added Go 1.25.5 support and updated all documentation and CI workflows accordingly
-- 008-analyzer-plugin: Added Go 1.25 + `github.com/pulumi/pulumi/sdk/v3` (for `pulumirpc`), `google.golang.org/grpc`, `github.com/spf13/cobra`
-- 008-analyzer-plugin: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 ## Session Analysis - Recommended Updates
 

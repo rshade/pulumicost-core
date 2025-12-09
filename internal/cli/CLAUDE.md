@@ -15,9 +15,15 @@ pulumicost
 ├── cost
 │   ├── projected  # Calculate estimated costs from Pulumi plan
 │   └── actual     # Fetch historical costs from cloud providers
-└── plugin
-    ├── list       # List installed plugins
-    └── validate   # Validate plugin installations
+├── plugin
+│   ├── init       # Initialize a new plugin project
+│   ├── install    # Install a plugin
+│   ├── update     # Update an installed plugin
+│   ├── remove     # Remove an installed plugin
+│   ├── list       # List installed plugins
+│   └── validate   # Validate plugin installations
+└── analyzer
+    └── serve      # Starts the PulumiCost analyzer gRPC server (usually run by Pulumi CLI)
 ```
 
 ### Command Implementation Pattern
@@ -29,6 +35,17 @@ Each command follows this consistent pattern:
 3. **RunE Function**: Contains the main command logic
 4. **Flag Registration**: Uses `cmd.Flags().StringVar()` for configuration
 5. **Required Flags**: Marked with `cmd.MarkFlagRequired()`
+
+### `analyzer serve` Integration Pattern
+
+The `pulumicost analyzer serve` command is unique as it's primarily designed for integration with the Pulumi CLI, not for direct user execution.
+
+1.  **Launched by Pulumi**: The Pulumi CLI launches this command as a gRPC server process, typically configured in `Pulumi.yaml`.
+2.  **Port Handshake**: The server prints its dynamically assigned listening port to stdout for the Pulumi CLI to connect.
+3.  **Logging**: All diagnostic and operational logs are directed to stderr to avoid interfering with the stdout port handshake.
+4.  **Graceful Shutdown**: The server handles `SIGINT`/`SIGTERM` signals for graceful shutdown when the Pulumi CLI terminates the connection.
+
+This indirect execution pattern is crucial for its "zero-click" cost estimation functionality during `pulumi preview`.
 
 ### Core Dependencies Flow
 
