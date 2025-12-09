@@ -4,7 +4,7 @@
 
 - `cmd/pulumicost`: CLI entrypoint and flag wiring.
 - `internal/` packages: core logic (engine, ingest, registry, pluginhost, config,
-  specvalidate, logging) kept unexported to guard APIs.
+  specvalidate, logging, **analyzer**) kept unexported to guard APIs.
 - `pkg/version`: shared version/build metadata used by the CLI.
 - `examples/` and `testdata/`: Pulumi plan fixtures and sample specs; prefer
   extending these for reproducible tests.
@@ -22,6 +22,11 @@
   and static checks.
 - `make run` / `make dev`: Build then run the CLI; use `make inspect` to launch
   the MCP inspector after a build.
+- `pulumicost plugin init`: Initialize a new plugin project.
+- `pulumicost plugin install`: Install a plugin from a registry or URL.
+- `pulumicost plugin update`: Update an installed plugin.
+- `pulumicost plugin remove`: Remove an installed plugin.
+- `pulumicost analyzer serve`: Start the Pulumi Analyzer gRPC server.
 - Docs: `make docs-lint`, `make docs-build`, `make docs-serve` for the Jekyll
   site.
 
@@ -32,9 +37,16 @@
 - Package names are lowercase and succinct; exported identifiers need Go doc
   comments when part of the CLI surface.
 - CLI flags use kebab-case (`--pulumi-json`, `--group-by`); config/env keys use
-  uppercase snake (`PULUMICOST_PLUGIN_*`).
+  uppercase snake (`PULUMICOST_PLUGIN_*`, `PULUMICOST_CONFIG_STRICT`).
 - Prefer structured logging through `internal/logging`; keep public structs
   JSON-tagged for CLI/JSON outputs.
+
+## Documentation Standards
+
+- Run `make docs-lint` before committing documentation changes
+- Use frontmatter YAML with `title`, `description`, and `layout` fields
+- **CRITICAL**: Files with frontmatter must NOT have duplicate H1 - the frontmatter
+  `title` serves as the page H1, content should start with H2 or text
 
 ## Testing Guidelines
 

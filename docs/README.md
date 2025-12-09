@@ -1,6 +1,7 @@
 # PulumiCost Documentation
 
-Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, architect, or business stakeholder, you'll find comprehensive guides to help you succeed with PulumiCost.
+Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, architect,
+or business stakeholder, you'll find comprehensive guides to help you succeed.
 
 ## Quick Navigation
 
@@ -56,7 +57,41 @@ Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, ar
 - **[Architect Guide](guides/architect-guide.md)** - Complete guide for software architects
 - **[Business Value](guides/business-value.md)** - Value proposition and ROI
 
-### 🚀 Getting Started (Recommended for first-time users)
+### 2. View Projected Costs
+
+```bash
+pulumicost cost projected --pulumi-json plan.json
+```
+
+**Output:**
+
+```text
+RESOURCE                          TYPE                MONTHLY   CURRENCY
+aws:ec2/instance:Instance         aws:ec2:Instance    $7.50     USD
+aws:s3/bucket:Bucket              aws:s3:Bucket       $0.00     USD
+aws:rds/instance:Instance         aws:rds:Instance    $0.00     USD
+
+Total: $7.50 USD
+```
+
+### 3. Zero-Click Cost Estimation
+
+Integrate PulumiCost directly into your `pulumi preview` workflow.
+
+```yaml
+# Configure analyzer in Pulumi.yaml
+plugins:
+  - path: pulumicost
+    args: ["analyzer", "serve"]
+```
+
+Then run:
+
+```bash
+pulumi preview
+```
+
+### 4. (Optional) View Actual Costs
 
 - **[5-Minute Quickstart](getting-started/quickstart.md)** - Get costs in 5 minutes
 - **[Installation Guide](getting-started/installation.md)** - Step-by-step installation
@@ -69,23 +104,25 @@ Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, ar
 - **[Core Concepts](architecture/core-concepts.md)** - Key concepts explained
 - **[Plugin Protocol](architecture/plugin-protocol.md)** - gRPC plugin protocol specification
 - **[Cost Calculation](architecture/cost-calculation.md)** - How costs are calculated and aggregated
-- **[Roadmap](architecture/roadmap.md)** - Planned features and timeline
 
 ### 🔌 Plugin Documentation
 
 #### For Plugin Developers
+
 - **[Plugin Development Guide](plugins/plugin-development.md)** - How to build a PulumiCost plugin
 - **[Plugin SDK Reference](plugins/plugin-sdk.md)** - API and SDK documentation
 - **[Plugin Examples](plugins/plugin-examples.md)** - Code patterns and examples
 - **[Plugin Checklist](plugins/plugin-checklist.md)** - Ensure your plugin is complete
 
 #### Vantage Plugin (IN PROGRESS)
+
 - **[Setup Guide](plugins/vantage/setup.md)** - Get started with Vantage
 - **[Authentication](plugins/vantage/authentication.md)** - API key management
 - **[Features](plugins/vantage/features.md)** - What's supported
 - **[Troubleshooting](plugins/vantage/troubleshooting.md)** - Common issues
 
 #### Future Plugins (PLANNED)
+
 - **[Kubecost](plugins/kubecost/coming-soon.md)** - Kubernetes cost allocation
 - **[Flexera](plugins/flexera/coming-soon.md)** - Multi-cloud cost management
 - **[Cloudability](plugins/cloudability/coming-soon.md)** - Enterprise cost visibility
@@ -120,15 +157,21 @@ Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, ar
 
 ### What is PulumiCost?
 
-PulumiCost is a CLI tool that calculates cloud infrastructure costs from Pulumi infrastructure definitions. It provides:
+**Key Features:**
 
-- **Projected Costs** - Estimated costs from your infrastructure code
-- **Actual Costs** - Real costs from cloud provider APIs
-- **Cost Changes** - Understand what changed and by how much
+- 🔍 **Pulumi Analyzer Integration**: Zero-click cost estimation during `pulumi preview`
+- 📊 **Cross-Provider Aggregation**: Daily/monthly cost trends across AWS, Azure, GCP
+- 🏗️ **Plugin Development Kit**: Initialize, install, update, and manage plugins
+- 📊 **Projected Costs** - Estimate costs before deploying
+- 💰 **Actual Costs** - See what you're actually paying
+- 🔌 **Multiple Cost Sources** - Works with Vantage, local specs, and more
+- 🎯 **Flexible Filtering** - Filter by resource type, tags, or custom criteria
+- 📈 **Cost Aggregation** - Group costs by provider, type, date, or tags
+- 📱 **Multiple Formats** - Table, JSON, or NDJSON output
 
 ### How It Works
 
-```
+```text
 1. You define infrastructure with Pulumi
 2. PulumiCost reads your Pulumi definitions
 3. Plugins fetch pricing and cost data
@@ -183,7 +226,7 @@ See [plan.md](plan.md) for complete documentation architecture, maintenance stra
 
 ## Site Map
 
-```
+```text
 📄 Getting Started
   ├─ Quickstart (5 minutes)
   ├─ Installation
@@ -255,6 +298,7 @@ See [plan.md](plan.md) for complete documentation architecture, maintenance stra
 Found an error? Want to improve a guide? The documentation is open source!
 
 See [Contributing Guide](support/contributing.md) for how to:
+
 - Report documentation issues
 - Submit improvements
 - Add new examples
@@ -264,7 +308,8 @@ See [Contributing Guide](support/contributing.md) for how to:
 
 ## For LLM/AI Tools
 
-If you're an AI assistant helping someone with PulumiCost, see [llms.txt](llms.txt) for a machine-readable index of all documentation.
+If you're an AI assistant helping someone with PulumiCost, see [llms.txt](llms.txt) for a
+machine-readable index of all documentation.
 
 ---
 

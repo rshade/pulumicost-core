@@ -4,9 +4,8 @@ title: User Guide
 description: Complete guide for end users - install, configure, and use PulumiCost
 ---
 
-# PulumiCost User Guide
-
-This guide is for anyone who wants to **use PulumiCost** to see costs for their Pulumi infrastructure.
+This guide is for anyone who wants to **use PulumiCost** to see costs for their Pulumi
+infrastructure.
 
 ## Table of Contents
 
@@ -86,7 +85,7 @@ pulumicost cost projected --pulumi-json plan.json
 
 **Output:**
 
-```
+```text
 RESOURCE                          TYPE                MONTHLY   CURRENCY
 aws:ec2/instance:Instance         aws:ec2:Instance    $7.50     USD
 aws:s3/bucket:Bucket              aws:s3:Bucket       $0.00     USD
@@ -140,6 +139,40 @@ pulumicost cost actual --pulumi-json plan.json --from 2024-01-01 --to 2024-01-31
 ```
 
 **Note:** Requires plugin setup (Vantage, Kubecost, etc.)
+
+---
+
+## Zero-Click Cost Estimation (Analyzer)
+
+PulumiCost can integrate directly with the Pulumi CLI as an Analyzer, providing instant
+cost estimates during `pulumi preview`. This eliminates the need for a separate
+`pulumicost` command to see projected costs.
+
+For detailed setup instructions, refer to the [Analyzer Setup Guide](../getting-started/analyzer-setup.md).
+
+---
+
+## Cross-Provider Aggregation
+
+PulumiCost supports aggregating costs across multiple cloud providers and services,
+allowing you to get a holistic view of your infrastructure spending. This feature is
+particularly powerful when combining actual cost data from various plugins.
+
+### Daily Cost Trends
+
+View daily cost trends across all configured providers for a specific period:
+
+```bash
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31 --group-by daily
+```
+
+### Monthly Comparison
+
+Generate a monthly cost comparison. You can output this as JSON for further processing:
+
+```bash
+pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by monthly --output json
+```
 
 ---
 
@@ -263,7 +296,7 @@ pulumicost cost projected --pulumi-json plan.json
 
 **Output:**
 
-```
+```text
 RESOURCE                      TYPE              MONTHLY   CURRENCY
 aws:ec2/instance:Instance     aws:ec2:Instance  $7.50     USD
 aws:s3/bucket:Bucket          aws:s3:Bucket     $0.00     USD
@@ -303,7 +336,7 @@ pulumicost cost projected --pulumi-json plan.json --output ndjson
 
 **Output:**
 
-```
+```text
 {"type": "aws:ec2:Instance", "estimatedCost": 7.50}
 {"type": "aws:s3:Bucket", "estimatedCost": 0.00}
 ```

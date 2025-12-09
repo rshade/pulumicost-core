@@ -4,9 +4,8 @@ title: Developer Guide
 description: Complete guide for engineers - extend PulumiCost and build plugins
 ---
 
-# PulumiCost Developer Guide
-
-This guide is for **engineers and developers** who want to extend PulumiCost by building plugins or contributing to the core project.
+This guide is for **engineers and developers** who want to extend PulumiCost by
+building plugins or contributing to the core project.
 
 ## Table of Contents
 
@@ -53,7 +52,7 @@ make test
 
 ### Core Components
 
-```
+```text
 ┌─────────────────┐
 │   Pulumi JSON   │  User's infrastructure definition
 └────────┬────────┘
@@ -90,15 +89,32 @@ make test
 
 ### Key Packages
 
-| Package               | Purpose                        |
-| --------------------- | ------------------------------ |
-| `internal/cli`        | Command-line interface (Cobra) |
-| `internal/engine`     | Cost calculation logic         |
-| `internal/ingest`     | Pulumi plan parsing            |
-| `internal/pluginhost` | Plugin gRPC communication      |
-| `internal/registry`   | Plugin discovery               |
-| `internal/spec`       | Local pricing specifications   |
-| `pkg/pluginsdk`       | Plugin SDK for developers      |
+| Package | Purpose |
+| --- | --- |
+| `internal/cli` | Command-line interface (Cobra) |
+| `internal/engine` | Core cost calculation logic |
+| `internal/ingest` | Pulumi plan parsing |
+| `internal/pluginhost` | Plugin gRPC communication |
+| `internal/registry` | Plugin discovery |
+| `internal/spec` | Local pricing specifications |
+| `internal/analyzer` | Pulumi Analyzer gRPC server |
+| `pkg/pluginsdk` | Plugin SDK for developers |
+
+### Pulumi Analyzer Integration (Developer Perspective)
+
+The `internal/analyzer` package implements the Pulumi Analyzer gRPC protocol, allowing
+PulumiCost to act as a "zero-click" cost analysis tool during `pulumi preview`.
+
+Developers extending or debugging the Analyzer should be aware of:
+
+- **gRPC Protocol**: Communication between Pulumi CLI and analyzer occurs via gRPC.
+- **Port Handshake**: The analyzer server communicates its dynamic port to the Pulumi
+  CLI via stdout. All other logging goes to stderr.
+- **Resource Mapping**: The analyzer converts Pulumi resource structures
+  (`pulumirpc.AnalyzerResource`) into `engine.ResourceDescriptor` for cost calculation.
+- **Diagnostics**: Cost estimates are returned as `ADVISORY` diagnostics.
+
+For a detailed architectural overview of the Analyzer, refer to the [Analyzer Architecture documentation](../architecture/analyzer.md).
 
 ---
 
@@ -359,7 +375,7 @@ ctx = logging.ContextWithTraceID(ctx, traceID)
 
 ### Commit Messages
 
-```
+```text
 type: Brief description
 
 More detailed explanation of changes.
@@ -466,53 +482,6 @@ func TestGetActualCost(t *testing.T) {
 }
 ```
 
-### Platform-Specific Test Requirements
-
-#### macOS Integration Test Tooling
-
-The `internal/pluginhost` integration tests simulate realistic plugin behavior by attempting
-actual port binding and timeout handling. On macOS, you need to install GNU utilities via Homebrew:
-
-**Required Tools:**
-
-- `nc` (netcat) — for port binding simulation
-- `timeout` (GNU coreutils) — for timing control
-
-**Installation:**
-
-```bash
-# Install GNU timeout via coreutils
-brew install coreutils
-
-# Install netcat (modern variant via nmap)
-brew install nmap
-
-# Verify installation
-which timeout    # Should show /opt/homebrew/bin/timeout or /usr/local/bin/timeout
-which nc         # Built-in BSD nc is sufficient, but nmap's ncat is more reliable
-```
-
-Why These Tools Are Required:
-
-The integration tests prioritize test fidelity over portability. Tests create mock plugin processes that:
-
-Bind to ephemeral TCP ports (simulating ProcessLauncher behavior)
-Timeout after brief intervals (simulating plugin startup/failure scenarios)
-Exercise real process lifecycle paths rather than simplified stubs
-This approach validates:
-
-Port allocation doesn't conflict across concurrent clients
-Cleanup doesn't affect other clients
-Connection retry logic works with actual network behavior
-Running Without These Tools:
-
-```bash
-# Skip integration tests on macOS without tooling
-go test -short ./internal/pluginhost/...
-```
-
-The `-short` flag skips integration tests that require platform-specific tools.
-
 ### Integration Testing
 
 For testing with real plugins:
@@ -524,6 +493,41 @@ For testing with real plugins:
 # Test with example plan
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 ```
+
+#### Analyzer Integration Testing
+
+Testing the Analyzer involves running `pulumi preview` against a Pulumi project
+configured to use the `pulumicost analyzer serve` command.
+
+```bash
+# Example: Configure your Pulumi.yaml as described in the Analyzer Setup guide.
+# Then, navigate to your Pulumi project directory:
+cd your-pulumi-project
+pulumi preview
+```
+
+Verify the output for cost diagnostics. For detailed debugging, enable verbose logging:
+
+```bash
+PULUMICOST_LOG_LEVEL=debug pulumi preview
+```
+
+#### Cross-Provider Aggregation Testing
+
+Test cross-provider aggregation by running `pulumicost cost actual` with `--group-by daily`
+or `--group-by monthly` on a Pulumi plan that includes resources from multiple providers.
+
+```bash
+# Example: Daily aggregation
+pulumicost cost actual --pulumi-json examples/plans/multi-provider-plan.json \
+  --from 2024-01-01 --to 2024-01-31 --group-by daily
+
+# Example: Monthly aggregation with JSON output
+pulumicost cost actual --pulumi-json examples/plans/multi-provider-plan.json \
+  --from 2024-01-01 --group-by monthly --output json
+```
+
+### Platform-Specific Test Requirements
 
 ---
 
@@ -548,7 +552,7 @@ Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
 
 **Structure:**
 
-```
+```text
 ~/.pulumicost/plugins/
 ├── myplugin/
 │   └── 0.1.0/
@@ -601,7 +605,7 @@ git push origin branch  # Push changes
 - **Plugin SDK:** [Plugin SDK Reference](../plugins/plugin-sdk.md)
 - **Examples:** [Code Examples](../plugins/plugin-examples.md)
 - **Architecture:** [System Architecture](../architecture/system-overview.md)
-- **Contributing:** [Contributing Guide](../support/contributing.md)
+- **Contributing:** [Contributing Guide](../../CONTRIBUTING.md)
 - **Vantage Plugin:** [Vantage Implementation Example](../plugins/vantage/README.md)
 
 ---
