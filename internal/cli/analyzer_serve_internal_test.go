@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"os"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -53,21 +52,8 @@ func TestGetAnalyzerLogLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Save and restore env
-			originalEnv := os.Getenv("PULUMICOST_LOG_LEVEL")
-			defer func() {
-				if originalEnv == "" {
-					os.Unsetenv("PULUMICOST_LOG_LEVEL")
-				} else {
-					os.Setenv("PULUMICOST_LOG_LEVEL", originalEnv)
-				}
-			}()
-
-			// Set test env
-			if tt.envValue == "" {
-				os.Unsetenv("PULUMICOST_LOG_LEVEL")
-			} else {
-				os.Setenv("PULUMICOST_LOG_LEVEL", tt.envValue)
+			if tt.envValue != "" {
+				t.Setenv("PULUMICOST_LOG_LEVEL", tt.envValue)
 			}
 
 			got := getAnalyzerLogLevel()

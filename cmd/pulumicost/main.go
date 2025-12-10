@@ -10,14 +10,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rs/zerolog"
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/pkg/version"
 	"github.com/spf13/cobra"
 )
 
-// run is the main application logic, separated for testability.
+// run executes the main application logic for the pulumicost program.
+// It either starts the Pulumi analyzer plugin serve path when the executable name
+// indicates an analyzer invocation (supports both legacy policy-pack and direct
+// analyzer names), or it runs the regular CLI root command for normal operation.
+// It returns an error if starting the analyzer serve or executing the root command fails.
 func run() error {
 	// Check if the binary is being run as a Pulumi Analyzer plugin
 	// Supports both legacy policy pack mode (pulumi-analyzer-policy-pulumicost)
@@ -27,28 +30,10 @@ func run() error {
 		strings.Contains(exeName, "pulumi-analyzer-pulumicost") {
 		// If run as an analyzer plugin, execute the analyzer serve logic directly.
 		// Pulumi expects the plugin binary to start a gRPC server and output the port.
-		// Setup a minimal stderr logger for the analyzer serve command, as it expects it.
-		// This must use os.Stderr to avoid breaking the Pulumi handshake.
-
-		// Determine log level from environment, default to info to reduce noise
-		logLevel := zerolog.InfoLevel
-		if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
-			if parsed, err := zerolog.ParseLevel(envLevel); err == nil {
-				logLevel = parsed
-			}
-		}
-
-		stderrLogger := zerolog.New(os.Stderr).
-			Level(logLevel).
-			With().
-			Str("component", "analyzer-plugin-autostart").
-			Timestamp().
-			Logger()
-
+		// RunAnalyzerServe sets up its own stderr logger via getAnalyzerLogLevel(),
+		// so we only need to provide a basic context here.
 		dummyCmd := &cobra.Command{}
-		dummyCmd.SetContext(stderrLogger.WithContext(context.Background())) // Initialize context with stderrLogger
-
-		// Call the analyzer serve run function directly
+		dummyCmd.SetContext(context.Background())
 		return cli.RunAnalyzerServe(dummyCmd)
 	}
 

@@ -1,4 +1,8 @@
-# Pulumi Analyzer Integration
+---
+title: Pulumi Analyzer Integration
+description: Real-time cost estimates during pulumi preview operations using the PulumiCost analyzer framework
+layout: default
+---
 
 PulumiCost integrates with Pulumi's analyzer framework to provide real-time cost
 estimates during `pulumi preview` operations.
@@ -160,4 +164,4 @@ Pulumi internal resources (Stack, providers) are handled specially:
 ## See Also
 
 - [Plugin Development](plugins/plugin-development.md)
-- [CLI Reference](reference/cli-reference.md)
+- [CLI Commands](reference/cli-commands.md)

@@ -569,6 +569,8 @@ func TestMapResourcesWithErrors(t *testing.T) {
 
 			assert.Len(t, result.Resources, tt.wantResources)
 			assert.Equal(t, tt.wantSkipped, result.Skipped)
+			// Verify error tracking matches skipped count (each nil resource produces one error)
+			assert.Len(t, result.Errors, tt.wantSkipped)
 		})
 	}
 }

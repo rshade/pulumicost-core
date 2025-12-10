@@ -134,7 +134,11 @@ func MapResourcesWithErrors(resources []*pulumirpc.AnalyzerResource) MappingResu
 //   - "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver" → "webserver"
 //   - "urn:pulumi:prod::api::azure:compute/vm:VM::api-server-01" → "api-server-01"
 //   - "" → ""
-//   - "no-separators" → "no-separators"
+//
+// extractResourceID extracts the resource-name segment from a Pulumi URN.
+// If urn is empty, it returns the empty string. If the URN contains "::"
+// separators, the last segment is returned as the resource name; otherwise the
+// original urn string is returned.
 func extractResourceID(urn string) string {
 	if urn == "" {
 		return ""
@@ -152,7 +156,17 @@ func extractResourceID(urn string) string {
 // This function is similar to extractProvider but works with AnalyzeRequest
 // which is used for single-resource analysis. It uses the same two-tier strategy:
 //  1. First, try to extract from the provider resource's type field
-//  2. Fall back to extracting from the resource type prefix
+//
+// extractProviderFromRequest derives the provider name from an AnalyzeRequest.
+//
+// It first checks the request's Provider type (expected in the form "pulumi:providers:NAME")
+// and returns the NAME segment when present. If that field is absent or malformed, it
+// falls back to parsing the resource type prefix from r.GetType() and returns the first
+// provider-like segment found. It returns "unknown" if no provider name can be determined.
+//
+// Parameters:
+//
+//	r - the AnalyzeRequest to inspect for provider information.
 func extractProviderFromRequest(r *pulumirpc.AnalyzeRequest) string {
 	// Try provider resource first
 	if p := r.GetProvider(); p != nil {
@@ -172,7 +186,8 @@ func extractProviderFromRequest(r *pulumirpc.AnalyzeRequest) string {
 // extractProviderFromType extracts the provider name from a resource type string.
 //
 // Format: "aws:ec2/instance:Instance" → "aws"
-// Returns "unknown" if the type is empty or malformed.
+// extractProviderFromType extracts the provider name from a resource type string.
+// It returns the first colon-separated segment (for example, "aws" from "aws:ec2/instance:Instance"), or "unknown" if the input is empty or does not contain a valid prefix.
 func extractProviderFromType(resourceType string) string {
 	if resourceType == "" {
 		return "unknown"
@@ -194,7 +209,10 @@ func extractProviderFromType(resourceType string) string {
 //  2. Fall back to extracting from the resource type prefix
 //     (format: "aws:ec2/instance:Instance" → "aws")
 //
-// If neither extraction succeeds, returns "unknown".
+// extractProvider returns the provider name for the given AnalyzerResource.
+// It first inspects the resource's Provider.Type (expected format `pulumi:providers:<provider>`) and returns the third segment when present.
+// If that is not available, it falls back to parsing the resource's type prefix via extractProviderFromType.
+// If neither approach yields a provider, it returns "unknown".
 func extractProvider(r *pulumirpc.AnalyzerResource) string {
 	// Try provider resource first
 	if p := r.GetProvider(); p != nil {

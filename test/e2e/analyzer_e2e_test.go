@@ -102,6 +102,11 @@ func runAnalyzerPreview(t *testing.T, tc *TestContext) string {
 	workDir, err := os.MkdirTemp("", "pulumi-e2e-analyzer-")
 	require.NoError(t, err)
 	tc.WorkDir = workDir
+	t.Cleanup(func() {
+		if tc.WorkDir != "" {
+			os.RemoveAll(tc.WorkDir)
+		}
+	})
 	tc.PreviewJSON = filepath.Join(workDir, "preview.json")
 
 	err = tc.CopyDir(absProjectPath, workDir)
@@ -192,6 +197,11 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 	workDir, err := os.MkdirTemp("", "pulumi-e2e-analyzer-")
 	require.NoError(t, err)
 	tc.WorkDir = workDir
+	t.Cleanup(func() {
+		if tc.WorkDir != "" {
+			os.RemoveAll(tc.WorkDir)
+		}
+	})
 	tc.PreviewJSON = filepath.Join(workDir, "preview.json")
 
 	err = tc.CopyDir(absProjectPath, workDir)

@@ -690,6 +690,7 @@ func TestServer_AnalyzeStack_InternalPulumiTypes(t *testing.T) {
 	assert.Contains(t, realResp.GetDiagnostics()[0].GetMessage(), "$10.00 USD")
 
 	// Now AnalyzeStack should return only the summary diagnostic
+	// Empty request is valid - AnalyzeStack uses costs cached from prior Analyze() calls
 	stackReq := &pulumirpc.AnalyzeStackRequest{}
 
 	stackResp, err := server.AnalyzeStack(ctx, stackReq)
