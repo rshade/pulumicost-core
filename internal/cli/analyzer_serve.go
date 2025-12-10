@@ -19,7 +19,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-// getAnalyzerLogLevel returns the log level for the analyzer, defaulting to info.
+// getAnalyzerLogLevel reads the PULUMICOST_LOG_LEVEL environment variable and returns
+// the corresponding zerolog level. If the environment variable is unset or cannot be
+// parsed, it returns zerolog.InfoLevel.
 func getAnalyzerLogLevel() zerolog.Level {
 	if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
 		if parsed, err := zerolog.ParseLevel(envLevel); err == nil {
@@ -35,7 +37,7 @@ func getAnalyzerLogLevel() zerolog.Level {
 // It binds to a random TCP port and prints ONLY the port number to stdout
 // (this is the handshake protocol with Pulumi engine).
 //
-// All logging goes to stderr to avoid breaking the handshake.
+// to stderr.
 func NewAnalyzerServeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
@@ -65,7 +67,11 @@ All logging output goes to stderr.`,
 	return cmd
 }
 
-// RunAnalyzerServe executes the analyzer serve command.
+// RunAnalyzerServe starts a Pulumi Analyzer gRPC server, binds to a random TCP port, writes only the chosen port number to stdout for the Pulumi plugin handshake, and serves analyzer requests until a shutdown signal or context cancellation occurs.
+// 
+// The cmd parameter is the Cobra command whose context and root version are used to control lifecycle and to populate the server version string.
+// 
+// It returns an error if the server fails to bind to a port or if the gRPC server returns a runtime error while serving.
 func RunAnalyzerServe(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 

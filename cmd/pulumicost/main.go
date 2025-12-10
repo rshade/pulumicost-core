@@ -17,7 +17,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// run is the main application logic, separated for testability.
+// run executes the main application logic for the pulumicost program.
+// It either starts the Pulumi analyzer plugin serve path when the executable name
+// indicates an analyzer invocation (supports both legacy policy-pack and direct
+// analyzer names), or it runs the regular CLI root command for normal operation.
+// It returns an error if starting the analyzer serve or executing the root command fails.
 func run() error {
 	// Check if the binary is being run as a Pulumi Analyzer plugin
 	// Supports both legacy policy pack mode (pulumi-analyzer-policy-pulumicost)

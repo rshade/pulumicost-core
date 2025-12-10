@@ -26,12 +26,15 @@ const (
 
 // isInternalPulumiType checks if a resource type is an internal Pulumi type
 // that has no associated cloud cost (e.g., pulumi:pulumi:Stack, pulumi:providers:aws).
-// These types should be reported with $0.00 cost rather than "no pricing available".
+// isInternalPulumiType reports whether resourceType is an internal Pulumi resource
+// type (has the "pulumi:" prefix) and therefore should be treated as having zero
+// cloud cost.
 func isInternalPulumiType(resourceType string) bool {
 	return strings.HasPrefix(resourceType, internalTypePrefix)
 }
 
-// zeroCostResult creates a CostResult with $0.00 for internal Pulumi types.
+// zeroCostResult returns an engine.CostResult representing zero cloud cost for an internal Pulumi resource.
+// The result uses USD currency, sets monthly and hourly costs to 0, and includes a note indicating the resource is internal.
 func zeroCostResult(resourceType, resourceID string) engine.CostResult {
 	return engine.CostResult{
 		ResourceType: resourceType,
@@ -91,7 +94,9 @@ type Server struct {
 //   - calculator: The cost calculation engine to use for estimating costs
 //   - version: The version string for this analyzer plugin
 //
-// If version is empty, it defaults to "0.0.0-dev".
+// NewServer creates a Server that uses the provided CostCalculator to estimate resource costs.
+// If the provided version is empty, it defaults to "0.0.0-dev". The returned Server has its
+// version set and its internal cost cache initialized.
 func NewServer(calculator CostCalculator, version string) *Server {
 	if version == "" {
 		version = defaultVersion
