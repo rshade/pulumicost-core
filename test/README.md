@@ -13,8 +13,8 @@ This directory contains the comprehensive testing framework for the PulumiCost s
 │   └── spec/            # Spec system unit tests
 ├── integration/         # Cross-component integration tests
 │   ├── plugin/          # Plugin communication tests
-│   ├── cli/             # CLI integration tests
-│   └── e2e/             # End-to-end workflow tests
+│   └── cli/             # CLI integration tests
+├── e2e/                 # End-to-end workflow tests
 ├── fixtures/            # Test data files
 │   ├── plans/           # Sample Pulumi plans
 │   ├── specs/           # Test pricing specifications
@@ -57,7 +57,7 @@ Cross-component interaction testing:
 
 - Cross-component data flow validation
 
-### End-to-End Tests (/test/integration/e2e/)
+### End-to-End Tests (/test/e2e/)
 
 Complete workflow validation:
 
@@ -171,7 +171,7 @@ go test ./test/unit/...
 go test ./test/integration/...
 
 # End-to-end tests only
-go test ./test/integration/e2e/...
+go test ./test/e2e/...
 
 # Benchmarks only
 go test -bench=. ./test/benchmarks/...
@@ -229,7 +229,7 @@ Test cross-component interactions:
 go test ./test/integration/plugin/...
 
 # CLI integration tests (part of e2e)
-go test ./test/integration/e2e/...
+go test ./test/e2e/...
 ```
 
 ### End-to-End Tests
@@ -238,10 +238,13 @@ Test complete workflows:
 
 ```bash
 # CLI workflow tests (requires building binary)
-go test ./test/integration/e2e/...
+go test -tags e2e ./test/e2e/...
 
 # Run with timeout for slow builds
-go test -timeout=120s ./test/integration/e2e/...
+go test -tags e2e -timeout=120s ./test/e2e/...
+
+# Run only Analyzer integration tests
+go test -tags e2e -v -run "TestAnalyzer" ./test/e2e/...
 ```
 
 ### Performance Tests

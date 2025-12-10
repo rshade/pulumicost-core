@@ -39,6 +39,35 @@ go test -run TestSpecificFunction ./... # Run specific test
 # Coverage
 go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out        # View in browser
+
+# Plugin management
+./bin/pulumicost plugin list
+./bin/pulumicost plugin validate
+```
+
+### Test Requirements
+
+- **Unit tests**: Must achieve 80% coverage minimum
+- **Critical paths**: Must achieve 95% coverage
+- **All error paths**: Must be tested
+- **Performance regressions**: Must be detected via benchmarks
+- **Integration scenarios**: Must include plugin communication flows
+- **End-to-end workflows**: Must test complete CLI usage
+
+### CI/CD Integration
+
+The existing CI/CD pipeline automatically runs all tests including the new framework:
+
+- Unit tests with coverage reporting
+- Integration tests with timeout handling
+- Linting and security scanning
+- Cross-platform build verification
+
+**Never complete a project without running:**
+
+```bash
+make test    # Run all tests
+make lint    # Run linting
 ```
 
 ## Go Version
@@ -184,18 +213,77 @@ docs/
 
 ### Logging (Zerolog)
 
-```go
-// Get logger from context (includes trace_id)
-log := logging.FromContext(ctx)
-log.Debug().Ctx(ctx).Str("component", "engine").Msg("starting")
+PulumiCost uses zerolog for structured logging with distributed tracing support.
+
+#### Enabling Debug Output
+
+```bash
+# CLI flag
+pulumicost cost projected --debug --pulumi-json plan.json
+
+# Environment variable
+export PULUMICOST_LOG_LEVEL=debug
+export PULUMICOST_LOG_FORMAT=json    # json or console
+export PULUMICOST_TRACE_ID=external-trace-123  # inject external trace ID
 ```
 
-Enable debug: `--debug` flag or `PULUMICOST_LOG_LEVEL=debug`
+#### Configuration Precedence
 
-**Log Levels**: TRACE (property extraction) → DEBUG (function entry/exit) →
-INFO (high-level ops) → WARN (recoverable issues) → ERROR (failures)
+1. CLI flags (`--debug`)
+2. Environment variables (`PULUMICOST_LOG_LEVEL`)
+3. Config file (`~/.pulumicost/config.yaml`)
+4. Default (info level, console format)
 
-**Standard Fields**: `trace_id`, `component`, `operation`, `duration_ms`
+#### Logging Patterns for Developers
+
+```go
+// Get logger from context (preferred - includes trace_id)
+log := logging.FromContext(ctx)
+log.Debug().
+    Ctx(ctx).
+    Str("component", "engine").
+    Str("operation", "get_projected_cost").
+    Int("resource_count", len(resources)).
+    Msg("starting projected cost calculation")
+
+// Create component sub-logger
+logger = logging.ComponentLogger(logger, "registry")
+
+// Log with duration
+start := time.Now()
+// ... operation ...
+log.Info().
+    Ctx(ctx).
+    Dur("duration_ms", time.Since(start)).
+    Msg("operation complete")
+```
+
+#### Standard Log Fields
+
+| Field         | Purpose             | Example                      |
+| ------------- | ------------------- | ---------------------------- |
+| `trace_id`    | Request correlation | "01HQ7X2J3K4M5N6P7Q8R9S0T1U" |
+| `component`   | Package identifier  | "cli", "engine", "registry"  |
+| `operation`   | Current operation   | "get_projected_cost"         |
+| `duration_ms` | Operation timing    | 245                          |
+
+#### Log Levels
+
+- **TRACE**: Property extraction, detailed calculations
+- **DEBUG**: Function entry/exit, retries, intermediate values
+- **INFO**: High-level operations (command start/end)
+- **WARN**: Recoverable issues (fallbacks, deprecations)
+- **ERROR**: Failures needing attention
+
+#### Trace ID Management
+
+```go
+// Generate trace ID at entry point (usually in CLI PersistentPreRunE)
+traceID := logging.GetOrGenerateTraceID(ctx)
+ctx = logging.ContextWithTraceID(ctx, traceID)
+
+// TracingHook automatically injects trace_id when using .Ctx(ctx)
+```
 
 ## Testing
 
@@ -300,3 +388,230 @@ Key dependencies (see `go.mod` for versions):
 - `github.com/charmbracelet/bubbletea` - TUI framework
 - `github.com/charmbracelet/lipgloss` - TUI styling
 - `golang.org/x/term` - Terminal detection utilities
+
+## Package-Specific Documentation
+
+### internal/cli
+
+The CLI package implements the Cobra-based command-line interface. Key patterns:
+
+- Use `RunE` not `Run` for error handling
+- Always use `cmd.Printf()` for output (not `fmt.Printf()`)
+- Defer cleanup functions immediately after obtaining resources
+- Support multiple date formats: "2006-01-02", RFC3339
+- See `internal/cli/CLAUDE.md` for detailed CLI architecture and patterns
+
+### internal/engine
+
+The engine package orchestrates cost calculations between plugins and specs:
+
+- Tries plugins first, falls back to local YAML specs
+- Supports three output formats: table, JSON, NDJSON
+- Uses `hoursPerMonth = 730` for monthly calculations
+- Always returns some result, even if placeholder
+- **Actual Cost Pipeline Features**:
+  - `GetActualCostWithOptions()` - Advanced querying with time ranges and filters
+  - Resource filtering with `matchesTags()` helper for tag-based filtering
+  - Cost aggregation logic for daily/monthly breakdowns
+  - Grouping support (resource, type, provider, date)
+  - Multiple date format parsing ("2006-01-02", RFC3339)
+- **Cross-Provider Aggregation Features**:
+  - `CreateCrossProviderAggregation()` - Time-based multi-provider cost analysis
+  - Currency validation system with `ErrMixedCurrencies` protection
+  - Advanced input validation (empty results, invalid date ranges, grouping types)
+  - GroupBy type safety with `IsValid()`, `IsTimeBasedGrouping()`, `String()` methods
+  - Intelligent cost calculation (actual vs projected with time period conversion)
+  - Provider extraction from resource types ("aws:ec2:Instance" → "aws")
+  - Sorted chronological output for trend analysis
+- See `internal/engine/CLAUDE.md` for detailed calculation flows
+
+### internal/pluginhost
+
+The pluginhost package manages plugin communication via gRPC:
+
+- Two launcher types: ProcessLauncher (TCP) and StdioLauncher (stdin/stdout)
+- 10-second timeout with 100ms retry delays
+- Platform-specific binary detection (Unix permissions vs Windows .exe)
+- Always call `cmd.Wait()` after `Kill()` to prevent zombies
+- See `internal/pluginhost/CLAUDE.md` for detailed plugin lifecycle
+
+### internal/registry
+
+The registry package handles plugin discovery and lifecycle:
+
+- Scans `~/.pulumicost/plugins/<name>/<version>/` structure
+- Optional `plugin.manifest.json` validation
+- Graceful handling of missing directories and invalid binaries
+- Platform-specific executable detection
+- See `internal/registry/CLAUDE.md` for detailed discovery patterns
+
+### internal/analyzer
+
+The analyzer package implements the Pulumi Analyzer gRPC protocol for zero-click cost estimation during `pulumi preview`:
+
+- **Server**: Implements `pulumirpc.AnalyzerServer` interface with `AnalyzeStack`, `Handshake`, `ConfigureStack`, `Cancel`, `GetAnalyzerInfo`, `GetPluginInfo` RPCs
+- **Resource Mapping**: Converts `pulumirpc.AnalyzerResource` to `engine.ResourceDescriptor` for cost calculation
+- **Diagnostics**: Generates `pulumirpc.AnalyzeDiagnostic` from cost results with ADVISORY enforcement (never blocks deployments)
+- **Graceful Degradation**: Errors produce warning diagnostics, preview continues even if cost calculation fails
+
+**Key Components**:
+
+- `Server` - gRPC server implementing Pulumi Analyzer protocol
+- `MapResource/MapResources` - Convert Pulumi resources to internal format
+- `CostToDiagnostic` - Convert cost results to Pulumi diagnostics
+- `StackSummaryDiagnostic` - Aggregate stack-level cost summary
+- `WarningDiagnostic` - Generate warning for error conditions
+
+**CLI Integration**:
+
+- `pulumicost analyzer serve` - Starts gRPC server on random TCP port
+- Prints ONLY port number to stdout (Pulumi handshake protocol)
+- All logging goes to stderr exclusively
+- Graceful shutdown on SIGINT/SIGTERM
+
+**Protocol Requirements**:
+
+- Port handshake: Server prints port to stdout, Pulumi engine connects
+- Stack configuration: Engine sends stack/project context before analysis
+- Resource analysis: Engine sends resources, analyzer returns diagnostics
+- Cancellation: Engine can request analysis cancellation
+
+**Testing**:
+
+```bash
+# Run analyzer unit tests
+go test ./internal/analyzer/...
+
+# Run integration tests
+go test ./test/integration/...
+
+# Check coverage (target: 80%, achieved: 92.7%)
+go test -coverprofile=coverage.out ./internal/analyzer/...
+go tool cover -func=coverage.out
+```
+
+## Common Error Types
+
+- `ErrNoCostData`: No cost data available for a resource.
+- `ErrMixedCurrencies`: Multiple currencies detected in cross-provider aggregation.
+- `ErrInvalidGroupBy`: Invalid grouping type used for time-based aggregation.
+- `ErrEmptyResults`: Attempted aggregation on empty results.
+- `ErrInvalidDateRange`: Invalid date range (end date before start date).
+- `ErrResourceValidation`: Internal resource validation failed.
+- `ErrConfigCorrupted`: Configuration file is malformed.
+
+## CodeRabbit Configuration
+
+### Setup
+
+The repository includes a comprehensive `.coderabbit.yaml` configuration optimized for Go development with the following key settings:
+
+**PR Blocking Configuration:**
+
+- `fail_commit_status: true` - Blocks PR merging on critical issues
+- `request_changes_workflow: true` - Formally requests changes for issues
+- `profile: assertive` - Uses stricter analysis profile
+
+**Comment Management:**
+
+- `auto_reply: true` - Enables automatic comment responses
+- `abort_on_close: true` - Stops processing when PR is closed
+- `auto_incremental_review: true` - Reviews new commits automatically
+
+**Go-Specific Settings:**
+
+- Custom path instructions for `**/*.go` files focusing on Go best practices
+- Enhanced test review instructions for `**/*_test.go` files
+- Enabled golangci-lint, gitleaks, yamllint, and markdownlint
+- Docstring and unit test generation enabled
+
+**Tool Configuration:**
+
+- `golangci-lint: enabled: false` - Integrates with project's existing linting
+- `markdownlint: enabled: true` - Validates documentation
+- `gitleaks: enabled: true` - Scans for secrets
+- `actionlint: enabled: true` - Validates GitHub Actions
+- `semgrep: enabled: true` - Advanced security analysis
+
+### Usage
+
+CodeRabbit now:
+
+1. **Blocks PRs** with critical issues by setting commit status to failed
+2. **Updates comments** automatically on new commits
+3. **Resolves outdated comments** when issues are fixed
+4. **Provides detailed Go-specific feedback** on code quality
+5. **Integrates with existing CI/CD** tools and workflows
+
+## Active Technologies
+
+- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
+- Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
+- Go 1.25.4 (008-analyzer-plugin)
+- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
+- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
+- Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
+- File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
+
+## Recent Changes
+
+- 001-engine-test-coverage: Added Go 1.25.5 + testing (stdlib), github.com/stretchr/testify
+- 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
+
+## Session Analysis - Recommended Updates
+
+Based on recent development sessions, consider adding:
+
+### Go Version Management
+
+- **Version Consistency**: When updating Go versions, update both `go.mod` and ALL markdown files simultaneously
+- **Search Pattern**: Use `grep "Go.*1\." --include="*.md"` to find all version references in documentation
+- **Files to Check**: go.mod, all .md files in docs/, specs/, examples/, and root-level documentation
+- **Docker Images**: Update Docker base images (e.g., `golang:1.24` → `golang:1.25.5`) in documentation examples
+
+### Systematic Version Updates
+
+- **Process**: 1) Update go.mod first, 2) Find all references with grep, 3) Update each file systematically, 4) Verify with final grep search
+- **Common Patterns**: Update both specific versions (1.24.10 → 1.25.5) and minimum requirements (Go 1.24+ → Go 1.25.5+)
+- **CI Workflows**: Update GitHub Actions go-version parameters in documentation examples
+
+This ensures complete version consistency across the entire codebase and documentation.
+
+## AI Agent File Maintenance
+
+This file (CLAUDE.md) provides guidance for Claude Code and other AI assistants. To maintain its effectiveness:
+
+### Update Requirements
+
+- **Review regularly** when significant codebase changes occur
+- **Update version information** immediately when Go versions change
+- **Document new patterns** and conventions as they emerge
+- **Include new technologies** and dependencies as they are added
+- **Update build/test commands** when processes change
+- **Maintain architecture documentation** as the system evolves
+
+### When to Update
+
+- New major features are implemented
+- Build or testing processes change
+- New dependencies are added
+- Coding standards evolve
+- Project structure changes significantly
+- New tools or workflows are introduced
+
+### Integration with GitHub Copilot
+
+- This file is automatically read by GitHub Copilot via `.github/instructions/ai-agent-files.instructions.md`
+- Use it as the authoritative source for development practices
+- Reference these instructions when working with AI assistants
+- Keep instructions current to ensure consistent AI assistance
+
+### Maintenance Checklist
+
+- [ ] Go version information is current
+- [ ] Build commands work as documented
+- [ ] Test commands produce expected results
+- [ ] Architecture documentation reflects current state
+- [ ] Dependencies are accurately listed
+- [ ] Security practices are up to date
+- [ ] Performance guidelines remain relevant

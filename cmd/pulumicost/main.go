@@ -4,18 +4,41 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/pkg/version"
+	"github.com/spf13/cobra"
 )
 
-// run is the main application logic, separated for testability.
+// run executes the main application logic for the pulumicost program.
+// It either starts the Pulumi analyzer plugin serve path when the executable name
+// indicates an analyzer invocation (supports both legacy policy-pack and direct
+// analyzer names), or it runs the regular CLI root command for normal operation.
+// It returns an error if starting the analyzer serve or executing the root command fails.
 func run() error {
+	// Check if the binary is being run as a Pulumi Analyzer plugin
+	// Supports both legacy policy pack mode (pulumi-analyzer-policy-pulumicost)
+	// and direct analyzer mode (pulumi-analyzer-pulumicost)
+	exeName := filepath.Base(os.Args[0])
+	if strings.Contains(exeName, "pulumi-analyzer-policy-pulumicost") ||
+		strings.Contains(exeName, "pulumi-analyzer-pulumicost") {
+		// If run as an analyzer plugin, execute the analyzer serve logic directly.
+		// Pulumi expects the plugin binary to start a gRPC server and output the port.
+		// RunAnalyzerServe sets up its own stderr logger via getAnalyzerLogLevel(),
+		// so we only need to provide a basic context here.
+		dummyCmd := &cobra.Command{}
+		dummyCmd.SetContext(context.Background())
+		return cli.RunAnalyzerServe(dummyCmd)
+	}
+
+	// Original CLI execution for the main pulumicost CLI tool
 	// Initialize a minimal startup logger for early error reporting
-	// Full logger initialization happens in PersistentPreRunE with debug/config options
 	startupCfg := logging.LoggingConfig{
 		Level:  "error",
 		Format: "json",
