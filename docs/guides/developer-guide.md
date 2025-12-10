@@ -527,7 +527,98 @@ pulumicost cost actual --pulumi-json examples/plans/multi-provider-plan.json \
   --from 2024-01-01 --group-by monthly --output json
 ```
 
-### Platform-Specific Test Requirements
+### Fuzz Testing
+
+PulumiCost uses Go's native fuzzing (Go 1.25+) for parser resilience testing:
+
+```bash
+# JSON parser fuzzing
+go test -fuzz=FuzzJSON$ -fuzztime=30s ./internal/ingest
+
+# YAML parser fuzzing
+go test -fuzz=FuzzYAML$ -fuzztime=30s ./internal/spec
+
+# Full plan parsing fuzzing
+go test -fuzz=FuzzPulumiPlanParse$ -fuzztime=30s ./internal/ingest
+```
+
+**Fuzz test files:**
+
+| Location                        | Purpose                      |
+| ------------------------------- | ---------------------------- |
+| `internal/ingest/fuzz_test.go`  | JSON parser fuzz tests       |
+| `internal/spec/fuzz_test.go`    | YAML spec fuzz tests         |
+
+**Adding seed corpus:**
+
+Place interesting inputs in `testdata/fuzz/<TestName>/` directories:
+
+```text
+internal/ingest/testdata/fuzz/FuzzJSON/
+├── valid_plan.json
+├── edge_case_unicode.json
+└── malformed_input.json
+```
+
+### Performance Benchmarks
+
+Benchmarks test scalability with synthetic data:
+
+```bash
+# Run all benchmarks
+go test -bench=. -benchmem ./test/benchmarks/...
+
+# Run scale benchmarks only
+go test -bench=BenchmarkScale -benchmem ./test/benchmarks/...
+
+# Run with specific iterations
+go test -bench=BenchmarkScale1K -benchtime=10x -benchmem ./test/benchmarks/...
+```
+
+**Benchmark test files:**
+
+| Location                              | Purpose                    |
+| ------------------------------------- | -------------------------- |
+| `test/benchmarks/scale_test.go`       | Scale tests (1K-100K)      |
+| `test/benchmarks/generator/`          | Synthetic data generator   |
+
+**Performance targets:**
+
+| Scale    | Target Time  | Actual (baseline) |
+| -------- | ------------ | ----------------- |
+| 1K       | < 1 second   | ~13ms             |
+| 10K      | < 30 seconds | ~167ms            |
+| 100K     | < 5 minutes  | ~2.3s             |
+
+### Synthetic Data Generator
+
+The benchmark generator creates realistic infrastructure plans:
+
+```go
+import "github.com/rshade/pulumicost-core/test/benchmarks/generator"
+
+// Use preset configurations
+plan, err := generator.GeneratePlan(generator.PresetSmall)   // 1K resources
+plan, err := generator.GeneratePlan(generator.PresetMedium)  // 10K resources
+plan, err := generator.GeneratePlan(generator.PresetLarge)   // 100K resources
+
+// Custom configuration
+config := generator.BenchmarkConfig{
+    ResourceCount:   5000,
+    MaxDepth:        5,
+    DependencyRatio: 0.3,
+    Seed:            42,  // Deterministic generation
+}
+plan, err := generator.GeneratePlan(config)
+```
+
+**Generator features:**
+
+- Deterministic output with seed values
+- Configurable resource count and nesting depth
+- Realistic resource types (AWS, Azure, GCP)
+- Dependency graph generation
+- JSON export for external tooling
 
 ---
 

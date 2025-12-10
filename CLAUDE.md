@@ -285,6 +285,99 @@ ctx = logging.ContextWithTraceID(ctx, traceID)
 // TracingHook automatically injects trace_id when using .Ctx(ctx)
 ```
 
+## CI/CD Pipeline
+
+Complete CI/CD pipeline setup with GitHub Actions for automated testing, building, and release management.
+
+### CI Pipeline (.github/workflows/ci.yml)
+
+Triggered on pull requests and pushes to main branch:
+
+**Test Job:**
+
+- Go 1.25.5 setup with caching
+- Unit tests with race detection and coverage reporting
+- Coverage threshold check (minimum 61%)
+- Artifacts uploaded for coverage reports
+
+**Lint Job:**
+
+- golangci-lint with project-specific configuration
+- Security scanning with gosec included
+- Timeout set to 5 minutes
+
+**Security Job:**
+
+- govulncheck for dependency vulnerability scanning
+- Checks for known vulnerabilities in Go dependencies
+
+**Validation Job:**
+
+- gofmt formatting checks
+- go mod tidy verification
+- go vet static analysis
+
+**Build Job:**
+
+- Cross-platform builds (Linux, macOS, Windows)
+- Support for amd64 and arm64 architectures
+- Build artifacts uploaded with proper naming
+
+### Release Pipeline (.github/workflows/release.yml)
+
+Triggered on version tags (v\*):
+
+**Multi-Platform Binaries:**
+
+- Linux: amd64, arm64
+- macOS: amd64, arm64
+- Windows: amd64
+- Naming convention: `pulumicost-v{version}-{os}-{arch}`
+
+**Release Features:**
+
+- Automatic changelog generation from git history
+- SHA256 checksums for all binaries
+- GitHub Release creation with proper metadata
+- Asset upload with verification instructions
+- Pre-release detection for tags containing hyphens
+
+### Quality Gates
+
+**Code Quality:**
+
+- golangci-lint with essential linters (errcheck, govet, staticcheck, gosec, etc.)
+- Security scanning integrated into CI pipeline
+- Formatting and import organization enforced
+
+**Coverage Requirements:**
+
+- Minimum 20% code coverage (adjustable as project matures)
+- Coverage reports generated and uploaded as artifacts
+- Automatic threshold validation in CI
+
+**Build Verification:**
+
+- Cross-platform compilation verification
+- Binary naming consistency
+- Version information embedded in binaries
+
+### Troubleshooting Commands
+
+```bash
+# Fix parallel linting conflicts
+pkill golangci-lint || true
+
+# Check coverage details
+go tool cover -html=coverage.out
+
+# Test release build locally
+GOOS=linux GOARCH=amd64 make build
+
+# Validate workflow syntax
+gh workflow validate .github/workflows/ci.yml
+```
+
 ## Testing
 
 ### Test Directory Structure
@@ -425,6 +518,13 @@ The engine package orchestrates cost calculations between plugins and specs:
   - Sorted chronological output for trend analysis
 - See `internal/engine/CLAUDE.md` for detailed calculation flows
 
+**Error Types for Cross-Provider Aggregation**:
+
+- `ErrMixedCurrencies`: Different currencies detected (USD vs EUR)
+- `ErrInvalidGroupBy`: Non-time-based grouping used for cross-provider aggregation
+- `ErrEmptyResults`: Empty or nil results provided for aggregation
+- `ErrInvalidDateRange`: EndDate before StartDate in cost results
+
 ### internal/pluginhost
 
 The pluginhost package manages plugin communication via gRPC:
@@ -547,7 +647,7 @@ CodeRabbit now:
 
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
-- Go 1.25.4 (008-analyzer-plugin)
+- Go 1.25.5 (008-analyzer-plugin)
 - `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
 - Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
@@ -557,6 +657,7 @@ CodeRabbit now:
 
 - 001-engine-test-coverage: Added Go 1.25.5 + testing (stdlib), github.com/stretchr/testify
 - 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
+- 008-test-infra-hardening: Added comprehensive test infrastructure hardening
 
 ## Session Analysis - Recommended Updates
 

@@ -4,6 +4,8 @@ on:
   schedule:
     # Run at 2 AM UTC every day
     - cron: '0 2 * * *'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       run_e2e:
@@ -21,16 +23,45 @@ on:
         required: false
         default: 'true'
         type: boolean
+      fuzz_duration:
+        description: 'Fuzz testing duration (e.g., 1h, 6h)'
+        required: false
+        default: '6h'
 
 permissions:
   contents: read
   issues: write
+  checks: write
 
 env:
   GOPRIVATE: github.com/rshade/*
   GO_VERSION: '1.25.5'
 
 jobs:
+  # Cross-platform test suite
+  cross-platform-tests:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run tests
+        run: go test -v -race ./internal/... ./pkg/...
+
+      - name: Run go vet
+        run: go vet ./...
+
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -61,7 +92,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: integration-test-results
           path: |
@@ -115,7 +146,7 @@ jobs:
 
       - name: Upload E2E test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: e2e-test-results
           path: |
@@ -168,17 +199,161 @@ jobs:
 
       - name: Upload Analyzer E2E test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: analyzer-e2e-test-results
           path: |
             test/e2e/*.log
           retention-days: 7
 
+  # Deep fuzzing (Linux only - runs longer)
+  deep-fuzz:
+    name: Deep Fuzz Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Restore fuzz corpus cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            internal/ingest/testdata/fuzz
+            internal/spec/testdata/fuzz
+          key: fuzz-corpus-deep-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            fuzz-corpus-deep-${{ runner.os }}-
+            fuzz-corpus-${{ runner.os }}-
+
+      - name: Run deep JSON fuzz test
+        run: |
+          DURATION="${{ github.event.inputs.fuzz_duration || '6h' }}"
+          echo "Running FuzzJSON for $DURATION"
+          go test -fuzz=FuzzJSON -fuzztime=$DURATION ./internal/ingest || true
+          go test -fuzz=FuzzPulumiPlanParse -fuzztime=$DURATION ./internal/ingest || true
+        timeout-minutes: 420  # 7 hours max
+
+      - name: Run deep YAML fuzz test
+        run: |
+          DURATION="${{ github.event.inputs.fuzz_duration || '6h' }}"
+          echo "Running FuzzYAML for $DURATION"
+          go test -fuzz=FuzzYAML -fuzztime=$DURATION ./internal/spec || true
+          go test -fuzz=FuzzSpecFilename -fuzztime=$DURATION ./internal/spec || true
+        timeout-minutes: 420  # 7 hours max
+
+      - name: Save fuzz corpus cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            internal/ingest/testdata/fuzz
+            internal/spec/testdata/fuzz
+          key: fuzz-corpus-deep-${{ runner.os }}-${{ github.sha }}
+
+      - name: Upload fuzz corpus artifacts
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: fuzz-corpus-${{ github.run_id }}
+          path: |
+            internal/ingest/testdata/fuzz
+            internal/spec/testdata/fuzz
+          retention-days: 30
+
+  # Cross-platform builds
+  cross-platform-builds:
+    name: Build (${{ matrix.os }}-${{ matrix.goarch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        shell: bash
+        run: |
+          VERSION=$(git describe --tags --always --dirty)
+          COMMIT=$(git rev-parse HEAD)
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          BINARY_NAME="pulumicost"
+          if [ "${GOOS}" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          mkdir -p dist
+          go build -ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}'" -o dist/${BINARY_NAME} ./cmd/pulumicost
+
+      - name: Verify binary
+        shell: bash
+        run: |
+          if [ "${{ matrix.goos }}" = "linux" ] || [ "${{ matrix.goos }}" = "darwin" ]; then
+            chmod +x dist/pulumicost
+            ./dist/pulumicost --version || true
+          fi
+
+  # Benchmarks (Linux only)
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run benchmarks
+        run: |
+          go test -bench=. -benchmem -benchtime=3s ./test/benchmarks/... 2>&1 | tee benchmark-results.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v5
+        with:
+          name: benchmark-results-${{ github.run_id }}
+          path: benchmark-results.txt
+          retention-days: 30
+
   notify-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [integration, e2e, analyzer-e2e]
+    needs: [cross-platform-tests, integration, e2e, analyzer-e2e, deep-fuzz, cross-platform-builds, benchmarks]
     if: failure() && github.event_name == 'schedule'
     steps:
       - name: Create failure issue

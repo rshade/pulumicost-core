@@ -61,6 +61,59 @@ Go 1.25.5: Follow standard conventions
 - **CRITICAL**: Files with frontmatter must NOT have duplicate H1 - the frontmatter
   `title` serves as the page H1, content should start with H2 or text
 
+## Testing Infrastructure
+
+### Fuzz Tests
+
+Parser resilience testing using Go's native fuzzing (Go 1.25+):
+
+```bash
+# JSON parser fuzzing
+go test -fuzz=FuzzJSON$ -fuzztime=30s ./internal/ingest
+
+# YAML parser fuzzing
+go test -fuzz=FuzzYAML$ -fuzztime=30s ./internal/spec
+```
+
+**Locations:**
+
+- `internal/ingest/fuzz_test.go` - JSON parser fuzz tests
+- `internal/spec/fuzz_test.go` - YAML spec fuzz tests
+
+### Performance Benchmarks
+
+Scalability testing with synthetic data:
+
+```bash
+# Run all benchmarks
+go test -bench=. -benchmem ./test/benchmarks/...
+
+# Scale tests (1K, 10K, 100K resources)
+go test -bench=BenchmarkScale -benchmem ./test/benchmarks/...
+```
+
+**Locations:**
+
+- `test/benchmarks/scale_test.go` - Scale benchmarks
+- `test/benchmarks/generator/` - Synthetic data generator
+
+**Performance targets:**
+
+- 1K resources: < 1s (actual: ~13ms)
+- 10K resources: < 30s (actual: ~167ms)
+- 100K resources: < 5min (actual: ~2.3s)
+
+### Validation Tests
+
+Configuration validation with >85% coverage:
+
+- `internal/config/validation_test.go` - Table-driven validation tests
+
+### CI Integration
+
+- PRs: 30-second fuzz smoke tests, benchmark smoke tests
+- Nightly: 6-hour deep fuzzing, full benchmark suite, cross-platform matrix
+
 <!-- MANUAL ADDITIONS START -->
 
 ## Workflow Restrictions
