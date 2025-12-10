@@ -16,6 +16,11 @@ on:
         required: false
         default: 'true'
         type: boolean
+      run_analyzer:
+        description: 'Run Analyzer E2E tests'
+        required: false
+        default: 'true'
+        type: boolean
 
 permissions:
   contents: read
@@ -117,10 +122,63 @@ jobs:
             test/e2e/*.log
           retention-days: 7
 
+  analyzer-e2e:
+    name: Analyzer E2E Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.run_analyzer == 'true' }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: latest
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build pulumicost binary
+        run: make build
+
+      - name: Run Analyzer E2E tests
+        env:
+          AWS_REGION: us-east-1
+          E2E_REGION: us-east-1
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE || 'e2e-test-passphrase' }}
+          PULUMICOST_LOG_LEVEL: debug
+          PULUMICOST_LOG_FORMAT: console
+          PULUMICOST_BINARY: ${{ github.workspace }}/bin/pulumicost
+        run: |
+          cd test/e2e
+          go test -v -tags e2e -timeout 20m -run "TestAnalyzer" ./...
+
+      - name: Upload Analyzer E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-e2e-test-results
+          path: |
+            test/e2e/*.log
+          retention-days: 7
+
   notify-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [integration, e2e]
+    needs: [integration, e2e, analyzer-e2e]
     if: failure() && github.event_name == 'schedule'
     steps:
       - name: Create failure issue

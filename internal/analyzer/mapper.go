@@ -147,6 +147,45 @@ func extractResourceID(urn string) string {
 	return urn
 }
 
+// extractProviderFromRequest extracts the provider name from an AnalyzeRequest.
+//
+// This function is similar to extractProvider but works with AnalyzeRequest
+// which is used for single-resource analysis. It uses the same two-tier strategy:
+//  1. First, try to extract from the provider resource's type field
+//  2. Fall back to extracting from the resource type prefix
+func extractProviderFromRequest(r *pulumirpc.AnalyzeRequest) string {
+	// Try provider resource first
+	if p := r.GetProvider(); p != nil {
+		if providerType := p.GetType(); providerType != "" {
+			// Format: pulumi:providers:aws
+			parts := strings.Split(providerType, ":")
+			if len(parts) >= minProviderTypeParts {
+				return parts[2]
+			}
+		}
+	}
+
+	// Fall back to resource type prefix
+	return extractProviderFromType(r.GetType())
+}
+
+// extractProviderFromType extracts the provider name from a resource type string.
+//
+// Format: "aws:ec2/instance:Instance" → "aws"
+// Returns "unknown" if the type is empty or malformed.
+func extractProviderFromType(resourceType string) string {
+	if resourceType == "" {
+		return "unknown"
+	}
+
+	parts := strings.Split(resourceType, ":")
+	if len(parts) >= 1 && parts[0] != "" {
+		return parts[0]
+	}
+
+	return "unknown"
+}
+
 // extractProvider extracts the provider name from the resource.
 //
 // The function uses a two-tier strategy:
@@ -169,18 +208,7 @@ func extractProvider(r *pulumirpc.AnalyzerResource) string {
 	}
 
 	// Fall back to resource type prefix
-	// Format: aws:ec2/instance:Instance
-	resourceType := r.GetType()
-	if resourceType == "" {
-		return "unknown"
-	}
-
-	parts := strings.Split(resourceType, ":")
-	if len(parts) >= 1 && parts[0] != "" {
-		return parts[0]
-	}
-
-	return "unknown"
+	return extractProviderFromType(r.GetType())
 }
 
 // structToMap converts a protobuf Struct to a Go map.

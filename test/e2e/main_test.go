@@ -107,7 +107,7 @@ func (tc *TestContext) SetupProject(ctx context.Context, projectPath string) err
 
 	// Copy project files to work directory
 	tc.T.Log("Copying project files...")
-	if err := tc.copyDir(absProjectPath, workDir); err != nil {
+	if err := tc.CopyDir(absProjectPath, workDir); err != nil {
 		return fmt.Errorf("failed to copy project: %w", err)
 	}
 
@@ -371,7 +371,7 @@ func (tc *TestContext) runCmdOutput(ctx context.Context, dir string, env []strin
 	return output, nil
 }
 
-func (tc *TestContext) copyDir(src, dst string) error {
+func (tc *TestContext) CopyDir(src, dst string) error {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
@@ -389,7 +389,7 @@ func (tc *TestContext) copyDir(src, dst string) error {
 			if err := os.MkdirAll(dstPath, srcInfo.Mode()); err != nil {
 				return err
 			}
-			if err := tc.copyDir(srcPath, dstPath); err != nil {
+			if err := tc.CopyDir(srcPath, dstPath); err != nil {
 				return err
 			}
 		} else {

@@ -19,6 +19,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+// getAnalyzerLogLevel returns the log level for the analyzer, defaulting to info.
+func getAnalyzerLogLevel() zerolog.Level {
+	if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
+		if parsed, err := zerolog.ParseLevel(envLevel); err == nil {
+			return parsed
+		}
+	}
+	return zerolog.InfoLevel
+}
+
 // NewAnalyzerServeCmd creates the analyzer serve command.
 //
 // This command starts the gRPC server for the Pulumi Analyzer plugin.
@@ -48,20 +58,22 @@ All logging output goes to stderr.`,
   # With debug logging
   pulumicost analyzer serve --debug`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runAnalyzerServe(cmd)
+			return RunAnalyzerServe(cmd)
 		},
 	}
 
 	return cmd
 }
 
-// runAnalyzerServe executes the analyzer serve command.
-func runAnalyzerServe(cmd *cobra.Command) error {
+// RunAnalyzerServe executes the analyzer serve command.
+func RunAnalyzerServe(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
 	// CRITICAL: Create a logger that writes ONLY to stderr
 	// stdout must be reserved for the port handshake
+	// Default to info level to reduce noise in Pulumi output
 	stderrLogger := zerolog.New(os.Stderr).
+		Level(getAnalyzerLogLevel()).
 		With().
 		Str("component", "analyzer").
 		Timestamp().

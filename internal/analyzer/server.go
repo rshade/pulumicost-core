@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
@@ -18,7 +19,29 @@ const (
 
 	// analyzerDescription provides a description of the analyzer's purpose.
 	analyzerDescription = "Provides real-time cost estimation for Pulumi infrastructure resources during preview operations."
+
+	// internalTypePrefix identifies internal Pulumi resource types that have no cost.
+	internalTypePrefix = "pulumi:"
 )
+
+// isInternalPulumiType checks if a resource type is an internal Pulumi type
+// that has no associated cloud cost (e.g., pulumi:pulumi:Stack, pulumi:providers:aws).
+// These types should be reported with $0.00 cost rather than "no pricing available".
+func isInternalPulumiType(resourceType string) bool {
+	return strings.HasPrefix(resourceType, internalTypePrefix)
+}
+
+// zeroCostResult creates a CostResult with $0.00 for internal Pulumi types.
+func zeroCostResult(resourceType, resourceID string) engine.CostResult {
+	return engine.CostResult{
+		ResourceType: resourceType,
+		ResourceID:   resourceID,
+		Currency:     "USD",
+		Monthly:      0,
+		Hourly:       0,
+		Notes:        "Internal Pulumi resource (no cloud cost)",
+	}
+}
 
 // CostCalculator is the interface for calculating projected costs.
 //
@@ -39,6 +62,7 @@ type CostCalculator interface {
 //   - All diagnostics use ADVISORY enforcement (never blocks deployments)
 //   - Reports both per-resource costs and a stack-level summary
 //   - Handles unsupported resources gracefully with informative messages
+//   - Caches costs from Analyze() calls for accurate AnalyzeStack() summaries
 type Server struct {
 	pulumirpc.UnimplementedAnalyzerServer
 
@@ -50,6 +74,11 @@ type Server struct {
 	projectName  string
 	organization string
 	dryRun       bool
+
+	// Cost cache for accumulating costs from Analyze() calls
+	// Used by AnalyzeStack() to generate accurate stack summaries
+	costCacheMu sync.RWMutex
+	costCache   map[string]engine.CostResult // resourceID -> CostResult
 
 	// Cancellation support
 	cancelMu sync.Mutex
@@ -70,73 +99,142 @@ func NewServer(calculator CostCalculator, version string) *Server {
 	return &Server{
 		calculator: calculator,
 		version:    version,
+		costCache:  make(map[string]engine.CostResult),
 	}
+}
+
+// cacheCost stores a cost result in the cache for later use by AnalyzeStack.
+func (s *Server) cacheCost(resourceID string, cost engine.CostResult) {
+	s.costCacheMu.Lock()
+	defer s.costCacheMu.Unlock()
+	s.costCache[resourceID] = cost
+}
+
+// getCachedCosts returns all cached costs as a slice.
+func (s *Server) getCachedCosts() []engine.CostResult {
+	s.costCacheMu.RLock()
+	defer s.costCacheMu.RUnlock()
+	costs := make([]engine.CostResult, 0, len(s.costCache))
+	for _, cost := range s.costCache {
+		costs = append(costs, cost)
+	}
+	return costs
+}
+
+// clearCostCache resets the cost cache (called at start of new stack analysis).
+func (s *Server) clearCostCache() {
+	s.costCacheMu.Lock()
+	defer s.costCacheMu.Unlock()
+	s.costCache = make(map[string]engine.CostResult)
+}
+
+// Analyze analyzes a single resource and returns cost diagnostics.
+//
+// This method is called by the Pulumi engine for each resource as it is
+// registered during preview. It receives the resource inputs before any
+// mutations and returns diagnostics with cost estimates.
+//
+// All diagnostics use ADVISORY enforcement per FR-005.
+func (s *Server) Analyze(
+	ctx context.Context,
+	req *pulumirpc.AnalyzeRequest,
+) (*pulumirpc.AnalyzeResponse, error) {
+	resourceType := req.GetType()
+	resourceID := extractResourceID(req.GetUrn())
+
+	// Handle internal Pulumi types (e.g., pulumi:pulumi:Stack, pulumi:providers:aws)
+	// These have no cloud cost and should return $0.00
+	if isInternalPulumiType(resourceType) {
+		cost := zeroCostResult(resourceType, resourceID)
+		// Cache the cost for AnalyzeStack summary
+		s.cacheCost(resourceID, cost)
+		return &pulumirpc.AnalyzeResponse{
+			Diagnostics: []*pulumirpc.AnalyzeDiagnostic{
+				CostToDiagnostic(cost, req.GetUrn(), s.version),
+			},
+		}, nil
+	}
+
+	// Convert AnalyzeRequest to ResourceDescriptor
+	resource := engine.ResourceDescriptor{
+		Type:       resourceType,
+		ID:         resourceID,
+		Provider:   extractProviderFromRequest(req),
+		Properties: structToMap(req.GetProperties()),
+	}
+
+	// Calculate costs using the engine
+	costs, calcErr := s.calculator.GetProjectedCost(ctx, []engine.ResourceDescriptor{resource})
+	if calcErr != nil {
+		// Return a warning diagnostic if cost calculation fails.
+		// We intentionally return nil error because we want to continue preview
+		// with a warning diagnostic rather than failing the analysis.
+		//nolint:nilerr // Intentional: return warning diagnostic instead of error
+		return &pulumirpc.AnalyzeResponse{
+			Diagnostics: []*pulumirpc.AnalyzeDiagnostic{
+				WarningDiagnostic(
+					"Cost calculation failed: "+calcErr.Error(),
+					req.GetUrn(),
+					s.version,
+				),
+			},
+		}, nil
+	}
+
+	// Build diagnostics and cache costs for AnalyzeStack summary
+	diagnostics := make([]*pulumirpc.AnalyzeDiagnostic, 0, len(costs))
+	for _, cost := range costs {
+		// Cache the cost for later use by AnalyzeStack
+		s.cacheCost(cost.ResourceID, cost)
+		diag := CostToDiagnostic(cost, req.GetUrn(), s.version)
+		diagnostics = append(diagnostics, diag)
+	}
+
+	// If no costs returned, add a zero-cost diagnostic
+	if len(diagnostics) == 0 {
+		cost := engine.CostResult{
+			ResourceType: resourceType,
+			ResourceID:   resourceID,
+			Currency:     "USD",
+			Monthly:      0,
+			Hourly:       0,
+			Notes:        "No pricing information available",
+		}
+		// Cache even zero-cost results so they appear in the summary
+		s.cacheCost(resourceID, cost)
+		diagnostics = append(diagnostics, CostToDiagnostic(cost, req.GetUrn(), s.version))
+	}
+
+	return &pulumirpc.AnalyzeResponse{
+		Diagnostics: diagnostics,
+	}, nil
 }
 
 // AnalyzeStack analyzes all resources in a stack and returns cost diagnostics.
 //
 // This method is called by the Pulumi engine at the end of a successful
-// preview or update. It receives the complete list of resources and returns
-// diagnostics with cost estimates.
+// preview or update. It receives the complete list of resources.
 //
-// The response includes:
-//   - Per-resource diagnostics with individual cost estimates
-//   - A stack-level summary diagnostic with total costs
+// Since Analyze() is called for each resource individually and already returns
+// per-resource cost diagnostics, AnalyzeStack() only returns the stack-level
+// summary to avoid duplicate diagnostics in the output.
 //
 // All diagnostics use ADVISORY enforcement per FR-005.
 func (s *Server) AnalyzeStack(
-	ctx context.Context,
-	req *pulumirpc.AnalyzeStackRequest,
+	_ context.Context,
+	_ *pulumirpc.AnalyzeStackRequest,
 ) (*pulumirpc.AnalyzeResponse, error) {
-	// Map Pulumi resources to internal format
-	resources := MapResources(req.GetResources())
+	// Use costs cached from individual Analyze() calls for accurate summary
+	// This avoids re-querying plugins which may return different results
+	// due to different property formats between AnalyzeRequest and AnalyzerResource
+	cachedCosts := s.getCachedCosts()
 
-	// Calculate costs using the engine
-	costs, err := s.calculator.GetProjectedCost(ctx, resources)
-	if err != nil {
-		// Log error but continue with zero costs for all resources
-		// This ensures all resources get diagnostics even if cost calculation fails
-		costs = []engine.CostResult{}
-	}
-
-	// Build diagnostics list
-	diagnostics := make([]*pulumirpc.AnalyzeDiagnostic, 0, len(req.GetResources())+1)
-
-	// Build lookup map from ResourceID to CostResult for stable correlation
-	costMap := make(map[string]engine.CostResult)
-	for _, cost := range costs {
-		costMap[cost.ResourceID] = cost
-	}
-
-	// Add per-resource diagnostics using URN-based correlation
-	for _, resource := range req.GetResources() {
-		urn := resource.GetUrn()
-		// Extract resource ID from URN using the same logic as extractResourceID
-		resourceID := extractResourceID(urn)
-
-		// Look up cost by resource ID, fallback to zero cost if not found
-		cost, found := costMap[resourceID]
-		if !found {
-			cost = engine.CostResult{
-				ResourceType: resource.GetType(),
-				ResourceID:   resourceID,
-				Currency:     "USD", // Default currency for missing costs
-				Monthly:      0,
-				Hourly:       0,
-				Notes:        "No pricing information available",
-			}
-		}
-
-		diag := CostToDiagnostic(cost, urn, s.version)
-		diagnostics = append(diagnostics, diag)
-	}
-
-	// Add stack summary diagnostic
-	summary := StackSummaryDiagnostic(costs, s.version)
-	diagnostics = append(diagnostics, summary)
+	// Only return the stack summary diagnostic
+	// Per-resource diagnostics are already returned by Analyze() calls
+	summary := StackSummaryDiagnostic(cachedCosts, s.version)
 
 	return &pulumirpc.AnalyzeResponse{
-		Diagnostics: diagnostics,
+		Diagnostics: []*pulumirpc.AnalyzeDiagnostic{summary},
 	}, nil
 }
 
@@ -208,6 +306,10 @@ func (s *Server) ConfigureStack(
 	_ context.Context,
 	req *pulumirpc.AnalyzerStackConfigureRequest,
 ) (*pulumirpc.AnalyzerStackConfigureResponse, error) {
+	// Clear the cost cache at the start of a new stack analysis
+	// This ensures we don't carry over costs from previous analyses
+	s.clearCostCache()
+
 	// Store stack context for logging and diagnostic enrichment
 	s.stackName = req.GetStack()
 	s.projectName = req.GetProject()

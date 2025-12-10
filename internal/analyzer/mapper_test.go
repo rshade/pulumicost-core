@@ -384,6 +384,145 @@ func TestMapResources_WithNilElements(t *testing.T) {
 	// If we have error tracking, verify it captured the nil resource
 }
 
+func TestExtractProviderFromRequest(t *testing.T) {
+	tests := []struct {
+		name    string
+		request *pulumirpc.AnalyzeRequest
+		want    string
+	}{
+		{
+			name: "provider from provider resource type",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "aws:ec2/instance:Instance",
+				Provider: &pulumirpc.AnalyzerProviderResource{
+					Type: "pulumi:providers:aws",
+				},
+			},
+			want: "aws",
+		},
+		{
+			name: "azure provider from provider resource",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "azure:compute/virtualMachine:VirtualMachine",
+				Provider: &pulumirpc.AnalyzerProviderResource{
+					Type: "pulumi:providers:azure",
+				},
+			},
+			want: "azure",
+		},
+		{
+			name: "gcp provider from provider resource",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "gcp:compute/instance:Instance",
+				Provider: &pulumirpc.AnalyzerProviderResource{
+					Type: "pulumi:providers:gcp",
+				},
+			},
+			want: "gcp",
+		},
+		{
+			name: "fallback to resource type when no provider",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "aws:s3/bucket:Bucket",
+			},
+			want: "aws",
+		},
+		{
+			name: "fallback when provider resource is empty",
+			request: &pulumirpc.AnalyzeRequest{
+				Type:     "aws:ec2/instance:Instance",
+				Provider: &pulumirpc.AnalyzerProviderResource{},
+			},
+			want: "aws",
+		},
+		{
+			name: "fallback when provider type is empty string",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "kubernetes:core/v1:Pod",
+				Provider: &pulumirpc.AnalyzerProviderResource{
+					Type: "",
+				},
+			},
+			want: "kubernetes",
+		},
+		{
+			name: "unknown when resource type is empty",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "",
+			},
+			want: "unknown",
+		},
+		{
+			name: "malformed provider type falls back to resource type",
+			request: &pulumirpc.AnalyzeRequest{
+				Type: "aws:lambda/function:Function",
+				Provider: &pulumirpc.AnalyzerProviderResource{
+					Type: "invalid", // Not enough colons
+				},
+			},
+			want: "aws",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractProviderFromRequest(tt.request)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestExtractProviderFromType(t *testing.T) {
+	tests := []struct {
+		name         string
+		resourceType string
+		want         string
+	}{
+		{
+			name:         "aws resource type",
+			resourceType: "aws:ec2/instance:Instance",
+			want:         "aws",
+		},
+		{
+			name:         "azure resource type",
+			resourceType: "azure:compute/virtualMachine:VirtualMachine",
+			want:         "azure",
+		},
+		{
+			name:         "gcp resource type",
+			resourceType: "gcp:compute/instance:Instance",
+			want:         "gcp",
+		},
+		{
+			name:         "kubernetes resource type",
+			resourceType: "kubernetes:core/v1:Pod",
+			want:         "kubernetes",
+		},
+		{
+			name:         "pulumi internal type",
+			resourceType: "pulumi:pulumi:Stack",
+			want:         "pulumi",
+		},
+		{
+			name:         "empty resource type",
+			resourceType: "",
+			want:         "unknown",
+		},
+		{
+			name:         "resource type starting with colon",
+			resourceType: ":invalid:type",
+			want:         "unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractProviderFromType(tt.resourceType)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestMapResourcesWithErrors(t *testing.T) {
 	tests := []struct {
 		name          string
