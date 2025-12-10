@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
 
 language: en-US
-tone_instructions: "Focus on Go 1.24 best practices and modern Go idioms"
+tone_instructions: "Focus on Go 1.25 best practices and modern Go idioms"
 early_access: false
 enable_free_tier: true
 reviews:
@@ -43,20 +43,20 @@ reviews:
   path_instructions:
     - path: "**/*.go"
       instructions: |
-        Please ensure this Go code is compatible with Go 1.24.
+        Please ensure this Go code is compatible with Go 1.25.
         Consider using the latest Go features and best practices.
         Pay special attention to:
         - Error handling with proper error wrapping
         - Use of generics where appropriate
         - Modern Go idioms and patterns
-        - Performance optimizations available in Go 1.24
+        - Performance optimizations available in Go 1.25
         - Proper documentation for exported functions and types
         - Security vulnerabilities and best practices
     - path: "**/*_test.go"
       instructions: |
         Please ensure adequate test coverage for new functionality.
         Consider adding integration tests for complex logic.
-        Use Go 1.24 testing features where appropriate.
+        Use Go 1.25 testing features where appropriate.
         - Ensure tests cover edge cases and error conditions
         - Check for proper use of testing utilities and patterns
         - Verify test isolation and cleanup
@@ -76,7 +76,7 @@ reviews:
       instructions: |
         Please review Go module dependencies for:
         - Security vulnerabilities
-        - Compatibility with Go 1.24
+        - Compatibility with Go 1.25
         - Latest stable versions
         - Proper module structure
   abort_on_close: true

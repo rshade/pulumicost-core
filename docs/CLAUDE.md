@@ -1,8 +1,14 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with documentation in this repository.
+
 ## Playwright MCP Integration
 
 ### Overview
 
-The project is configured with Playwright MCP for automated browser testing and documentation validation. The configuration is in `.mcp.json` and uses chromium in headless, isolated mode.
+The project is configured with Playwright MCP for automated browser testing and
+documentation validation. The configuration is in `.mcp.json` and uses chromium
+in headless, isolated mode.
 
 ### Configuration
 
