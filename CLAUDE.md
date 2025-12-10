@@ -1009,6 +1009,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
+- Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
 
 - Go 1.25.4 (008-analyzer-plugin)
 - `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)

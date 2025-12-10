@@ -21,9 +21,22 @@ type mockCostCalculator struct {
 
 func (m *mockCostCalculator) GetProjectedCost(
 	_ context.Context,
-	_ []engine.ResourceDescriptor,
+	resources []engine.ResourceDescriptor,
 ) ([]engine.CostResult, error) {
-	return m.results, m.err
+	if m.err != nil {
+		return nil, m.err
+	}
+	// Return only results that match the requested resources
+	var matched []engine.CostResult
+	for _, resource := range resources {
+		for _, result := range m.results {
+			if result.ResourceID == resource.ID {
+				matched = append(matched, result)
+				break
+			}
+		}
+	}
+	return matched, nil
 }
 
 func TestNewServer(t *testing.T) {
@@ -36,12 +49,14 @@ func TestNewServer(t *testing.T) {
 
 func TestServer_AnalyzeStack(t *testing.T) {
 	tests := []struct {
-		name          string
-		resources     []*pulumirpc.AnalyzerResource
-		calcResults   []engine.CostResult
-		calcErr       error
-		wantDiagCount int
-		wantContains  []string
+		name                 string
+		resources            []*pulumirpc.AnalyzerResource
+		calcResults          []engine.CostResult
+		calcErr              error
+		wantAnalyzeDiagCount int      // Diagnostics from Analyze() calls
+		wantStackDiagCount   int      // Diagnostics from AnalyzeStack() (should be 1 - summary only)
+		wantAnalyzeContains  []string // Expected content in Analyze() diagnostics
+		wantStackContains    []string // Expected content in AnalyzeStack() summary
 	}{
 		{
 			name: "single resource with cost",
@@ -62,8 +77,10 @@ func TestServer_AnalyzeStack(t *testing.T) {
 					Hourly:       0.0116,
 				},
 			},
-			wantDiagCount: 2, // 1 per-resource + 1 summary
-			wantContains:  []string{"$8.45 USD", "Total Estimated Monthly Cost"},
+			wantAnalyzeDiagCount: 1,
+			wantStackDiagCount:   1, // Summary only
+			wantAnalyzeContains:  []string{"$8.45 USD"},
+			wantStackContains:    []string{"Total Estimated Monthly Cost", "$8.45 USD", "1 resources analyzed"},
 		},
 		{
 			name: "multiple resources",
@@ -95,15 +112,19 @@ func TestServer_AnalyzeStack(t *testing.T) {
 					Monthly:      50.00,
 				},
 			},
-			wantDiagCount: 3, // 2 per-resource + 1 summary
-			wantContains:  []string{"$8.45 USD", "$50.00 USD", "2 resources analyzed"},
+			wantAnalyzeDiagCount: 1, // Per resource
+			wantStackDiagCount:   1, // Summary only
+			wantAnalyzeContains:  []string{"$8.45 USD", "$50.00 USD"},
+			wantStackContains:    []string{"$58.45 USD", "2 resources analyzed"},
 		},
 		{
-			name:          "empty resources",
-			resources:     []*pulumirpc.AnalyzerResource{},
-			calcResults:   []engine.CostResult{},
-			wantDiagCount: 1, // summary only
-			wantContains:  []string{"$0.00 USD", "0 resources analyzed"},
+			name:                 "empty resources",
+			resources:            []*pulumirpc.AnalyzerResource{},
+			calcResults:          []engine.CostResult{},
+			wantAnalyzeDiagCount: 0,
+			wantStackDiagCount:   1, // Summary only
+			wantAnalyzeContains:  []string{},
+			wantStackContains:    []string{"$0.00 USD", "0 resources analyzed"},
 		},
 		{
 			name: "resource with zero cost (unsupported)",
@@ -124,8 +145,10 @@ func TestServer_AnalyzeStack(t *testing.T) {
 					Notes:        "Unsupported resource type",
 				},
 			},
-			wantDiagCount: 2, // 1 per-resource + 1 summary
-			wantContains:  []string{"Unsupported resource type"},
+			wantAnalyzeDiagCount: 1,
+			wantStackDiagCount:   1, // Summary only
+			wantAnalyzeContains:  []string{"Unsupported resource type"},
+			wantStackContains:    []string{"0 resources analyzed"}, // Zero cost resources don't count as "analyzed"
 		},
 	}
 
@@ -137,6 +160,31 @@ func TestServer_AnalyzeStack(t *testing.T) {
 			}
 			server := NewServer(calc, "0.1.0")
 
+			// Simulate the real workflow: Analyze() is called for each resource before AnalyzeStack()
+			// This populates the cost cache used by AnalyzeStack for the summary
+			var allAnalyzeMessages []string
+			for _, resource := range tt.resources {
+				analyzeReq := &pulumirpc.AnalyzeRequest{
+					Type:       resource.GetType(),
+					Urn:        resource.GetUrn(),
+					Properties: resource.GetProperties(),
+				}
+				analyzeResp, err := server.Analyze(context.Background(), analyzeReq)
+				require.NoError(t, err)
+				require.Len(t, analyzeResp.GetDiagnostics(), tt.wantAnalyzeDiagCount)
+
+				for _, diag := range analyzeResp.GetDiagnostics() {
+					allAnalyzeMessages = append(allAnalyzeMessages, diag.GetMessage())
+				}
+			}
+
+			// Verify Analyze() diagnostics contain expected content
+			allAnalyzeText := strings.Join(allAnalyzeMessages, " ")
+			for _, want := range tt.wantAnalyzeContains {
+				assert.Contains(t, allAnalyzeText, want)
+			}
+
+			// Now call AnalyzeStack - should only return summary
 			req := &pulumirpc.AnalyzeStackRequest{
 				Resources: tt.resources,
 			}
@@ -145,16 +193,16 @@ func TestServer_AnalyzeStack(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			require.Len(t, resp.GetDiagnostics(), tt.wantDiagCount)
+			require.Len(t, resp.GetDiagnostics(), tt.wantStackDiagCount)
 
-			// Verify expected content is present in diagnostics
-			var messages []string
+			// Verify AnalyzeStack() summary contains expected content
+			var stackMessages []string
 			for _, diag := range resp.GetDiagnostics() {
-				messages = append(messages, diag.GetMessage())
+				stackMessages = append(stackMessages, diag.GetMessage())
 			}
-			allMessages := strings.Join(messages, " ")
-			for _, want := range tt.wantContains {
-				assert.Contains(t, allMessages, want)
+			allStackText := strings.Join(stackMessages, " ")
+			for _, want := range tt.wantStackContains {
+				assert.Contains(t, allStackText, want)
 			}
 		})
 	}
@@ -190,12 +238,25 @@ func TestServer_AnalyzeStack_WithProperties(t *testing.T) {
 	}
 	server := NewServer(calc, "0.1.0")
 
+	// Call Analyze first to populate the cache (simulates real workflow)
+	for _, resource := range resources {
+		analyzeReq := &pulumirpc.AnalyzeRequest{
+			Type:       resource.GetType(),
+			Urn:        resource.GetUrn(),
+			Properties: resource.GetProperties(),
+		}
+		_, err := server.Analyze(context.Background(), analyzeReq)
+		require.NoError(t, err)
+	}
+
 	req := &pulumirpc.AnalyzeStackRequest{Resources: resources}
 	resp, err := server.AnalyzeStack(context.Background(), req)
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.Len(t, resp.GetDiagnostics(), 2)
+	// AnalyzeStack now only returns the summary diagnostic
+	assert.Len(t, resp.GetDiagnostics(), 1)
+	assert.Contains(t, resp.GetDiagnostics()[0].GetMessage(), "$7.59 USD")
 }
 
 func TestServer_AnalyzeStack_DiagnosticFields(t *testing.T) {
@@ -221,22 +282,33 @@ func TestServer_AnalyzeStack_DiagnosticFields(t *testing.T) {
 	}
 	server := NewServer(calc, "1.2.3")
 
-	req := &pulumirpc.AnalyzeStackRequest{Resources: resources}
-	resp, err := server.AnalyzeStack(context.Background(), req)
-
+	// Call Analyze first to get per-resource diagnostics and populate cache
+	analyzeReq := &pulumirpc.AnalyzeRequest{
+		Type: resources[0].GetType(),
+		Urn:  resources[0].GetUrn(),
+	}
+	analyzeResp, err := server.Analyze(context.Background(), analyzeReq)
 	require.NoError(t, err)
-	require.Len(t, resp.GetDiagnostics(), 2)
+	require.Len(t, analyzeResp.GetDiagnostics(), 1)
 
-	// Check per-resource diagnostic
-	resourceDiag := resp.GetDiagnostics()[0]
+	// Check per-resource diagnostic from Analyze()
+	resourceDiag := analyzeResp.GetDiagnostics()[0]
 	assert.Equal(t, "cost-estimate", resourceDiag.GetPolicyName())
 	assert.Equal(t, "pulumicost", resourceDiag.GetPolicyPackName())
 	assert.Equal(t, "1.2.3", resourceDiag.GetPolicyPackVersion())
 	assert.Equal(t, "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::web", resourceDiag.GetUrn())
 	assert.Equal(t, pulumirpc.EnforcementLevel_ADVISORY, resourceDiag.GetEnforcementLevel())
 
-	// Check summary diagnostic
-	summaryDiag := resp.GetDiagnostics()[1]
+	// Call AnalyzeStack to get summary
+	req := &pulumirpc.AnalyzeStackRequest{Resources: resources}
+	resp, err := server.AnalyzeStack(context.Background(), req)
+
+	require.NoError(t, err)
+	// AnalyzeStack now only returns the summary diagnostic
+	require.Len(t, resp.GetDiagnostics(), 1)
+
+	// Check summary diagnostic from AnalyzeStack()
+	summaryDiag := resp.GetDiagnostics()[0]
 	assert.Equal(t, "stack-cost-summary", summaryDiag.GetPolicyName())
 	assert.Empty(t, summaryDiag.GetUrn()) // Stack-level has no URN
 }
@@ -452,4 +524,188 @@ func TestServer_Cancel_ThreadSafe(t *testing.T) {
 
 	// Should be canceled
 	assert.True(t, server.IsCanceled())
+}
+
+func TestIsInternalPulumiType(t *testing.T) {
+	tests := []struct {
+		name         string
+		resourceType string
+		want         bool
+	}{
+		{
+			name:         "pulumi stack resource",
+			resourceType: "pulumi:pulumi:Stack",
+			want:         true,
+		},
+		{
+			name:         "pulumi AWS provider",
+			resourceType: "pulumi:providers:aws",
+			want:         true,
+		},
+		{
+			name:         "pulumi Azure provider",
+			resourceType: "pulumi:providers:azure",
+			want:         true,
+		},
+		{
+			name:         "AWS EC2 instance",
+			resourceType: "aws:ec2/instance:Instance",
+			want:         false,
+		},
+		{
+			name:         "Azure VM",
+			resourceType: "azure:compute/virtualMachine:VirtualMachine",
+			want:         false,
+		},
+		{
+			name:         "GCP compute instance",
+			resourceType: "gcp:compute/instance:Instance",
+			want:         false,
+		},
+		{
+			name:         "empty type",
+			resourceType: "",
+			want:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isInternalPulumiType(tt.resourceType)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestZeroCostResult(t *testing.T) {
+	result := zeroCostResult("pulumi:pulumi:Stack", "my-stack")
+
+	assert.Equal(t, "pulumi:pulumi:Stack", result.ResourceType)
+	assert.Equal(t, "my-stack", result.ResourceID)
+	assert.Equal(t, "USD", result.Currency)
+	assert.Equal(t, float64(0), result.Monthly)
+	assert.Equal(t, float64(0), result.Hourly)
+	assert.Equal(t, "Internal Pulumi resource (no cloud cost)", result.Notes)
+}
+
+func TestServer_Analyze_InternalPulumiType(t *testing.T) {
+	calc := &mockCostCalculator{
+		// Should NOT be called for internal types
+		results: []engine.CostResult{
+			{
+				ResourceType: "should-not-use-this",
+				Monthly:      999.99,
+			},
+		},
+	}
+	server := NewServer(calc, "1.0.0")
+
+	tests := []struct {
+		name         string
+		resourceType string
+		urn          string
+		wantNotes    string
+	}{
+		{
+			name:         "pulumi stack",
+			resourceType: "pulumi:pulumi:Stack",
+			urn:          "urn:pulumi:dev::myapp::pulumi:pulumi:Stack::dev",
+			wantNotes:    "Internal Pulumi resource (no cloud cost)",
+		},
+		{
+			name:         "aws provider",
+			resourceType: "pulumi:providers:aws",
+			urn:          "urn:pulumi:dev::myapp::pulumi:providers:aws::default",
+			wantNotes:    "Internal Pulumi resource (no cloud cost)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &pulumirpc.AnalyzeRequest{
+				Type: tt.resourceType,
+				Urn:  tt.urn,
+			}
+
+			resp, err := server.Analyze(context.Background(), req)
+
+			require.NoError(t, err)
+			require.NotNil(t, resp)
+			require.Len(t, resp.GetDiagnostics(), 1)
+
+			diag := resp.GetDiagnostics()[0]
+			assert.Contains(t, diag.GetMessage(), tt.wantNotes)
+			assert.Equal(t, pulumirpc.EnforcementLevel_ADVISORY, diag.GetEnforcementLevel())
+		})
+	}
+}
+
+func TestServer_AnalyzeStack_InternalPulumiTypes(t *testing.T) {
+	calc := &mockCostCalculator{
+		// Only non-internal types should be sent to calculator
+		results: []engine.CostResult{
+			{
+				ResourceType: "aws:ec2/instance:Instance",
+				ResourceID:   "webserver",
+				Monthly:      10.00,
+				Hourly:       0.01,
+				Currency:     "USD",
+			},
+		},
+	}
+	server := NewServer(calc, "1.0.0")
+	ctx := context.Background()
+
+	// Simulate Pulumi workflow: Analyze() is called for each resource first
+	// Internal types should return $0.00 with "Internal Pulumi resource" message
+	internalResources := []struct {
+		resourceType string
+		urn          string
+	}{
+		{"pulumi:pulumi:Stack", "urn:pulumi:dev::myapp::pulumi:pulumi:Stack::dev"},
+		{"pulumi:providers:aws", "urn:pulumi:dev::myapp::pulumi:providers:aws::default"},
+	}
+
+	for _, res := range internalResources {
+		req := &pulumirpc.AnalyzeRequest{
+			Type: res.resourceType,
+			Urn:  res.urn,
+		}
+		resp, err := server.Analyze(ctx, req)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.Len(t, resp.GetDiagnostics(), 1)
+		assert.Contains(t, resp.GetDiagnostics()[0].GetMessage(), "Internal Pulumi resource")
+	}
+
+	// Analyze the real resource
+	realReq := &pulumirpc.AnalyzeRequest{
+		Type: "aws:ec2/instance:Instance",
+		Urn:  "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+	}
+	realResp, err := server.Analyze(ctx, realReq)
+	require.NoError(t, err)
+	require.NotNil(t, realResp)
+	require.Len(t, realResp.GetDiagnostics(), 1)
+	assert.Contains(t, realResp.GetDiagnostics()[0].GetMessage(), "$10.00 USD")
+
+	// Now AnalyzeStack should return only the summary diagnostic
+	stackReq := &pulumirpc.AnalyzeStackRequest{}
+
+	stackResp, err := server.AnalyzeStack(ctx, stackReq)
+
+	require.NoError(t, err)
+	require.NotNil(t, stackResp)
+
+	// Only 1 summary diagnostic (per-resource diagnostics come from Analyze())
+	require.Len(t, stackResp.GetDiagnostics(), 1)
+
+	// Check it's the summary
+	summary := stackResp.GetDiagnostics()[0]
+	assert.Equal(t, "stack-cost-summary", summary.GetPolicyName())
+	// Summary should include the real resource cost ($10.00)
+	// Only resources with Monthly > 0 are counted in "resources analyzed"
+	// Internal types have $0.00 cost so they don't increment the analyzed count
+	assert.Contains(t, summary.GetMessage(), "$10.00 USD")
+	assert.Contains(t, summary.GetMessage(), "1 resources analyzed")
 }
