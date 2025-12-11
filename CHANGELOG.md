@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/rshade/pulumicost-core/compare/v0.1.2...v0.1.3) (2025-12-10)
+
+
+### Added
+
+* **analyzer:** implement Pulumi Analyzer plugin for zero-click cost estimation ([#229](https://github.com/rshade/pulumicost-core/issues/229)) ([2070b05](https://github.com/rshade/pulumicost-core/commit/2070b05513f6e9ae2580930c02abed8fec3fe790))
+* **e2e:** implement E2E testing framework with Pulumi Automation API ([#238](https://github.com/rshade/pulumicost-core/issues/238)) ([ee23ff2](https://github.com/rshade/pulumicost-core/commit/ee23ff2b19b348086e83969457c6927a787b96ac)), closes [#177](https://github.com/rshade/pulumicost-core/issues/177)
+* **tui:** add shared TUI package with Bubble Tea/Lip Gloss components ([#258](https://github.com/rshade/pulumicost-core/issues/258)) ([e049460](https://github.com/rshade/pulumicost-core/commit/e049460e4ccd5545f456ecf9d2051a6f0bac94f9))
+
+
+### Fixed
+
+* **deps:** update module github.com/rshade/pulumicost-spec to v0.4.3 ([#211](https://github.com/rshade/pulumicost-core/issues/211)) ([4cb56d9](https://github.com/rshade/pulumicost-core/commit/4cb56d928ab0b5887fd2fc56c182383d9eedfffe))
+* **deps:** update module github.com/spf13/cobra to v1.10.2 ([#240](https://github.com/rshade/pulumicost-core/issues/240)) ([ad3bfd7](https://github.com/rshade/pulumicost-core/commit/ad3bfd7b92d189a912dbae3ae10bbda2067e6bf2))
+* update Go version to 1.25.5 and improve plugin integration tests ([#244](https://github.com/rshade/pulumicost-core/issues/244)) ([4f383df](https://github.com/rshade/pulumicost-core/commit/4f383df0df1e1d4d3d23259adef8eb29d6ea41e9))
+
+
+### Documentation
+
+* **all:** synchronize documentation with codebase features ([#257](https://github.com/rshade/pulumicost-core/issues/257)) ([5881cdc](https://github.com/rshade/pulumicost-core/commit/5881cdcbbd27705d35de3de285411ebcabe4b602)), closes [#256](https://github.com/rshade/pulumicost-core/issues/256)
+
 ## [0.1.2](https://github.com/rshade/pulumicost-core/compare/v0.1.1...v0.1.2) (2025-12-03)
 
 
