@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,26 +79,26 @@ func TestLoggingConfig_OverridePrecedence(t *testing.T) {
 	// Note: This test validates env var precedence over defaults; file-based
 	// overrides are tested in config_test.go which has access to stubHome().
 
-	// Save and restore environment.
-	origLevel := os.Getenv("PULUMICOST_LOG_LEVEL")
-	origFormat := os.Getenv("PULUMICOST_LOG_FORMAT")
+	// Save and restore environment using pluginsdk constants for consistency.
+	origLevel := os.Getenv(pluginsdk.EnvLogLevel)
+	origFormat := os.Getenv(pluginsdk.EnvLogFormat)
 	t.Cleanup(func() {
 		if origLevel != "" {
-			_ = os.Setenv("PULUMICOST_LOG_LEVEL", origLevel)
+			_ = os.Setenv(pluginsdk.EnvLogLevel, origLevel)
 		} else {
-			_ = os.Unsetenv("PULUMICOST_LOG_LEVEL")
+			_ = os.Unsetenv(pluginsdk.EnvLogLevel)
 		}
 		if origFormat != "" {
-			_ = os.Setenv("PULUMICOST_LOG_FORMAT", origFormat)
+			_ = os.Setenv(pluginsdk.EnvLogFormat, origFormat)
 		} else {
-			_ = os.Unsetenv("PULUMICOST_LOG_FORMAT")
+			_ = os.Unsetenv(pluginsdk.EnvLogFormat)
 		}
 	})
 
 	t.Run("env vars override default values", func(t *testing.T) {
-		// Set environment variables to override defaults.
-		_ = os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-		_ = os.Setenv("PULUMICOST_LOG_FORMAT", "text")
+		// Set environment variables to override defaults using pluginsdk constants.
+		_ = os.Setenv(pluginsdk.EnvLogLevel, "debug")
+		_ = os.Setenv(pluginsdk.EnvLogFormat, "text")
 
 		// Load config - env vars should take precedence over defaults.
 		cfg := config.New()

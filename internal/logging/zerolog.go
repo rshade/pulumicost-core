@@ -11,6 +11,7 @@ import (
 
 	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 )
 
 // traceIDKey is a private type for context keys to avoid collisions.
@@ -218,8 +219,8 @@ func GenerateTraceID() string {
 // GetOrGenerateTraceID returns a trace ID from environment, context, or generates a new one.
 // Priority: PULUMICOST_TRACE_ID env var > context > generate new.
 func GetOrGenerateTraceID(ctx context.Context) string {
-	// 1. Check environment variable (external injection)
-	if envTraceID := os.Getenv("PULUMICOST_TRACE_ID"); envTraceID != "" {
+	// 1. Check environment variable (external injection) using pluginsdk constant
+	if envTraceID := os.Getenv(pluginsdk.EnvTraceID); envTraceID != "" {
 		return envTraceID
 	}
 
@@ -252,14 +253,14 @@ func FromContext(ctx context.Context) *zerolog.Logger {
 	logger := zerolog.Ctx(ctx)
 	if logger.GetLevel() == zerolog.Disabled {
 		// No logger in context, create a default one
-		// Check environment variable for log level
+		// Check environment variable for log level using pluginsdk constant
 		level := zerolog.InfoLevel
-		if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
+		if envLevel := os.Getenv(pluginsdk.EnvLogLevel); envLevel != "" {
 			if parsedLevel, err := zerolog.ParseLevel(envLevel); err == nil {
 				level = parsedLevel
 			} else {
 				// Log invalid log level values at error level
-				fmt.Fprintf(os.Stderr, "Invalid PULUMICOST_LOG_LEVEL '%s': %v, using default info level\n", envLevel, err)
+				fmt.Fprintf(os.Stderr, "Invalid %s '%s': %v, using default info level\n", pluginsdk.EnvLogLevel, envLevel, err)
 			}
 		}
 		defaultLogger := zerolog.New(os.Stderr).Level(level).With().Timestamp().Logger().Hook(TracingHook{})
