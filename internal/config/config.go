@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -599,14 +600,14 @@ func (c *Config) applyEnvOverrides() {
 		}
 	}
 
-	// Logging overrides
-	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
+	// Logging overrides using pluginsdk constants for consistency with plugins
+	if level := os.Getenv(pluginsdk.EnvLogLevel); level != "" {
 		c.Logging.Level = level
 	}
-	if format := os.Getenv("PULUMICOST_LOG_FORMAT"); format != "" {
+	if format := os.Getenv(pluginsdk.EnvLogFormat); format != "" {
 		c.Logging.Format = format
 	}
-	if logFile := os.Getenv("PULUMICOST_LOG_FILE"); logFile != "" {
+	if logFile := os.Getenv(pluginsdk.EnvLogFile); logFile != "" {
 		c.Logging.File = logFile
 	}
 

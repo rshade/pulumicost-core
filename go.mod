@@ -8,7 +8,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/pulumi/pulumi/sdk/v3 v3.210.0
 	github.com/rs/zerolog v1.34.0
-	github.com/rshade/pulumicost-spec v0.4.4
+	github.com/rshade/pulumicost-spec v0.4.5
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/term v0.37.0

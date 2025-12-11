@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -173,9 +174,9 @@ func TestTracePropagation_ExternalTraceIDFlow(t *testing.T) {
 
 // T058: Test that external trace ID takes precedence over context.
 func TestTracePropagation_ExternalTraceIDPrecedence(t *testing.T) {
-	// Set external trace ID
-	os.Setenv("PULUMICOST_TRACE_ID", "external-takes-precedence")
-	defer os.Unsetenv("PULUMICOST_TRACE_ID")
+	// Set external trace ID using pluginsdk constant for consistency
+	os.Setenv(pluginsdk.EnvTraceID, "external-takes-precedence")
+	defer os.Unsetenv(pluginsdk.EnvTraceID)
 
 	// Create context with different trace ID
 	ctx := context.Background()
