@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 )
 
@@ -70,10 +71,10 @@ func NewRootCmd(ver string) *cobra.Command {
 
 			// Check environment variable overrides (between config file and --debug)
 			// Note: PULUMICOST_LOG_FORMAT can override even in debug mode for CI/scripting needs
-			if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" && !debug {
+			if envLevel := os.Getenv(pluginsdk.EnvLogLevel); envLevel != "" && !debug {
 				loggingCfg.Level = envLevel
 			}
-			if envFormat := os.Getenv("PULUMICOST_LOG_FORMAT"); envFormat != "" {
+			if envFormat := os.Getenv(pluginsdk.EnvLogFormat); envFormat != "" {
 				loggingCfg.Format = envFormat
 			}
 
