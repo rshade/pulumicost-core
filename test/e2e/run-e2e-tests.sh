@@ -40,7 +40,7 @@ fi
 
 # Check for Go
 if ! command -v go &> /dev/null; then
-    echo -e "${RED}ERROR: Go not found. Please install Go 1.24.10+${NC}"
+    echo -e "${RED}ERROR: Go not found. Please install Go 1.25.5+${NC}"
     exit 1
 fi
 

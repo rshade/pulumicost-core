@@ -34,7 +34,7 @@ func TestIntegration_ProcessLauncherWithClient(t *testing.T) {
 			client.Close()
 		}
 	} else {
-		t.Logf("Expected integration error for ProcessLauncher (plugin: %s): %v", mockPlugin, err)
+		t.Logf("Expected integration failure (handled) for ProcessLauncher (plugin: %s): %v", mockPlugin, err)
 	}
 
 	// Should not panic or leave hanging processes
@@ -63,7 +63,7 @@ func TestIntegration_StdioLauncherWithClient(t *testing.T) {
 			client.Close()
 		}
 	} else {
-		t.Logf("Expected integration error for StdioLauncher (plugin: %s): %v", mockPlugin, err)
+		t.Logf("Expected integration failure (handled) for StdioLauncher (plugin: %s): %v", mockPlugin, err)
 	}
 
 	// Should not panic or leave hanging processes
@@ -98,7 +98,7 @@ func TestIntegration_LauncherSwitching(t *testing.T) {
 
 			// We expect errors with our mock plugin
 			if err != nil {
-				t.Logf("%s integration error (expected): %v", launcher.name, err)
+				t.Logf("%s integration failure (expected/handled): %v", launcher.name, err)
 			}
 		})
 	}
@@ -139,7 +139,7 @@ func TestIntegration_ConcurrentClients(t *testing.T) {
 	for i := range numClients {
 		err := <-results
 		if err != nil {
-			t.Logf("Concurrent client %d error (expected with mock plugin): %v", i, err)
+			t.Logf("Concurrent client %d failure (expected with mock plugin): %v", i, err)
 		} else {
 			t.Logf("Concurrent client %d unexpectedly succeeded", i)
 		}
@@ -169,7 +169,7 @@ func TestIntegration_RapidCreateDestroy(t *testing.T) {
 		cancel()
 
 		if err != nil {
-			t.Logf("Rapid create/destroy iteration %d error (expected with mock plugin): %v", i, err)
+			t.Logf("Rapid create/destroy iteration %d failure (expected with mock plugin): %v", i, err)
 		} else {
 			t.Logf("Rapid create/destroy iteration %d unexpectedly succeeded", i)
 		}
@@ -254,7 +254,7 @@ func TestIntegration_PluginDirectoryStructure(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Logf("Expected error with test plugin binary (%s): %v", binPath, err)
+		t.Logf("Expected failure with test plugin binary (handled) (%s): %v", binPath, err)
 	} else {
 		t.Logf("Test plugin binary unexpectedly succeeded: %s", binPath)
 	}
@@ -299,7 +299,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expected error for %s (binPath: %s), got nil", tc.name, tc.binPath)
 			} else {
-				t.Logf("Expected error for %s (binPath: %s): %v", tc.name, tc.binPath, err)
+				t.Logf("Expected failure for (handled) %s (binPath: %s): %v", tc.name, tc.binPath, err)
 			}
 		})
 	}

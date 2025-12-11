@@ -644,6 +644,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
+- N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
 
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
