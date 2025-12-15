@@ -13,6 +13,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// displayErrorSummary prints an error summary to the command output.
+// It only displays for table format since JSON/NDJSON formats include errors in their structure.
+func displayErrorSummary(
+	cmd *cobra.Command,
+	resultWithErrors *engine.CostResultWithErrors,
+	outputFormat engine.OutputFormat,
+) {
+	if resultWithErrors.HasErrors() && outputFormat == engine.OutputTable {
+		cmd.Println() // Add blank line before error summary
+		cmd.Println("ERRORS")
+		cmd.Println("======")
+		cmd.Print(resultWithErrors.ErrorSummary())
+	}
+}
+
 // NewCostProjectedCmd creates the "projected" subcommand that calculates estimated costs from a Pulumi plan.
 //
 // NewCostProjectedCmd creates the "projected" subcommand for calculating estimated costs from a Pulumi preview JSON.
@@ -151,13 +166,7 @@ func NewCostProjectedCmd() *cobra.Command {
 				return renderErr
 			}
 
-			// Display error summary after results if there were errors
-			if resultWithErrors.HasErrors() {
-				cmd.Println() // Add blank line before error summary
-				cmd.Println("ERRORS")
-				cmd.Println("======")
-				cmd.Print(resultWithErrors.ErrorSummary())
-			}
+			displayErrorSummary(cmd, resultWithErrors, outputFormat)
 
 			// Log completion with duration
 			log.Info().

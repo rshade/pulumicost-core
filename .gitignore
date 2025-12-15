@@ -59,3 +59,4 @@ yarn-error.log*
 
 # Test/debug log files
 *.log
+**/recorded_data/

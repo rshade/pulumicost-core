@@ -165,22 +165,30 @@ func TestCLIWorkflow_Version(t *testing.T) {
 func TestCLIWorkflow_PluginList(t *testing.T) {
 	h := helpers.NewCLIHelper(t)
 
-	// Execute plugin list (will be empty without plugins)
-	output, err := h.Execute("plugin", "list")
-	require.NoError(t, err, "Command should succeed even with no plugins")
+	// Use isolated HOME directory to ensure no plugins are found
+	tempHome := t.TempDir()
+	h.WithEnv(map[string]string{"HOME": tempHome}, func() {
+		// Execute plugin list (will be empty without plugins)
+		output, err := h.Execute("plugin", "list")
+		require.NoError(t, err, "Command should succeed even with no plugins")
 
-	// Should indicate no plugins installed
-	assert.Contains(t, output, "No plugins installed", "Should report no plugins")
+		// Should indicate no plugins installed
+		assert.Contains(t, output, "No plugins installed", "Should report no plugins")
+	})
 }
 
 // TestCLIWorkflow_PluginValidate tests plugin validate command.
 func TestCLIWorkflow_PluginValidate(t *testing.T) {
 	h := helpers.NewCLIHelper(t)
 
-	// Execute plugin validate (will be empty without plugins)
-	output, err := h.Execute("plugin", "validate")
-	require.NoError(t, err, "Command should succeed even with no plugins")
+	// Use isolated HOME directory to ensure no plugins are found
+	tempHome := t.TempDir()
+	h.WithEnv(map[string]string{"HOME": tempHome}, func() {
+		// Execute plugin validate (will be empty without plugins)
+		output, err := h.Execute("plugin", "validate")
+		require.NoError(t, err, "Command should succeed even with no plugins")
 
-	// Should indicate no plugins to validate
-	assert.Contains(t, output, "No plugins to validate", "Should report no plugins to validate")
+		// Should indicate no plugins to validate
+		assert.Contains(t, output, "No plugins to validate", "Should report no plugins to validate")
+	})
 }

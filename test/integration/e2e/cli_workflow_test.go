@@ -96,6 +96,9 @@ func buildPulumicostBinary() (string, string, error) {
 // TestE2E_ProjectedCostWorkflow tests the complete projected cost workflow from
 // building the binary, loading a Pulumi plan, and outputting JSON results.
 func TestE2E_ProjectedCostWorkflow(t *testing.T) {
+	// Create isolated HOME directory to ensure no plugins are found
+	tempHome := t.TempDir()
+
 	// Use test fixture plan
 	planFile := filepath.Join("..", "..", "fixtures", "plans", "aws-simple-plan.json")
 	planPath, err := filepath.Abs(planFile)
@@ -119,6 +122,7 @@ func TestE2E_ProjectedCostWorkflow(t *testing.T) {
 		"--output",
 		"json",
 	)
+	cmd.Env = append(os.Environ(), "HOME="+tempHome)
 	output, err := cmd.Output()
 	require.NoError(t, err, "Command failed: %v", err)
 
@@ -241,11 +245,15 @@ func TestE2E_ActualCostWorkflow(t *testing.T) {
 // TestE2E_PluginListWorkflow tests the plugin list command to ensure it reports
 // correctly when no plugins are installed.
 func TestE2E_PluginListWorkflow(t *testing.T) {
-	// Run plugin list command
+	// Create an isolated HOME directory to ensure no plugins are found
+	tempHome := t.TempDir()
+
+	// Run plugin list command with isolated HOME
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, testBinaryPath, "plugin", "list")
+	cmd.Env = append(os.Environ(), "HOME="+tempHome)
 	output, err := cmd.CombinedOutput()
 	require.NoError(t, err, "Plugin list command failed: %v\nOutput: %s", err, string(output))
 
@@ -258,11 +266,15 @@ func TestE2E_PluginListWorkflow(t *testing.T) {
 // TestE2E_PluginValidateWorkflow tests the plugin validate command to ensure it reports
 // correctly when no plugins are installed or available for validation.
 func TestE2E_PluginValidateWorkflow(t *testing.T) {
-	// Run plugin validate command
+	// Create an isolated HOME directory to ensure no plugins are found
+	tempHome := t.TempDir()
+
+	// Run plugin validate command with isolated HOME
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, testBinaryPath, "plugin", "validate")
+	cmd.Env = append(os.Environ(), "HOME="+tempHome)
 	output, err := cmd.CombinedOutput()
 	require.NoError(t, err, "Plugin validate command failed: %v\nOutput: %s", err, string(output))
 

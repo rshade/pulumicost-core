@@ -408,6 +408,64 @@ make test-e2e
 **CRITICAL**: E2E tests MUST call actual pulumicost CLI binary.
 Never simulate cost values or stub CLI execution.
 
+### Expected Failure Test Patterns
+
+**IMPORTANT**: Tests that intentionally create failing plugin scenarios (e.g., mock
+plugins that exit immediately, nonexistent binaries, timeout scenarios) must follow
+these patterns to avoid false CI failures:
+
+**Pattern for Expected Errors**:
+
+```go
+// CORRECT: Use t.Logf() for expected failures - test passes
+client, err := pluginhost.NewClient(ctx, launcher, mockPlugin)
+if client != nil {
+    client.Close()
+}
+if err != nil {
+    t.Logf("Expected failure (handled): %v", err)  // Informational, not a failure
+}
+
+// INCORRECT: Using t.Errorf() would cause CI to fail
+if err != nil {
+    t.Errorf("Failed: %v", err)  // DON'T DO THIS for expected errors
+}
+```
+
+**Pattern for Required Errors**:
+
+```go
+// When an error MUST occur for the test to pass
+_, err := launcher.Start(ctx, "/nonexistent/command")
+if err == nil {
+    t.Fatalf("expected error for invalid command")  // Only fail if NO error
+}
+if !strings.Contains(err.Error(), "starting plugin") {
+    t.Errorf("unexpected error: %v", err)  // Fail for WRONG error type
+}
+```
+
+**Test Types That Use Expected Failures**:
+
+- `TestIntegration_ProcessLauncherWithClient` - Tests mock plugin startup
+- `TestIntegration_StdioLauncherWithClient` - Tests stdio communication
+- `TestIntegration_ConcurrentClients` - Concurrent mock plugin handling
+- `TestIntegration_RapidCreateDestroy` - Rapid teardown scenarios
+- `TestIntegration_ErrorRecovery` - Various error conditions
+
+**Common Expected Error Types**:
+
+- `context deadline exceeded` - Timeout waiting for plugin
+- `connection refused` - Plugin not listening on port
+- `broken pipe` / `EOF` - Plugin crashed or disconnected
+- `no such file or directory` - Plugin binary not found
+
+**CI Troubleshooting**:
+
+If CI shows these errors in logs but tests are marked PASS, the behavior is correct.
+Tests log these messages with `t.Logf()` for debugging visibility while passing.
+Only investigate if tests actually FAIL (exit code 1) with these messages.
+
 ### Local Plugin Development
 
 To debug plugin issues during Core development:
@@ -687,6 +745,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
+- N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
 
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)

@@ -267,13 +267,7 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 		return renderErr
 	}
 
-	// Display error summary after results if there were errors
-	if resultWithErrors.HasErrors() {
-		cmd.Println() // Add blank line before error summary
-		cmd.Println("ERRORS")
-		cmd.Println("======")
-		cmd.Print(resultWithErrors.ErrorSummary())
-	}
+	displayErrorSummary(cmd, resultWithErrors, outputFormat)
 
 	// Log completion with duration
 	log.Info().

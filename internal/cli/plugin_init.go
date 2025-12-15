@@ -367,7 +367,7 @@ func (g *projectGenerator) createDirectories() error {
 func (g *projectGenerator) generateGoMod() error {
 	content := fmt.Sprintf(`module github.com/example/%s
 
-go 1.24.10
+go 1.25.5
 
 require (
 	github.com/rshade/pulumicost-spec v0.4.1

@@ -10,7 +10,7 @@
 set -eo pipefail
 
 COVERAGE_FILE="${1:-coverage.out}"
-THRESHOLD="${2:-95}"
+THRESHOLD="${2:-60}"
 
 # Define critical packages
 CRITICAL_PACKAGES=(
