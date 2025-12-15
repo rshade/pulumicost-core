@@ -12,9 +12,28 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
+.PHONY: all build build-recorder install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
 
 all: build
+
+build-recorder:
+	@echo "Building recorder plugin..."
+	@mkdir -p bin
+	go build $(LDFLAGS) -o bin/pulumicost-plugin-recorder ./plugins/recorder/cmd
+
+RECORDER_VERSION=0.1.0
+RECORDER_INSTALL_DIR=$(HOME)/.pulumicost/plugins/recorder/$(RECORDER_VERSION)
+
+install-recorder: build-recorder
+	@echo "Installing recorder plugin to $(RECORDER_INSTALL_DIR)..."
+	@mkdir -p $(RECORDER_INSTALL_DIR)
+	cp bin/pulumicost-plugin-recorder $(RECORDER_INSTALL_DIR)/
+	cp plugins/recorder/plugin.manifest.json $(RECORDER_INSTALL_DIR)/
+	chmod 644 $(RECORDER_INSTALL_DIR)/plugin.manifest.json
+	@echo "Recorder plugin installed successfully."
+	@echo "Verify with: pulumicost plugin list"
+
+build-all: build build-recorder
 
 build:
 	@echo "Building $(BINARY)..."
@@ -117,6 +136,9 @@ docs-validate: docs-lint
 help:
 	@echo "Available targets:"
 	@echo "  build            - Build the binary"
+	@echo "  build-recorder   - Build the recorder plugin"
+	@echo "  install-recorder - Build and install recorder plugin to ~/.pulumicost/plugins/"
+	@echo "  build-all        - Build binary and all plugins"
 	@echo "  test             - Run unit tests (fast, default)"
 	@echo "  test-unit        - Run unit tests only"
 	@echo "  test-race        - Run unit tests with race detector"

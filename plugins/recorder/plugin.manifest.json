@@ -1,0 +1,14 @@
+{
+  "name": "recorder",
+  "version": "0.1.0",
+  "description": "Reference plugin that records all gRPC requests and optionally returns mock responses",
+  "author": "PulumiCost Team",
+  "supported_providers": ["*"],
+  "protocols": ["grpc"],
+  "binary": "pulumicost-plugin-recorder",
+  "metadata": {
+    "repository": "https://github.com/rshade/pulumicost-core",
+    "docs": "https://github.com/rshade/pulumicost-core/tree/main/plugins/recorder",
+    "reference_implementation": true
+  }
+}

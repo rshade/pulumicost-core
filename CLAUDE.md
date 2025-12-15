@@ -691,6 +691,82 @@ go test -coverprofile=coverage.out ./internal/analyzer/...
 go tool cover -func=coverage.out
 ```
 
+### plugins/recorder (Reference Plugin)
+
+The recorder plugin is a reference implementation demonstrating how to build a PulumiCost plugin using the pluginsdk v0.4.6. It captures all gRPC requests to JSON files and optionally returns mock cost responses.
+
+**Location**: `plugins/recorder/`
+
+**Purpose**:
+
+- Developer tool for inspecting Core-to-plugin data shapes
+- Reference implementation for pluginsdk patterns
+- Contract testing support for integration tests
+
+**Key Files**:
+
+- `plugins/recorder/plugin.go` - Main plugin implementation with CostSourceService
+- `plugins/recorder/recorder.go` - Request serialization to JSON files
+- `plugins/recorder/mocker.go` - Mock response generation with randomized costs
+- `plugins/recorder/config.go` - Environment variable configuration
+- `plugins/recorder/cmd/main.go` - Plugin entry point with signal handling
+
+**Build Commands**:
+
+```bash
+make build-recorder    # Build to bin/pulumicost-plugin-recorder
+make install-recorder  # Build and install to ~/.pulumicost/plugins/recorder/0.1.0/
+```
+
+**Configuration (Environment Variables)**:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PULUMICOST_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
+| `PULUMICOST_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
+
+**Usage Examples**:
+
+```bash
+# Record requests to inspect data shapes
+export PULUMICOST_RECORDER_OUTPUT_DIR=./debug
+./bin/pulumicost cost projected --pulumi-json plan.json
+cat ./debug/*.json | jq .
+
+# Enable mock mode for testing
+export PULUMICOST_RECORDER_MOCK_RESPONSE=true
+./bin/pulumicost cost projected --pulumi-json plan.json
+```
+
+**Recorded File Format**:
+
+```json
+{
+  "timestamp": "2025-12-11T14:30:52Z",
+  "method": "GetProjectedCost",
+  "requestId": "01JEK7X2J3K4M5N6P7Q8R9S1T2",
+  "request": { /* protobuf request as JSON */ }
+}
+```
+
+**Testing**:
+
+```bash
+go test ./plugins/recorder/...                      # Unit tests
+go test ./test/integration/recorder_test.go         # Integration tests
+go test -bench=BenchmarkRecorder ./plugins/recorder/...  # Performance (<10ms overhead)
+```
+
+**Implementation Patterns Demonstrated**:
+
+- `pluginsdk.BasePlugin` embedding with wildcard provider matcher
+- Request validation using pluginsdk v0.4.6 helpers
+- `protojson.Marshal` for human-readable JSON serialization
+- ULID for time-ordered, collision-free filenames
+- Graceful shutdown with context cancellation
+- Thread-safe recording with `sync.Mutex`
+- Zerolog structured logging
+
 ## Common Error Types
 
 - `ErrNoCostData`: No cost data available for a resource.
@@ -745,10 +821,11 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+
 - Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
 - Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (104-remove-port-env)
-
+- Local filesystem (`./recorded_data` default, configurable via env var) (104-recorder-plugin)
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
 - Go 1.25.5 (008-analyzer-plugin)
