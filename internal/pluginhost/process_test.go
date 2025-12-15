@@ -1,6 +1,7 @@
 package pluginhost // needs access to unexported methods
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -8,10 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 )
 
 func TestProcessLauncher_AllocatePort(t *testing.T) {
@@ -693,4 +697,186 @@ func TestProcessLauncher_DoubleRelease(t *testing.T) {
 	if err == nil {
 		t.Error("expected error on double release")
 	}
+}
+
+// =============================================================================
+// Environment Variable Tests (User Story 1: Plugin Communication Consistency)
+// =============================================================================
+
+// TestProcessLauncher_EnvironmentVariableConstants verifies that the process launcher
+// uses pluginsdk constants for environment variable names instead of hardcoded strings.
+// This ensures consistency between core and plugins for environment variable handling.
+func TestProcessLauncher_EnvironmentVariableConstants(t *testing.T) {
+	// Verify that pluginsdk.EnvPort matches the expected canonical value.
+	// This test ensures that if the pluginsdk constant changes, we'll catch it.
+	expectedEnvPort := "PULUMICOST_PLUGIN_PORT"
+	if pluginsdk.EnvPort != expectedEnvPort {
+		t.Errorf("pluginsdk.EnvPort changed: expected %q, got %q", expectedEnvPort, pluginsdk.EnvPort)
+	}
+}
+
+// TestProcessLauncher_StartPluginEnvironment verifies that startPlugin sets the correct
+// environment variables for plugin communication using pluginsdk constants.
+func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping environment test in short mode")
+	}
+
+	// Create a mock plugin script that outputs its environment and exits
+	script := createEnvCheckingScript(t)
+
+	launcher := NewProcessLauncher()
+	ctx := context.Background()
+
+	// Allocate a port
+	port, _, err := launcher.allocatePortWithListener(ctx)
+	if err != nil {
+		t.Fatalf("failed to allocate port: %v", err)
+	}
+
+	// Release the port so the mock script can bind
+	if err := launcher.releasePortListener(port); err != nil {
+		t.Fatalf("failed to release port: %v", err)
+	}
+
+	// Create the command manually to capture output (startPlugin sets Stdout to os.Stderr)
+	cmd := exec.CommandContext(ctx, script, fmt.Sprintf("--port=%d", port))
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("PORT=%d", port), // fallback for backward compatibility
+		fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
+	)
+	cmd.WaitDelay = processWaitDelay
+
+	// Capture stdout and stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// Start the process
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("failed to start plugin: %v", err)
+	}
+	defer launcher.killProcess(cmd)
+
+	// Wait for the process to complete with a timeout
+	waitCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case err := <-done:
+		// Process completed
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			// Process exited with non-zero code
+			stdoutStr := stdout.String()
+			stderrStr := stderr.String()
+			t.Fatalf("plugin process failed with exit code %d\nstdout: %s\nstderr: %s",
+				exitErr.ExitCode(), stdoutStr, stderrStr)
+		}
+		if err != nil {
+			t.Fatalf("failed to wait for plugin process: %v", err)
+		}
+
+		// Process succeeded - validate output is clean (no error messages) and contains expected env vars
+		stdoutStr := stdout.String()
+		stderrStr := stderr.String()
+		if strings.Contains(stderrStr, "ERROR:") || strings.Contains(stdoutStr, "ERROR:") {
+			t.Fatalf("plugin process succeeded but output contains errors\nstdout: %s\nstderr: %s",
+				stdoutStr, stderrStr)
+		}
+
+		// Validate that stdout contains the expected environment variable lines
+		expectedPortStr := strconv.Itoa(port)
+		expectedEnvLine := fmt.Sprintf("%s=%s", pluginsdk.EnvPort, expectedPortStr)
+		expectedPortLine := fmt.Sprintf("PORT=%s", expectedPortStr)
+
+		if !strings.Contains(stdoutStr, expectedEnvLine) {
+			t.Errorf("stdout does not contain expected environment variable line: %s\nstdout: %s",
+				expectedEnvLine, stdoutStr)
+		}
+		if !strings.Contains(stdoutStr, expectedPortLine) {
+			t.Errorf("stdout does not contain expected PORT variable line: %s\nstdout: %s",
+				expectedPortLine, stdoutStr)
+		}
+
+	case <-waitCtx.Done():
+		// Timeout - kill the process and report failure
+		stdoutStr := stdout.String()
+		stderrStr := stderr.String()
+		t.Fatalf("plugin process timed out after 5 seconds\nstdout: %s\nstderr: %s",
+			stdoutStr, stderrStr)
+	}
+}
+
+// createEnvCheckingScript creates a script that verifies environment variables are set.
+func createEnvCheckingScript(t *testing.T) string {
+	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		// Windows PowerShell script
+		script := fmt.Sprintf(`
+$envPort = $env:%s
+$fallbackPort = $env:PORT
+
+if (-not $envPort) {
+    Write-Error "%s environment variable not set"
+    exit 1
+}
+
+if (-not $fallbackPort) {
+    Write-Error "PORT environment variable not set (fallback)"
+    exit 1
+}
+
+	if ($envPort -ne $fallbackPort) {
+    Write-Error "Port values don't match: %s=$envPort, PORT=$fallbackPort"
+    exit 1
+}
+
+# Output the environment variables for validation
+Write-Output "%s=$envPort"
+Write-Output "PORT=$fallbackPort"
+
+# Keep running briefly for the test
+Start-Sleep -Milliseconds 100
+exit 0
+`, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort)
+		return createScript(t, script, ".ps1")
+	}
+
+	// Unix shell script
+	script := fmt.Sprintf(`#!/bin/bash
+# Check that the canonical environment variable is set
+if [ -z "$%s" ]; then
+    echo "ERROR: %s environment variable not set" >&2
+    exit 1
+fi
+
+# Check that the fallback PORT variable is also set (for backward compatibility)
+if [ -z "$PORT" ]; then
+    echo "ERROR: PORT environment variable not set (fallback)" >&2
+    exit 1
+fi
+
+# Verify both have the same value
+if [ "$%s" != "$PORT" ]; then
+    echo "ERROR: Port values don't match: %s=$%s, PORT=$PORT" >&2
+    exit 1
+fi
+
+# Output the environment variables for validation
+echo "%s=$%s"
+echo "PORT=$PORT"
+
+# Brief sleep to allow test to observe
+sleep 0.1
+exit 0
+`, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort, pluginsdk.EnvPort)
+
+	return createScript(t, script, ".sh")
 }

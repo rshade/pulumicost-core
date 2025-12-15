@@ -15,6 +15,7 @@ import (
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/rshade/pulumicost-core/internal/spec"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -23,7 +24,7 @@ import (
 // the corresponding zerolog level. If the environment variable is unset or cannot be
 // parsed, it returns zerolog.InfoLevel.
 func getAnalyzerLogLevel() zerolog.Level {
-	if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
+	if envLevel := os.Getenv(pluginsdk.EnvLogLevel); envLevel != "" {
 		if parsed, err := zerolog.ParseLevel(envLevel); err == nil {
 			return parsed
 		}

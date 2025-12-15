@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
@@ -32,6 +33,14 @@ const (
 	initialBackoff    = 100 * time.Millisecond
 	maxBackoff        = 2 * time.Second
 	backoffMultiplier = 2
+
+	// envPortFallback is the legacy environment variable for plugin port.
+	// Kept for backward compatibility with older plugins that read PORT instead of
+	// PULUMICOST_PLUGIN_PORT. New plugins should use pluginsdk.GetPort() which
+	// reads pluginsdk.EnvPort (PULUMICOST_PLUGIN_PORT) first.
+	// TODO: Remove once all plugins are migrated to pluginsdk.GetPort().
+	// See: https://github.com/rshade/pulumicost-core/issues/232
+	envPortFallback = "PORT"
 )
 
 // getPluginBindTimeout returns the timeout for plugin binding, with increased timeout in CI environments.
@@ -356,14 +365,14 @@ func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int
 		ctx,
 		path,
 		append(args, fmt.Sprintf("--port=%d", port))...)
-	// Set environment variables for plugin port communication.
-	// Currently we set both PORT and PULUMICOST_PLUGIN_PORT for compatibility.
-	// TODO: Remove PORT env var once plugins support --port flag.
+	// Set environment variables for plugin port communication using pluginsdk constants.
+	// We set both the canonical PULUMICOST_PLUGIN_PORT and the legacy PORT for backward
+	// compatibility with older plugins that haven't migrated to pluginsdk.GetPort().
 	// See: https://github.com/rshade/pulumicost-spec/issues/129 (Add --port flag to pluginsdk)
 	// See: https://github.com/rshade/pulumicost-core/issues/232 (Remove PORT from core)
 	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("PORT=%d", port),
-		fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+		fmt.Sprintf("%s=%d", envPortFallback, port),
+		fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
 	)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr

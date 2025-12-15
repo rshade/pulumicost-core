@@ -476,11 +476,54 @@ Key dependencies (see `go.mod` for versions):
 - `github.com/spf13/cobra` - CLI framework
 - `google.golang.org/grpc` - Plugin communication
 - `github.com/rs/zerolog` - Structured logging
-- `github.com/rshade/pulumicost-spec` - Protocol definitions
+- `github.com/rshade/pulumicost-spec` - Protocol definitions and pluginsdk
 - `github.com/pulumi/pulumi/sdk/v3` - Pulumi SDK for Analyzer (v3.210.0+)
 - `github.com/charmbracelet/bubbletea` - TUI framework
 - `github.com/charmbracelet/lipgloss` - TUI styling
 - `golang.org/x/term` - Terminal detection utilities
+
+## Environment Variable Constants (pluginsdk)
+
+PulumiCost uses standardized environment variable constants from `pluginsdk` for
+consistency between core and plugins.
+
+### Available Constants
+
+```go
+import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+
+// Plugin communication
+pluginsdk.EnvPort        // "PULUMICOST_PLUGIN_PORT" - Primary port for gRPC
+
+// Logging configuration
+pluginsdk.EnvLogLevel    // "PULUMICOST_LOG_LEVEL" - Log verbosity
+pluginsdk.EnvLogFormat   // "PULUMICOST_LOG_FORMAT" - Log format (json/text)
+pluginsdk.EnvLogFile     // "PULUMICOST_LOG_FILE" - Log file path
+
+// Distributed tracing
+pluginsdk.EnvTraceID     // "PULUMICOST_TRACE_ID" - Trace ID for request correlation
+```
+
+### Usage Patterns
+
+**Setting environment variables (core → plugin):**
+
+```go
+cmd.Env = append(os.Environ(),
+    fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
+    fmt.Sprintf("PORT=%d", port), // Legacy fallback
+)
+```
+
+**Reading environment variables (in tests):**
+
+```go
+os.Setenv(pluginsdk.EnvLogLevel, "debug")
+defer os.Unsetenv(pluginsdk.EnvLogLevel)
+```
+
+**Note**: Config-specific variables like `PULUMICOST_OUTPUT_FORMAT` and
+`PULUMICOST_CONFIG_STRICT` are NOT in pluginsdk as they are core-specific.
 
 ## Package-Specific Documentation
 
