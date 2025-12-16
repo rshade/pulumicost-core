@@ -33,14 +33,6 @@ const (
 	initialBackoff    = 100 * time.Millisecond
 	maxBackoff        = 2 * time.Second
 	backoffMultiplier = 2
-
-	// envPortFallback is the legacy environment variable for plugin port.
-	// Kept for backward compatibility with older plugins that read PORT instead of
-	// PULUMICOST_PLUGIN_PORT. New plugins should use pluginsdk.GetPort() which
-	// reads pluginsdk.EnvPort (PULUMICOST_PLUGIN_PORT) first.
-	// TODO: Remove once all plugins are migrated to pluginsdk.GetPort().
-	// See: https://github.com/rshade/pulumicost-core/issues/232
-	envPortFallback = "PORT"
 )
 
 // getPluginBindTimeout returns the timeout for plugin binding, with increased timeout in CI environments.
@@ -209,11 +201,14 @@ func (p *ProcessLauncher) startOnce(
 	defer bindCancel()
 
 	if bindErr := p.waitForPluginBind(bindCtx, port); bindErr != nil {
+		// FR-007: Combined error + guidance message when plugin fails to bind
 		log.Error().
 			Ctx(ctx).
 			Str("component", "pluginhost").
 			Err(bindErr).
 			Int("port", port).
+			Str("plugin_path", path).
+			Str("guidance", "if using an older plugin, ensure it supports --port flag").
 			Msg("plugin failed to bind to port")
 		p.killProcess(cmd)
 		return nil, nil, fmt.Errorf("plugin failed to bind to port: %w", bindErr)
@@ -343,7 +338,7 @@ func (p *ProcessLauncher) waitForPluginBind(ctx context.Context, port int) error
 // It returns true if err contains common platform-independent phrases that
 // indicate the address or port is already in use; returns false for nil or
 // unrelated errors. The check uses string matching to remain portable across
-// operating systems and locales.
+// "port is already allocated", or "failed to bind to port".
 func isPortCollisionError(err error) bool {
 	if err == nil {
 		return false
@@ -360,18 +355,28 @@ func isPortCollisionError(err error) bool {
 }
 
 func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int, args []string) (*exec.Cmd, error) {
+	log := logging.FromContext(ctx)
+
+	// FR-008: Log DEBUG message when PORT is detected in user's environment
+	// This helps users understand that their PORT env var is being ignored
+	if portEnv := os.Getenv("PORT"); portEnv != "" {
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Str("inherited_port", portEnv).
+			Msg("PORT environment variable detected in parent environment (will be ignored, plugin uses --port flag)")
+	}
+
 	//nolint:gosec // Plugin path is validated before execution
 	cmd := exec.CommandContext(
 		ctx,
 		path,
 		append(args, fmt.Sprintf("--port=%d", port))...)
-	// Set environment variables for plugin port communication using pluginsdk constants.
-	// We set both the canonical PULUMICOST_PLUGIN_PORT and the legacy PORT for backward
-	// compatibility with older plugins that haven't migrated to pluginsdk.GetPort().
-	// See: https://github.com/rshade/pulumicost-spec/issues/129 (Add --port flag to pluginsdk)
-	// See: https://github.com/rshade/pulumicost-core/issues/232 (Remove PORT from core)
+	// Set PULUMICOST_PLUGIN_PORT environment variable for plugin port communication.
+	// The --port flag is authoritative; PULUMICOST_PLUGIN_PORT is for debugging/tooling.
+	// Note: PORT is intentionally NOT set (issue #232) - plugins should use --port flag
+	// or pluginsdk.GetPort() which reads PULUMICOST_PLUGIN_PORT.
 	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("%s=%d", envPortFallback, port),
 		fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
 	)
 	cmd.Stdout = os.Stderr

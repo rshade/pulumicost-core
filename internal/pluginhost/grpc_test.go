@@ -1,9 +1,11 @@
 package pluginhost
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -144,4 +146,33 @@ func TestTraceInterceptor_PropagatesInvokerError(t *testing.T) {
 // Test the TraceIDMetadataKey constant value.
 func TestTraceIDMetadataKey_Value(t *testing.T) {
 	assert.Equal(t, "x-pulumicost-trace-id", TraceIDMetadataKey)
+}
+
+func TestLoggedInterceptor(t *testing.T) {
+	// Capture logs
+	var buf bytes.Buffer
+	logger := zerolog.New(&buf)
+	interceptor := LoggedInterceptor(logger)
+
+	ctx := context.Background()
+	method := "/test.Service/Method"
+
+	// Success case
+	mockInvokerSuccess := func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, opts ...grpc.CallOption) error {
+		return nil
+	}
+
+	err := interceptor(ctx, method, nil, nil, nil, mockInvokerSuccess)
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "making gRPC call to plugin")
+
+	// Error case
+	buf.Reset()
+	mockInvokerError := func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, opts ...grpc.CallOption) error {
+		return assert.AnError
+	}
+
+	err = interceptor(ctx, method, nil, nil, nil, mockInvokerError)
+	assert.ErrorIs(t, err, assert.AnError)
+	assert.Contains(t, buf.String(), "gRPC call failed")
 }
