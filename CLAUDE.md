@@ -569,8 +569,8 @@ pluginsdk.EnvTraceID     // "PULUMICOST_TRACE_ID" - Trace ID for request correla
 ```go
 cmd.Env = append(os.Environ(),
     fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
-    fmt.Sprintf("PORT=%d", port), // Legacy fallback
 )
+// Note: PORT is NOT set (issue #232) - plugins use --port flag or pluginsdk.GetPort()
 ```
 
 **Reading environment variables (in tests):**
@@ -747,6 +747,7 @@ CodeRabbit now:
 ## Active Technologies
 - Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
+- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (104-remove-port-env)
 
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)

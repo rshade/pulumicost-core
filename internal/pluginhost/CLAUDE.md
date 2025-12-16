@@ -162,8 +162,21 @@ Plugins must implement:
 
 ## Environment Variables
 
-- `PULUMICOST_PLUGIN_PORT`: Port number passed to plugin (ProcessLauncher)
+- `PULUMICOST_PLUGIN_PORT`: Port number passed to plugin (ProcessLauncher) - for debugging/tooling only
 - Plugin inherits full parent environment via `os.Environ()`
+
+### Port Communication (Issue #232)
+
+The `--port` flag is the **authoritative** mechanism for port communication. Plugins MUST read the port from:
+
+1. **Primary**: `--port=XXXXX` command-line flag (authoritative)
+2. **Fallback**: `PULUMICOST_PLUGIN_PORT` environment variable (for debugging/tooling)
+
+**Note**: The legacy `PORT` environment variable is **NOT** set by core (removed in issue #232). If a user has `PORT` in their shell environment, a DEBUG message is logged to indicate it will be ignored. Plugins should use `pluginsdk.GetPort()` which reads from `--port` flag or `PULUMICOST_PLUGIN_PORT`.
+
+### Guidance Logging
+
+When a plugin fails to bind to its assigned port, the launcher logs a guidance message suggesting the plugin may need updating to support the `--port` flag. This helps users diagnose issues with older plugins that only read from the `PORT` environment variable.
 
 ## Timeout Configuration
 
