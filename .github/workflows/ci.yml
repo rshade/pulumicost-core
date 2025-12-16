@@ -39,11 +39,17 @@ jobs:
           if [ -d "examples/plugins/aws-example" ]; then
             go build -o bin/aws-example-plugin ./examples/plugins/aws-example
           fi
+          # Build recorder plugin for integration tests
+          make build-recorder
 
       - name: Run tests with coverage
         run: |
           go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./pkg/...
           go tool cover -func=coverage.out
+
+      - name: Run integration tests
+        run: |
+          go test -v -race ./test/integration/...
 
       - name: Check overall coverage threshold
         run: |
@@ -255,6 +261,13 @@ jobs:
 
           mkdir -p dist
           eval go build ${LDFLAGS} -o dist/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/pulumicost
+
+          # Build recorder plugin
+          RECORDER_NAME="pulumicost-plugin-recorder"
+          if [ "${GOOS}" = "windows" ]; then
+            RECORDER_NAME="${RECORDER_NAME}.exe"
+          fi
+          eval go build ${LDFLAGS} -o dist/${RECORDER_NAME}-${GOOS}-${GOARCH} ./plugins/recorder/cmd
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
