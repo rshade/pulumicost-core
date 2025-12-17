@@ -1,0 +1,115 @@
+# CLI Contract: cost actual Command
+
+**Version**: 1.0.0
+**Command**: `pulumicost cost actual`
+**Purpose**: Fetch actual historical costs with optional tag-based filtering
+
+## Interface
+
+### Command Signature
+```bash
+pulumicost cost actual [flags]
+```
+
+### Flags
+- `--pulumi-json string`: Path to Pulumi preview JSON output (required)
+- `--from string`: Start date (YYYY-MM-DD or RFC3339) (required)
+- `--to string`: End date (YYYY-MM-DD or RFC3339) (defaults to now)
+- `--adapter string`: Use only the specified adapter plugin
+- `--output string`: Output format (table/json/ndjson)
+- `--group-by string`: Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value
+
+### Tag Filtering Syntax
+**Format**: `--group-by "tag:key=value"`
+**Behavior**: Filters results to only include resources with matching tag
+**Examples**:
+- `--group-by "tag:env=prod"` - Only production environment resources
+- `--group-by "tag:team=backend"` - Only backend team resources
+
+## Behavior Contracts
+
+### Success Responses
+
+#### Tag Filtered Results (200 OK equivalent)
+**Trigger**: Valid tag filter matches some resources
+**Output**: Filtered cost data for tagged resources only
+**Post-conditions**:
+- Only resources with matching tags included
+- Costs aggregated according to tag filter
+- No error exit code
+
+#### No Tag Matches (200 OK equivalent)
+**Trigger**: Tag filter matches no resources
+**Output**: Empty result set or zero-cost entries
+**Post-conditions**:
+- Valid output structure
+- No error exit code
+
+### Error Responses
+
+#### Missing Required Flags (Exit code 1)
+**Trigger**: `--pulumi-json` or `--from` not provided
+**Output**: Error message: `required flag(s) "pulumi-json", "from" not set`
+**Post-conditions**:
+- Exit code 1
+- No cost fetching performed
+
+#### Invalid Date Format (Exit code 1)
+**Trigger**: Invalid date format in `--from` or `--to`
+**Output**: Error message: `invalid date format`
+**Post-conditions**:
+- Exit code 1
+- No processing performed
+
+#### Date Range Too Large (Exit code 1)
+**Trigger**: Date range exceeds maximum allowed (366 days)
+**Output**: Error message: `date range too large`
+**Post-conditions**:
+- Exit code 1
+- No API calls made
+
+## Data Contracts
+
+### Input
+- **Format**: Valid Pulumi plan JSON
+- **Date Range**: Maximum 366 days, maximum 5 years in past
+- **Encoding**: UTF-8
+
+### Output Formats
+
+#### Table Format
+- **Structure**: ASCII table with columns: Date/Resource, Type, Provider, Daily/Monthly Cost
+- **Grouping**: Determined by `--group-by` flag
+- **Filtering**: Tag filters reduce rows to matching resources
+
+#### JSON Format
+- **Structure**: Array of cost result objects
+- **Schema**:
+```json
+[
+  {
+    "date": "2025-01-01",
+    "resource": "string",
+    "type": "string",
+    "provider": "string",
+    "dailyCost": "number",
+    "monthlyCost": "number"
+  }
+]
+```
+
+#### NDJSON Format
+- **Structure**: One JSON object per line
+- **Schema**: Same as JSON format, one object per newline
+
+## Performance Contracts
+
+- **Tag Filter Performance**: Should not significantly impact query performance
+- **API Rate Limiting**: Respects provider API limits
+- **Execution Time**: < 30 seconds for typical date ranges (varies by provider API response times)
+
+## Integration Notes
+
+- Requires functional adapter plugins for actual cost data
+- Tag filtering depends on resource tagging in Pulumi plan
+- Historical data availability varies by cloud provider
