@@ -417,6 +417,18 @@ All pull requests must pass:
 - Documentation validation
 - Cross-platform builds (Linux, macOS, Windows)
 
+### Automated Nightly Failure Analysis
+
+To assist with debugging, the project employs an automated nightly failure
+analysis workflow:
+
+- **Trigger**: When a nightly build fails, an issue is created with the
+  `nightly-failure` label.
+- **Analysis**: A workflow automatically runs to fetch logs, analyze them
+  using OpenCode, and post a triage report as a comment.
+- **Goal**: Provide immediate root cause hypothesis and suggested fixes to
+  reduce manual investigation time.
+
 ## Project Architecture
 
 PulumiCost operates as a three-repository ecosystem:
