@@ -224,6 +224,9 @@ const DefaultTimeout = 10 * time.Second
 // DefaultSuiteTimeout is the default timeout for the entire suite (5 minutes).
 const DefaultSuiteTimeout = 5 * time.Minute
 
+// batchTestTimeoutMultiplier is the multiplier for batch tests.
+const batchTestTimeoutMultiplier = 2
+
 // MaxBatchSize is the maximum number of resources in a batch request.
 const MaxBatchSize = 1000
 

@@ -31,7 +31,12 @@ func (r *SuiteReport) WriteTable(w io.Writer) error {
 	// Header
 	fprintln("CONFORMANCE TEST RESULTS")
 	fprintln("========================")
-	fprintf("Plugin: %s v%s (protocol v%s)\n", r.Plugin.Name, r.Plugin.Version, r.Plugin.ProtocolVersion)
+	fprintf(
+		"Plugin: %s v%s (protocol v%s)\n",
+		r.Plugin.Name,
+		r.Plugin.Version,
+		r.Plugin.ProtocolVersion,
+	)
 	fprintf("Mode:   %s\n", strings.ToUpper(string(r.Plugin.CommMode)))
 	fprintln()
 

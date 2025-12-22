@@ -387,7 +387,9 @@ test/
 ├── unit/           # Unit tests by package (engine, config, spec)
 ├── integration/    # Cross-component tests (plugin communication)
 ├── e2e/            # End-to-end tests (separate Go module)
-├── fixtures/       # Test data (plans, specs, configs, responses)
+│   ├── fixtures/   # Pulumi project fixtures for E2E tests
+│   └── ...
+├── fixtures/       # General test data (plans, specs, configs, responses)
 ├── mocks/          # Mock implementations (plugin server)
 └── benchmarks/     # Performance tests
 ```
@@ -396,10 +398,11 @@ test/
 
 **Location**: `test/e2e/` (separate Go module)
 
-**Prerequisites**: AWS credentials, Pulumi CLI, `make build`
+**Project Fixtures**: `test/e2e/fixtures/` (Real Pulumi projects)
+
+**Prerequisites**: AWS session or profile configured, Pulumi CLI, `make build`
 
 ```bash
-eval "$(aws configure export-credentials --format env)"
 export PATH="$HOME/.pulumi/bin:$PATH"
 export PULUMI_CONFIG_PASSPHRASE="e2e-test-passphrase"
 make test-e2e
@@ -824,12 +827,12 @@ CodeRabbit now:
 
 - Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
-- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (104-remove-port-env)
-- Local filesystem (`./recorded_data` default, configurable via env var) (104-recorder-plugin)
-- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (103-analyzer-e2e-tests)
-- Local Pulumi state (`file://` backend), temp directories for test fixtures (103-analyzer-e2e-tests)
-- Go 1.25.5 (008-analyzer-plugin)
-- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (008-analyzer-plugin)
+- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (017-remove-port-env)
+- Local filesystem (`./recorded_data` default, configurable via env var) (018-recorder-plugin)
+- Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (012-analyzer-e2e-tests)
+- Local Pulumi state (`file://` backend), temp directories for test fixtures (012-analyzer-e2e-tests)
+- Go 1.25.5 (009-analyzer-plugin)
+- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (009-analyzer-plugin)
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
 - Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
 - File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
@@ -838,7 +841,7 @@ CodeRabbit now:
 
 - 001-engine-test-coverage: Added Go 1.25.5 + testing (stdlib), github.com/stretchr/testify
 - 007-integrate-logging: Added zerolog v1.34.0 logging integration across all components
-- 008-test-infra-hardening: Added comprehensive test infrastructure hardening
+- 013-test-infra-hardening: Added comprehensive test infrastructure hardening
 
 ## Session Analysis - Recommended Updates
 

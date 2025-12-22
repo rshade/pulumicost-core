@@ -59,12 +59,22 @@ func TestProgressBarRender_BarWidth(t *testing.T) {
 
 			filledCount := strings.Count(result, "█")
 			if filledCount != tt.expected {
-				t.Errorf("Expected %d filled characters, got %d. Result: %q", tt.expected, filledCount, result)
+				t.Errorf(
+					"Expected %d filled characters, got %d. Result: %q",
+					tt.expected,
+					filledCount,
+					result,
+				)
 			}
 
 			totalChars := strings.Count(result, "█") + strings.Count(result, "░")
 			if totalChars != tt.width {
-				t.Errorf("Expected total bar width %d, got %d. Result: %q", tt.width, totalChars, result)
+				t.Errorf(
+					"Expected total bar width %d, got %d. Result: %q",
+					tt.width,
+					totalChars,
+					result,
+				)
 			}
 		})
 	}

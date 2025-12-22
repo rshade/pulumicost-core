@@ -1,6 +1,6 @@
 # Data Model: Add UnaryInterceptors Support to ServeConfig
 
-**Branch**: `001-pluginsdk-interceptors`
+**Branch**: `005-pluginsdk-interceptors`
 **Date**: 2025-11-28
 
 ## Entities

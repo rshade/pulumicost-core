@@ -31,7 +31,10 @@ func GetEmbeddedRegistry() (*EmbeddedRegistry, error) {
 		embeddedRegistry = &EmbeddedRegistry{}
 		errEmbeddedRegistry = json.Unmarshal(registryData, embeddedRegistry)
 		if errEmbeddedRegistry != nil {
-			errEmbeddedRegistry = fmt.Errorf("failed to parse embedded registry: %w", errEmbeddedRegistry)
+			errEmbeddedRegistry = fmt.Errorf(
+				"failed to parse embedded registry: %w",
+				errEmbeddedRegistry,
+			)
 		}
 	})
 	return embeddedRegistry, errEmbeddedRegistry

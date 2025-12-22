@@ -76,6 +76,7 @@ func validateRegistryEntryComplete(t *testing.T, name string, entry RegistryEntr
 		"cost_retrieval":  true,
 		"cost_projection": true,
 		"pricing_specs":   true,
+		"recommendations": true,
 	}
 	for _, cap := range entry.Capabilities {
 		if !validCapabilities[cap] {
@@ -145,7 +146,12 @@ func TestRegistryJSONNoDuplicates(t *testing.T) {
 	repos := make(map[string]string)
 	for name, entry := range reg.Plugins {
 		if existing, ok := repos[entry.Repository]; ok {
-			t.Errorf("duplicate repository %s: used by both %q and %q", entry.Repository, existing, name)
+			t.Errorf(
+				"duplicate repository %s: used by both %q and %q",
+				entry.Repository,
+				existing,
+				name,
+			)
 		}
 		repos[entry.Repository] = name
 	}

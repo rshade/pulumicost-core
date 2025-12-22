@@ -21,7 +21,11 @@ type TCPLauncher struct {
 	Address string
 }
 
-func (l *TCPLauncher) Start(ctx context.Context, path string, args ...string) (*grpc.ClientConn, func() error, error) {
+func (l *TCPLauncher) Start(
+	ctx context.Context,
+	path string,
+	args ...string,
+) (*grpc.ClientConn, func() error, error) {
 	conn, err := grpc.NewClient(
 		l.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -187,7 +191,10 @@ func TestEngineConcurrency_SharedState(t *testing.T) {
 				case <-done:
 					return
 				default:
-					_, _ = eng.GetProjectedCost(ctx, []engine.ResourceDescriptor{{Type: "aws:ec2:Instance", ID: "i-1"}})
+					_, _ = eng.GetProjectedCost(
+						ctx,
+						[]engine.ResourceDescriptor{{Type: "aws:ec2:Instance", ID: "i-1"}},
+					)
 					time.Sleep(1 * time.Millisecond)
 				}
 			}
@@ -205,8 +212,13 @@ func TestEngineConcurrency_SharedState(t *testing.T) {
 					return
 				default:
 					// Toggle cost to verify no race conditions in mock
-					mockServer.Plugin.SetProjectedCostResponse("aws:ec2:Instance",
-						&proto.CostResult{MonthlyCost: float64(time.Now().UnixNano() % 100), Currency: "USD"})
+					mockServer.Plugin.SetProjectedCostResponse(
+						"aws:ec2:Instance",
+						&proto.CostResult{
+							MonthlyCost: float64(time.Now().UnixNano() % 100),
+							Currency:    "USD",
+						},
+					)
 					time.Sleep(5 * time.Millisecond)
 				}
 			}

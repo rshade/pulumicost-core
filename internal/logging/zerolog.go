@@ -263,7 +263,12 @@ func FromContext(ctx context.Context) *zerolog.Logger {
 				fmt.Fprintf(os.Stderr, "Invalid %s '%s': %v, using default info level\n", pluginsdk.EnvLogLevel, envLevel, err)
 			}
 		}
-		defaultLogger := zerolog.New(os.Stderr).Level(level).With().Timestamp().Logger().Hook(TracingHook{})
+		defaultLogger := zerolog.New(os.Stderr).
+			Level(level).
+			With().
+			Timestamp().
+			Logger().
+			Hook(TracingHook{})
 		return &defaultLogger
 	}
 	return logger

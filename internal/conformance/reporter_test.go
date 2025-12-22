@@ -314,9 +314,24 @@ func TestReport_WriteTable_AllStatusTypes(t *testing.T) {
 		},
 		Results: []TestResult{
 			{TestName: "PassTest", Status: StatusPass, Category: CategoryProtocol},
-			{TestName: "FailTest", Status: StatusFail, Category: CategoryError, Error: "assertion failed"},
-			{TestName: "SkipTest", Status: StatusSkip, Category: CategoryProtocol, Error: "skipped"},
-			{TestName: "ErrorTest", Status: StatusError, Category: CategoryContext, Error: "plugin crashed"},
+			{
+				TestName: "FailTest",
+				Status:   StatusFail,
+				Category: CategoryError,
+				Error:    "assertion failed",
+			},
+			{
+				TestName: "SkipTest",
+				Status:   StatusSkip,
+				Category: CategoryProtocol,
+				Error:    "skipped",
+			},
+			{
+				TestName: "ErrorTest",
+				Status:   StatusError,
+				Category: CategoryContext,
+				Error:    "plugin crashed",
+			},
 		},
 		Summary: Summary{Total: 4, Passed: 1, Failed: 1, Skipped: 1, Errors: 1},
 	}

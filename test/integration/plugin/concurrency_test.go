@@ -16,7 +16,7 @@ import (
 //
 // NOTE: The registry package currently does NOT implement file locking.
 // This test serves as a regression test for when locking is implemented.
-// See T006 in specs/001-plugin-integration-tests/tasks.md for tracking.
+// See T006 in specs/021-plugin-integration-tests/tasks.md for tracking.
 func TestConcurrentInstall_SamePlugin(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping concurrency test in short mode")

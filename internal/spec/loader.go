@@ -48,7 +48,10 @@ func (l *Loader) LoadSpec(provider, service, sku string) (interface{}, error) {
 }
 
 // LoadSpecWithContext loads a pricing specification by provider, service, and SKU with logging.
-func (l *Loader) LoadSpecWithContext(ctx context.Context, provider, service, sku string) (interface{}, error) {
+func (l *Loader) LoadSpecWithContext(
+	ctx context.Context,
+	provider, service, sku string,
+) (interface{}, error) {
 	log := logging.FromContext(ctx)
 	filename := fmt.Sprintf("%s-%s-%s.yaml", provider, service, sku)
 	path := filepath.Join(l.specDir, filename)

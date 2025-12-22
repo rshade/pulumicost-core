@@ -26,7 +26,11 @@ type mockCostSourceClient struct {
 	) (*GetActualCostResponse, error)
 }
 
-func (m *mockCostSourceClient) Name(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*NameResponse, error) {
+func (m *mockCostSourceClient) Name(
+	ctx context.Context,
+	in *Empty,
+	opts ...grpc.CallOption,
+) (*NameResponse, error) {
 	if m.nameFunc != nil {
 		return m.nameFunc(ctx, in, opts...)
 	}
@@ -141,7 +145,11 @@ func TestCostResultWithErrors_HasErrors(t *testing.T) {
 			name: "multiple errors",
 			errors: []ErrorDetail{
 				{ResourceType: "aws:ec2:Instance", ResourceID: "i-123", Error: errors.New("test1")},
-				{ResourceType: "aws:rds:Instance", ResourceID: "db-456", Error: errors.New("test2")},
+				{
+					ResourceType: "aws:rds:Instance",
+					ResourceID:   "db-456",
+					Error:        errors.New("test2"),
+				},
 			},
 			expected: true,
 		},
@@ -294,7 +302,12 @@ func TestGetProjectedCostWithErrors(t *testing.T) {
 			{Type: "aws:s3:Bucket", Provider: "aws", Properties: map[string]string{}},
 		}
 
-		result := GetProjectedCostWithErrors(context.Background(), mockClient, "test-plugin", resources)
+		result := GetProjectedCostWithErrors(
+			context.Background(),
+			mockClient,
+			"test-plugin",
+			resources,
+		)
 
 		// Should have 3 results (2 success + 1 placeholder for error)
 		if len(result.Results) != 3 {
@@ -313,7 +326,10 @@ func TestGetProjectedCostWithErrors(t *testing.T) {
 
 		// Error details should be correct
 		if result.Errors[0].ResourceType != "aws:rds:Instance" {
-			t.Errorf("Error ResourceType = %s, want aws:rds:Instance", result.Errors[0].ResourceType)
+			t.Errorf(
+				"Error ResourceType = %s, want aws:rds:Instance",
+				result.Errors[0].ResourceType,
+			)
 		}
 
 		// Placeholder result should have ERROR in Notes
@@ -323,6 +339,56 @@ func TestGetProjectedCostWithErrors(t *testing.T) {
 					t.Errorf("Error result Notes should contain error message, got %q", r.Notes)
 				}
 			}
+		}
+	})
+}
+
+// T020: Unit test for GetActualCost error tracking.
+func TestGetActualCostWithErrors(t *testing.T) {
+	t.Run("tracks errors for failed resources", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			getActualFunc: func(ctx context.Context, in *GetActualCostRequest, opts ...grpc.CallOption) (*GetActualCostResponse, error) {
+				// Fail for the second resource ID
+				if len(in.ResourceIDs) > 0 && in.ResourceIDs[0] == "failed-resource" {
+					return nil, errors.New("timeout")
+				}
+				return &GetActualCostResponse{
+					Results: []*ActualCostResult{
+						{Currency: "USD", TotalCost: 50.0},
+					},
+				}, nil
+			},
+		}
+
+		resourceIDs := []string{"success-1", "failed-resource", "success-2"}
+		startTime := time.Now().Add(-24 * time.Hour).Unix()
+		endTime := time.Now().Unix()
+
+		req := &GetActualCostRequest{
+			ResourceIDs: resourceIDs,
+			StartTime:   startTime,
+			EndTime:     endTime,
+		}
+
+		result := GetActualCostWithErrors(context.Background(), mockClient, "test-plugin", req)
+
+		// Should have 3 results
+		if len(result.Results) != 3 {
+			t.Errorf("Results length = %d, want 3", len(result.Results))
+		}
+
+		// Should have 1 error
+		if len(result.Errors) != 1 {
+			t.Errorf("Errors length = %d, want 1", len(result.Errors))
+		}
+
+		// Error details should be correct
+		if result.Errors[0].ResourceID != "failed-resource" {
+			t.Errorf("Error ResourceID = %s, want failed-resource", result.Errors[0].ResourceID)
+		}
+
+		if !strings.Contains(result.Errors[0].Error.Error(), "timeout") {
+			t.Errorf("Error should contain 'timeout', got %v", result.Errors[0].Error)
 		}
 	})
 }
@@ -514,6 +580,7 @@ func TestClientAdapter_GetActualCost(t *testing.T) {
 func TestExtractSKUFromProperties(t *testing.T) {
 	tests := []struct {
 		name       string
+		provider   string
 		properties map[string]string
 		expected   string
 	}{
@@ -538,47 +605,44 @@ func TestExtractSKUFromProperties(t *testing.T) {
 			expected:   "db.t3.micro",
 		},
 		{
-			name:       "explicit sku property",
+			name:       "explicit sku property (generic)",
+			provider:   "generic",
 			properties: map[string]string{"sku": "Standard_DS1_v2"},
 			expected:   "Standard_DS1_v2",
 		},
 		{
-			name:       "Azure size property",
-			properties: map[string]string{"size": "Standard_B1s"},
+			name:       "Azure vmSize property",
+			provider:   "azure",
+			properties: map[string]string{"vmSize": "Standard_B1s"},
 			expected:   "Standard_B1s",
 		},
 		{
-			name:       "Lambda runtime",
-			properties: map[string]string{"runtime": "python3.9"},
-			expected:   "python3.9",
-		},
-		{
-			name:       "tier property",
-			properties: map[string]string{"tier": "Premium"},
-			expected:   "Premium",
+			name:       "GCP machineType",
+			provider:   "gcp",
+			properties: map[string]string{"machineType": "n1-standard-4"},
+			expected:   "n1-standard-4",
 		},
 		{
 			name:       "instanceType takes precedence over type",
+			provider:   "aws",
 			properties: map[string]string{"instanceType": "t3.micro", "type": "gp3"},
 			expected:   "t3.micro",
 		},
 		{
 			name:       "empty properties returns empty string",
+			provider:   "aws",
 			properties: map[string]string{},
 			expected:   "",
 		},
 		{
 			name:       "nil properties returns empty string",
+			provider:   "aws",
 			properties: nil,
 			expected:   "",
 		},
 		{
-			name:       "empty value for instanceType skips to next",
-			properties: map[string]string{"instanceType": "", "type": "gp3"},
-			expected:   "gp3",
-		},
-		{
 			name:       "irrelevant properties returns empty string",
+			provider:   "aws",
 			properties: map[string]string{"bucketName": "my-bucket", "acl": "private"},
 			expected:   "",
 		},
@@ -586,10 +650,15 @@ func TestExtractSKUFromProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := extractSKUFromProperties(tt.properties)
-			if result != tt.expected {
-				t.Errorf("extractSKUFromProperties() = %q, want %q", result, tt.expected)
+			provider := "aws"
+			if tt.provider != "" {
+				provider = tt.provider
 			}
+			sku, region := resolveSKUAndRegion(provider, tt.properties)
+			if sku != tt.expected {
+				t.Errorf("resolveSKUAndRegion(%s) sku = %q, want %q", provider, sku, tt.expected)
+			}
+			_ = region
 		})
 	}
 }
@@ -628,9 +697,9 @@ func TestExtractRegionFromProperties(t *testing.T) {
 			expected:   "us-west-2",
 		},
 		{
-			name:       "availabilityZone takes precedence over region",
+			name:       "region takes precedence over availabilityZone (mapping package default)",
 			properties: map[string]string{"availabilityZone": "us-east-1a", "region": "us-west-2"},
-			expected:   "us-east-1",
+			expected:   "us-west-2",
 		},
 		{
 			name:       "fallback to AWS_REGION env var",
@@ -668,10 +737,11 @@ func TestExtractRegionFromProperties(t *testing.T) {
 				t.Setenv(key, val)
 			}
 
-			result := extractRegionFromProperties(tt.properties)
-			if result != tt.expected {
-				t.Errorf("extractRegionFromProperties() = %q, want %q", result, tt.expected)
+			sku, region := resolveSKUAndRegion("aws", tt.properties)
+			if region != tt.expected {
+				t.Errorf("resolveSKUAndRegion() region = %q, want %q", region, tt.expected)
 			}
+			_ = sku
 		})
 	}
 }

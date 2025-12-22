@@ -83,7 +83,11 @@ func NewCostProjectedCmd() *cobra.Command {
 
 			plan, err := ingest.LoadPulumiPlanWithContext(ctx, planPath)
 			if err != nil {
-				log.Error().Ctx(ctx).Err(err).Str("plan_path", planPath).Msg("failed to load Pulumi plan")
+				log.Error().
+					Ctx(ctx).
+					Err(err).
+					Str("plan_path", planPath).
+					Msg("failed to load Pulumi plan")
 				// Log audit entry for failure
 				auditEntry := logging.NewAuditEntry("cost projected", traceID).
 					WithParameters(auditParams).
@@ -191,14 +195,16 @@ func NewCostProjectedCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
+	cmd.Flags().
+		StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
 	cmd.Flags().StringVar(&specDir, "spec-dir", "", "Directory containing pricing spec files")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
 
 	// Use configuration default if no output format specified
 	defaultFormat := config.GetDefaultOutputFormat()
 	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
-	cmd.Flags().StringVar(&filter, "filter", "", "Resource filter expressions (e.g., 'type=aws:ec2/instance')")
+	cmd.Flags().
+		StringVar(&filter, "filter", "", "Resource filter expressions (e.g., 'type=aws:ec2/instance')")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 

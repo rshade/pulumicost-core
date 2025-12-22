@@ -93,7 +93,8 @@ func NewCostActualCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
+	cmd.Flags().
+		StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
 	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
 	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
 	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
@@ -168,7 +169,11 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 
 	plan, err := ingest.LoadPulumiPlanWithContext(ctx, params.planPath)
 	if err != nil {
-		log.Error().Ctx(ctx).Err(err).Str("plan_path", params.planPath).Msg("failed to load Pulumi plan")
+		log.Error().
+			Ctx(ctx).
+			Err(err).
+			Str("plan_path", params.planPath).
+			Msg("failed to load Pulumi plan")
 		// Log audit entry for failure
 		auditEntry := logging.NewAuditEntry("cost actual", traceID).
 			WithParameters(auditParams).
@@ -346,7 +351,11 @@ func ParseTime(str string) (time.Time, error) {
 	}
 
 	if !parsed {
-		return time.Time{}, fmt.Errorf("unable to parse date: %s (use YYYY-MM-DD or RFC3339): %w", str, parseErr)
+		return time.Time{}, fmt.Errorf(
+			"unable to parse date: %s (use YYYY-MM-DD or RFC3339): %w",
+			str,
+			parseErr,
+		)
 	}
 
 	// Validate: date cannot be in the future
@@ -358,7 +367,11 @@ func ParseTime(str string) (time.Time, error) {
 	// Validate: date cannot be more than maxPastYears years in the past
 	oldestAllowed := now.AddDate(-maxPastYears, 0, 0)
 	if parsedTime.Before(oldestAllowed) {
-		return time.Time{}, fmt.Errorf("date too far in past: %s (max %d years ago)", str, maxPastYears)
+		return time.Time{}, fmt.Errorf(
+			"date too far in past: %s (max %d years ago)",
+			str,
+			maxPastYears,
+		)
 	}
 
 	return parsedTime, nil
@@ -423,7 +436,12 @@ func renderActualCostOutput(
 		if err != nil {
 			return fmt.Errorf("creating cross-provider aggregation: %w", err)
 		}
-		return engine.RenderCrossProviderAggregation(writer, outputFormat, aggregations, groupByType)
+		return engine.RenderCrossProviderAggregation(
+			writer,
+			outputFormat,
+			aggregations,
+			groupByType,
+		)
 	}
 
 	return engine.RenderActualCostResults(writer, outputFormat, results)

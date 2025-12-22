@@ -260,7 +260,9 @@ func (p *ProcessLauncher) allocatePort(ctx context.Context) (int, error) {
 
 // allocatePortWithListener allocates a port and keeps the listener open to prevent race conditions.
 // The caller must call releasePortListener when ready for the plugin to bind.
-func (p *ProcessLauncher) allocatePortWithListener(ctx context.Context) (int, *portListener, error) {
+func (p *ProcessLauncher) allocatePortWithListener(
+	ctx context.Context,
+) (int, *portListener, error) {
 	lc := &net.ListenConfig{}
 	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
@@ -354,7 +356,12 @@ func isPortCollisionError(err error) bool {
 		strings.Contains(errStr, "failed to bind to port")
 }
 
-func (p *ProcessLauncher) startPlugin(ctx context.Context, path string, port int, args []string) (*exec.Cmd, error) {
+func (p *ProcessLauncher) startPlugin(
+	ctx context.Context,
+	path string,
+	port int,
+	args []string,
+) (*exec.Cmd, error) {
 	log := logging.FromContext(ctx)
 
 	// FR-008: Log DEBUG message when PORT is detected in user's environment
@@ -446,7 +453,11 @@ func (p *ProcessLauncher) killProcess(cmd *exec.Cmd) {
 	}
 }
 
-func (p *ProcessLauncher) createCloseFn(ctx context.Context, conn *grpc.ClientConn, cmd *exec.Cmd) func() error {
+func (p *ProcessLauncher) createCloseFn(
+	ctx context.Context,
+	conn *grpc.ClientConn,
+	cmd *exec.Cmd,
+) func() error {
 	return func() error {
 		log := logging.FromContext(ctx)
 		log.Debug().

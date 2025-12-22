@@ -1,7 +1,7 @@
 # Data Model: Plugin Install/Update/Remove System
 
 **Date**: 2025-11-23
-**Feature**: 001-plugin-install
+**Feature**: 006-plugin-install
 
 ## Entities
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -127,14 +128,24 @@ func RenderCrossProviderAggregation(
 func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
-	// Print summary first
+	renderSummary(w, aggregated)
+	renderBreakdowns(w, aggregated)
+	renderSustainabilitySummary(w, aggregated)
+	renderResourceDetails(w, aggregated)
+
+	return w.Flush()
+}
+
+func renderSummary(w io.Writer, aggregated *AggregatedResults) {
 	fmt.Fprintf(w, "COST SUMMARY\n")
 	fmt.Fprintf(w, "============\n")
 	fmt.Fprintf(w, "Total Monthly Cost:\t%.2f %s\n", aggregated.Summary.TotalMonthly, aggregated.Summary.Currency)
 	fmt.Fprintf(w, "Total Hourly Cost:\t%.2f %s\n", aggregated.Summary.TotalHourly, aggregated.Summary.Currency)
 	fmt.Fprintf(w, "Total Resources:\t%d\n", len(aggregated.Resources))
 	fmt.Fprintf(w, "\n")
+}
 
+func renderBreakdowns(w io.Writer, aggregated *AggregatedResults) {
 	// Print breakdown by provider
 	if len(aggregated.Summary.ByProvider) > 0 {
 		fmt.Fprintf(w, "BY PROVIDER\n")
@@ -164,8 +175,36 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 		}
 		fmt.Fprintf(w, "\n")
 	}
+}
 
-	// Print detailed resource breakdown
+func renderSustainabilitySummary(w io.Writer, aggregated *AggregatedResults) {
+	sustainTotals := make(map[string]SustainabilityMetric)
+	for _, r := range aggregated.Resources {
+		for k, m := range r.Sustainability {
+			total := sustainTotals[k]
+			total.Value += m.Value
+			total.Unit = m.Unit // Assume same unit for same kind
+			sustainTotals[k] = total
+		}
+	}
+
+	if len(sustainTotals) > 0 {
+		fmt.Fprintf(w, "SUSTAINABILITY SUMMARY\n")
+		fmt.Fprintf(w, "======================\n")
+		var keys []string
+		for k := range sustainTotals {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			m := sustainTotals[k]
+			fmt.Fprintf(w, "%s:\t%.2f %s\n", k, m.Value, m.Unit)
+		}
+		fmt.Fprintf(w, "\n")
+	}
+}
+
+func renderResourceDetails(w io.Writer, aggregated *AggregatedResults) {
 	fmt.Fprintf(w, "RESOURCE DETAILS\n")
 	fmt.Fprintf(w, "================\n")
 	fmt.Fprintln(w, "Resource\tAdapter\tMonthly\tHourly\tCurrency\tNotes")
@@ -176,17 +215,42 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 		if len(resource) > maxResourceDisplayLen {
 			resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
 		}
+
+		notes := formatResourceNotes(result)
+
 		fmt.Fprintf(w, "%s\t%s\t%.2f\t%.4f\t%s\t%s\n",
 			resource,
 			result.Adapter,
 			result.Monthly,
 			result.Hourly,
 			result.Currency,
-			result.Notes,
+			notes,
 		)
 	}
+}
 
-	return w.Flush()
+func formatResourceNotes(result CostResult) string {
+	notes := result.Notes
+	if len(result.Sustainability) > 0 {
+		var metrics []string
+		var keys []string
+		for k := range result.Sustainability {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			m := result.Sustainability[k]
+			metrics = append(metrics, fmt.Sprintf("%s: %.2f %s", k, m.Value, m.Unit))
+		}
+		sustainStr := "[" + strings.Join(metrics, ", ") + "]"
+		if notes != "" {
+			notes += " " + sustainStr
+		} else {
+			notes = sustainStr
+		}
+	}
+	return notes
 }
 
 func renderActualCostTable(writer io.Writer, results []CostResult) error {
@@ -201,6 +265,16 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 		}
 	}
 
+	renderActualCostHeader(w, hasActualCosts)
+
+	for _, result := range results {
+		renderActualCostRow(w, result, hasActualCosts)
+	}
+
+	return w.Flush()
+}
+
+func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 	if hasActualCosts {
 		fmt.Fprintln(w, "Resource\tAdapter\tTotal Cost\tPeriod\tCurrency\tNotes")
 		fmt.Fprintln(w, "--------\t-------\t----------\t------\t--------\t-----")
@@ -208,44 +282,44 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 		fmt.Fprintln(w, "Resource\tAdapter\tProjected Monthly\tCurrency\tNotes")
 		fmt.Fprintln(w, "--------\t-------\t-----------------\t--------\t-----")
 	}
+}
 
-	for _, result := range results {
-		resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
-		if len(resource) > maxResourceDisplayLen {
-			resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
-		}
-
-		if hasActualCosts {
-			costDisplay := fmt.Sprintf("%.2f", result.TotalCost)
-			if result.TotalCost == 0 && result.Monthly > 0 {
-				costDisplay = fmt.Sprintf("%.2f (est)", result.Monthly)
-			}
-
-			period := result.CostPeriod
-			if period == "" {
-				period = "monthly (est)"
-			}
-
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-				resource,
-				result.Adapter,
-				costDisplay,
-				period,
-				result.Currency,
-				result.Notes,
-			)
-		} else {
-			fmt.Fprintf(w, "%s\t%s\t%.2f\t%s\t%s\n",
-				resource,
-				result.Adapter,
-				result.Monthly,
-				result.Currency,
-				result.Notes,
-			)
-		}
+func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool) {
+	resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
+	if len(resource) > maxResourceDisplayLen {
+		resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
 	}
 
-	return w.Flush()
+	notes := formatResourceNotes(result)
+
+	if hasActualCosts {
+		costDisplay := fmt.Sprintf("%.2f", result.TotalCost)
+		if result.TotalCost == 0 && result.Monthly > 0 {
+			costDisplay = fmt.Sprintf("%.2f (est)", result.Monthly)
+		}
+
+		period := result.CostPeriod
+		if period == "" {
+			period = "monthly (est)"
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+			resource,
+			result.Adapter,
+			costDisplay,
+			period,
+			result.Currency,
+			notes,
+		)
+	} else {
+		fmt.Fprintf(w, "%s\t%s\t%.2f\t%s\t%s\n",
+			resource,
+			result.Adapter,
+			result.Monthly,
+			result.Currency,
+			notes,
+		)
+	}
 }
 
 func renderJSON(writer io.Writer, aggregated *AggregatedResults) error {
@@ -303,7 +377,11 @@ func renderNDJSON(writer io.Writer, results []CostResult) error {
 // groupBy controls the period label used in the table header (e.g., daily uses "Date", otherwise "Month").
 //
 // It returns an error if writing to stdout or flushing the table writer fails.
-func renderCrossProviderTable(writer io.Writer, aggregations []CrossProviderAggregation, groupBy GroupBy) error {
+func renderCrossProviderTable(
+	writer io.Writer,
+	aggregations []CrossProviderAggregation,
+	groupBy GroupBy,
+) error {
 	if len(aggregations) == 0 {
 		_, err := fmt.Fprintln(writer, "No cost data available for cross-provider aggregation")
 		return err

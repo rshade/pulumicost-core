@@ -64,10 +64,18 @@ func ValidatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 			return fmt.Errorf("invalid manifest: %w", loadErr)
 		}
 		if manifest.Name != plugin.Name {
-			return fmt.Errorf("manifest name mismatch: expected %s, got %s", plugin.Name, manifest.Name)
+			return fmt.Errorf(
+				"manifest name mismatch: expected %s, got %s",
+				plugin.Name,
+				manifest.Name,
+			)
 		}
 		if manifest.Version != plugin.Version {
-			return fmt.Errorf("manifest version mismatch: expected %s, got %s", plugin.Version, manifest.Version)
+			return fmt.Errorf(
+				"manifest version mismatch: expected %s, got %s",
+				plugin.Version,
+				manifest.Version,
+			)
 		}
 	}
 
@@ -80,7 +88,10 @@ func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 	cfg := config.New()
 	if _, err := os.Stat(cfg.PluginDir); os.IsNotExist(err) {
 		if targetPlugin != "" {
-			return fmt.Errorf("plugin '%s' not found: plugin directory does not exist", targetPlugin)
+			return fmt.Errorf(
+				"plugin '%s' not found: plugin directory does not exist",
+				targetPlugin,
+			)
 		}
 		cmd.Printf("Plugin directory does not exist: %s\n", cfg.PluginDir)
 		cmd.Println("No plugins to validate.")
@@ -109,7 +120,10 @@ func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 	return runValidation(ctx, cmd, plugins)
 }
 
-func filterPlugins(plugins []registry.PluginInfo, targetPlugin string) ([]registry.PluginInfo, error) {
+func filterPlugins(
+	plugins []registry.PluginInfo,
+	targetPlugin string,
+) ([]registry.PluginInfo, error) {
 	if targetPlugin == "" {
 		return plugins, nil
 	}
@@ -144,7 +158,11 @@ func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.P
 	return nil
 }
 
-func validateSinglePlugin(ctx context.Context, cmd *cobra.Command, plugin registry.PluginInfo) bool {
+func validateSinglePlugin(
+	ctx context.Context,
+	cmd *cobra.Command,
+	plugin registry.PluginInfo,
+) bool {
 	cmd.Printf("Validating %s v%s... ", plugin.Name, plugin.Version)
 
 	if err := ValidatePlugin(ctx, plugin); err != nil {

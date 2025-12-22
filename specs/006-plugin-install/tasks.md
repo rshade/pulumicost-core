@@ -1,6 +1,6 @@
 # Tasks: Plugin Install/Update/Remove System
 
-**Input**: Design documents from `/specs/001-plugin-install/`
+**Input**: Design documents from `/specs/006-plugin-install/`
 **Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md, contracts/
 
 **Tests**: Per Constitution Principle II (Test-Driven Development), tests are MANDATORY and must be written BEFORE implementation. All code changes must maintain minimum 80% test coverage (95% for critical paths).
@@ -38,21 +38,21 @@
 
 ### Tests for Foundational (MANDATORY - TDD Required) ⚠️
 
-- [ ] T004 [P] Unit tests for registry embedding in `internal/registry/embed_test.go`
-- [ ] T005 [P] Unit tests for GitHub API client in `internal/registry/github_test.go`
-- [ ] T006 [P] Unit tests for archive extraction in `internal/registry/archive_test.go`
-- [ ] T007 [P] Unit tests for version constraint parsing in `internal/registry/version_test.go`
+- [x] T004 [P] Unit tests for registry embedding in `internal/registry/embed_test.go`
+- [x] T005 [P] Unit tests for GitHub API client in `internal/registry/github_test.go`
+- [x] T006 [P] Unit tests for archive extraction in `internal/registry/archive_test.go`
+- [x] T007 [P] Unit tests for version constraint parsing in `internal/registry/version_test.go`
 
 ### Implementation for Foundational
 
-- [ ] T008 [P] Create registry.json with schema and initial plugins (kubecost, aws-public) in `registry/registry.json`
-- [ ] T009 [P] Implement registry embedding and parsing in `internal/registry/embed.go`
-- [ ] T010 [P] Implement RegistryEntry types and validation in `internal/registry/entry.go`
-- [ ] T011 [P] Implement GitHub API client with retry logic and GITHUB_TOKEN/gh auth support in `internal/registry/github.go`
-- [ ] T012 [P] Implement archive extraction (tar.gz/zip) in `internal/registry/archive.go`
-- [ ] T013 [P] Implement semver constraint parsing in `internal/registry/version.go`
-- [ ] T014 Add PluginConfig struct and plugins section to `internal/config/config.go`
-- [ ] T015 Implement plugin config management in `internal/config/plugins.go`
+- [x] T008 [P] Create registry.json with schema and initial plugins (kubecost, aws-public) in `registry/registry.json`
+- [x] T009 [P] Implement registry embedding and parsing in `internal/registry/embed.go`
+- [x] T010 [P] Implement RegistryEntry types and validation in `internal/registry/entry.go`
+- [x] T011 [P] Implement GitHub API client with retry logic and GITHUB_TOKEN/gh auth support in `internal/registry/github.go`
+- [x] T012 [P] Implement archive extraction (tar.gz/zip) in `internal/registry/archive.go`
+- [x] T013 [P] Implement semver constraint parsing in `internal/registry/version.go`
+- [x] T014 Add PluginConfig struct and plugins section to `internal/config/config.go`
+- [x] T015 Implement plugin config management in `internal/config/plugins.go`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -66,19 +66,19 @@
 
 ### Tests for User Story 1 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T016 [P] [US1] Unit tests for plugin install command in `internal/cli/plugin_install_test.go`
-- [ ] T017 [P] [US1] Integration test for registry install flow in `test/integration/plugin_install_test.go`
+- [x] T016 [P] [US1] Unit tests for plugin install command in `internal/cli/plugin_install_test.go`
+- [x] T017 [P] [US1] Integration test for registry install flow in `test/integration/plugin_install_test.go`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement ParsePluginSpecifier (name@version parsing) in `internal/registry/entry.go`
-- [ ] T019 [US1] Implement plugin install command with registry lookup in `internal/cli/plugin_install.go`
-- [ ] T020 [US1] Add install subcommand to plugin command in `internal/cli/plugin.go`
-- [ ] T021 [US1] Implement platform-specific binary detection in `internal/registry/github.go`
-- [ ] T022 [US1] Implement download with progress reporting in `internal/registry/github.go`
-- [ ] T023 [US1] Implement post-install validation (executable check) in `internal/registry/archive.go`
-- [ ] T024 [US1] Add --force, --no-save, and --plugin-dir flags to install command in `internal/cli/plugin_install.go`
-- [ ] T025 [US1] Persist installed plugin to config.yaml in `internal/cli/plugin_install.go`
+- [x] T018 [P] [US1] Implement ParsePluginSpecifier (name@version parsing) in `internal/registry/entry.go`
+- [x] T019 [US1] Implement plugin install command with registry lookup in `internal/cli/plugin_install.go`
+- [x] T020 [US1] Add install subcommand to plugin command in `internal/cli/plugin.go`
+- [x] T021 [US1] Implement platform-specific binary detection in `internal/registry/github.go`
+- [x] T022 [US1] Implement download with progress reporting in `internal/registry/github.go`
+- [x] T023 [US1] Implement post-install validation (executable check) in `internal/registry/archive.go`
+- [x] T024 [US1] Add --force, --no-save, and --plugin-dir flags to install command in `internal/cli/plugin_install.go`
+- [x] T025 [US1] Persist installed plugin to config.yaml in `internal/cli/plugin_install.go`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -92,15 +92,15 @@
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T026 [P] [US2] Unit tests for GitHub URL parsing in `internal/registry/entry_test.go`
-- [ ] T027 [P] [US2] Integration test for URL install flow in `test/integration/plugin_install_test.go`
+- [x] T026 [P] [US2] Unit tests for GitHub URL parsing in `internal/registry/entry_test.go`
+- [x] T027 [P] [US2] Integration test for URL install flow in `test/integration/plugin_install_test.go`
 
 ### Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Implement ParseGitHubURL (owner/repo extraction) in `internal/registry/entry.go`
-- [ ] T029 [US2] Extend install command to handle GitHub URLs in `internal/cli/plugin_install.go`
-- [ ] T030 [US2] Derive plugin name from repository name in `internal/cli/plugin_install.go`
-- [ ] T031 [US2] Handle repositories without releases (error message) in `internal/registry/github.go`
+- [x] T028 [P] [US2] Implement ParseGitHubURL (owner/repo extraction) in `internal/registry/entry.go`
+- [x] T029 [US2] Extend install command to handle GitHub URLs in `internal/cli/plugin_install.go`
+- [x] T030 [US2] Derive plugin name from repository name in `internal/cli/plugin_install.go`
+- [x] T031 [US2] Handle repositories without releases (error message) in `internal/registry/github.go`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -114,15 +114,15 @@
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T032 [P] [US3] Unit tests for config persistence in `internal/config/plugins_test.go`
-- [ ] T033 [P] [US3] Integration test for auto-install flow in `test/integration/plugin_autoinstall_test.go`
+- [x] T032 [P] [US3] Unit tests for config persistence in `internal/config/plugins_test.go`
+- [x] T033 [P] [US3] Integration test for auto-install flow in `test/integration/plugin_autoinstall_test.go`
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Implement GetMissingPlugins to compare config vs installed in `internal/config/plugins.go`
-- [ ] T035 [US3] Implement auto-install on application startup in `cmd/pulumicost/main.go`
-- [ ] T036 [US3] Add startup check for configured plugins in `internal/cli/root.go`
-- [ ] T037 [US3] Display auto-install progress messages in `internal/cli/root.go`
+- [x] T034 [US3] Implement GetMissingPlugins to compare config vs installed in `internal/config/plugins.go`
+- [x] T035 [US3] Implement auto-install on application startup in `cmd/pulumicost/main.go`
+- [x] T036 [US3] Add startup check for configured plugins in `internal/cli/root.go`
+- [x] T037 [US3] Display auto-install progress messages in `internal/cli/root.go`
 
 **Checkpoint**: Config persistence and auto-install working independently
 
@@ -136,17 +136,17 @@
 
 ### Tests for User Story 4 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T038 [P] [US4] Unit tests for update command in `internal/cli/plugin_update_test.go`
-- [ ] T039 [P] [US4] Integration test for update flow in `test/integration/plugin_update_test.go`
+- [x] T038 [P] [US4] Unit tests for update command in `internal/cli/plugin_update_test.go`
+- [x] T039 [P] [US4] Integration test for update flow in `test/integration/plugin_update_test.go`
 
 ### Implementation for User Story 4
 
-- [ ] T040 [US4] Implement plugin update command in `internal/cli/plugin_update.go`
-- [ ] T041 [US4] Add update subcommand to plugin command in `internal/cli/plugin.go`
-- [ ] T042 [US4] Implement --all flag for bulk updates in `internal/cli/plugin_update.go`
-- [ ] T043 [US4] Implement --dry-run flag for preview in `internal/cli/plugin_update.go`
-- [ ] T044 [US4] Update config.yaml with new version after update in `internal/cli/plugin_update.go`
-- [ ] T045 [US4] Replace old version directory with new version after successful update in `internal/cli/plugin_update.go`
+- [x] T040 [US4] Implement plugin update command in `internal/cli/plugin_update.go`
+- [x] T041 [US4] Add update subcommand to plugin command in `internal/cli/plugin.go`
+- [x] T042 [x] T042 [US4] Implement --all flag for bulk updates in `internal/cli/plugin_update.go`
+- [x] T043 [US4] Implement --dry-run flag for preview in `internal/cli/plugin_update.go`
+- [x] T044 [US4] Update config.yaml with new version after update in `internal/cli/plugin_update.go`
+- [x] T045 [US4] Replace old version directory with new version after successful update in `internal/cli/plugin_update.go`
 
 **Checkpoint**: Update functionality working independently
 
@@ -160,16 +160,16 @@
 
 ### Tests for User Story 5 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T046 [P] [US5] Unit tests for remove command in `internal/cli/plugin_remove_test.go`
-- [ ] T047 [P] [US5] Integration test for remove flow in `test/integration/plugin_remove_test.go`
+- [x] T046 [P] [US5] Unit tests for remove command in `internal/cli/plugin_remove_test.go`
+- [x] T047 [P] [US5] Integration test for remove flow in `test/integration/plugin_remove_test.go`
 
 ### Implementation for User Story 5
 
-- [ ] T048 [US5] Implement plugin remove command in `internal/cli/plugin_remove.go`
-- [ ] T049 [US5] Add remove subcommand to plugin command in `internal/cli/plugin.go`
-- [ ] T050 [US5] Implement --all-versions flag in `internal/cli/plugin_remove.go`
-- [ ] T051 [US5] Implement --keep-config flag in `internal/cli/plugin_remove.go`
-- [ ] T052 [US5] Remove plugin entry from config.yaml in `internal/cli/plugin_remove.go`
+- [x] T048 [US5] Implement plugin remove command in `internal/cli/plugin_remove.go`
+- [x] T049 [US5] Add remove subcommand to plugin command in `internal/cli/plugin.go`
+- [x] T050 [US5] Implement --all-versions flag in `internal/cli/plugin_remove.go`
+- [x] T051 [US5] Implement --keep-config flag in `internal/cli/plugin_remove.go`
+- [x] T052 [US5] Remove plugin entry from config.yaml in `internal/cli/plugin_remove.go`
 
 **Checkpoint**: Remove functionality working independently
 
@@ -183,15 +183,15 @@
 
 ### Tests for Dependency Resolution (MANDATORY - TDD Required) ⚠️
 
-- [ ] T053 [P] [US6] Unit tests for dependency resolution in `internal/registry/dependency_test.go`
-- [ ] T054 [P] [US6] Integration test for dependency install in `test/integration/plugin_dependency_test.go`
+- [x] T053 [P] [US6] Unit tests for dependency resolution in `internal/registry/dependency_test.go`
+- [x] T054 [P] [US6] Integration test for dependency install in `test/integration/plugin_dependency_test.go`
 
 ### Implementation for Dependency Resolution
 
-- [ ] T055 [P] [US6] Implement dependency resolver with cycle detection in `internal/registry/dependency.go`
-- [ ] T056 [US6] Parse dependencies from plugin.manifest.json in `internal/registry/dependency.go`
-- [ ] T057 [US6] Integrate dependency resolution into install flow in `internal/cli/plugin_install.go`
-- [ ] T058 [US6] Add dependency warning to remove command in `internal/cli/plugin_remove.go`
+- [x] T055 [P] [US6] Implement dependency resolver with cycle detection in `internal/registry/dependency.go`
+- [x] T056 [US6] Parse dependencies from plugin.manifest.json in `internal/registry/dependency.go`
+- [x] T057 [US6] Integrate dependency resolution into install flow in `internal/cli/plugin_install.go`
+- [x] T058 [US6] Add dependency warning to remove command in `internal/cli/plugin_remove.go`
 
 **Checkpoint**: Dependency resolution working
 
@@ -201,13 +201,13 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T059 [P] Update user guide documentation in `docs/guides/user-guide.md`
-- [ ] T060 [P] Add plugin management section to CLI reference in `docs/reference/cli.md`
-- [ ] T061 Run make lint and fix all linting errors
-- [ ] T062 Run make test and ensure 80%+ coverage on new code
-- [ ] T063 [P] Add example plugin installation in quickstart documentation
-- [ ] T064 Security review: validate zip-slip prevention in archive extraction
-- [ ] T065 Performance validation: ensure install completes < 30 seconds
+- [x] T059 [P] Update user guide documentation in `docs/guides/user-guide.md`
+- [x] T060 [P] Add plugin management section to CLI reference in `docs/reference/cli.md`
+- [x] T061 Run make lint and fix all linting errors
+- [x] T062 Run make test and ensure 80%+ coverage on new code
+- [x] T063 [P] Add example plugin installation in quickstart documentation
+- [x] T064 Security review: validate zip-slip prevention in archive extraction
+- [x] T065 Performance validation: ensure install completes < 30 seconds
 
 ---
 

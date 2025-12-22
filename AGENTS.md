@@ -8,6 +8,7 @@
 - `pkg/version`: shared version/build metadata used by the CLI.
 - `examples/` and `testdata/`: Pulumi plan fixtures and sample specs; prefer
   extending these for reproducible tests.
+- `test/e2e/fixtures/`: Real Pulumi project fixtures for E2E tests.
 - `docs/`: Jekyll site and contributor docs; `scripts/` contains helper tooling;
   `bin/` is populated by builds.
 
@@ -146,11 +147,11 @@ maintain its effectiveness:
 
 ## Active Technologies
 
-- Go 1.25.5 + existing CLI infrastructure, test helpers (105-cost-filter-tests)
-- N/A (CLI tool processing JSON files) (105-cost-filter-tests)
+- Go 1.25.5 + existing CLI infrastructure, test helpers (020-cost-filter-tests)
+- N/A (CLI tool processing JSON files) (020-cost-filter-tests)
 
-- Go 1.25.5 + pluginsdk from pulumicost-spec (001-pluginsdk-env-adoption)
-- Environment variable constants via pluginsdk (001-pluginsdk-env-adoption)
+- Go 1.25.5 + pluginsdk from pulumicost-spec (014-pluginsdk-env-adoption)
+- Environment variable constants via pluginsdk (014-pluginsdk-env-adoption)
 
 - Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.37.0
   (104-shared-tui-package)

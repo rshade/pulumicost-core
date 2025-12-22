@@ -62,12 +62,21 @@ The plugin must already be installed. Use 'plugin install' to install new plugin
 			}
 
 			if result.WasUpToDate {
-				cmd.Printf("\n✓ Plugin %s is already up to date (%s)\n", result.Name, result.OldVersion)
+				cmd.Printf(
+					"\n✓ Plugin %s is already up to date (%s)\n",
+					result.Name,
+					result.OldVersion,
+				)
 				return nil
 			}
 
 			if dryRun {
-				cmd.Printf("\n→ Would update %s from %s to %s\n", result.Name, result.OldVersion, result.NewVersion)
+				cmd.Printf(
+					"\n→ Would update %s from %s to %s\n",
+					result.Name,
+					result.OldVersion,
+					result.NewVersion,
+				)
 				return nil
 			}
 
@@ -81,8 +90,10 @@ The plugin must already be installed. Use 'plugin install' to install new plugin
 		},
 	}
 
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be updated without making changes")
-	cmd.Flags().StringVar(&version, "version", "", "Specific version to update to (default: latest)")
+	cmd.Flags().
+		BoolVar(&dryRun, "dry-run", false, "Show what would be updated without making changes")
+	cmd.Flags().
+		StringVar(&version, "version", "", "Specific version to update to (default: latest)")
 	cmd.Flags().StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory")
 
 	return cmd

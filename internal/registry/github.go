@@ -47,6 +47,11 @@ type GitHubClient struct {
 	token      string
 }
 
+const (
+	// downloadTimeout is the timeout for large plugin downloads (15MB+).
+	downloadTimeout = 5 * time.Minute
+)
+
 // NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
 // The client has an HTTP client with a 5-minute timeout (for large plugin downloads) and
 // BaseURL set to https://api.github.com. It initializes the authentication token by reading
@@ -54,10 +59,11 @@ type GitHubClient struct {
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{
-		// Use 5 minute timeout for large plugin downloads (15MB+)
-		HTTPClient: &http.Client{Timeout: 5 * time.Minute}, //nolint:mnd // timeout for large downloads
-		BaseURL:    "https://api.github.com",
-		token:      token,
+		HTTPClient: &http.Client{
+			Timeout: downloadTimeout,
+		},
+		BaseURL: "https://api.github.com",
+		token:   token,
 	}
 }
 

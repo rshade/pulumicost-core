@@ -27,7 +27,8 @@ func CheckProtocolVersion(pluginVersion, expectedVersion string) error {
 	if !IsCompatibleVersion(pluginMajor, pluginMinor, expectedMajor, expectedMinor) {
 		return fmt.Errorf(
 			"protocol version mismatch: got %s, want %s (major versions must match, plugin minor must be >= expected)",
-			pluginVersion, expectedVersion,
+			pluginVersion,
+			expectedVersion,
 		)
 	}
 

@@ -77,7 +77,11 @@ func ValidateRegistryEntry(entry RegistryEntry) error {
 	}
 	validLevels := map[string]bool{"official": true, "community": true, "experimental": true}
 	if entry.SecurityLevel != "" && !validLevels[entry.SecurityLevel] {
-		return fmt.Errorf("registry entry %q has invalid security_level: %s", entry.Name, entry.SecurityLevel)
+		return fmt.Errorf(
+			"registry entry %q has invalid security_level: %s",
+			entry.Name,
+			entry.SecurityLevel,
+		)
 	}
 	return nil
 }

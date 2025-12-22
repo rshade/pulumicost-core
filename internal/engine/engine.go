@@ -69,7 +69,10 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 // GetProjectedCost calculates projected costs for the given resources using plugins or specs.
 //
 //nolint:gocognit,funlen // Comprehensive cost calculation requires multiple nested conditions and fallbacks.
-func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
+func (e *Engine) GetProjectedCost(
+	ctx context.Context,
+	resources []ResourceDescriptor,
+) ([]CostResult, error) {
 	log := logging.FromContext(ctx)
 	start := time.Now()
 
@@ -248,7 +251,9 @@ func (e *Engine) GetProjectedCostWithErrors(
 				continue
 			}
 			if pluginResult != nil {
-				resourceResults = append(resourceResults, *pluginResult)
+				engineResult := *pluginResult
+				// Ensure sustainability map is copied if needed (though it should already be correct from getProjectedCostFromPlugin)
+				resourceResults = append(resourceResults, engineResult)
 			}
 		}
 
@@ -373,7 +378,13 @@ func (e *Engine) GetActualCostWithOptions(
 
 			// Apply per-resource timeout for plugin calls
 			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
-			result, err := e.getActualCostFromPlugin(resourceCtx, client, resource, request.From, request.To)
+			result, err := e.getActualCostFromPlugin(
+				resourceCtx,
+				client,
+				resource,
+				request.From,
+				request.To,
+			)
 			resourceCancel()
 			if err != nil {
 				log.Debug().
@@ -503,7 +514,13 @@ func (e *Engine) getActualCostForResource(
 			continue
 		}
 
-		costResult, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
+		costResult, err := e.getActualCostFromPlugin(
+			ctx,
+			client,
+			resource,
+			request.From,
+			request.To,
+		)
 		if err != nil {
 			// Log error with structured fields using context-based logger
 			log := logging.FromContext(ctx)
@@ -526,7 +543,17 @@ func (e *Engine) getActualCostForResource(
 			continue
 		}
 		if costResult != nil {
-			resourceResult = costResult
+			engineResult := *costResult
+			for k, v := range costResult.Sustainability {
+				if engineResult.Sustainability == nil {
+					engineResult.Sustainability = make(map[string]SustainabilityMetric)
+				}
+				engineResult.Sustainability[k] = SustainabilityMetric{
+					Value: v.Value,
+					Unit:  v.Unit,
+				}
+			}
+			resourceResult = &engineResult
 			break
 		}
 	}
@@ -573,22 +600,34 @@ func (e *Engine) getProjectedCostFromPlugin(
 	resp, err := client.API.GetProjectedCost(ctx, req)
 	if err == nil && len(resp.Results) > 0 {
 		result := resp.Results[0]
-		return &CostResult{
-			ResourceType: resource.Type,
-			ResourceID:   resource.ID,
-			Adapter:      client.Name,
-			Currency:     result.Currency,
-			Monthly:      result.MonthlyCost,
-			Hourly:       result.HourlyCost,
-			Notes:        result.Notes,
-			Breakdown:    result.CostBreakdown,
-		}, nil
+		engineResult := &CostResult{
+			ResourceType:   resource.Type,
+			ResourceID:     resource.ID,
+			Adapter:        client.Name,
+			Currency:       result.Currency,
+			Monthly:        result.MonthlyCost,
+			Hourly:         result.HourlyCost,
+			Notes:          result.Notes,
+			Breakdown:      result.CostBreakdown,
+			Sustainability: make(map[string]SustainabilityMetric),
+		}
+
+		for k, v := range result.Sustainability {
+			engineResult.Sustainability[k] = SustainabilityMetric{
+				Value: v.Value,
+				Unit:  v.Unit,
+			}
+		}
+		return engineResult, nil
 	}
 
 	return nil, ErrNoCostData
 }
 
-func (e *Engine) getProjectedCostFromSpec(ctx context.Context, resource ResourceDescriptor) *CostResult {
+func (e *Engine) getProjectedCostFromSpec(
+	ctx context.Context,
+	resource ResourceDescriptor,
+) *CostResult {
 	service := extractService(resource.Type)
 	sku := extractSKU(resource)
 
@@ -601,7 +640,10 @@ func (e *Engine) getProjectedCostFromSpec(ctx context.Context, resource Resource
 	return e.createSpecBasedResult(resource, spec, monthly, hourly)
 }
 
-func (e *Engine) loadSpecWithFallback(ctx context.Context, provider, service, sku string) *PricingSpec {
+func (e *Engine) loadSpecWithFallback(
+	ctx context.Context,
+	provider, service, sku string,
+) *PricingSpec {
 	// Try provider-service-sku pattern first
 	if sku != "" {
 		if spec := e.tryLoadSpec(ctx, provider, service, sku); spec != nil {
@@ -661,7 +703,12 @@ func (e *Engine) createSpecBasedResult(
 		Currency:     spec.Currency,
 		Monthly:      monthly,
 		Hourly:       hourly,
-		Notes:        fmt.Sprintf("Calculated from local spec: %s-%s-%s", spec.Provider, spec.Service, spec.SKU),
+		Notes: fmt.Sprintf(
+			"Calculated from local spec: %s-%s-%s",
+			spec.Provider,
+			spec.Service,
+			spec.SKU,
+		),
 		Breakdown: map[string]float64{
 			"base_cost": monthly,
 		},
@@ -726,11 +773,15 @@ func (e *Engine) getActualCostFromPlugin(
 		Hourly:       hourlyRate,
 		TotalCost:    result.TotalCost,
 		DailyCosts:   dailyCosts,
-		Notes:        fmt.Sprintf("Actual cost from %s to %s", from.Format("2006-01-02"), to.Format("2006-01-02")),
-		Breakdown:    result.CostBreakdown,
-		StartDate:    from,
-		EndDate:      to,
-		CostPeriod:   FormatPeriod(from, to),
+		Notes: fmt.Sprintf(
+			"Actual cost from %s to %s",
+			from.Format("2006-01-02"),
+			to.Format("2006-01-02"),
+		),
+		Breakdown:  result.CostBreakdown,
+		StartDate:  from,
+		EndDate:    to,
+		CostPeriod: FormatPeriod(from, to),
 	}, nil
 }
 
@@ -855,7 +906,10 @@ func tryHourlyRates(pricing map[string]interface{}) (float64, float64, bool) {
 	return 0, 0, false
 }
 
-func tryStoragePricing(pricing map[string]interface{}, resource ResourceDescriptor) (float64, float64, bool) {
+func tryStoragePricing(
+	pricing map[string]interface{},
+	resource ResourceDescriptor,
+) (float64, float64, bool) {
 	sizeGB, hasSize := getStorageSize(resource)
 	if !hasSize {
 		return 0, 0, false
@@ -1294,7 +1348,10 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 //   - ErrInvalidGroupBy if `groupBy` is not a time-based grouping.
 //   - ErrInvalidDateRange if any result has an EndDate not after its StartDate.
 //   - ErrMixedCurrencies if results contain more than one distinct currency.
-func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]CrossProviderAggregation, error) {
+func CreateCrossProviderAggregation(
+	results []CostResult,
+	groupBy GroupBy,
+) ([]CrossProviderAggregation, error) {
 	// Input validation
 	if err := validateAggregationInputs(results, groupBy); err != nil {
 		return nil, err
@@ -1542,7 +1599,10 @@ func distributeDailyCosts(
 // Parameters:
 //   - results: slice of CostResult to group and aggregate.
 //   - groupBy: grouping granularity (e.g., daily or monthly) used to format period keys and compute period costs.
-func groupResultsByPeriod(results []CostResult, groupBy GroupBy) (map[string]map[string]float64, string) {
+func groupResultsByPeriod(
+	results []CostResult,
+	groupBy GroupBy,
+) (map[string]map[string]float64, string) {
 	periods := make(map[string]map[string]float64) // period -> provider -> cost
 	baseCurrency := defaultCurrency                // Default currency
 
@@ -1736,7 +1796,10 @@ func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
 //
 // The resulting slice is sorted by the `Period` field in ascending (lexicographic) order. If `periods` is empty, an
 // empty slice is returned.
-func createSortedAggregations(periods map[string]map[string]float64, baseCurrency string) []CrossProviderAggregation {
+func createSortedAggregations(
+	periods map[string]map[string]float64,
+	baseCurrency string,
+) []CrossProviderAggregation {
 	var aggregations []CrossProviderAggregation
 
 	for period, providers := range periods {

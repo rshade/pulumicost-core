@@ -106,15 +106,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T029 [P] Run go mod tidy and verify dependencies
-- [ ] T030 [P] Run golangci-lint and fix any issues
-- [ ] T031 [P] Run tests and verify 80%+ coverage (95%+ for critical paths)
-- [ ] T032 [P] Update quickstart.md with any additional examples
-- [ ] T033 [P] Add package-level documentation in internal/tui/doc.go
-- [ ] T034 [P] Validate all acceptance criteria from spec.md
-- [ ] T035 [P] Validate SC-001: Verify all package files compile successfully
-- [ ] T036 [P] Validate SC-003: Test TTY detection in multiple environments (TTY, no-TTY, CI, TERM=dumb)
-- [ ] T037 [P] Validate SC-005: Import package in test CLI command and verify functionality
+- [x] T029 [P] Run go mod tidy and verify dependencies
+- [x] T030 [P] Run golangci-lint and fix any issues
+- [x] T031 [P] Run tests and verify 80%+ coverage (95%+ for critical paths)
+- [x] T032 [P] Update quickstart.md with any additional examples
+- [x] T033 [P] Add package-level documentation in internal/tui/doc.go
+- [x] T034 [P] Validate all acceptance criteria from spec.md
+- [x] T035 [P] Validate SC-001: Verify all package files compile successfully
+- [x] T036 [P] Validate SC-003: Test TTY detection in multiple environments (TTY, no-TTY, CI, TERM=dumb)
+- [x] T037 [P] Validate SC-005: Import package in test CLI command and verify functionality
 
 ---
 

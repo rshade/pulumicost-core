@@ -23,7 +23,11 @@ func TestNewRootCmd(t *testing.T) {
 			args:        []string{"--help"},
 			expectError: false,
 			checkOutput: func(t *testing.T, output string) {
-				assert.Contains(t, output, "PulumiCost: Calculate projected and actual cloud costs via plugins")
+				assert.Contains(
+					t,
+					output,
+					"PulumiCost: Calculate projected and actual cloud costs via plugins",
+				)
 				assert.Contains(t, output, "Available Commands:")
 				assert.Contains(t, output, "cost")
 				assert.Contains(t, output, "plugin")

@@ -24,7 +24,11 @@ const (
 //
 // Per FR-005, all diagnostics use ADVISORY enforcement level to ensure
 // cost estimation never blocks deployments in MVP mode.
-func CostToDiagnostic(cost engine.CostResult, urn string, version string) *pulumirpc.AnalyzeDiagnostic {
+func CostToDiagnostic(
+	cost engine.CostResult,
+	urn string,
+	version string,
+) *pulumirpc.AnalyzeDiagnostic {
 	message := formatCostMessage(cost)
 	severity := pulumirpc.PolicySeverity_POLICY_SEVERITY_LOW
 
@@ -54,7 +58,10 @@ func CostToDiagnostic(cost engine.CostResult, urn string, version string) *pulum
 //   - Currency (defaults to USD)
 //
 // The summary diagnostic has no URN (it's stack-level, not resource-specific).
-func StackSummaryDiagnostic(costs []engine.CostResult, version string) *pulumirpc.AnalyzeDiagnostic {
+func StackSummaryDiagnostic(
+	costs []engine.CostResult,
+	version string,
+) *pulumirpc.AnalyzeDiagnostic {
 	var totalMonthly float64
 	currency := "USD"
 	analyzed := 0

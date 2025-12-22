@@ -1,6 +1,6 @@
 # Tasks: Add UnaryInterceptors Support to ServeConfig
 
-**Input**: Design documents from `/specs/001-pluginsdk-interceptors/`
+**Input**: Design documents from `/specs/005-pluginsdk-interceptors/`
 **Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md
 **Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
 
@@ -100,7 +100,7 @@ in the correct order for each request.
 Implementation was covered in Foundational phase (T002). This phase focuses on
 validating the chaining behavior.
 
-- [x] T010 [US2] Add example of multiple interceptors to quickstart.md in specs/001-pluginsdk-interceptors/
+- [x] T010 [US2] Add example of multiple interceptors to quickstart.md in specs/005-pluginsdk-interceptors/
 - [x] T011 [US2] Run full test suite with race detection in sdk/go/pluginsdk/
 
 **Checkpoint**: User Story 2 complete - multiple interceptor chaining works

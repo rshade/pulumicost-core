@@ -76,7 +76,14 @@ func runPluginListAvailable(cmd *cobra.Command) error {
 		if security == "" {
 			security = "community"
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", entry.Name, entry.Description, entry.Repository, security)
+		fmt.Fprintf(
+			w,
+			"%s\t%s\t%s\t%s\n",
+			entry.Name,
+			entry.Description,
+			entry.Repository,
+			security,
+		)
 	}
 	return w.Flush()
 }

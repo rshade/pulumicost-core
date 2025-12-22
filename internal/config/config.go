@@ -190,7 +190,11 @@ func New() *Config {
 			if strictMode {
 				panic(fmt.Sprintf("STRICT MODE: Config file appears corrupted: %v", err))
 			}
-			fmt.Fprintf(os.Stderr, "Warning: Config file may be corrupted, using defaults: %v\n", err)
+			fmt.Fprintf(
+				os.Stderr,
+				"Warning: Config file may be corrupted, using defaults: %v\n",
+				err,
+			)
 		}
 	}
 
@@ -354,7 +358,11 @@ func (c *Config) Validate() error {
 		}
 	}
 	if !valid {
-		return fmt.Errorf("invalid output format: %s (must be one of: %v)", c.Output.DefaultFormat, validFormats)
+		return fmt.Errorf(
+			"invalid output format: %s (must be one of: %v)",
+			c.Output.DefaultFormat,
+			validFormats,
+		)
 	}
 
 	// Validate precision
@@ -529,10 +537,16 @@ func validateFileOutput(output LogOutput) error {
 
 	// Validate rotation settings
 	if output.MaxSizeMB < 0 {
-		return fmt.Errorf("max_size_mb must be non-negative (0 means unlimited), got: %d", output.MaxSizeMB)
+		return fmt.Errorf(
+			"max_size_mb must be non-negative (0 means unlimited), got: %d",
+			output.MaxSizeMB,
+		)
 	}
 	if output.MaxFiles < 0 {
-		return fmt.Errorf("max_files must be non-negative (0 means unlimited), got: %d", output.MaxFiles)
+		return fmt.Errorf(
+			"max_files must be non-negative (0 means unlimited), got: %d",
+			output.MaxFiles,
+		)
 	}
 
 	return nil

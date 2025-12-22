@@ -29,7 +29,13 @@ func TestDetectOutputMode_ExplicitFlags(t *testing.T) {
 		{"plain flag", false, false, true, OutputModePlain},
 		{"no-color flag", false, true, false, OutputModePlain},
 		{"both plain and no-color", false, true, true, OutputModePlain},
-		{"force-color flag", true, false, false, OutputModeStyled}, // forceColor enables styled output even without TTY
+		{
+			"force-color flag",
+			true,
+			false,
+			false,
+			OutputModeStyled,
+		}, // forceColor enables styled output even without TTY
 	}
 
 	for _, tt := range tests {
@@ -65,8 +71,16 @@ func TestDetectOutputMode_EnvironmentVariables(t *testing.T) {
 	}{
 		{"NO_COLOR set", map[string]string{"NO_COLOR": "1"}, OutputModePlain},
 		{"TERM=dumb", map[string]string{"TERM": "dumb"}, OutputModePlain},
-		{"CI set", map[string]string{"CI": "true"}, OutputModePlain},                           // Not a TTY in test env
-		{"CI and TERM set", map[string]string{"CI": "true", "TERM": "xterm"}, OutputModePlain}, // Not a TTY in test env
+		{
+			"CI set",
+			map[string]string{"CI": "true"},
+			OutputModePlain,
+		}, // Not a TTY in test env
+		{
+			"CI and TERM set",
+			map[string]string{"CI": "true", "TERM": "xterm"},
+			OutputModePlain,
+		}, // Not a TTY in test env
 	}
 
 	for _, tt := range tests {

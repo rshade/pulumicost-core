@@ -1,6 +1,6 @@
 # Tasks: Engine Test Coverage Completion
 
-**Input**: Design documents from `/specs/001-engine-test-coverage/`
+**Input**: Design documents from `/specs/007-engine-test-coverage/`
 **Prerequisites**: plan.md, spec.md, research.md, quickstart.md
 
 **Tests**: This feature IS about tests. All tasks create or extend test files.

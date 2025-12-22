@@ -69,7 +69,8 @@ and context cancellation.`,
 	}
 
 	cmd.Flags().StringVar(&mode, "mode", "tcp", "Communication mode: tcp, stdio")
-	cmd.Flags().StringVar(&verbosity, "verbosity", "normal", "Output detail: quiet, normal, verbose, debug")
+	cmd.Flags().
+		StringVar(&verbosity, "verbosity", "normal", "Output detail: quiet, normal, verbose, debug")
 	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, junit")
 	cmd.Flags().StringVar(&outputFile, "output-file", "", "Write output to file (default: stdout)")
 	cmd.Flags().StringVar(&timeout, "timeout", "5m", "Global suite timeout")
@@ -175,7 +176,10 @@ func parseCategories(categories []string) ([]conformance.Category, error) {
 	var categoryList []conformance.Category
 	for _, cat := range categories {
 		if !conformance.IsValidCategory(cat) {
-			return nil, fmt.Errorf("invalid category %q: must be protocol, error, performance, or context", cat)
+			return nil, fmt.Errorf(
+				"invalid category %q: must be protocol, error, performance, or context",
+				cat,
+			)
 		}
 		categoryList = append(categoryList, conformance.Category(cat))
 	}
@@ -183,7 +187,11 @@ func parseCategories(categories []string) ([]conformance.Category, error) {
 }
 
 // writeReport writes the conformance report to the appropriate destination.
-func writeReport(cmd *cobra.Command, report *conformance.SuiteReport, output, outputFile string) error {
+func writeReport(
+	cmd *cobra.Command,
+	report *conformance.SuiteReport,
+	output, outputFile string,
+) error {
 	writer, cleanup, err := getOutputWriter(cmd, outputFile)
 	if err != nil {
 		return err
@@ -222,7 +230,11 @@ func getOutputWriter(cmd *cobra.Command, outputFile string) (io.Writer, func(), 
 	return f, func() {
 		if closeErr := f.Close(); closeErr != nil {
 			// Log but don't fail - we've already written output
-			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "warning: failed to close output file: %v\n", closeErr)
+			_, _ = fmt.Fprintf(
+				cmd.ErrOrStderr(),
+				"warning: failed to close output file: %v\n",
+				closeErr,
+			)
 		}
 	}, nil
 }

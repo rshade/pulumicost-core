@@ -201,7 +201,11 @@ func TestCostToDiagnostic_EnforcementLevel(t *testing.T) {
 		Currency:     "USD",
 	}
 
-	diag := CostToDiagnostic(cost, "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::expensive-server", "0.1.0")
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::expensive-server",
+		"0.1.0",
+	)
 
 	// Must be ADVISORY per FR-005
 	assert.Equal(t, pulumirpc.EnforcementLevel_ADVISORY, diag.GetEnforcementLevel())
@@ -288,7 +292,11 @@ func TestCostToDiagnostic_ErrorInNotes(t *testing.T) {
 		Notes:        "ERROR: Plugin vantage failed: connection refused",
 	}
 
-	diag := CostToDiagnostic(cost, "urn:pulumi:dev::myapp::aws:lambda/function:Function::api-handler", "0.1.0")
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:lambda/function:Function::api-handler",
+		"0.1.0",
+	)
 
 	// Should report the error in the message
 	assert.Contains(t, diag.GetMessage(), "ERROR")

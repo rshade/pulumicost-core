@@ -1,7 +1,7 @@
 # Implementation Plan: Plugin Install/Update/Remove System
 
-**Branch**: `001-plugin-install` | **Date**: 2025-11-23 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/001-plugin-install/spec.md`
+**Branch**: `006-plugin-install` | **Date**: 2025-11-23 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/006-plugin-install/spec.md`
 
 ## Summary
 
@@ -40,7 +40,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 ### Documentation (this feature)
 
 ```text
-specs/001-plugin-install/
+specs/006-plugin-install/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output

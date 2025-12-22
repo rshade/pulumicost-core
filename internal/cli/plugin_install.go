@@ -98,7 +98,8 @@ Plugins can be specified in several formats:
 
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Reinstall even if version already exists")
 	cmd.Flags().BoolVar(&noSave, "no-save", false, "Don't add plugin to config file")
-	cmd.Flags().StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.pulumicost/plugins)")
+	cmd.Flags().
+		StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.pulumicost/plugins)")
 
 	return cmd
 }

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 )
 
 // Suite is the main conformance test suite orchestrator.
@@ -128,34 +130,19 @@ func (s *Suite) registerDefaultTests() {
 			RequiredMethods: []string{"Name"},
 			TestFunc:        testTimeoutRespected,
 		},
+		{
+			Name:            "Batch_Handling",
+			Category:        CategoryPerformance,
+			Description:     "Verifies plugin handles multiple sequential requests",
+			Timeout:         DefaultTimeout * batchTestTimeoutMultiplier,
+			RequiredMethods: []string{"GetProjectedCost"},
+			TestFunc:        testBatchHandling,
+		},
 	}
 }
 
 // Placeholder test functions - return Skip until properly implemented.
-// TODO: Implement actual test logic in protocol.go, error.go, etc.
-func testNameReturnsIdentifier(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
-
-func testNameReturnsProtocolVersion(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
-
-func testGetProjectedCostValid(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
-
-func testGetProjectedCostInvalid(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
-
-func testContextCancellation(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
-
-func testTimeoutRespected(_ *TestContext) *TestResult {
-	return &TestResult{Status: StatusSkip, Error: "test not implemented"}
-}
+// TODO: Implement actual test logic in error.go, etc.
 
 // GetTestCases returns the filtered list of test cases based on configuration.
 func (s *Suite) GetTestCases() []TestCase {
@@ -204,9 +191,28 @@ func (s *Suite) Run(ctx context.Context) (*SuiteReport, error) {
 		Int("test_count", len(testCases)).
 		Msg("starting conformance suite")
 
-	// TODO: Start plugin process and establish connection
-	// For now, we'll use a placeholder client
-	var client interface{}
+	// Start plugin process and establish connection
+	launcher := pluginhost.NewProcessLauncher()
+	conn, closeFn, err := launcher.Start(suiteCtx, s.config.PluginPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start plugin: %w", err)
+	}
+	defer func() {
+		if closeErr := closeFn(); closeErr != nil {
+			s.logger.Warn().Err(closeErr).Msg("error closing plugin process")
+		}
+	}()
+
+	client := pbc.NewCostSourceServiceClient(conn)
+
+	// Fetch plugin info for report
+	nameResp, err := client.Name(suiteCtx, &pbc.NameRequest{})
+	pluginName := "unknown"
+	pluginVersion := "unknown"
+	if err == nil {
+		pluginName = nameResp.GetName()
+		// Version might be in metadata or we might add a Version() RPC
+	}
 
 	// Create runner
 	runner := NewRunner(s.logger, s.config.Verbosity)
@@ -221,8 +227,8 @@ func (s *Suite) Run(ctx context.Context) (*SuiteReport, error) {
 		SuiteName: "conformance",
 		Plugin: PluginUnderTest{
 			Path:            s.config.PluginPath,
-			Name:            "unknown", // TODO: Get from plugin Name() RPC
-			Version:         "unknown",
+			Name:            pluginName,
+			Version:         pluginVersion,
 			ProtocolVersion: ProtocolVersion,
 			CommMode:        s.config.CommMode,
 		},

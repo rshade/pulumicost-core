@@ -29,7 +29,12 @@ func TestRenderStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderStatus(tt.status)
 			if !strings.Contains(result, tt.expected) {
-				t.Errorf("RenderStatus(%q) = %q, expected to contain %q", tt.status, result, tt.expected)
+				t.Errorf(
+					"RenderStatus(%q) = %q, expected to contain %q",
+					tt.status,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -56,7 +61,12 @@ func TestRenderDelta(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderDelta(tt.delta)
 			if !strings.Contains(result, tt.expected) {
-				t.Errorf("RenderDelta(%.2f) = %q, expected to contain %q", tt.delta, result, tt.expected)
+				t.Errorf(
+					"RenderDelta(%.2f) = %q, expected to contain %q",
+					tt.delta,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -85,7 +95,12 @@ func TestRenderPriority(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RenderPriority(tt.priority)
 			if !strings.Contains(result, tt.expected) {
-				t.Errorf("RenderPriority(%q) = %q, expected to contain %q", tt.priority, result, tt.expected)
+				t.Errorf(
+					"RenderPriority(%q) = %q, expected to contain %q",
+					tt.priority,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -104,7 +119,11 @@ func TestRenderFunctions_BasicOutput(t *testing.T) {
 		{"Positive delta output", func() string { return RenderDelta(10.0) }, "+$10.00 ↑"},
 		{"Negative delta output", func() string { return RenderDelta(-10.0) }, "-$10.00 ↓"},
 		{"Zero delta output", func() string { return RenderDelta(0) }, "$0.00 →"},
-		{"Critical priority output", func() string { return RenderPriority("CRITICAL") }, "🚨 CRITICAL"},
+		{
+			"Critical priority output",
+			func() string { return RenderPriority("CRITICAL") },
+			"🚨 CRITICAL",
+		},
 		{"High priority output", func() string { return RenderPriority("HIGH") }, "⚠ HIGH"},
 		{"Medium priority output", func() string { return RenderPriority("MEDIUM") }, "◉ MEDIUM"},
 		{"Low priority output", func() string { return RenderPriority("LOW") }, "✓ LOW"},

@@ -533,8 +533,14 @@ func TestMapResourcesWithErrors(t *testing.T) {
 		{
 			name: "all valid resources",
 			resources: []*pulumirpc.AnalyzerResource{
-				{Type: "aws:ec2/instance:Instance", Urn: "urn:pulumi:dev::app::aws:ec2/instance:Instance::web"},
-				{Type: "aws:s3/bucket:Bucket", Urn: "urn:pulumi:dev::app::aws:s3/bucket:Bucket::bucket"},
+				{
+					Type: "aws:ec2/instance:Instance",
+					Urn:  "urn:pulumi:dev::app::aws:ec2/instance:Instance::web",
+				},
+				{
+					Type: "aws:s3/bucket:Bucket",
+					Urn:  "urn:pulumi:dev::app::aws:s3/bucket:Bucket::bucket",
+				},
 			},
 			wantResources: 2,
 			wantSkipped:   0,
@@ -542,9 +548,15 @@ func TestMapResourcesWithErrors(t *testing.T) {
 		{
 			name: "mixed with nil resources",
 			resources: []*pulumirpc.AnalyzerResource{
-				{Type: "aws:ec2/instance:Instance", Urn: "urn:pulumi:dev::app::aws:ec2/instance:Instance::web"},
+				{
+					Type: "aws:ec2/instance:Instance",
+					Urn:  "urn:pulumi:dev::app::aws:ec2/instance:Instance::web",
+				},
 				nil,
-				{Type: "aws:s3/bucket:Bucket", Urn: "urn:pulumi:dev::app::aws:s3/bucket:Bucket::bucket"},
+				{
+					Type: "aws:s3/bucket:Bucket",
+					Urn:  "urn:pulumi:dev::app::aws:s3/bucket:Bucket::bucket",
+				},
 			},
 			wantResources: 2,
 			wantSkipped:   1,

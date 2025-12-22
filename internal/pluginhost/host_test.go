@@ -109,7 +109,11 @@ func TestNewClient_WithProcessLauncher(t *testing.T) {
 	defer cancel()
 
 	// This should fail gracefully
-	client, err := pluginhost.NewClient(ctx, launcher, "/bin/false") // Command that exists but fails
+	client, err := pluginhost.NewClient(
+		ctx,
+		launcher,
+		"/bin/false",
+	) // Command that exists but fails
 
 	if err == nil {
 		t.Log("Note: /bin/false might not exist on this system")
@@ -130,7 +134,11 @@ func TestNewClient_WithStdioLauncher(t *testing.T) {
 	defer cancel()
 
 	// This should fail gracefully
-	client, err := pluginhost.NewClient(ctx, launcher, "/bin/false") // Command that exists but fails
+	client, err := pluginhost.NewClient(
+		ctx,
+		launcher,
+		"/bin/false",
+	) // Command that exists but fails
 
 	if err == nil {
 		t.Log("Note: /bin/false might not exist on this system")
@@ -166,7 +174,11 @@ type mockLauncher struct {
 	startError error
 }
 
-func (m *mockLauncher) Start(_ context.Context, _ string, _ ...string) (*grpc.ClientConn, func() error, error) {
+func (m *mockLauncher) Start(
+	_ context.Context,
+	_ string,
+	_ ...string,
+) (*grpc.ClientConn, func() error, error) {
 	if m.startError != nil {
 		return nil, nil, m.startError
 	}
