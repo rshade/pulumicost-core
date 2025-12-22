@@ -16,8 +16,14 @@ test/integration/
 │   └── error_propagation_test.go
 ├── output/           # Output format generation tests
 │   └── output_format_test.go
-├── plugin/           # Plugin communication tests
-│   └── plugin_communication_test.go
+├── plugin/           # Plugin communication and management tests
+│   ├── plugin_communication_test.go  # gRPC integration
+│   ├── setup_test.go                 # Mock registry infrastructure
+│   ├── init_test.go                  # Plugin init command tests
+│   ├── install_test.go               # Plugin install command tests
+│   ├── update_test.go                # Plugin update command tests
+│   ├── remove_test.go                # Plugin remove command tests
+│   └── concurrency_test.go           # Concurrent operation tests
 └── e2e/              # End-to-end tests (Phase 8)
     └── cli_workflow_test.go
 ```
@@ -74,6 +80,17 @@ Tests integration between engine and plugin layer via gRPC.
 - Actual cost flow
 - Error injection and handling
 - Timeout and latency simulation
+
+### 6. Plugin Management Tests (`plugin/`)
+Tests plugin lifecycle commands (init, install, update, remove).
+
+**Coverage:**
+- Plugin initialization with scaffolding (`init_test.go`)
+- Plugin installation from mock registry (`install_test.go`)
+- Plugin updates with version control (`update_test.go`)
+- Plugin removal with config cleanup (`remove_test.go`)
+- Concurrent operations (`concurrency_test.go`)
+- Mock GitHub Release API (`setup_test.go`)
 
 ## Test Helpers
 
@@ -359,10 +376,11 @@ Integration tests run automatically in CI:
 
 ### Planned Improvements
 - [ ] Add integration tests for actual cost commands
-- [ ] Add integration tests for plugin init commands
+- [x] Add integration tests for plugin init commands
 - [ ] Add performance benchmarks for integration flows
 - [ ] Add integration tests with real plugin binaries
 - [ ] Add integration tests for multi-plugin scenarios
+- [ ] Add file locking support for concurrent plugin operations (documented in `concurrency_test.go`)
 
 ## Contributing
 

@@ -1,0 +1,115 @@
+# CLI Contract: cost projected Command
+
+**Version**: 1.0.0
+**Command**: `pulumicost cost projected`
+**Purpose**: Calculate projected costs with optional resource filtering
+
+## Interface
+
+### Command Signature
+```bash
+pulumicost cost projected [flags]
+```
+
+### Flags
+- `--pulumi-json string`: Path to Pulumi preview JSON output (required)
+- `--spec-dir string`: Directory containing pricing specifications
+- `--adapter string`: Restrict queries to a single adapter plugin
+- `--output string`: Output format (table/json/ndjson)
+- `--filter string`: Resource filter expressions (e.g., 'type=aws:ec2/instance')
+
+### Filter Syntax
+**Format**: `key=value`
+**Supported Keys**:
+- `type`: Filter by resource type (substring match)
+- `provider`: Filter by cloud provider (substring match)
+- `service`: Filter by service name (substring match)
+- `id`: Filter by resource ID (substring match)
+- `{property}`: Filter by any resource property
+
+**Examples**:
+- `type=aws:ec2/instance` - Exact resource type
+- `type=ec2` - Substring match for all EC2 resources
+- `provider=aws` - All AWS resources
+- `service=s3` - All S3-related resources
+
+## Behavior Contracts
+
+### Success Responses
+
+#### Filtered Results (200 OK equivalent)
+**Trigger**: Valid filter matches some resources
+**Output**: Filtered resource list in specified format
+**Post-conditions**:
+- Only matching resources included
+- Total count reflects filtered subset
+- No error exit code
+
+#### No Matches (200 OK equivalent)
+**Trigger**: Valid filter matches no resources
+**Output**: Empty result set
+**Post-conditions**:
+- Empty but valid output structure
+- No error exit code
+- Appropriate message for empty results
+
+### Error Responses
+
+#### Invalid Filter Syntax (No error - current behavior)
+**Trigger**: Malformed filter expression
+**Output**: All resources (unfiltered)
+**Post-conditions**:
+- No error exit code
+- All resources returned
+- Silent fallback behavior
+
+#### Missing Required Flags (Exit code 1)
+**Trigger**: `--pulumi-json` not provided
+**Output**: Error message: `required flag(s) "pulumi-json" not set`
+**Post-conditions**:
+- Exit code 1
+- No cost calculation performed
+
+#### Invalid Plan File (Exit code 1)
+**Trigger**: Invalid or missing Pulumi JSON file
+**Output**: Error message: `failed to load plan`
+**Post-conditions**:
+- Exit code 1
+- No processing performed
+
+## Data Contracts
+
+### Input
+- **Format**: Valid Pulumi plan JSON
+- **Encoding**: UTF-8
+- **Size Limit**: No specific limit (system memory constrained)
+
+### Output Formats
+
+#### Table Format
+- **Structure**: ASCII table with columns: Resource, Type, Provider, Monthly Cost
+- **Filtering**: Only matching resources appear in table rows
+
+#### JSON Format
+- **Structure**: Array of cost result objects
+- **Schema**:
+```json
+[
+  {
+    "resource": "string",
+    "type": "string",
+    "provider": "string",
+    "monthlyCost": "number"
+  }
+]
+```
+
+#### NDJSON Format
+- **Structure**: One JSON object per line
+- **Schema**: Same as JSON format, one object per newline
+
+## Performance Contracts
+
+- **Filter Performance**: Should not significantly degrade compared to unfiltered queries
+- **Case Sensitivity**: All filtering is case-insensitive
+- **Execution Time**: < 10 second increase over unfiltered queries for 20-resource plans

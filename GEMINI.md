@@ -7,6 +7,9 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 - Git repository (docs folder) (011-sync-docs-codebase)
 - Pulumi Analyzer integration (pulumicost analyzer serve)
 - Plugin management commands (pulumicost plugin init/install/update/remove)
+- GitHub Actions, `gh` CLI, OpenCode CLI/API (001-nightly-failure-analysis)
+- Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking) (001-plugin-integration-tests)
+- Filesystem (mocked via `t.TempDir()`) (001-plugin-integration-tests)
 
 - Local Pulumi state (ephemeral), no persistent DB. (010-e2e-cost-testing)
 - N/A (Stateless operation) (008-analyzer-plugin)
@@ -129,10 +132,12 @@ Configuration validation with >85% coverage:
 - **Property Extraction**: Core (`adapter.go`) relies on populated `Inputs` to extract SKU and Region. If `Inputs` are empty (due to ingest issues), pricing lookup fails.
 
 ## Recent Changes
-- 011-sync-docs-codebase: Added Markdown, Go 1.25.5 (for code verification) + Jekyll (for docs site), GitHub Pages
+- 001-plugin-integration-tests: Added Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking)
 
-- 010-e2e-cost-testing: Fixed E2E test failure by parsing `newState` in Pulumi plan JSON.
-- 010-e2e-cost-testing: Patched `aws-public` plugin to support `aws:ec2/instance:Instance` resource type.
+- 001-nightly-failure-analysis: Added GitHub Actions, `gh` CLI, OpenCode CLI/API
+- 011-sync-docs-codebase: Added Markdown, Go 1.25.5 (for code verification)
+  plus Jekyll (for docs site), GitHub Pages
+  plan JSON.
 
 ## Session Analysis - Recommended Updates
 

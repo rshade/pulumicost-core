@@ -62,3 +62,9 @@ yarn-error.log*
 
 # Recorder plugin output directory
 **/recorded_data/
+
+# Nightly failure analysis artifacts
+context.txt
+analysis.md
+dist/
+build/

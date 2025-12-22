@@ -146,6 +146,9 @@ maintain its effectiveness:
 
 ## Active Technologies
 
+- Go 1.25.5 + existing CLI infrastructure, test helpers (105-cost-filter-tests)
+- N/A (CLI tool processing JSON files) (105-cost-filter-tests)
+
 - Go 1.25.5 + pluginsdk from pulumicost-spec (001-pluginsdk-env-adoption)
 - Environment variable constants via pluginsdk (001-pluginsdk-env-adoption)
 

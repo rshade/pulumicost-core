@@ -1,0 +1,376 @@
+{
+  "steps": [
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:ec2/instance:Instance::web-server",
+      "type": "aws:ec2/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "ami": "ami-0c02fb55956c7d316",
+        "instanceType": "t3.micro",
+        "tags": {
+          "Name": "Web Server",
+          "Environment": "dev",
+          "Team": "frontend"
+        },
+        "availabilityZone": "us-west-2a",
+        "keyName": "my-key"
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:ec2/instance:Instance::api-server",
+      "type": "aws:ec2/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "ami": "ami-0c02fb55956c7d316",
+        "instanceType": "t3.small",
+        "tags": {
+          "Name": "API Server",
+          "Environment": "prod",
+          "Team": "backend"
+        },
+        "availabilityZone": "us-west-2b"
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:ec2/instance:Instance::worker-node",
+      "type": "aws:ec2/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "ami": "ami-0c02fb55956c7d316",
+        "instanceType": "t3.medium",
+        "tags": {
+          "Name": "Worker Node",
+          "Environment": "staging",
+          "Team": "data"
+        },
+        "availabilityZone": "us-west-2c"
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:s3/bucket:Bucket::static-assets",
+      "type": "aws:s3/bucket:Bucket",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "bucket": "my-static-assets-bucket-12345",
+        "acl": "private",
+        "versioning": {
+          "enabled": true
+        },
+        "tags": {
+          "Purpose": "Static Assets",
+          "Environment": "dev",
+          "Team": "frontend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:s3/bucket:Bucket::logs-bucket",
+      "type": "aws:s3/bucket:Bucket",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "bucket": "my-logs-bucket-67890",
+        "acl": "private",
+        "tags": {
+          "Purpose": "Logs",
+          "Environment": "prod",
+          "Team": "platform"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:rds/instance:Instance::database",
+      "type": "aws:rds/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "allocatedStorage": 20,
+        "dbInstanceClass": "db.t3.micro",
+        "engine": "postgres",
+        "engineVersion": "13.7",
+        "identifier": "my-database",
+        "username": "admin",
+        "password": "supersecret123",
+        "skipFinalSnapshot": true,
+        "tags": {
+          "Name": "Application Database",
+          "Environment": "prod",
+          "Team": "backend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:lambda/function:Function::api-handler",
+      "type": "aws:lambda/function:Function",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "name": "api-handler",
+        "runtime": "nodejs18.x",
+        "handler": "index.handler",
+        "role": "arn:aws:iam::123456789012:role/lambda-role",
+        "memorySize": 128,
+        "timeout": 30,
+        "tags": {
+          "Name": "API Handler",
+          "Environment": "dev",
+          "Team": "backend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:lambda/function:Function::data-processor",
+      "type": "aws:lambda/function:Function",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "name": "data-processor",
+        "runtime": "python3.9",
+        "handler": "lambda_function.lambda_handler",
+        "role": "arn:aws:iam::123456789012:role/lambda-role",
+        "memorySize": 256,
+        "timeout": 60,
+        "tags": {
+          "Name": "Data Processor",
+          "Environment": "staging",
+          "Team": "data"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::azure:compute/virtualMachine:VirtualMachine::web-vm",
+      "type": "azure:compute/virtualMachine:VirtualMachine",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:azure::default_1_0_0::12345678-1234-1234-1234-123456789abc",
+      "inputs": {
+        "name": "web-vm",
+        "resourceGroupName": "my-resource-group",
+        "location": "East US",
+        "vmSize": "Standard_B2s",
+        "osProfile": {
+          "computerName": "webvm",
+          "adminUsername": "adminuser",
+          "adminPassword": "P@ssw0rd123!"
+        },
+        "storageOsDisk": {
+          "name": "osdisk",
+          "caching": "ReadWrite",
+          "createOption": "FromImage",
+          "diskSizeGb": 30
+        },
+        "tags": {
+          "Environment": "prod",
+          "Team": "frontend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::azure:storage/storageAccount:StorageAccount::data-storage",
+      "type": "azure:storage/storageAccount:StorageAccount",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:azure::default_1_0_0::12345678-1234-1234-1234-123456789abc",
+      "inputs": {
+        "name": "datastorageacct123",
+        "resourceGroupName": "my-resource-group",
+        "location": "East US",
+        "accountTier": "Standard",
+        "accountReplicationType": "LRS",
+        "tags": {
+          "Environment": "dev",
+          "Team": "data"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::azure:sql/server:Server::sql-server",
+      "type": "azure:sql/server:Server",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:azure::default_1_0_0::12345678-1234-1234-1234-123456789abc",
+      "inputs": {
+        "name": "my-sql-server",
+        "resourceGroupName": "my-resource-group",
+        "location": "East US",
+        "version": "12.0",
+        "administratorLogin": "sqladmin",
+        "administratorLoginPassword": "P@ssw0rd123!",
+        "tags": {
+          "Environment": "staging",
+          "Team": "backend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::gcp:compute/instance:Instance::gcp-web-server",
+      "type": "gcp:compute/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:gcp::default_1_0_0::abcdef12-3456-7890-abcd-ef1234567890",
+      "inputs": {
+        "name": "gcp-web-server",
+        "machineType": "e2-medium",
+        "zone": "us-central1-a",
+        "bootDisk": {
+          "initializeParams": {
+            "image": "debian-cloud/debian-11",
+            "size": 10,
+            "type": "pd-standard"
+          }
+        },
+        "networkInterfaces": [
+          {
+            "network": "default",
+            "accessConfigs": [{}]
+          }
+        ],
+        "labels": {
+          "environment": "prod",
+          "team": "frontend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::gcp:storage/bucket:Bucket::gcp-data-bucket",
+      "type": "gcp:storage/bucket:Bucket",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:gcp::default_1_0_0::abcdef12-3456-7890-abcd-ef1234567890",
+      "inputs": {
+        "name": "my-gcp-data-bucket-12345",
+        "location": "US",
+        "storageClass": "STANDARD",
+        "labels": {
+          "environment": "dev",
+          "team": "data"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::gcp:sql/databaseInstance:DatabaseInstance::gcp-database",
+      "type": "gcp:sql/databaseInstance:DatabaseInstance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:gcp::default_1_0_0::abcdef12-3456-7890-abcd-ef1234567890",
+      "inputs": {
+        "name": "my-gcp-database",
+        "region": "us-central1",
+        "databaseVersion": "POSTGRES_13",
+        "settings": {
+          "tier": "db-f1-micro",
+          "diskSize": 10,
+          "diskType": "PD_SSD"
+        },
+        "labels": {
+          "environment": "staging",
+          "team": "backend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::gcp:functions/function:Function::gcp-api-function",
+      "type": "gcp:functions/function:Function",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:gcp::default_1_0_0::abcdef12-3456-7890-abcd-ef1234567890",
+      "inputs": {
+        "name": "gcp-api-function",
+        "runtime": "nodejs16",
+        "entryPoint": "helloWorld",
+        "triggerHttp": true,
+        "availableMemoryMb": 128,
+        "labels": {
+          "environment": "prod",
+          "team": "backend"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::aws:ec2/instance:Instance::bastion-host",
+      "type": "aws:ec2/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:aws::default_1_0_0::04da6b54-80e4-46f7-96ec-b56ff0331ba9",
+      "inputs": {
+        "ami": "ami-0c02fb55956c7d316",
+        "instanceType": "t2.micro",
+        "tags": {
+          "Name": "Bastion Host",
+          "Environment": "prod",
+          "Team": "platform"
+        },
+        "availabilityZone": "us-west-2a"
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::azure:compute/virtualMachine:VirtualMachine::data-vm",
+      "type": "azure:compute/virtualMachine:VirtualMachine",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:azure::default_1_0_0::12345678-1234-1234-1234-123456789abc",
+      "inputs": {
+        "name": "data-vm",
+        "resourceGroupName": "my-resource-group",
+        "location": "East US",
+        "vmSize": "Standard_B4ms",
+        "osProfile": {
+          "computerName": "datavm",
+          "adminUsername": "adminuser",
+          "adminPassword": "P@ssw0rd123!"
+        },
+        "storageOsDisk": {
+          "name": "dataosdisk",
+          "caching": "ReadWrite",
+          "createOption": "FromImage",
+          "diskSizeGb": 50
+        },
+        "tags": {
+          "Environment": "staging",
+          "Team": "data"
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "op": "create",
+      "urn": "urn:pulumi:dev::my-app::gcp:compute/instance:Instance::gcp-worker",
+      "type": "gcp:compute/instance:Instance",
+      "provider": "urn:pulumi:dev::my-app::pulumi:providers:gcp::default_1_0_0::abcdef12-3456-7890-abcd-ef1234567890",
+      "inputs": {
+        "name": "gcp-worker",
+        "machineType": "e2-small",
+        "zone": "us-central1-b",
+        "bootDisk": {
+          "initializeParams": {
+            "image": "debian-cloud/debian-11",
+            "size": 20,
+            "type": "pd-standard"
+          }
+        },
+        "networkInterfaces": [
+          {
+            "network": "default",
+            "accessConfigs": [{}]
+          }
+        ],
+        "labels": {
+          "environment": "dev",
+          "team": "platform"
+        }
+      },
+      "outputs": {}
+    }
+  ]
+}
