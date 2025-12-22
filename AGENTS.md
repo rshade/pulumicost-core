@@ -27,6 +27,7 @@
 - `pulumicost plugin install`: Install a plugin from a registry or URL.
 - `pulumicost plugin update`: Update an installed plugin.
 - `pulumicost plugin remove`: Remove an installed plugin.
+- `pulumicost plugin certify`: Run certification tests for a plugin.
 - `pulumicost analyzer serve`: Start the Pulumi Analyzer gRPC server.
 - Docs: `make docs-lint`, `make docs-build`, `make docs-serve` for the Jekyll
   site.

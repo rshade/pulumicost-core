@@ -1,42 +1,38 @@
 ---
-title: Error Codes Reference
-description: PulumiCost error codes and troubleshooting guidance
+title: Error Codes
+description: Reference for Pulumicost error codes
 layout: default
 ---
 
-PulumiCost provides clear error messages and codes to help diagnose and resolve issues.
-This reference categorizes common errors and suggests solutions.
-
-## Engine Errors
-
-These errors typically occur during the cost calculation and aggregation process within
-the PulumiCost engine.
-
-| Code | Message | Description | Solution |
-| --- | --- | --- | --- |
-| `ErrNoCostData` | "no cost data available" | No pricing information found | Ensure plugins are installed |
-| `ErrMixedCurrencies` | "mixed currencies not supported" | Different currencies in aggregation | Filter by currency first |
-| `ErrInvalidGroupBy` | "invalid groupBy type" | Unsupported grouping type | Use `daily` or `monthly` |
-| `ErrEmptyResults` | "empty results" | No data to aggregate | Check input file and filters |
-| `ErrInvalidDateRange` | "end date must be after start" | Invalid date range | Ensure `--to` > `--from` |
-| `ErrResourceValidation` | "resource validation failed" | Internal validation error | Report bug with details |
-
-## Configuration Errors
-
-These errors relate to parsing or validating the PulumiCost configuration file
-(`~/.pulumicost/config.yaml`).
-
-| Code | Message | Description | Solution |
-| --- | --- | --- | --- |
-| `ErrConfigCorrupted` | "configuration file corrupted" | Cannot parse config file | Fix YAML or delete config |
+This page lists common error codes and messages returned by Pulumicost.
 
 ## CLI Errors
 
-Errors related to command-line argument parsing or general CLI usage.
+### ERR-001: Config File Error
 
-| Message | Description | Solution |
-| --- | --- | --- |
-| "invalid date format" | Date not recognized | Use `YYYY-MM-DD` or RFC3339 |
-| "date range cannot exceed 366 days" | Date range too wide | Reduce range to max 366 days |
-| "plugin not found" | Plugin not in registry | Verify plugin name |
-| "plugin already installed" | Plugin exists | Use `update` or `--force` |
+**Message**: "Failed to load configuration file"
+**Cause**: The configuration file at `~/.pulumicost/config.yaml` is invalid
+or unreadable.
+**Fix**: Check permissions and YAML syntax.
+
+### ERR-002: Plugin Not Found
+
+**Message**: "Plugin [name] not found"
+**Cause**: The requested plugin is not installed in `~/.pulumicost/plugins`.
+**Fix**: Run `pulumicost plugin install [name]`.
+
+## Engine Errors
+
+### ENG-001: Pricing Lookup Failed
+
+**Message**: "No pricing data found for resource"
+**Cause**: The resource type or SKU is not supported by the pricing provider.
+**Fix**: Check if the resource is supported or add a local override in
+`~/.pulumicost/specs/`.
+
+### ENG-002: Plugin Timeout
+
+**Message**: "Plugin request timed out"
+**Cause**: The plugin took too long to respond (default 10s).
+**Fix**: Check network connectivity or increase timeout via environment
+variable.

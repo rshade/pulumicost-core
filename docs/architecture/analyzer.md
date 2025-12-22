@@ -1,58 +1,38 @@
 ---
-title: Pulumi Analyzer Integration
-description: Architecture and protocol details for PulumiCost Pulumi Analyzer integration
+title: Analyzer Architecture
+description: Architecture of the Pulumicost Analyzer integration
 layout: default
 ---
 
+Pulumicost integrates with the Pulumi engine via the Analyzer interface.
+This allows Pulumicost to intercept resource changes during `pulumi preview`
+and `pulumi up` to provide cost estimates and policy enforcement.
+
 ## Overview
 
-PulumiCost integrates with the Pulumi CLI as an Analyzer, providing "Zero-Click" cost
-estimation during `pulumi preview`. This delivers instant feedback on infrastructure
-change costs directly within your Pulumi workflow.
+The Analyzer runs as a gRPC service that Pulumi connects to. When you run
+a Pulumi command, if the analyzer is configured, Pulumi sends resource
+definitions to Pulumicost.
 
-## Architecture
+## Protocol
 
-The Pulumi Analyzer integration operates as a gRPC plugin. When `pulumicost analyzer
-serve` is configured in your `Pulumi.yaml`, the Pulumi CLI communicates with the
-PulumiCost analyzer via a local gRPC connection.
+Pulumicost implements the `pulumirpc.Analyzer` service.
 
-1. **Server Startup and Port Handshake**: Pulumi CLI launches the `pulumicost analyzer
-   serve` process. PulumiCost's analyzer listens on a dynamic port and communicates it
-   back to Pulumi via stdout.
-2. **Resource Mapping**: The analyzer receives resource descriptors from Pulumi, maps
-   them to an internal format compatible with PulumiCost's pricing engine.
-3. **Cost Calculation**: The internal pricing engine, leveraging configured pricing
-   plugins, calculates the estimated costs for each resource.
-4. **Diagnostic Generation**: Estimated costs are returned to the Pulumi CLI as
-   diagnostics with `ADVISORY` severity, appearing in the `pulumi preview` output.
+- **Analyze**: Receives a resource and its properties. Pulumicost calculates
+  the cost.
+- **AnalyzeStack**: Receives the entire stack state.
 
 ## Configuration
 
-To enable the PulumiCost Analyzer, add the following to your Pulumi project's
-`Pulumi.yaml` file:
+The analyzer is configured via `Pulumi.yaml` using the `analyzers` key:
 
 ```yaml
-name: my-project
-runtime: go # or your chosen runtime
-description: A Pulumi project with cost analysis
-plugins:
-  - path: pulumicost
-    args: ["analyzer", "serve"]
+analyzers:
+  - name: pulumicost
+    version: v1.0.0
 ```
 
-The analyzer's behavior can be further configured via `~/.pulumicost/config.yaml`
-within the `analyzer` section. Refer to the
-[Configuration Reference](/reference/config-reference.md) for details on setting
-timeouts and plugin-specific options for the analyzer.
+## Diagnostics
 
-## Protocol Details
-
-The PulumiCost Analyzer implements the Pulumi Analyzer gRPC protocol. Key aspects
-include:
-
-- **gRPC RPCs**: The analyzer responds to standard Pulumi Analyzer RPCs for resource
-  analysis.
-- **Stdout/Stderr Behavior**: The initial port handshake occurs over stdout. Standard
-  logging output is directed to stderr or configured log files.
-- **Graceful Shutdown**: The analyzer is designed to shut down gracefully when the
-  Pulumi CLI terminates its connection.
+If a resource violates a cost policy (e.g., exceeds budget), Pulumicost
+returns a diagnostic error or warning, which Pulumi displays in the CLI.

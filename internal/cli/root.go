@@ -157,6 +157,7 @@ func NewRootCmd(ver string) *cobra.Command {
 		NewPluginUpdateCmd(),
 		NewPluginRemoveCmd(),
 		NewPluginConformanceCmd(),
+		NewPluginCertifyCmd(),
 	)
 
 	configCmd := &cobra.Command{

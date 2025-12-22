@@ -15,6 +15,9 @@ import (
 func TestPluginListCmd_NoPlugins(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set HOME to temp directory to ensure no plugins are found
+	t.Setenv("HOME", t.TempDir())
+
 	cmd := cli.NewPluginListCmd()
 
 	var out bytes.Buffer
@@ -67,6 +70,9 @@ func TestPluginListCmd_WithPlugins(t *testing.T) {
 func TestPluginValidateCmd_NoPlugins(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set HOME to temp directory to ensure no plugins are found
+	t.Setenv("HOME", t.TempDir())
+
 	cmd := cli.NewPluginValidateCmd()
 
 	var out bytes.Buffer

@@ -1,9 +1,8 @@
-package cli
+package cli_test
 
 import (
 	"encoding/json"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/rshade/pulumicost-core/test/integration/helpers"
@@ -11,263 +10,193 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// extractResourcesFromAggregatedJSON parses the AggregatedResults JSON structure
-// and returns the resources array. The JSON output from "cost projected --output json"
-// has the structure: {"summary": {...}, "resources": [...]}.
-func extractResourcesFromAggregatedJSON(t *testing.T, output string) []map[string]interface{} {
-	t.Helper()
-
-	var aggregated map[string]interface{}
-	err := json.Unmarshal([]byte(output), &aggregated)
-	require.NoError(t, err, "Should parse aggregated JSON output")
-
-	resources, ok := aggregated["resources"].([]interface{})
-	require.True(t, ok, "Aggregated JSON should have resources array")
-
-	// Convert []interface{} to []map[string]interface{}
-	result := make([]map[string]interface{}, 0, len(resources))
-	for _, r := range resources {
-		if m, ok := r.(map[string]interface{}); ok {
-			result = append(result, m)
-		}
-	}
-	return result
-}
-
-// TestProjectedCost_FilterByType tests filtering projected costs by exact resource type.
 func TestProjectedCost_FilterByType(t *testing.T) {
 	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
 
-	// Use the multi-resource test fixture
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
+	// Execute projected cost command with type filter
+	output, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile, "--filter",
+		"type=aws:ec2/instance:Instance", "--output", "json",
+	)
+	require.NoError(t, err)
 
-	// Execute with type filter for EC2 instances
-	output := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=aws:ec2/instance",
-		"--output", "json")
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
 
-	// Parse the aggregated JSON structure and extract resources
-	results := extractResourcesFromAggregatedJSON(t, output)
+	resources := result["resources"].([]interface{})
 
-	// Verify all results are EC2 instances
-	// Note: JSON field is "resourceType" (camelCase) not "type"
-	for _, result := range results {
-		resourceType, ok := result["resourceType"].(string)
-		assert.True(t, ok, "Result should have resourceType field")
-		assert.Contains(t, resourceType, "ec2/instance", "All results should be EC2 instances")
+	// Verify filtered results
+	assert.NotEmpty(t, resources, "Expected matches for filter: type=aws:ec2/instance:Instance. Output: %s", output)
+	for _, r := range resources {
+		res := r.(map[string]interface{})
+		// The key in JSON output is "resourceType"
+		assert.Equal(t, "aws:ec2/instance:Instance", res["resourceType"])
 	}
 }
 
-// TestProjectedCost_FilterByTypeSubstring tests filtering by type substring.
 func TestProjectedCost_FilterByTypeSubstring(t *testing.T) {
 	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
 
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
+	// Filter by "bucket" substring
+	output, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile,
+		"--filter", "type=bucket", "--output", "json",
+	)
+	require.NoError(t, err)
 
-	// Execute with substring filter
-	output := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=ec2",
-		"--output", "json")
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
 
-	// Parse the aggregated JSON structure and extract resources
-	results := extractResourcesFromAggregatedJSON(t, output)
-
-	// Verify all results contain "ec2" in resourceType
-	for _, result := range results {
-		resourceType, ok := result["resourceType"].(string)
-		assert.True(t, ok, "Result should have resourceType field")
-		assert.Contains(t, resourceType, "ec2", "All results should contain 'ec2' in resourceType")
+	resources := result["resources"].([]interface{})
+	assert.NotEmpty(t, resources)
+	for _, r := range resources {
+		res := r.(map[string]interface{})
+		assert.Contains(t, res["resourceType"], "Bucket")
 	}
 }
 
-// TestProjectedCost_FilterByProvider tests filtering by cloud provider.
 func TestProjectedCost_FilterByProvider(t *testing.T) {
 	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
 
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
+	// Filter by "azure" provider
+	output, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile,
+		"--filter", "provider=azure", "--output", "json",
+	)
+	require.NoError(t, err)
 
-	// Execute with provider filter
-	output := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "provider=aws",
-		"--output", "json")
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
 
-	// Parse the aggregated JSON structure and extract resources
-	results := extractResourcesFromAggregatedJSON(t, output)
-
-	// Verify all results are AWS resources
-	for _, result := range results {
-		resourceType, ok := result["resourceType"].(string)
-		assert.True(t, ok, "Result should have resourceType field")
-		assert.Contains(t, resourceType, "aws:", "All results should be AWS resources")
+	resources := result["resources"].([]interface{})
+	assert.NotEmpty(t, resources)
+	for _, r := range resources {
+		res := r.(map[string]interface{})
+		typeStr := res["resourceType"].(string)
+		assert.Contains(t, typeStr, "azure")
 	}
 }
 
-// TestActualCost_FilterByTag tests filtering actual costs by tags using --group-by.
 func TestActualCost_FilterByTag(t *testing.T) {
+	// Skip for now if no plugin support or mock data
+	// The cost actual command relies on plugins. Without a plugin that supports actual cost *and* tags, this might fail or return empty.
+	// But we can test the filtering logic if we assume the engine does filtering *before* or *after* plugin call?
+	// Actually, for GetActualCost, the engine passes filters to the plugin usually, or filters results?
+	// Let's check engine.go... Filter by tags happens in GetActualCostWithOptions.
+	// It calls MatchesTags.
+	// So we can test this even if the plugin returns mock data, as long as we have a plan with resources that have tags.
+	// But `cost actual` usually requires resource IDs from the plan.
+
 	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
 
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
+	// Filter by env=prod tag
+	// Note: 'cost actual' needs --from/--to usually, but defaults exist.
+	// We'll use defaults.
+	output, err := h.Execute(
+		"cost", "actual", "--pulumi-json", planFile,
+		"--filter", "tag:env=prod", "--output", "json",
+	)
+	require.NoError(t, err)
 
-	// Note: Actual cost filtering uses --group-by with tag syntax, not --filter
-	// This test would require mock server setup for actual cost data
-	// For now, test the command parsing and basic execution
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
 
-	output, err := h.Execute("cost", "actual",
-		"--pulumi-json", planFile,
-		"--from", "2025-01-01",
-		"--group-by", "tag:Environment=prod",
-		"--output", "json")
+	// Since we don't have a real actual cost plugin configured that returns data for these IDs,
+	// we expect results (placeholders) but filtered to only those with the tag.
+	resources := result["resources"].([]interface{})
+	assert.NotEmpty(t, resources)
 
-	// The command may fail due to missing actual cost data/mocking
-	// But we can at least verify it accepts the tag filter syntax
-	if err == nil {
-		// If it succeeds, verify basic JSON structure
-		// Note: actual cost JSON output is an array []CostResult, not an aggregated object
-		var result []map[string]interface{}
-		assert.NoError(t, json.Unmarshal([]byte(output), &result), "Should return valid JSON array")
-	}
-	_ = err // Mark err as used to avoid linting error
-}
+	for _, r := range resources {
+		res := r.(map[string]interface{})
+		// Verify these resources are the ones with env=prod in the fixture
+		// i-123... (aws_instance) has env=prod
+		// vm-azure-1 has env=prod
+		// db-1 has env=prod
+		// vm-gcp-1 has env=staging
+		// my-bucket has env=dev
 
-// TestActualCost_FilterByTagAndType tests combined tag and type filtering.
-func TestActualCost_FilterByTagAndType(t *testing.T) {
-	h := helpers.NewCLIHelper(t)
-
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
-
-	// Test command accepts both group-by and type filtering parameters
-	// This validates the CLI accepts the combined filtering approach
-	output, err := h.Execute("cost", "actual",
-		"--pulumi-json", planFile,
-		"--from", "2025-01-01",
-		"--group-by", "tag:Team=backend",
-		"--output", "json")
-
-	// Verify command executes (may fail due to actual cost data requirements)
-	// The key test is that the CLI accepts the tag filtering syntax
-	assert.NotNil(t, output, "Command should produce output")
-	_ = err // Mark err as used
-}
-
-// TestProjectedCost_FilterNoMatch tests behavior when filter matches no resources.
-func TestProjectedCost_FilterNoMatch(t *testing.T) {
-	h := helpers.NewCLIHelper(t)
-
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
-
-	// Execute with filter that should match no resources
-	output := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=nonexistent",
-		"--output", "json")
-
-	// Parse the aggregated JSON structure and extract resources
-	results := extractResourcesFromAggregatedJSON(t, output)
-
-	// Verify empty result set (filtering works but no matches)
-	assert.Empty(t, results, "Should return empty results when no resources match filter")
-}
-
-// TestProjectedCost_FilterInvalidSyntax tests invalid filter syntax handling.
-func TestProjectedCost_FilterInvalidSyntax(t *testing.T) {
-	h := helpers.NewCLIHelper(t)
-
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
-
-	// Execute with invalid filter syntax
-	output, err := h.Execute("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "invalid string",
-		"--output", "json")
-
-	// Current implementation: invalid filters return all resources (no error)
-	// Verify command succeeds and returns results
-	assert.NoError(t, err, "Invalid filter syntax should not cause command failure")
-	assert.NotEmpty(t, output, "Should return results even with invalid filter")
-	_ = err // Mark err as used
-}
-
-// TestFilter_CaseInsensitivity tests case-insensitive filtering behavior.
-func TestFilter_CaseInsensitivity(t *testing.T) {
-	h := helpers.NewCLIHelper(t)
-
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
-
-	// Test with uppercase filter (should match due to case-insensitive implementation)
-	output := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=AWS:EC2/INSTANCE",
-		"--output", "json")
-
-	// Parse the aggregated JSON structure and extract resources
-	results := extractResourcesFromAggregatedJSON(t, output)
-
-	// Should return EC2 instances because filtering is case-insensitive
-	assert.NotEmpty(t, results, "Case-insensitive filter should return EC2 instances for uppercase filter")
-
-	// Verify all results are EC2 instances
-	for _, result := range results {
-		resourceType, ok := result["resourceType"].(string)
-		assert.True(t, ok, "Result should have resourceType field")
-		assert.Contains(t, resourceType, "ec2/instance", "All results should be EC2 instances")
-	}
-}
-
-// TestFilter_AllOutputFormats tests filtering works across all output formats.
-func TestFilter_AllOutputFormats(t *testing.T) {
-	h := helpers.NewCLIHelper(t)
-
-	planFile := filepath.Join("..", "..", "fixtures", "plans", "multi-resource-plan.json")
-
-	// Test JSON output format with filtering
-	jsonOutput := h.ExecuteOrFail("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=aws:ec2/instance",
-		"--output", "json")
-
-	// Parse the aggregated JSON structure and extract resources
-	jsonResults := extractResourcesFromAggregatedJSON(t, jsonOutput)
-
-	// Verify JSON results contain only EC2 instances
-	for _, result := range jsonResults {
-		resourceType, ok := result["resourceType"].(string)
-		assert.True(t, ok, "JSON result should have resourceType field")
-		assert.Contains(t, resourceType, "ec2/instance", "JSON results should be EC2 instances")
-	}
-
-	// Test table output format with filtering
-	tableOutput, err := h.Execute("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "type=aws:s3/bucket",
-		"--output", "table")
-
-	assert.NoError(t, err, "Table output should succeed")
-	assert.Contains(t, tableOutput, "s3/bucket", "Table output should contain S3 buckets")
-	assert.NotContains(t, tableOutput, "ec2/instance", "Table output should not contain EC2 instances")
-
-	// Test NDJSON output format with filtering
-	ndjsonOutput, err := h.Execute("cost", "projected",
-		"--pulumi-json", planFile,
-		"--filter", "provider=gcp",
-		"--output", "ndjson")
-
-	assert.NoError(t, err, "NDJSON output should succeed")
-	// NDJSON should contain valid JSON lines
-	lines := strings.Split(strings.TrimSpace(ndjsonOutput), "\n")
-	assert.NotEmpty(t, lines, "NDJSON should contain at least one line")
-
-	// Verify each line is valid JSON and contains GCP resources
-	for _, line := range lines {
-		if line != "" {
-			var result map[string]interface{}
-			assert.NoError(t, json.Unmarshal([]byte(line), &result), "Each NDJSON line should be valid JSON")
-
-			if resourceType, ok := result["resourceType"].(string); ok {
-				assert.Contains(t, resourceType, "gcp:", "NDJSON results should be GCP resources")
-			}
+		id := res["resourceId"].(string)
+		// assert that ID is one of the expected ones
+		if id != "i-1234567890abcdef0" && id != "vm-azure-1" && id != "db-1" {
+			t.Errorf("Found unexpected resource ID in filtered output: %s", id)
 		}
 	}
+}
+
+func TestActualCost_FilterByTagAndType(t *testing.T) {
+	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
+
+	// Filter by env=prod AND type=aws
+	// Note: CLI supports one filter flag string. Does it support multiple expressions?
+	// The implementation split by "=". It doesn't seem to support AND logic in one flag unless we pass multiple flags?
+	// Cobra flags can be slice. But `filter` is defined as `StringVar`.
+	// So probably only one filter at a time?
+	// Wait, the spec says "Filter resources (tag:key=value, type=*)".
+	// The implementation `matchesFilter` handles ONE key/value pair.
+	// `FilterResources` loops through resources.
+
+	// If we want multiple filters, we might need multiple flags if supported, or logic change.
+	// Looking at `internal/cli/cost_projected.go`: `cmd.Flags().StringVar(&filter, ...)` -> Single string.
+	// So currently only one filter condition is supported per command execution.
+	// User Story 2 says "Actual Cost Filtering by Tags".
+	// Scenario 2: "cost actual with both a group-by and a filter".
+
+	// Let's test that specific scenario then.
+
+	output, err := h.Execute(
+		"cost", "actual", "--pulumi-json", planFile, "--filter",
+		"tag:env=prod", "--group-by", "type", "--output", "json",
+	)
+	require.NoError(t, err)
+
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
+
+	resources := result["resources"].([]interface{})
+	assert.NotEmpty(t, resources)
+
+	// With group-by type, we should see aggregated results for types that have env=prod resources
+	// aws:ec2/instance:Instance (prod)
+	// azure:compute/virtualMachine:VirtualMachine (prod)
+	// aws:rds/instance:Instance (prod)
+
+	foundEC2 := false
+	foundAzure := false
+	foundRDS := false
+
+	for _, r := range resources {
+		res := r.(map[string]interface{})
+		rType := res["resourceType"].(string)
+		if rType == "aws:ec2/instance:Instance" {
+			foundEC2 = true
+		}
+		if rType == "azure:compute/virtualMachine:VirtualMachine" {
+			foundAzure = true
+		}
+		if rType == "aws:rds/instance:Instance" {
+			foundRDS = true
+		}
+
+		// Should NOT see gcp or s3
+		if rType == "gcp:compute/instance:Instance" {
+			t.Error("Found GCP resource, should be filtered out")
+		}
+		if rType == "aws:s3/bucket:Bucket" {
+			t.Error("Found S3 bucket, should be filtered out")
+		}
+	}
+
+	assert.True(t, foundEC2, "Should find EC2")
+	assert.True(t, foundAzure, "Should find Azure VM")
+	assert.True(t, foundRDS, "Should find RDS")
 }

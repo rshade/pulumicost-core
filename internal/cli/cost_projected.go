@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -39,6 +40,7 @@ func displayErrorSummary(
 //nolint:funlen // CLI command setup requires many configuration steps
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
+	var utilization float64
 
 	cmd := &cobra.Command{
 		Use:   "projected",
@@ -61,6 +63,9 @@ func NewCostProjectedCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			start := time.Now()
 			ctx := cmd.Context()
+
+			// Inject utilization into context
+			ctx = context.WithValue(ctx, engine.ContextKeyUtilization, utilization)
 
 			// Get logger from context (set by PersistentPreRunE)
 			log := logging.FromContext(ctx)
@@ -205,6 +210,8 @@ func NewCostProjectedCmd() *cobra.Command {
 	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().
 		StringVar(&filter, "filter", "", "Resource filter expressions (e.g., 'type=aws:ec2/instance')")
+	cmd.Flags().
+		Float64Var(&utilization, "utilization", 1.0, "Utilization rate for sustainability calculations (0.0 to 1.0)")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 

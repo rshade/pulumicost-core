@@ -22,14 +22,14 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [x] T001 Create internal/tui/ directory structure
-- [x] T002 [P] Add Bubble Tea and Lip Gloss dependencies to go.mod
-- [x] T003 [P] Configure Go module and import paths
-- [x] T004 [P] Bump pulumicost-spec dependency to v0.4.4
-- [x] T005 [P] Define color constants in internal/tui/colors.go
-- [x] T006 [P] Define icon constants in internal/tui/components.go
-- [x] T007 [P] Define OutputMode type and constants in internal/tui/detect.go
-- [x] T008 [P] Define ProgressBar struct in internal/tui/progress.go
+- [ ] T001 Create internal/tui/ directory structure
+- [ ] T002 [P] Add Bubble Tea and Lip Gloss dependencies to go.mod
+- [ ] T003 [P] Configure Go module and import paths
+- [ ] T004 [P] Bump pulumicost-spec dependency to v0.4.4
+- [ ] T005 [P] Define color constants in internal/tui/colors.go
+- [ ] T006 [P] Define icon constants in internal/tui/components.go
+- [ ] T007 [P] Define OutputMode type and constants in internal/tui/detect.go
+- [ ] T008 [P] Define ProgressBar struct in internal/tui/progress.go
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -45,13 +45,13 @@
 
 > **CONSTITUTION REQUIREMENT: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [x] T009 [P] [US1] Unit tests for color constants in internal/tui/colors_test.go
-- [x] T010 [P] [US1] Unit tests for style definitions in internal/tui/styles_test.go
+- [ ] T009 [P] [US1] Unit tests for color constants in internal/tui/colors_test.go
+- [ ] T010 [P] [US1] Unit tests for style definitions in internal/tui/styles_test.go
 
 ### Implementation for User Story 1
 
-- [x] T011 [US1] Implement Lip Gloss style definitions in internal/tui/styles.go
-- [x] T012 [US1] Add usage documentation in code comments for styles.go
+- [ ] T011 [US1] Implement Lip Gloss style definitions in internal/tui/styles.go
+- [ ] T012 [US1] Add usage documentation in code comments for styles.go
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -65,19 +65,19 @@
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
-- [x] T013 [P] [US2] Unit tests for progress bar rendering in internal/tui/progress_test.go
-- [x] T014 [P] [US2] Unit tests for status rendering functions in internal/tui/components_test.go
-- [x] T015 [P] [US2] Unit tests for money formatting utilities in internal/tui/render_test.go
+- [ ] T013 [P] [US2] Unit tests for progress bar rendering in internal/tui/progress_test.go
+- [ ] T014 [P] [US2] Unit tests for status rendering functions in internal/tui/components_test.go
+- [ ] T015 [P] [US2] Unit tests for money formatting utilities in internal/tui/render_test.go
 
 ### Implementation for User Story 2
 
-- [x] T016 [US2] Implement progress bar Render method in internal/tui/progress.go
-- [x] T017 [US2] Implement status rendering functions in internal/tui/components.go
-- [x] T018 [US2] Implement delta rendering function in internal/tui/components.go
-- [x] T019 [US2] Implement priority rendering function in internal/tui/components.go
-- [x] T020 [US2] Implement money formatting utilities in internal/tui/render.go
-- [x] T021 [US2] Implement percentage formatting utility in internal/tui/render.go
-- [x] T022 [US2] Add usage documentation in code comments for components.go and render.go
+- [ ] T016 [US2] Implement progress bar Render method in internal/tui/progress.go
+- [ ] T017 [US2] Implement status rendering functions in internal/tui/components.go
+- [ ] T018 [US2] Implement delta rendering function in internal/tui/components.go
+- [ ] T019 [US2] Implement priority rendering function in internal/tui/components.go
+- [ ] T020 [US2] Implement money formatting utilities in internal/tui/render.go
+- [ ] T021 [US2] Implement percentage formatting utility in internal/tui/render.go
+- [ ] T022 [US2] Add usage documentation in code comments for components.go and render.go
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -91,12 +91,12 @@
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [x] T023 [P] [US3] Unit tests for output mode detection in internal/tui/detect_test.go
-- [x] T024 [P] [US3] Unit tests for TTY utilities in internal/tui/detect_test.go
-- [x] T025 [US3] Implement DetectOutputMode function in internal/tui/detect.go
-- [x] T026 [US3] Implement IsTTY utility function in internal/tui/detect.go
-- [x] T027 [US3] Implement TerminalWidth utility function in internal/tui/detect.go
-- [x] T028 [US3] Add usage documentation in code comments for detect.go
+- [ ] T023 [P] [US3] Unit tests for output mode detection in internal/tui/detect_test.go
+- [ ] T024 [P] [US3] Unit tests for TTY utilities in internal/tui/detect_test.go
+- [ ] T025 [US3] Implement DetectOutputMode function in internal/tui/detect.go
+- [ ] T026 [US3] Implement IsTTY utility function in internal/tui/detect.go
+- [ ] T027 [US3] Implement TerminalWidth utility function in internal/tui/detect.go
+- [ ] T028 [US3] Add usage documentation in code comments for detect.go
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -106,15 +106,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T029 [P] Run go mod tidy and verify dependencies
-- [x] T030 [P] Run golangci-lint and fix any issues
-- [x] T031 [P] Run tests and verify 80%+ coverage (95%+ for critical paths)
-- [x] T032 [P] Update quickstart.md with any additional examples
-- [x] T033 [P] Add package-level documentation in internal/tui/doc.go
-- [x] T034 [P] Validate all acceptance criteria from spec.md
-- [x] T035 [P] Validate SC-001: Verify all package files compile successfully
-- [x] T036 [P] Validate SC-003: Test TTY detection in multiple environments (TTY, no-TTY, CI, TERM=dumb)
-- [x] T037 [P] Validate SC-005: Import package in test CLI command and verify functionality
+- [ ] T029 [P] Run go mod tidy and verify dependencies
+- [ ] T030 [P] Run golangci-lint and fix any issues
+- [ ] T031 [P] Run tests and verify 80%+ coverage (95%+ for critical paths)
+- [ ] T032 [P] Update quickstart.md with any additional examples
+- [ ] T033 [P] Add package-level documentation in internal/tui/doc.go
+- [ ] T034 [P] Validate all acceptance criteria from spec.md
+- [ ] T035 [P] Validate SC-001: Verify all package files compile successfully
+- [ ] T036 [P] Validate SC-003: Test TTY detection in multiple environments (TTY, no-TTY, CI, TERM=dumb)
+- [ ] T037 [P] Validate SC-005: Import package in test CLI command and verify functionality
 
 ---
 

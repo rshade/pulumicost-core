@@ -24,9 +24,9 @@
 
 **Purpose**: Verify external dependency and prepare for implementation
 
-- [x] T001 Verify pulumicost-spec#129 is merged (external dependency check)
-- [x] T002 [P] Update pulumicost-spec dependency if needed via `go get github.com/rshade/pulumicost-spec@latest`
-- [x] T003 [P] Verify pluginsdk.Serve() handles --port flag by checking SDK documentation
+- [ ] T001 Verify pulumicost-spec#129 is merged (external dependency check)
+- [ ] T002 [P] Update pulumicost-spec dependency if needed via `go get github.com/rshade/pulumicost-spec@latest`
+- [ ] T003 [P] Verify pluginsdk.Serve() handles --port flag by checking SDK documentation
 
 ---
 
@@ -36,11 +36,11 @@
 
 **CRITICAL**: Tests must be updated to expect new behavior BEFORE code changes
 
-- [x] T004 Update `createEnvCheckingScript()` to verify PORT is NOT set in `internal/pluginhost/process_test.go`
-- [x] T005 Update `TestProcessLauncher_StartPluginEnvironment` assertions to verify PORT is NOT set (validates FR-002, FR-005) in `internal/pluginhost/process_test.go`
-- [x] T006 [P] Add test for DEBUG logging when PORT detected in user environment in `internal/pluginhost/process_test.go`
-- [x] T007 [P] Add test for guidance logging when plugin fails to bind in `internal/pluginhost/process_test.go`
-- [x] T008 Run tests - confirm they FAIL (expected, validates TDD approach)
+- [ ] T004 Update `createEnvCheckingScript()` to verify PORT is NOT set in `internal/pluginhost/process_test.go`
+- [ ] T005 Update `TestProcessLauncher_StartPluginEnvironment` assertions to verify PORT is NOT set (validates FR-002, FR-005) in `internal/pluginhost/process_test.go`
+- [ ] T006 [P] Add test for DEBUG logging when PORT detected in user environment in `internal/pluginhost/process_test.go`
+- [ ] T007 [P] Add test for guidance logging when plugin fails to bind in `internal/pluginhost/process_test.go`
+- [ ] T008 Run tests - confirm they FAIL (expected, validates TDD approach)
 
 **Checkpoint**: Tests updated and failing - ready for implementation
 
@@ -54,11 +54,11 @@
 
 ### Implementation for User Story 1
 
-- [x] T009 [US1] Remove `envPortFallback` constant (line 43) in `internal/pluginhost/process.go`
-- [x] T010 [US1] Remove PORT env var line (line 374) from `startPlugin()` in `internal/pluginhost/process.go`
-- [x] T011 [US1] Add DEBUG logging for PORT detection in `startPlugin()` in `internal/pluginhost/process.go`
-- [x] T012 [US1] Update comments (lines 368-372) to remove PORT references in `internal/pluginhost/process.go`
-- [x] T013 [US1] Run `go test ./internal/pluginhost/...` - verify tests pass
+- [ ] T009 [US1] Remove `envPortFallback` constant (line 43) in `internal/pluginhost/process.go`
+- [ ] T010 [US1] Remove PORT env var line (line 374) from `startPlugin()` in `internal/pluginhost/process.go`
+- [ ] T011 [US1] Add DEBUG logging for PORT detection in `startPlugin()` in `internal/pluginhost/process.go`
+- [ ] T012 [US1] Update comments (lines 368-372) to remove PORT references in `internal/pluginhost/process.go`
+- [ ] T013 [US1] Run `go test ./internal/pluginhost/...` - verify tests pass
 
 **Checkpoint**: User Story 1 complete - PORT removed, --port is authoritative
 
@@ -74,9 +74,9 @@
 
 ### Implementation for User Story 2
 
-- [x] T014 [US2] Verify PULUMICOST_PLUGIN_PORT line (line 375) is preserved in `internal/pluginhost/process.go`
-- [x] T015 [US2] Extend test assertions in `TestProcessLauncher_StartPluginEnvironment` to also verify PULUMICOST_PLUGIN_PORT is set in `internal/pluginhost/process_test.go`
-- [x] T016 [US2] Run `go test ./internal/pluginhost/...` - verify tests pass
+- [ ] T014 [US2] Verify PULUMICOST_PLUGIN_PORT line (line 375) is preserved in `internal/pluginhost/process.go`
+- [ ] T015 [US2] Extend test assertions in `TestProcessLauncher_StartPluginEnvironment` to also verify PULUMICOST_PLUGIN_PORT is set in `internal/pluginhost/process_test.go`
+- [ ] T016 [US2] Run `go test ./internal/pluginhost/...` - verify tests pass
 
 **Checkpoint**: User Story 2 complete - PULUMICOST_PLUGIN_PORT verified
 
@@ -90,9 +90,9 @@
 
 ### Implementation for User Story 3
 
-- [x] T017 [US3] Add guidance logging in `startOnce()` error path (line 219) when plugin fails to bind in `internal/pluginhost/process.go`
-- [x] T018 [US3] Verify existing `TestProcessLauncher_ConcurrentPortAllocation` still passes (validates FR-004: unique ports) in `internal/pluginhost/process_test.go`
-- [x] T019 [US3] Run integration tests `go test ./test/integration/plugin/...` - verify tests pass
+- [ ] T017 [US3] Add guidance logging in `startOnce()` error path (line 219) when plugin fails to bind in `internal/pluginhost/process.go`
+- [ ] T018 [US3] Verify existing `TestProcessLauncher_ConcurrentPortAllocation` still passes (validates FR-004: unique ports) in `internal/pluginhost/process_test.go`
+- [ ] T019 [US3] Run integration tests `go test ./test/integration/plugin/...` - verify tests pass
 
 **Checkpoint**: User Story 3 complete - multi-plugin scenarios verified
 
@@ -102,12 +102,12 @@
 
 **Purpose**: Documentation, validation, and cleanup
 
-- [x] T020 [P] Update `internal/pluginhost/CLAUDE.md` to document new PORT behavior
-- [x] T021 [P] Update main `CLAUDE.md` Environment Variables section if needed
-- [x] T022 Run `make lint` - verify no linting errors
-- [x] T023 Run `make test` - verify all tests pass
-- [x] T024 Run `make test-integration` - verify integration tests pass
-- [x] T025 Verify code coverage meets 80% minimum for `internal/pluginhost/`
+- [ ] T020 [P] Update `internal/pluginhost/CLAUDE.md` to document new PORT behavior
+- [ ] T021 [P] Update main `CLAUDE.md` Environment Variables section if needed
+- [ ] T022 Run `make lint` - verify no linting errors
+- [ ] T023 Run `make test` - verify all tests pass
+- [ ] T024 Run `make test-integration` - verify integration tests pass
+- [ ] T025 Verify code coverage meets 80% minimum for `internal/pluginhost/`
 
 ---
 

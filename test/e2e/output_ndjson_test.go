@@ -1,0 +1,37 @@
+//go:build e2e
+// +build e2e
+
+package e2e
+
+import (
+	"encoding/json"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestE2E_Output_NDJSON(t *testing.T) {
+	binary := findPulumicostBinary()
+	require.NotEmpty(t, binary)
+
+	planPath, _ := filepath.Abs("../fixtures/plans/aws/simple.json")
+
+	// Run with NDJSON output
+	cmd := exec.Command(binary, "cost", "projected", "--pulumi-json", planPath, "--output", "ndjson")
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		var obj map[string]interface{}
+		err := json.Unmarshal([]byte(line), &obj)
+		assert.NoError(t, err, "Line should be valid JSON: %s", line)
+	}
+}

@@ -25,11 +25,11 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [x] T001 Create plugin directory structure at plugins/recorder/
-- [x] T002 [P] Initialize Go module for plugin with go.mod in plugins/recorder/ (using main module - monorepo pattern)
-- [x] T003 [P] Add pulumicost-spec v0.4.6+ dependency to plugins/recorder/go.mod (upgraded main go.mod to v0.4.6)
-- [x] T004 [P] Add Makefile target `build-recorder` in Makefile
-- [x] T005 [P] Create plugin.manifest.json in plugins/recorder/plugin.manifest.json
+- [ ] T001 Create plugin directory structure at plugins/recorder/
+- [ ] T002 [P] Initialize Go module for plugin with go.mod in plugins/recorder/ (using main module - monorepo pattern)
+- [ ] T003 [P] Add pulumicost-spec v0.4.6+ dependency to plugins/recorder/go.mod (upgraded main go.mod to v0.4.6)
+- [ ] T004 [P] Add Makefile target `build-recorder` in Makefile
+- [ ] T005 [P] Create plugin.manifest.json in plugins/recorder/plugin.manifest.json
 
 ---
 
@@ -39,14 +39,14 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T006 Implement Config struct and LoadConfig() in plugins/recorder/config.go
-- [x] T007 [P] Create RecorderPlugin struct with BasePlugin embedding in plugins/recorder/plugin.go
-- [x] T008 [P] Implement NewRecorderPlugin() factory in plugins/recorder/plugin.go
-- [x] T009 Implement Name() RPC handler in plugins/recorder/plugin.go
-- [x] T010 Implement main() with signal handling and pluginsdk.Serve() in plugins/recorder/cmd/main.go
-- [x] T011 [P] Add test for Config loading in plugins/recorder/config_test.go
-- [x] T012 [P] Add test for NewRecorderPlugin() in plugins/recorder/plugin_test.go
-- [x] T012a [P] Add test for both TCP and stdio communication modes in plugins/recorder/plugin_test.go
+- [ ] T006 Implement Config struct and LoadConfig() in plugins/recorder/config.go
+- [ ] T007 [P] Create RecorderPlugin struct with BasePlugin embedding in plugins/recorder/plugin.go
+- [ ] T008 [P] Implement NewRecorderPlugin() factory in plugins/recorder/plugin.go
+- [ ] T009 Implement Name() RPC handler in plugins/recorder/plugin.go
+- [ ] T010 Implement main() with signal handling and pluginsdk.Serve() in plugins/recorder/cmd/main.go
+- [ ] T011 [P] Add test for Config loading in plugins/recorder/config_test.go
+- [ ] T012 [P] Add test for NewRecorderPlugin() in plugins/recorder/plugin_test.go
+- [ ] T012a [P] Add test for both TCP and stdio communication modes in plugins/recorder/plugin_test.go
 
 **Checkpoint**: Foundation ready - plugin can start and respond to Name() calls
 
@@ -60,24 +60,24 @@
 
 ### Tests for User Story 1 (MANDATORY - TDD Required)
 
-- [x] T013 [P] [US1] Unit test for Recorder.Record() in plugins/recorder/recorder_test.go
-- [x] T014 [P] [US1] Unit test for generateFilename() ULID format in plugins/recorder/recorder_test.go
-- [x] T015 [P] [US1] Unit test for directory creation in plugins/recorder/recorder_test.go
-- [x] T016 [P] [US1] Integration test for request recording in test/integration/recorder_test.go (covered by unit tests)
-- [x] T016a [P] [US1] Unit test for malformed request handling in plugins/recorder/recorder_test.go
+- [ ] T013 [P] [US1] Unit test for Recorder.Record() in plugins/recorder/recorder_test.go
+- [ ] T014 [P] [US1] Unit test for generateFilename() ULID format in plugins/recorder/recorder_test.go
+- [ ] T015 [P] [US1] Unit test for directory creation in plugins/recorder/recorder_test.go
+- [ ] T016 [P] [US1] Integration test for request recording in test/integration/recorder_test.go (covered by unit tests)
+- [ ] T016a [P] [US1] Unit test for malformed request handling in plugins/recorder/recorder_test.go
 
 ### Implementation for User Story 1
 
-- [x] T017 [US1] Create Recorder struct in plugins/recorder/recorder.go
-- [x] T018 [US1] Implement NewRecorder() with output directory setup in plugins/recorder/recorder.go
-- [x] T019 [US1] Implement generateFilename() with ULID in plugins/recorder/recorder.go
-- [x] T020 [US1] Implement serializeRequest() using protojson in plugins/recorder/recorder.go
-- [x] T021 [US1] Implement Record() method to write JSON files in plugins/recorder/recorder.go
-- [x] T022 [US1] Wire Recorder into GetProjectedCost() handler in plugins/recorder/plugin.go
-- [x] T023 [US1] Wire Recorder into GetActualCost() handler in plugins/recorder/plugin.go
-- [x] T024 [US1] Add request validation using pluginsdk v0.4.6 helpers in plugins/recorder/plugin.go
-- [x] T025 [US1] Handle edge case: non-writable directory in plugins/recorder/recorder.go
-- [x] T026 [US1] Handle edge case: disk full (graceful degradation) in plugins/recorder/recorder.go
+- [ ] T017 [US1] Create Recorder struct in plugins/recorder/recorder.go
+- [ ] T018 [US1] Implement NewRecorder() with output directory setup in plugins/recorder/recorder.go
+- [ ] T019 [US1] Implement generateFilename() with ULID in plugins/recorder/recorder.go
+- [ ] T020 [US1] Implement serializeRequest() using protojson in plugins/recorder/recorder.go
+- [ ] T021 [US1] Implement Record() method to write JSON files in plugins/recorder/recorder.go
+- [ ] T022 [US1] Wire Recorder into GetProjectedCost() handler in plugins/recorder/plugin.go
+- [ ] T023 [US1] Wire Recorder into GetActualCost() handler in plugins/recorder/plugin.go
+- [ ] T024 [US1] Add request validation using pluginsdk v0.4.6 helpers in plugins/recorder/plugin.go
+- [ ] T025 [US1] Handle edge case: non-writable directory in plugins/recorder/recorder.go
+- [ ] T026 [US1] Handle edge case: disk full (graceful degradation) in plugins/recorder/recorder.go
 
 **Checkpoint**: User Story 1 complete - recorder captures all requests to JSON files
 
@@ -91,22 +91,22 @@
 
 ### Tests for User Story 2 (MANDATORY - TDD Required)
 
-- [x] T027 [P] [US2] Unit test for Mocker.GenerateProjectedCost() range in plugins/recorder/mocker_test.go
-- [x] T028 [P] [US2] Unit test for Mocker.GenerateActualCost() range in plugins/recorder/mocker_test.go
-- [x] T029 [P] [US2] Unit test for mock response structure validity in plugins/recorder/mocker_test.go
-- [x] T030 [P] [US2] Integration test for mock mode toggle in test/integration/recorder_test.go (covered by unit tests)
+- [ ] T027 [P] [US2] Unit test for Mocker.GenerateProjectedCost() range in plugins/recorder/mocker_test.go
+- [ ] T028 [P] [US2] Unit test for Mocker.GenerateActualCost() range in plugins/recorder/mocker_test.go
+- [ ] T029 [P] [US2] Unit test for mock response structure validity in plugins/recorder/mocker_test.go
+- [ ] T030 [P] [US2] Integration test for mock mode toggle in test/integration/recorder_test.go (covered by unit tests)
 
 ### Implementation for User Story 2
 
-- [x] T031 [US2] Create Mocker struct in plugins/recorder/mocker.go
-- [x] T032 [US2] Implement NewMocker() constructor in plugins/recorder/mocker.go
-- [x] T033 [US2] Implement GenerateProjectedCost() with log-scale random in plugins/recorder/mocker.go
-- [x] T034 [US2] Implement CreateProjectedCostResponse() using SDK Calculator in plugins/recorder/mocker.go
-- [x] T035 [US2] Implement GenerateActualCost() for historical data mock in plugins/recorder/mocker.go
-- [x] T036 [US2] Implement CreateActualCostResponse() in plugins/recorder/mocker.go
-- [x] T037 [US2] Wire Mocker into GetProjectedCost() when MockResponse=true in plugins/recorder/plugin.go
-- [x] T038 [US2] Wire Mocker into GetActualCost() when MockResponse=true in plugins/recorder/plugin.go
-- [x] T039 [US2] Implement default (zero cost) response when MockResponse=false in plugins/recorder/plugin.go
+- [ ] T031 [US2] Create Mocker struct in plugins/recorder/mocker.go
+- [ ] T032 [US2] Implement NewMocker() constructor in plugins/recorder/mocker.go
+- [ ] T033 [US2] Implement GenerateProjectedCost() with log-scale random in plugins/recorder/mocker.go
+- [ ] T034 [US2] Implement CreateProjectedCostResponse() using SDK Calculator in plugins/recorder/mocker.go
+- [ ] T035 [US2] Implement GenerateActualCost() for historical data mock in plugins/recorder/mocker.go
+- [ ] T036 [US2] Implement CreateActualCostResponse() in plugins/recorder/mocker.go
+- [ ] T037 [US2] Wire Mocker into GetProjectedCost() when MockResponse=true in plugins/recorder/plugin.go
+- [ ] T038 [US2] Wire Mocker into GetActualCost() when MockResponse=true in plugins/recorder/plugin.go
+- [ ] T039 [US2] Implement default (zero cost) response when MockResponse=false in plugins/recorder/plugin.go
 
 **Checkpoint**: User Story 2 complete - recorder returns mock costs when enabled
 
@@ -120,19 +120,19 @@
 
 ### Tests for User Story 3 (MANDATORY - TDD Required)
 
-- [x] T040 [P] [US3] Verify 80%+ test coverage across all files in plugins/recorder/ (83.5% achieved)
-- [x] T041 [P] [US3] Verify all exported symbols have godoc comments in plugins/recorder/
-- [x] T041a [P] [US3] Add concurrent request stress test (100+ parallel requests) in plugins/recorder/recorder_test.go
+- [ ] T040 [P] [US3] Verify 80%+ test coverage across all files in plugins/recorder/ (83.5% achieved)
+- [ ] T041 [P] [US3] Verify all exported symbols have godoc comments in plugins/recorder/
+- [ ] T041a [P] [US3] Add concurrent request stress test (100+ parallel requests) in plugins/recorder/recorder_test.go
 
 ### Implementation for User Story 3
 
-- [x] T042 [P] [US3] Add comprehensive godoc comments to all exported types in plugins/recorder/
-- [x] T043 [P] [US3] Add inline code comments explaining SDK patterns in plugins/recorder/plugin.go
-- [x] T044 [US3] Create README.md with usage examples in plugins/recorder/README.md
-- [x] T045 [US3] Add zerolog structured logging throughout plugin in plugins/recorder/
-- [x] T046 [US3] Implement graceful shutdown with Shutdown() method in plugins/recorder/plugin.go
-- [x] T047 [US3] Ensure thread-safety with sync.Mutex in plugins/recorder/recorder.go
-- [x] T048 [US3] Run `make lint` and fix any issues in plugins/recorder/
+- [ ] T042 [P] [US3] Add comprehensive godoc comments to all exported types in plugins/recorder/
+- [ ] T043 [P] [US3] Add inline code comments explaining SDK patterns in plugins/recorder/plugin.go
+- [ ] T044 [US3] Create README.md with usage examples in plugins/recorder/README.md
+- [ ] T045 [US3] Add zerolog structured logging throughout plugin in plugins/recorder/
+- [ ] T046 [US3] Implement graceful shutdown with Shutdown() method in plugins/recorder/plugin.go
+- [ ] T047 [US3] Ensure thread-safety with sync.Mutex in plugins/recorder/recorder.go
+- [ ] T048 [US3] Run `make lint` and fix any issues in plugins/recorder/
 
 **Checkpoint**: User Story 3 complete - recorder is a high-quality reference implementation
 
@@ -146,16 +146,16 @@
 
 ### Tests for User Story 4 (MANDATORY - TDD Required)
 
-- [x] T049 [P] [US4] Integration test verifying plugin discovery in test/integration/recorder_test.go
-- [x] T050 [P] [US4] Contract test validating all RPC responses in test/integration/recorder_test.go
+- [ ] T049 [P] [US4] Integration test verifying plugin discovery in test/integration/recorder_test.go
+- [ ] T050 [P] [US4] Contract test validating all RPC responses in test/integration/recorder_test.go
 
 ### Implementation for User Story 4
 
-- [x] T051 [US4] Ensure binary builds to correct path bin/pulumicost-plugin-recorder
-- [x] T052 [US4] Add CI workflow step to build recorder in .github/workflows/ci.yml
-- [x] T053 [US4] Add CI workflow step to run recorder integration tests in .github/workflows/ci.yml
-- [x] T054 [US4] Create test fixture for recorder at test/fixtures/recorder/
-- [x] T055 [US4] Document plugin installation in quickstart for contract testing in plugins/recorder/README.md
+- [ ] T051 [US4] Ensure binary builds to correct path bin/pulumicost-plugin-recorder
+- [ ] T052 [US4] Add CI workflow step to build recorder in .github/workflows/ci.yml
+- [ ] T053 [US4] Add CI workflow step to run recorder integration tests in .github/workflows/ci.yml
+- [ ] T054 [US4] Create test fixture for recorder at test/fixtures/recorder/
+- [ ] T055 [US4] Document plugin installation in quickstart for contract testing in plugins/recorder/README.md
 
 **Checkpoint**: User Story 4 complete - recorder works as contract test target
 
@@ -165,13 +165,13 @@
 
 **Purpose**: Final improvements and validation
 
-- [x] T056 [P] Run full test suite with `make test` and verify all pass
-- [x] T057 [P] Run `make lint` and verify clean output
-- [x] T058 [P] Verify cross-platform build with GOOS/GOARCH variations
-- [x] T058a [P] Add benchmark test validating <10ms recording overhead in plugins/recorder/recorder_test.go
-- [x] T059 Validate quickstart.md end-to-end from specs/018-recorder-plugin/quickstart.md
-- [x] T060 Run `pulumicost plugin validate` on installed recorder
-- [x] T061 Update CLAUDE.md with recorder plugin documentation
+- [ ] T056 [P] Run full test suite with `make test` and verify all pass
+- [ ] T057 [P] Run `make lint` and verify clean output
+- [ ] T058 [P] Verify cross-platform build with GOOS/GOARCH variations
+- [ ] T058a [P] Add benchmark test validating <10ms recording overhead in plugins/recorder/recorder_test.go
+- [ ] T059 Validate quickstart.md end-to-end from specs/018-recorder-plugin/quickstart.md
+- [ ] T060 Run `pulumicost plugin validate` on installed recorder
+- [ ] T061 Update CLAUDE.md with recorder plugin documentation
 
 ---
 

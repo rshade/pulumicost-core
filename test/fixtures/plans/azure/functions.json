@@ -1,0 +1,12 @@
+{
+  "resources": [
+    {
+      "type": "azure-native:web:WebApp",
+      "id": "test-function-app",
+      "inputs": {
+        "kind": "functionapp"
+      },
+      "provider": "azure-native"
+    }
+  ]
+}

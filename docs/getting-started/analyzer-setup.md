@@ -1,61 +1,40 @@
 ---
-title: Analyzer Setup Quickstart
-description: Quick setup guide for PulumiCost Pulumi Analyzer integration
+title: Analyzer Setup
+description: Setting up PulumiCost as a Pulumi Analyzer
 layout: default
 ---
 
-## Zero-Click Cost Estimation
+PulumiCost can run as a Pulumi Analyzer, providing cost estimates directly
+within your `pulumi preview` and `pulumi up` workflow.
 
-PulumiCost integrates directly with the Pulumi CLI as an analyzer, providing cost
-estimates automatically during `pulumi preview`.
-
-### Prerequisites
+## Prerequisites
 
 - Pulumi CLI installed
-- `pulumicost` installed and in your PATH
+- `pulumicost` binary available in your PATH
 
-### Configuration
+## Configuration
 
-Add the analyzer to your project's `Pulumi.yaml`:
+To enable the analyzer, add the following to your `Pulumi.yaml` file:
 
 ```yaml
-name: my-project
-runtime: go # or your chosen runtime
-description: A Pulumi project with cost analysis
-plugins:
-  - path: pulumicost
-    args: ["analyzer", "serve"]
+analyzers:
+  - name: pulumicost
+    version: v1.0.0 # Match your installed version
 ```
 
-### Usage
+## Usage
 
-Run a preview as normal. Cost estimates will appear in the diagnostics output:
+Once configured, run `pulumi preview` as usual. You will see cost estimates
+in the diagnostics output.
 
-```text
-Diagnostics:
-  pulumicost:
-    Type: aws:ec2/instance:Instance
-    ID:   web-server
-    Cost: $7.59/month (est.)
+```bash
+pulumi preview
 ```
 
-### Troubleshooting
+## Troubleshooting
 
 If you don't see cost estimates:
 
-1. **Check Logs**: Run with debug logging enabled:
-
-   ```bash
-   PULUMICOST_LOG_LEVEL=debug pulumi preview
-   ```
-
-   Check `~/.pulumicost/logs/pulumicost.log`.
-
-2. **Verify Port**: The analyzer runs on a dynamic port. Ensure no firewalls are
-   blocking localhost traffic.
-
-3. **Strict Mode**: If config issues are suspected, enable strict mode:
-
-   ```bash
-   PULUMICOST_CONFIG_STRICT=true pulumi preview
-   ```
+1. Ensure `pulumicost` is in your PATH.
+2. Check `Pulumi.yaml` syntax.
+3. Run `pulumi preview --debug` to see if the analyzer is being loaded.

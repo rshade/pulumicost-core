@@ -1,165 +1,50 @@
 name: Nightly Failure Analysis
 
 on:
-  workflow_run:
-    workflows: ["Nightly Tests"]
-    types: [completed]
+  issues:
+    types: [labeled]
 
 jobs:
   analyze-failure:
-    if: github.event.workflow_run.conclusion == 'failure'
+    if: github.event.label.name == 'nightly-failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
-      actions: read
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Install OpenCode CLI
-        run: curl -fsSL https://opencode.ai/install | bash
-        env:
-          VERSION: '1.0.114'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
 
-      - name: Find or Wait for Failure Issue
-        id: find-issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
+      - name: Setup OpenCode CLI
         run: |
-          # Wait for notify-failure job to create the issue (max 60 seconds)
-          for i in {1..12}; do
-            echo "Attempt $i: Looking for nightly-failure issue..."
+          npm install -g @opencode/cli
 
-            # Find issue containing this run ID or today's date
-            ISSUE_NUMBER=$(gh issue list --label nightly-failure --state open --json number,body \
-              --jq ".[] | select(.body | contains(\"$RUN_ID\")) | .number" | head -1)
-
-            if [ -n "$ISSUE_NUMBER" ]; then
-              echo "Found issue #$ISSUE_NUMBER"
-              echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-
-            # Also try finding by today's date
-            TODAY=$(date -u +"%Y-%m-%d")
-            ISSUE_NUMBER=$(gh issue list --label nightly-failure --state open --json number,title \
-              --jq ".[] | select(.title | contains(\"$TODAY\")) | .number" | head -1)
-
-            if [ -n "$ISSUE_NUMBER" ]; then
-              echo "Found issue #$ISSUE_NUMBER by date"
-              echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-
-            sleep 5
-          done
-
-          # If no issue found, create one
-          echo "No existing issue found, creating one..."
-          ISSUE_NUMBER=$(gh issue create \
-            --title "Nightly test failure - $(date -u +%Y-%m-%d)" \
-            --body "## Nightly Test Failure
-
-          The nightly test run has failed.
-
-          **Run URL:** ${{ github.event.workflow_run.html_url }}
-
-          Please investigate and fix the failing tests." \
-            --label "nightly-failure" \
-            --label "bug" \
-            --json number --jq '.number')
-
-          echo "Created issue #$ISSUE_NUMBER"
-          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-
-      - name: Fetch Failure Context
+      - name: Analyze Failure Context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
         run: |
-          echo "# NIGHTLY FAILURE CONTEXT" > context.txt
-          echo "Run ID: $RUN_ID" >> context.txt
-          echo "Run URL: $RUN_URL" >> context.txt
-          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> context.txt
-          echo "" >> context.txt
+          go run scripts/analysis/analyze_failure.go \
+            --issue-body "${{ github.event.issue.body }}" \
+            --output context.txt
 
-          # Fetch failed jobs
-          echo "Fetching failed jobs..."
-          FAILED_JOBS=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs" \
-            --jq '.jobs[] | select(.conclusion=="failure")')
-
-          if [ -z "$FAILED_JOBS" ]; then
-            echo "No failed jobs found in run $RUN_ID" >> context.txt
-            exit 0
-          fi
-
-          # Process each failed job
-          while read -r job; do
-            JOB_ID=$(echo "$job" | jq -r '.id')
-            JOB_NAME=$(echo "$job" | jq -r '.name')
-            FAILED_STEP=$(echo "$job" | jq -r '.steps[] | select(.conclusion=="failure") | .name' | head -1)
-
-            echo "## FAILED JOB: $JOB_NAME (ID: $JOB_ID)" >> context.txt
-            echo "Failed Step: ${FAILED_STEP:-Unknown}" >> context.txt
-            echo "" >> context.txt
-
-            # Fetch logs for this job (truncate to last 200 lines)
-            echo "Fetching logs for job $JOB_ID..."
-            echo "Logs (Truncated):" >> context.txt
-            echo '```text' >> context.txt
-            gh api "repos/${{ github.repository }}/actions/jobs/$JOB_ID/logs" 2>/dev/null | tail -200 >> context.txt || echo "Error fetching logs" >> context.txt
-            echo '```' >> context.txt
-            echo "" >> context.txt
-          done < <(echo "$FAILED_JOBS" | jq -c '.')
-
-      - name: Verify Context
-        run: |
-          echo "=== Context file contents ==="
-          cat context.txt
-          echo "=== End of context ==="
-
-      - name: Run OpenCode Analysis
+      - name: Generate Analysis Report
         env:
-          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
-          PROMPT="Analyze the attached failure log context.
+          opencode run \
+            --model "claude-3-5-sonnet-20241022" \
+            --context context.txt \
+            --prompt "Analyze this CI failure log. Provide a structured report with: 1. Executive Summary, 2. Root Cause Analysis (be specific), 3. Recommended Fixes. Format as Markdown." \
+            > analysis.md
 
-          Your goal is to provide a triage report for this nightly build failure.
-
-          Output Format (Markdown):
-          ## Nightly Failure Analysis
-
-          **Run**: [Run URL from context]
-          **Date**: [Timestamp from context]
-
-          ### Summary
-          [Brief description of what failed, e.g. 'Integration tests failed on Ubuntu due to timeout']
-
-          ### Root Cause Hypothesis
-          [Your analysis of why it failed based on the logs. Be specific. Quote the error.]
-
-          ### Suggested Fixes
-          1. [Step 1]
-          2. [Step 2]
-
-          ### Relevant Logs
-          \`\`\`text
-          [Extract key error lines]
-          \`\`\`
-          "
-
-          opencode run --model xai/grok-code-free --file context.txt "$PROMPT" > analysis.md
-
-      - name: Post Analysis Comment
+      - name: Post Triage Report
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ steps.find-issue.outputs.issue_number }}
         run: |
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "Error: No issue number found"
-            exit 1
-          fi
-          gh issue comment "$ISSUE_NUMBER" -F analysis.md
+          gh issue comment ${{ github.event.issue.number }} --body-file analysis.md

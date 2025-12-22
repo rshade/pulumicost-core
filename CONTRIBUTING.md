@@ -279,6 +279,8 @@ make validate  # Module and vet checks must pass
 
 ### Test Requirements
 
+For detailed testing instructions, see the [Testing Guide](docs/testing/guide.md).
+
 - Write tests before implementation (TDD approach)
 - Include tests for all new code paths
 - Test error conditions and edge cases

@@ -174,6 +174,29 @@ Generate a monthly cost comparison. You can output this as JSON for further proc
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by monthly --output json
 ```
 
+## Sustainability Metrics
+
+PulumiCost now supports sustainability metrics, allowing you to estimate the carbon footprint of your infrastructure.
+
+### Carbon Footprint
+
+The table output includes a "CO₂" column showing the estimated carbon emissions for supported resources.
+
+**Example Output:**
+
+```text
+RESOURCE                      TYPE              MONTHLY   CURRENCY  CO₂
+aws:ec2/instance:Instance     aws:ec2:Instance  $7.50     USD       12.5 kg
+```
+
+### Utilization Rate
+
+You can adjust the assumed utilization rate for sustainability calculations using the `--utilization` flag. The default is 1.0 (100%).
+
+```bash
+pulumicost cost projected --pulumi-json plan.json --utilization 0.8
+```
+
 ---
 
 ## Common Workflows

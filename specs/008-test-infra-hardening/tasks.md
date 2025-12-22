@@ -25,9 +25,9 @@
 
 **Purpose**: Project initialization and test infrastructure foundation
 
-- [x] T001 Verify Go 1.24+ installed (required for native fuzzing and project compatibility) via `go version`
-- [x] T002 [P] Create `test/benchmarks/generator/` directory structure
-- [x] T003 [P] Verify existing `test/benchmarks/` suite structure and dependencies
+- [ ] T001 Verify Go 1.24+ installed (required for native fuzzing and project compatibility) via `go version`
+- [ ] T002 [P] Create `test/benchmarks/generator/` directory structure
+- [ ] T003 [P] Verify existing `test/benchmarks/` suite structure and dependencies
 
 ---
 
@@ -37,11 +37,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T004 Create `test/benchmarks/generator/generator.go` with `BenchmarkConfig` and `SyntheticResource` structs from data-model.md
-- [x] T005 [P] Implement `GeneratePlan(config BenchmarkConfig) SyntheticPlan` function in `test/benchmarks/generator/generator.go`
-- [x] T006 [P] Add validation rules (ResourceCount > 0, MaxDepth >= 0, DependencyRatio 0.0-1.0) in `test/benchmarks/generator/generator.go`
-- [x] T007 [P] Write unit tests for generator validation rules in `test/benchmarks/generator/generator_test.go`
-- [x] T008 Create `test/benchmarks/generator/export.go` with `ToJSON(plan SyntheticPlan) []byte` for benchmark data serialization
+- [ ] T004 Create `test/benchmarks/generator/generator.go` with `BenchmarkConfig` and `SyntheticResource` structs from data-model.md
+- [ ] T005 [P] Implement `GeneratePlan(config BenchmarkConfig) SyntheticPlan` function in `test/benchmarks/generator/generator.go`
+- [ ] T006 [P] Add validation rules (ResourceCount > 0, MaxDepth >= 0, DependencyRatio 0.0-1.0) in `test/benchmarks/generator/generator.go`
+- [ ] T007 [P] Write unit tests for generator validation rules in `test/benchmarks/generator/generator_test.go`
+- [ ] T008 Create `test/benchmarks/generator/export.go` with `ToJSON(plan SyntheticPlan) []byte` for benchmark data serialization
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -57,19 +57,19 @@
 
 > **CONSTITUTION REQUIREMENT: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [x] T009 [P] [US1] Create fuzz test skeleton `FuzzJSON` in `internal/ingest/fuzz_test.go`
-- [x] T010 [P] [US1] Create fuzz test skeleton `FuzzYAML` in `internal/spec/fuzz_test.go`
-- [x] T011 [P] [US1] Add seed corpus directory `internal/ingest/testdata/fuzz/FuzzJSON/` with sample valid/invalid JSON files
-- [x] T012 [P] [US1] Add seed corpus directory `internal/spec/testdata/fuzz/FuzzYAML/` with sample valid/invalid YAML files
+- [ ] T009 [P] [US1] Create fuzz test skeleton `FuzzJSON` in `internal/ingest/fuzz_test.go`
+- [ ] T010 [P] [US1] Create fuzz test skeleton `FuzzYAML` in `internal/spec/fuzz_test.go`
+- [ ] T011 [P] [US1] Add seed corpus directory `internal/ingest/testdata/fuzz/FuzzJSON/` with sample valid/invalid JSON files
+- [ ] T012 [P] [US1] Add seed corpus directory `internal/spec/testdata/fuzz/FuzzYAML/` with sample valid/invalid YAML files
 
 ### Implementation for User Story 1
 
-- [x] T013 [US1] Implement `FuzzJSON(f *testing.F)` function in `internal/ingest/fuzz_test.go` targeting JSON parser
-- [x] T014 [US1] Implement `FuzzYAML(f *testing.F)` function in `internal/spec/fuzz_test.go` targeting YAML parser
-- [x] T015 [US1] Run local fuzzing (30s each parser) and fix any panics discovered in parser code
-- [x] T016 [P] [US1] Update `.github/workflows/ci.yml` to add fuzz smoke test step (`-fuzztime=30s`) for PRs
-- [x] T017 [P] [US1] Add deep fuzzing job (6h) to `.github/workflows/nightly.yml` on schedule
-- [x] T018 [US1] Configure fuzz corpus caching in GitHub Actions (`testdata/fuzz` directories)
+- [ ] T013 [US1] Implement `FuzzJSON(f *testing.F)` function in `internal/ingest/fuzz_test.go` targeting JSON parser
+- [ ] T014 [US1] Implement `FuzzYAML(f *testing.F)` function in `internal/spec/fuzz_test.go` targeting YAML parser
+- [ ] T015 [US1] Run local fuzzing (30s each parser) and fix any panics discovered in parser code
+- [ ] T016 [P] [US1] Update `.github/workflows/ci.yml` to add fuzz smoke test step (`-fuzztime=30s`) for PRs
+- [ ] T017 [P] [US1] Add deep fuzzing job (6h) to `.github/workflows/nightly.yml` on schedule
+- [ ] T018 [US1] Configure fuzz corpus caching in GitHub Actions (`testdata/fuzz` directories)
 
 **Checkpoint**: Parser resilience verified - fuzz tests pass locally and in CI
 
@@ -83,17 +83,17 @@
 
 ### Audits for User Story 2 (Pre-Implementation Analysis)
 
-- [x] T019 [P] [US2] Audit codebase for path separator issues (`/` vs `\`) in file operations
-- [x] T020 [P] [US2] Audit codebase for platform-specific executable detection patterns
+- [ ] T019 [P] [US2] Audit codebase for path separator issues (`/` vs `\`) in file operations
+- [ ] T020 [P] [US2] Audit codebase for platform-specific executable detection patterns
 
 ### Implementation for User Story 2
 
-- [x] T021 [US2] Create `.github/workflows/nightly.yml` with matrix: `os: [ubuntu-latest, windows-latest, macos-latest]` (consolidates all nightly jobs: cross-platform tests, deep fuzzing, benchmarks)
-- [x] T022 [US2] Configure nightly schedule trigger (`cron: '0 0 * * *'`) in `.github/workflows/nightly.yml`
-- [x] T023 [US2] Configure release tag trigger (`on: release, types: [published]`) in `.github/workflows/nightly.yml`
-- [x] T024 [US2] Add `fail-fast: true` to matrix strategy in `.github/workflows/nightly.yml`
-- [x] T025 [US2] Add platform-specific Go setup with caching in `.github/workflows/nightly.yml`
-- [x] T026 [US2] Fix any platform-specific issues discovered (path separators, permissions, etc.) - None found: codebase uses filepath.Join/Dir/Base and handles .exe correctly
+- [ ] T021 [US2] Create `.github/workflows/nightly.yml` with matrix: `os: [ubuntu-latest, windows-latest, macos-latest]` (consolidates all nightly jobs: cross-platform tests, deep fuzzing, benchmarks)
+- [ ] T022 [US2] Configure nightly schedule trigger (`cron: '0 0 * * *'`) in `.github/workflows/nightly.yml`
+- [ ] T023 [US2] Configure release tag trigger (`on: release, types: [published]`) in `.github/workflows/nightly.yml`
+- [ ] T024 [US2] Add `fail-fast: true` to matrix strategy in `.github/workflows/nightly.yml`
+- [ ] T025 [US2] Add platform-specific Go setup with caching in `.github/workflows/nightly.yml`
+- [ ] T026 [US2] Fix any platform-specific issues discovered (path separators, permissions, etc.) - None found: codebase uses filepath.Join/Dir/Base and handles .exe correctly
 
 **Checkpoint**: Cross-platform reliability verified - nightly workflow runs successfully on all platforms
 
@@ -109,18 +109,18 @@
 
 > **CONSTITUTION REQUIREMENT: Write benchmark test stubs FIRST**
 
-- [x] T027 [P] [US3] Create benchmark test file `test/benchmarks/scale_test.go` with stub functions
-- [x] T028 [P] [US3] Define benchmark scenarios: 1K, 10K, 100K resources with moderately complex nesting
+- [ ] T027 [P] [US3] Create benchmark test file `test/benchmarks/scale_test.go` with stub functions
+- [ ] T028 [P] [US3] Define benchmark scenarios: 1K, 10K, 100K resources with moderately complex nesting
 
 ### Implementation for User Story 3
 
-- [x] T029 [US3] Implement `BenchmarkScale1K(b *testing.B)` in `test/benchmarks/scale_test.go`
-- [x] T030 [US3] Implement `BenchmarkScale10K(b *testing.B)` in `test/benchmarks/scale_test.go`
-- [x] T031 [US3] Implement `BenchmarkScale100K(b *testing.B)` in `test/benchmarks/scale_test.go`
-- [x] T032 [US3] Implement `BenchmarkDeeplyNested(b *testing.B)` for depth complexity testing in `test/benchmarks/scale_test.go`
-- [x] T033 [US3] Run benchmarks and capture baseline metrics - Results: 1K=13ms, 10K=167ms, 100K=2.3s (all under 5min target)
-- [x] T034 [US3] Add benchmark step to CI workflow for regression detection in `.github/workflows/ci.yml` - Added benchmark smoke test job
-- [x] T035 [US3] Optimize any bottlenecks discovered if 100K resources exceeds 5 minute threshold - NOT NEEDED: 100K completes in 2.3s
+- [ ] T029 [US3] Implement `BenchmarkScale1K(b *testing.B)` in `test/benchmarks/scale_test.go`
+- [ ] T030 [US3] Implement `BenchmarkScale10K(b *testing.B)` in `test/benchmarks/scale_test.go`
+- [ ] T031 [US3] Implement `BenchmarkScale100K(b *testing.B)` in `test/benchmarks/scale_test.go`
+- [ ] T032 [US3] Implement `BenchmarkDeeplyNested(b *testing.B)` for depth complexity testing in `test/benchmarks/scale_test.go`
+- [ ] T033 [US3] Run benchmarks and capture baseline metrics - Results: 1K=13ms, 10K=167ms, 100K=2.3s (all under 5min target)
+- [ ] T034 [US3] Add benchmark step to CI workflow for regression detection in `.github/workflows/ci.yml` - Added benchmark smoke test job
+- [ ] T035 [US3] Optimize any bottlenecks discovered if 100K resources exceeds 5 minute threshold - NOT NEEDED: 100K completes in 2.3s
 
 **Checkpoint**: Scalability verified - benchmarks complete within acceptable limits
 
@@ -136,19 +136,19 @@
 
 > **CONSTITUTION REQUIREMENT: Write negative test cases FIRST**
 
-- [x] T036 [P] [US4] Audit `internal/config` to identify all error handling paths - Identified: validateFileOutput, validatePluginConfigurations, InitLogger, getLoggingValue, setLoggingValue
-- [x] T037 [P] [US4] Create negative test file `internal/config/validation_test.go` with table-driven test structure
+- [ ] T036 [P] [US4] Audit `internal/config` to identify all error handling paths - Identified: validateFileOutput, validatePluginConfigurations, InitLogger, getLoggingValue, setLoggingValue
+- [ ] T037 [P] [US4] Create negative test file `internal/config/validation_test.go` with table-driven test structure
 
 ### Implementation for User Story 4
 
-- [x] T038 [US4] Implement table-driven tests for invalid configurations in `internal/config/validation_test.go`
-- [x] T039 [US4] Add tests for missing required fields in `internal/config/validation_test.go`
-- [x] T040 [US4] Add tests for invalid field values (wrong types, out of range) in `internal/config/validation_test.go`
-- [x] T041 [US4] Add tests for malformed file inputs in `internal/config/validation_test.go`
-- [x] T042 [US4] Measure coverage with `go test -coverprofile=coverage.out -covermode=atomic ./internal/config` - Result: 87.7%
-- [x] T043 [US4] Add additional error path tests until >90% error handling coverage achieved - Achieved 87.7% overall, >90% on critical paths
-- [x] T044 [US4] Improve error messages for any unclear validation failures discovered - Error messages already clear
-- [x] T045 [US4] Ensure validation logic achieves >85% coverage target - ACHIEVED: 87.7% (target was 85%)
+- [ ] T038 [US4] Implement table-driven tests for invalid configurations in `internal/config/validation_test.go`
+- [ ] T039 [US4] Add tests for missing required fields in `internal/config/validation_test.go`
+- [ ] T040 [US4] Add tests for invalid field values (wrong types, out of range) in `internal/config/validation_test.go`
+- [ ] T041 [US4] Add tests for malformed file inputs in `internal/config/validation_test.go`
+- [ ] T042 [US4] Measure coverage with `go test -coverprofile=coverage.out -covermode=atomic ./internal/config` - Result: 87.7%
+- [ ] T043 [US4] Add additional error path tests until >90% error handling coverage achieved - Achieved 87.7% overall, >90% on critical paths
+- [ ] T044 [US4] Improve error messages for any unclear validation failures discovered - Error messages already clear
+- [ ] T045 [US4] Ensure validation logic achieves >85% coverage target - ACHIEVED: 87.7% (target was 85%)
 
 **Checkpoint**: Robust validation verified - coverage targets met, error messages clear
 
@@ -158,14 +158,14 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T046 [P] Update `CONTRIBUTING.md` with instructions for running fuzz tests
-- [x] T047 [P] Update `CONTRIBUTING.md` with instructions for running benchmarks
-- [x] T048 [P] Update `docs/developer-guide.md` with test infrastructure documentation
-- [x] T049 Register new testing capabilities in `GEMINI.md` (agent context)
-- [x] T050 Validate `quickstart.md` commands work correctly - Fixed benchmark name and added `$` anchors
-- [x] T051 Run `make lint` and fix any issues - All lint issues fixed
-- [x] T052 Run `make test` and verify all tests pass - All tests pass
-- [x] T053 Final coverage check: overall test coverage should meet thresholds - 74% overall, config 87.7%, engine 85.1%, ingest 97.7%, spec 100%
+- [ ] T046 [P] Update `CONTRIBUTING.md` with instructions for running fuzz tests
+- [ ] T047 [P] Update `CONTRIBUTING.md` with instructions for running benchmarks
+- [ ] T048 [P] Update `docs/developer-guide.md` with test infrastructure documentation
+- [ ] T049 Register new testing capabilities in `GEMINI.md` (agent context)
+- [ ] T050 Validate `quickstart.md` commands work correctly - Fixed benchmark name and added `$` anchors
+- [ ] T051 Run `make lint` and fix any issues - All lint issues fixed
+- [ ] T052 Run `make test` and verify all tests pass - All tests pass
+- [ ] T053 Final coverage check: overall test coverage should meet thresholds - 74% overall, config 87.7%, engine 85.1%, ingest 97.7%, spec 100%
 
 ---
 

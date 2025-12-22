@@ -4,8 +4,6 @@ title: 5-Minute Quickstart
 description: Get started with PulumiCost in 5 minutes
 ---
 
-# 5-Minute Quickstart
-
 Get PulumiCost running and see your first cost estimate in just 5 minutes.
 
 ## Prerequisites
@@ -34,6 +32,7 @@ chmod +x pulumicost
 ```
 
 **Verify installation:**
+
 ```bash
 pulumicost --version
 ```
@@ -58,7 +57,8 @@ pulumicost cost projected --pulumi-json plan.json
 ```
 
 **Output:**
-```
+
+```text
 RESOURCE                          TYPE              MONTHLY   CURRENCY
 aws:ec2/instance:Instance         aws:ec2:Instance  $7.50     USD
 aws:s3/bucket:Bucket              aws:s3:Bucket     $0.00     USD
@@ -74,6 +74,7 @@ pulumicost cost projected --pulumi-json plan.json --output json | jq .
 ```
 
 **Output:**
+
 ```json
 {
   "summary": {

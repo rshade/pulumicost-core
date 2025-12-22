@@ -29,9 +29,9 @@ each story.
 
 **Purpose**: Project initialization, dependency management, and replace existing unused slog implementation
 
-- [X] T001 Add github.com/oklog/ulid/v2 dependency to go.mod
-- [X] T002 Remove unused slog implementation in internal/logging/logger.go
-- [X] T003 Remove unused slog tests in internal/logging/logger_test.go
+- [ ] T001 Add github.com/oklog/ulid/v2 dependency to go.mod
+- [ ] T002 Remove unused slog implementation in internal/logging/logger.go
+- [ ] T003 Remove unused slog tests in internal/logging/logger_test.go
 
 ---
 
@@ -45,25 +45,25 @@ each story.
 
 > **CONSTITUTION REQUIREMENT: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [X] T004 [P] Unit test for TracingHook trace ID injection in internal/logging/zerolog_test.go
-- [X] T005 [P] Unit test for NewLogger factory function in internal/logging/zerolog_test.go
-- [X] T006 [P] Unit test for ULID trace ID generation in internal/logging/zerolog_test.go
-- [X] T007 [P] Unit test for context helpers (FromContext, ContextWithTraceID) in internal/logging/zerolog_test.go
-- [X] T008 [P] Unit test for log level parsing in internal/logging/zerolog_test.go
-- [X] T009 [P] Unit test for sensitive data protection patterns in internal/logging/zerolog_test.go
+- [ ] T004 [P] Unit test for TracingHook trace ID injection in internal/logging/zerolog_test.go
+- [ ] T005 [P] Unit test for NewLogger factory function in internal/logging/zerolog_test.go
+- [ ] T006 [P] Unit test for ULID trace ID generation in internal/logging/zerolog_test.go
+- [ ] T007 [P] Unit test for context helpers (FromContext, ContextWithTraceID) in internal/logging/zerolog_test.go
+- [ ] T008 [P] Unit test for log level parsing in internal/logging/zerolog_test.go
+- [ ] T009 [P] Unit test for sensitive data protection patterns in internal/logging/zerolog_test.go
 
 ### Implementation for Foundational Phase
 
-- [X] T010 Create TracingHook struct implementing zerolog.Hook in internal/logging/zerolog.go
-- [X] T011 Implement NewLogger factory function with format/level configuration in internal/logging/zerolog.go
-- [X] T012 Implement GenerateTraceID using oklog/ulid/v2 in internal/logging/zerolog.go
-- [X] T013 Implement GetOrGenerateTraceID (checks env, context, generates new) in internal/logging/zerolog.go
-- [X] T014 Implement ContextWithTraceID and FromContext helpers in internal/logging/zerolog.go
-- [X] T015 Implement parseLevel function mapping string to zerolog.Level in internal/logging/zerolog.go
-- [X] T016 Implement createWriter function for JSON/console output in internal/logging/zerolog.go
-- [X] T017 Implement isSensitiveKey function with blocklist patterns in internal/logging/zerolog.go
-- [X] T018 Implement SafeStr helper for redacting sensitive values in internal/logging/zerolog.go
-- [X] T019 Define traceIDKey context key type in internal/logging/zerolog.go
+- [ ] T010 Create TracingHook struct implementing zerolog.Hook in internal/logging/zerolog.go
+- [ ] T011 Implement NewLogger factory function with format/level configuration in internal/logging/zerolog.go
+- [ ] T012 Implement GenerateTraceID using oklog/ulid/v2 in internal/logging/zerolog.go
+- [ ] T013 Implement GetOrGenerateTraceID (checks env, context, generates new) in internal/logging/zerolog.go
+- [ ] T014 Implement ContextWithTraceID and FromContext helpers in internal/logging/zerolog.go
+- [ ] T015 Implement parseLevel function mapping string to zerolog.Level in internal/logging/zerolog.go
+- [ ] T016 Implement createWriter function for JSON/console output in internal/logging/zerolog.go
+- [ ] T017 Implement isSensitiveKey function with blocklist patterns in internal/logging/zerolog.go
+- [ ] T018 Implement SafeStr helper for redacting sensitive values in internal/logging/zerolog.go
+- [ ] T019 Define traceIDKey context key type in internal/logging/zerolog.go
 
 **Checkpoint**: Foundation ready - logging infrastructure complete, all unit tests passing
 
@@ -80,25 +80,25 @@ calculations, and command completion with duration.
 
 ### Tests for User Story 1 (MANDATORY - TDD Required) ⚠️
 
-- [X] T020 [P] [US1] Unit test for --debug flag enabling DEBUG level in internal/cli/root_test.go
-- [X] T021 [P] [US1] Unit test for trace ID generation at command start in internal/cli/root_test.go
-- [X] T022 [P] [US1] Unit test for command duration logging in internal/cli/cost_projected_test.go
-- [X] T023 [P] [US1] Integration test for full debug output flow in test/integration/logging_test.go
+- [ ] T020 [P] [US1] Unit test for --debug flag enabling DEBUG level in internal/cli/root_test.go
+- [ ] T021 [P] [US1] Unit test for trace ID generation at command start in internal/cli/root_test.go
+- [ ] T022 [P] [US1] Unit test for command duration logging in internal/cli/cost_projected_test.go
+- [ ] T023 [P] [US1] Integration test for full debug output flow in test/integration/logging_test.go
 
 ### Implementation for User Story 1
 
-- [X] T024 [US1] Add --debug persistent flag to root command in internal/cli/root.go
-- [X] T025 [US1] Initialize logger in PersistentPreRunE with config in internal/cli/root.go
-- [X] T026 [US1] Generate trace ID at command start and store in context in internal/cli/root.go
-- [X] T027 [US1] Add command start logging with trace_id, component=cli in internal/cli/root.go
-- [X] T028 [US1] Add cost_projected command logging (start, duration) in internal/cli/cost_projected.go
-- [X] T029 [US1] Add cost_actual command logging (start, duration) in internal/cli/cost_actual.go
-- [X] T030 [US1] Add resource ingestion logging in internal/ingest/pulumi_plan.go
-- [X] T031 [US1] Add plugin lookup logging with resource_type in internal/registry/registry.go
-- [X] T032 [US1] Add cost calculation logging with duration_ms in internal/engine/engine.go
-- [X] T033 [US1] Add fallback decision logging (WARN level) when plugin returns no price in internal/engine/engine.go
-- [X] T034 [US1] Add spec loading logging in internal/spec/loader.go
-- [X] T035 [US1] Initialize main logger at startup in cmd/pulumicost/main.go
+- [ ] T024 [US1] Add --debug persistent flag to root command in internal/cli/root.go
+- [ ] T025 [US1] Initialize logger in PersistentPreRunE with config in internal/cli/root.go
+- [ ] T026 [US1] Generate trace ID at command start and store in context in internal/cli/root.go
+- [ ] T027 [US1] Add command start logging with trace_id, component=cli in internal/cli/root.go
+- [ ] T028 [US1] Add cost_projected command logging (start, duration) in internal/cli/cost_projected.go
+- [ ] T029 [US1] Add cost_actual command logging (start, duration) in internal/cli/cost_actual.go
+- [ ] T030 [US1] Add resource ingestion logging in internal/ingest/pulumi_plan.go
+- [ ] T031 [US1] Add plugin lookup logging with resource_type in internal/registry/registry.go
+- [ ] T032 [US1] Add cost calculation logging with duration_ms in internal/engine/engine.go
+- [ ] T033 [US1] Add fallback decision logging (WARN level) when plugin returns no price in internal/engine/engine.go
+- [ ] T034 [US1] Add spec loading logging in internal/spec/loader.go
+- [ ] T035 [US1] Initialize main logger at startup in cmd/pulumicost/main.go
 
 **Checkpoint**: User Story 1 complete - debug mode shows full decision flow, independently testable
 
@@ -114,17 +114,17 @@ verify same trace ID appears in both log streams.
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
-- [X] T036 [P] [US2] Unit test for gRPC unary client interceptor in internal/pluginhost/grpc_test.go
-- [X] T037 [P] [US2] Unit test for trace ID metadata injection in internal/pluginhost/grpc_test.go
-- [X] T038 [P] [US2] Integration test for trace propagation to mock plugin in test/integration/trace_propagation_test.go
+- [ ] T036 [P] [US2] Unit test for gRPC unary client interceptor in internal/pluginhost/grpc_test.go
+- [ ] T037 [P] [US2] Unit test for trace ID metadata injection in internal/pluginhost/grpc_test.go
+- [ ] T038 [P] [US2] Integration test for trace propagation to mock plugin in test/integration/trace_propagation_test.go
 
 ### Implementation for User Story 2
 
-- [X] T039 [US2] Create TraceInterceptor function returning grpc.UnaryClientInterceptor in internal/pluginhost/grpc.go
-- [X] T040 [US2] Define TraceIDMetadataKey constant as "x-pulumicost-trace-id" in internal/pluginhost/grpc.go
-- [X] T041 [US2] Apply interceptor when creating gRPC connection in internal/pluginhost/process.go
-- [X] T042 [US2] Add plugin connection lifecycle logging (connect, disconnect, errors) in internal/pluginhost/process.go
-- [X] T043 [US2] Add gRPC call logging with method name in internal/pluginhost/grpc.go
+- [ ] T039 [US2] Create TraceInterceptor function returning grpc.UnaryClientInterceptor in internal/pluginhost/grpc.go
+- [ ] T040 [US2] Define TraceIDMetadataKey constant as "x-pulumicost-trace-id" in internal/pluginhost/grpc.go
+- [ ] T041 [US2] Apply interceptor when creating gRPC connection in internal/pluginhost/process.go
+- [ ] T042 [US2] Add plugin connection lifecycle logging (connect, disconnect, errors) in internal/pluginhost/process.go
+- [ ] T043 [US2] Add gRPC call logging with method name in internal/pluginhost/grpc.go
 
 **Checkpoint**: User Story 2 complete - trace IDs propagate to plugins, independently testable
 
@@ -140,21 +140,21 @@ ERROR logs appear (environment takes precedence over config file).
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [X] T044 [P] [US3] Unit test for configuration precedence (CLI > env > config) in internal/config/config_test.go
-- [X] T045 [P] [US3] Unit test for PULUMICOST_LOG_LEVEL environment variable in internal/config/config_test.go
-- [X] T046 [P] [US3] Unit test for PULUMICOST_LOG_FORMAT environment variable in internal/config/config_test.go
-- [X] T047 [P] [US3] Unit test for invalid log level fallback to INFO in internal/config/config_test.go
+- [ ] T044 [P] [US3] Unit test for configuration precedence (CLI > env > config) in internal/config/config_test.go
+- [ ] T045 [P] [US3] Unit test for PULUMICOST_LOG_LEVEL environment variable in internal/config/config_test.go
+- [ ] T046 [P] [US3] Unit test for PULUMICOST_LOG_FORMAT environment variable in internal/config/config_test.go
+- [ ] T047 [P] [US3] Unit test for invalid log level fallback to INFO in internal/config/config_test.go
 
 ### Implementation for User Story 3
 
-- [X] T048 [US3] Extend LoggingConfig struct with all fields (level, format, output, file, caller, stack_trace) in internal/config/config.go
-- [X] T049 [US3] Implement resolveLogLevel function checking CLI > env > config > default in internal/config/config.go
-- [X] T050 [US3] Implement resolveLogFormat function checking env > config > default in internal/config/config.go
-- [X] T051 [US3] Add PULUMICOST_LOG_LEVEL environment variable support in internal/config/config.go
-- [X] T052 [US3] Add PULUMICOST_LOG_FORMAT environment variable support in internal/config/config.go
-- [X] T053 [US3] Add file output support with fallback to stderr in internal/logging/zerolog.go
-- [X] T054 [US3] Add invalid log level warning and fallback in internal/logging/zerolog.go
-- [X] T055 [US3] Wire config resolution to logger initialization in internal/cli/root.go (call resolveLogLevel/resolveLogFormat, pass to NewLogger)
+- [ ] T048 [US3] Extend LoggingConfig struct with all fields (level, format, output, file, caller, stack_trace) in internal/config/config.go
+- [ ] T049 [US3] Implement resolveLogLevel function checking CLI > env > config > default in internal/config/config.go
+- [ ] T050 [US3] Implement resolveLogFormat function checking env > config > default in internal/config/config.go
+- [ ] T051 [US3] Add PULUMICOST_LOG_LEVEL environment variable support in internal/config/config.go
+- [ ] T052 [US3] Add PULUMICOST_LOG_FORMAT environment variable support in internal/config/config.go
+- [ ] T053 [US3] Add file output support with fallback to stderr in internal/logging/zerolog.go
+- [ ] T054 [US3] Add invalid log level warning and fallback in internal/logging/zerolog.go
+- [ ] T055 [US3] Wire config resolution to logger initialization in internal/cli/root.go (call resolveLogLevel/resolveLogFormat, pass to NewLogger)
 
 **Checkpoint**: User Story 3 complete - configuration precedence works correctly, independently testable
 
@@ -170,13 +170,13 @@ log entries use "external-trace-12345" as trace_id value.
 
 ### Tests for User Story 4 (MANDATORY - TDD Required) ⚠️
 
-- [X] T056 [P] [US4] Unit test for PULUMICOST_TRACE_ID environment variable override in internal/logging/zerolog_test.go
-- [X] T057 [P] [US4] Unit test for external trace ID appearing in all log entries in internal/logging/zerolog_test.go
-- [X] T058 [P] [US4] Integration test validating external trace ID flow in test/integration/trace_propagation_test.go
+- [ ] T056 [P] [US4] Unit test for PULUMICOST_TRACE_ID environment variable override in internal/logging/zerolog_test.go
+- [ ] T057 [P] [US4] Unit test for external trace ID appearing in all log entries in internal/logging/zerolog_test.go
+- [ ] T058 [P] [US4] Integration test validating external trace ID flow in test/integration/trace_propagation_test.go
 
 ### Implementation for User Story 4
 
-- [X] T059 [US4] Check PULUMICOST_TRACE_ID before generating new trace ID in internal/logging/zerolog.go
+- [ ] T059 [US4] Check PULUMICOST_TRACE_ID before generating new trace ID in internal/logging/zerolog.go
 
 **Checkpoint**: User Story 4 complete - external trace IDs properly injected, independently testable
 
@@ -186,19 +186,19 @@ log entries use "external-trace-12345" as trace_id value.
 
 **Purpose**: Improvements that affect multiple user stories, documentation, and quality assurance
 
-- [X] T060 [P] Add component sub-logger initialization for cli package in internal/cli/root.go
-- [X] T061 [P] Add component sub-logger initialization for engine package in internal/engine/engine.go
-- [X] T062 [P] Add component sub-logger initialization for registry package in internal/registry/registry.go
-- [X] T063 [P] Add component sub-logger initialization for pluginhost package in internal/pluginhost/process.go
-- [X] T064 [P] Add component sub-logger initialization for ingest package in internal/ingest/pulumi_plan.go
-- [X] T065 [P] Add component sub-logger initialization for spec package in internal/spec/loader.go
-- [X] T066 [P] Add component sub-logger initialization for config package in internal/config/config.go
-- [X] T067 Update user documentation with --debug flag examples in docs/guides/user-guide.md
-- [X] T068 Update developer documentation with logging patterns in docs/guides/developer-guide.md
-- [X] T069 Run make lint and fix any issues
-- [X] T070 Run make test and ensure 80% coverage minimum
-- [X] T071 Run quickstart.md validation scenarios
-- [X] T072 Update CLAUDE.md with zerolog logging patterns
+- [ ] T060 [P] Add component sub-logger initialization for cli package in internal/cli/root.go
+- [ ] T061 [P] Add component sub-logger initialization for engine package in internal/engine/engine.go
+- [ ] T062 [P] Add component sub-logger initialization for registry package in internal/registry/registry.go
+- [ ] T063 [P] Add component sub-logger initialization for pluginhost package in internal/pluginhost/process.go
+- [ ] T064 [P] Add component sub-logger initialization for ingest package in internal/ingest/pulumi_plan.go
+- [ ] T065 [P] Add component sub-logger initialization for spec package in internal/spec/loader.go
+- [ ] T066 [P] Add component sub-logger initialization for config package in internal/config/config.go
+- [ ] T067 Update user documentation with --debug flag examples in docs/guides/user-guide.md
+- [ ] T068 Update developer documentation with logging patterns in docs/guides/developer-guide.md
+- [ ] T069 Run make lint and fix any issues
+- [ ] T070 Run make test and ensure 80% coverage minimum
+- [ ] T071 Run quickstart.md validation scenarios
+- [ ] T072 Update CLAUDE.md with zerolog logging patterns
 
 ---
 

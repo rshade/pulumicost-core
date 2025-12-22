@@ -1,0 +1,13 @@
+{
+  "resources": [
+    {
+      "type": "aws:lambda/function:Function",
+      "id": "test-lambda-function",
+      "inputs": {
+        "memorySize": 128,
+        "runtime": "nodejs14.x"
+      },
+      "provider": "aws"
+    }
+  ]
+}

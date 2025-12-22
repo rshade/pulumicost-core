@@ -120,7 +120,7 @@ See `.specify/memory/constitution.md` for non-negotiable principles:
 1. **CLI Layer** (`internal/cli/`) - Cobra-based commands:
    - `cost projected` - Estimate costs from Pulumi preview JSON
    - `cost actual` - Fetch historical costs with time ranges/grouping
-   - `plugin list/validate/install/remove/update` - Plugin management
+   - `plugin list/validate/install/remove/update/certify` - Plugin management
    - `analyzer serve` - Pulumi Analyzer gRPC server for zero-click cost estimation
 
 2. **Engine** (`internal/engine/`) - Core cost calculation:
@@ -554,7 +554,7 @@ consistency between core and plugins.
 import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 
 // Plugin communication
-pluginsdk.EnvPort        // "PULUMICOST_PLUGIN_PORT" - Primary port for gRPC
+pluginsdk.EnvPort        // "PULUMICOST_PLUGIN_PORT" - Primary port for gRPC (Note: "PORT" is NOT set)
 
 // Logging configuration
 pluginsdk.EnvLogLevel    // "PULUMICOST_LOG_LEVEL" - Log verbosity

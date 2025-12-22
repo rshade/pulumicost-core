@@ -1,0 +1,13 @@
+{
+  "resources": [
+    {
+      "type": "gcp:cloudfunctions/function:Function",
+      "id": "test-cloud-function",
+      "inputs": {
+        "runtime": "nodejs14",
+        "availableMemoryMb": 256
+      },
+      "provider": "gcp"
+    }
+  ]
+}

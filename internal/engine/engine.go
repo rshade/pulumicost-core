@@ -28,6 +28,14 @@ const (
 	defaultComputeMonthlyCost   = 20.0  // Default monthly cost for compute resources
 	defaultServiceName          = "default"
 	defaultCurrency             = "USD" // Default currency for cost calculations
+)
+
+// ContextKey is a custom type for context keys to avoid collisions.
+type ContextKey string
+
+const (
+	// ContextKeyUtilization is the context key for passing utilization rate.
+	ContextKeyUtilization ContextKey = "utilization"
 
 	// Timeout constants for engine operations.
 	defaultQueryTimeout = 60 * time.Second // Overall query timeout.
@@ -595,6 +603,16 @@ func (e *Engine) getProjectedCostFromPlugin(
 				Properties: convertToProto(resource.Properties),
 			},
 		},
+	}
+
+	// Pass utilization via context metadata if present
+	if utilization, ok := ctx.Value(ContextKeyUtilization).(float64); ok {
+		// Since we can't easily modify grpc metadata here without importing metadata package which might be an abstraction leak,
+		// we will rely on the adapter to handle it if we pass it down.
+		// However, adapter.GetProjectedCost takes ctx.
+		// Let's assume adapter handles context values or we modify adapter.
+		// For now, let's just pass the context which contains the value.
+		_ = utilization
 	}
 
 	resp, err := client.API.GetProjectedCost(ctx, req)

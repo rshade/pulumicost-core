@@ -256,6 +256,16 @@ PulumiCost Core is designed as a plugin-agnostic orchestrator:
                        └─────────────────┘
 ```
 
+## Nightly Failure Analysis
+
+Pulumicost includes an automated workflow for analyzing nightly build failures. If a nightly build fails, an issue labeled `nightly-failure` is created. This triggers a workflow that:
+
+1.  Retrieves build logs.
+2.  Analyzes the failure using an LLM (via OpenCode).
+3.  Posts a triage report as a comment on the issue, including a summary, root cause analysis, and recommended fixes.
+
+This helps maintainers quickly identify and resolve regressions.
+
 ## Contributing
 
 We welcome contributions! See our development documentation:
