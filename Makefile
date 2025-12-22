@@ -164,3 +164,6 @@ help:
 	@echo "  -timeout N       - Set timeout to N minutes"
 	@echo ""
 	@echo "  help             - Show this help message"
+
+test-integration-plugin:
+	go test -v ./test/integration/plugin/...
