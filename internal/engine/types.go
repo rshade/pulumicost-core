@@ -81,7 +81,10 @@ func (r *ResourceDescriptor) Validate() error {
 }
 
 // validatePropertyKey checks if a property key is a valid identifier.
-// Valid keys contain only alphanumeric characters, underscores, hyphens, and dots.
+// validatePropertyKey validates a resource property key.
+// It ensures the key is not empty, does not exceed the maximum allowed length,
+// and contains only letters, digits, underscores (_), hyphens (-), or dots (.).
+// Returns an error describing the violation when the key is invalid, or nil when valid.
 func validatePropertyKey(key string) error {
 	if key == "" {
 		return errors.New("property key cannot be empty")
@@ -102,7 +105,8 @@ func validatePropertyKey(key string) error {
 	return nil
 }
 
-// isValidPropertyKeyChar returns true if the character is valid in a property key.
+// isValidPropertyKeyChar reports whether ch is a valid character for a property key.
+// Valid characters are letters, digits, underscore ('_'), hyphen ('-'), or dot ('.').
 func isValidPropertyKeyChar(ch rune) bool {
 	return unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_' || ch == '-' || ch == '.'
 }

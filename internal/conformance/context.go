@@ -9,7 +9,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// testContextCancellation verifies plugin respects context cancellation.
+// testContextCancellation verifies that the plugin's RPCs respect context cancellation.
+// It calls GetProjectedCost with an already-canceled context and expects the call to fail
+// with a gRPC status whose code is codes.Canceled. If the PluginClient is not a
+// pbc.CostSourceServiceClient, the test returns an error result. If the RPC succeeds,
+// returns a failure result. If the RPC returns a non-gRPC error or a gRPC status with
+// a code other than Canceled, the test returns a failure result.
+// ctx is the test harness context which must provide a PluginClient implementing
+// pbc.CostSourceServiceClient.
+// The function returns a *TestResult that indicates Pass when a Canceled status is observed,
+// Fail for unexpected RPC outcomes, or Error for an invalid client type.
 func testContextCancellation(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {
@@ -49,7 +58,13 @@ func testContextCancellation(ctx *TestContext) *TestResult {
 	return &TestResult{Status: StatusPass}
 }
 
-// testTimeoutRespected verifies plugin responds within timeout limits.
+// testTimeoutRespected verifies that the plugin honors context timeouts when handling RPCs.
+// It calls the plugin's Name RPC with a very short deadline and interprets the outcome:
+// - returns a Pass result if the RPC completes successfully despite the short timeout,
+//   or if the RPC fails with gRPC code DeadlineExceeded or Canceled.
+// - returns a Fail result if the RPC returns a non-gRPC error or a gRPC status with an unexpected code.
+// - returns an Error result if the plugin client has an unexpected type.
+// ctx is the TestContext that provides the plugin client used to make the RPC.
 func testTimeoutRespected(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {

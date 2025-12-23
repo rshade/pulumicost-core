@@ -340,7 +340,11 @@ func (p *ProcessLauncher) waitForPluginBind(ctx context.Context, port int) error
 // It returns true if err contains common platform-independent phrases that
 // indicate the address or port is already in use; returns false for nil or
 // unrelated errors. The check uses string matching to remain portable across
-// "port is already allocated", or "failed to bind to port".
+// isPortCollisionError reports whether err indicates a port or address collision.
+// It returns true if err is non-nil and its error message contains common
+// platform strings used for port-binding conflicts such as
+// "address already in use", "bind: address already in use", "port is already allocated",
+// or "failed to bind to port". If err is nil it returns false.
 func isPortCollisionError(err error) bool {
 	if err == nil {
 		return false

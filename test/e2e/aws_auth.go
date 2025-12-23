@@ -12,7 +12,14 @@ import (
 )
 
 // GetAWSCredentialsEnv returns a slice of environment variables for AWS credentials
-// using the AWS SDK v2. This avoids the need for external shell scripts to export credentials.
+// GetAWSCredentialsEnv loads AWS configuration and credentials using the AWS SDK v2
+// and returns a slice of environment variable assignments suitable for exporting to a
+// subprocess (for example: "AWS_ACCESS_KEY_ID=...", "AWS_SECRET_ACCESS_KEY=...").
+// It includes AWS_SESSION_TOKEN if a session token is present. If the loaded config
+// contains a region and the AWS_REGION environment variable is not already set in
+// the process, the returned slice will include "AWS_REGION=<region>".
+// The provided context is used for config loading and credential retrieval.
+// Returns a wrapped error if loading the AWS config or retrieving credentials fails.
 func GetAWSCredentialsEnv(ctx context.Context) ([]string, error) {
 	// Load default config. It will pick up AWS_PROFILE, AWS_REGION, etc.
 	// and also handle SSO session if configured.

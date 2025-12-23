@@ -130,7 +130,12 @@ type AnalyzerPlugin struct {
 
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
-// By default, config errors are logged as warnings and defaults are used.
+// New creates a Config populated with sensible defaults and attempts to load overrides from the user's config file.
+// It sets legacy plugin/spec paths under the user's home directory (defaulting to ~/.pulumicost), default output and logging settings,
+// analyzer timeouts, and an internal configPath of ~/.pulumicost/config.yaml.
+// If a config file exists it is loaded; on load errors the function logs warnings and continues using defaults.
+// When the environment variable PULUMICOST_CONFIG_STRICT is set to "true" or "1", permission errors or corrupted config content cause a panic instead of falling back to defaults.
+// Environment variable overrides are applied after loading the file.
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
@@ -518,6 +523,7 @@ func validateOutputType(outputType string) error {
 	return fmt.Errorf("invalid output type: %s (must be one of: %v)", outputType, validTypes)
 }
 
+//   - MaxSizeMB or MaxFiles is negative (values of 0 are allowed and mean unlimited).
 func validateFileOutput(output LogOutput) error {
 	if output.Path == "" {
 		return errors.New("file output requires 'path' field")

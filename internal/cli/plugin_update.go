@@ -15,7 +15,14 @@ import (
 //	--version   Specific version to update to (default: latest).
 //	--plugin-dir Custom plugin directory.
 //
-// The command uses the registry installer to perform the update and prints progress and result details to the command output.
+// NewPluginUpdateCmd returns a cobra command that updates an installed plugin to the latest
+// version or to a specified version. The command accepts a single plugin name argument and
+// supports the flags --dry-run (show changes without applying), --version (target version),
+// and --plugin-dir (custom plugin directory). It prints progress messages and a summary of the
+// result (including name, old/new versions, and path).
+//
+// The command's execution returns an error if the underlying installer fails to perform the
+// update; that error is returned to the caller.
 func NewPluginUpdateCmd() *cobra.Command {
 	var (
 		dryRun    bool

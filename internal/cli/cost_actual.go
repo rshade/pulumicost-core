@@ -52,7 +52,19 @@ type costActualParams struct {
 // The command accepts flags for the Pulumi preview JSON path (--pulumi-json, required), start date (--from, required),
 // optional end date (--to, defaults to now), optional adapter plugin (--adapter), output format (--output, defaults
 // to the configured default), and grouping or tag filter (--group-by). It returns a configured *cobra.Command ready
-// to be added to the CLI.
+// NewCostActualCmd creates the "actual" subcommand which fetches historical cloud-provider billing
+// costs for resources described in a Pulumi preview JSON.
+//
+// The command is configured with flags:
+//   - --pulumi-json (required): path to Pulumi preview JSON output
+//   - --from (required): start date (YYYY-MM-DD or RFC3339)
+//   - --to: end date (YYYY-MM-DD or RFC3339; defaults to now)
+//   - --adapter: restrict to a specific adapter plugin
+//   - --output: output format (table, json, ndjson; defaults from configuration)
+//   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
+//
+// The command's execution collects the flag values into a costActualParams and delegates to
+// executeCostActual for performing the work.
 func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
@@ -138,7 +150,17 @@ func NewCostActualCmd() *cobra.Command {
 // mapping resources, parsing the time range, opening adapter plugins, fetching costs, or rendering
 // output). On success it returns nil.
 //
-//nolint:funlen // CLI command execution requires many sequential steps
+// executeCostActual orchestrates the "actual" cost workflow for a Pulumi plan and writes the formatted results to the command output.
+// 
+// It loads and maps resources from the specified Pulumi plan, parses the requested time range, opens adapter plugins,
+// requests actual cost data from the engine, renders the results, displays any error summary, and emits audit entries.
+//
+// Parameters:
+//  - cmd: the Cobra command whose context and output writer are used.
+//  - params: command parameters including plan path, adapter, output format, time range, and grouping/tag filter.
+//
+// Returns an error if any step fails — for example, loading or mapping the Pulumi plan, parsing the time range,
+// opening plugins, fetching actual costs from the engine, or rendering the output.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	start := time.Now()
 	ctx := cmd.Context()
@@ -329,7 +351,14 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 // ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
 // ParseTime parses a date/time string in either YYYY-MM-DD or RFC3339 format.
 // It returns the parsed time on success, or an error if the string does not match either supported format.
-// Additionally validates that the date is not in the future and not more than 5 years in the past.
+// ParseTime parses str as a date in either "YYYY-MM-DD" or RFC3339 format and returns the corresponding time.
+// It also validates that the parsed time is not in the future and is not more than maxPastYears years in the past.
+// Parameters:
+//   - str: the date string to parse; supported formats are "2006-01-02" (YYYY-MM-DD) and RFC3339.
+// Returns:
+//   - the parsed time on success.
+//   - an error if the string cannot be parsed in either supported format or if the parsed date is in the future
+//     or older than maxPastYears years.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
@@ -422,6 +451,12 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 // outputFormat is the desired rendering format, results are the cost entries
 // to render or aggregate, and actualGroupBy controls grouping (time-based
 // groupings trigger cross-provider aggregation).
+// renderActualCostOutput renders actual cost results to the provided writer using the given outputFormat.
+// If actualGroupBy denotes a time-based grouping, it creates cross-provider aggregations and renders the aggregated view; otherwise it renders the raw results.
+// writer is the destination for the rendered output.
+// outputFormat selects the output serialization/format.
+// results are the computed cost results to render.
+// actualGroupBy indicates the grouping to apply; when it represents a time-based grouping, cross-provider aggregation is performed prior to rendering.
 // It returns an error if aggregation or rendering fails.
 func renderActualCostOutput(
 	writer io.Writer,

@@ -24,7 +24,20 @@ var logger zerolog.Logger //nolint:gochecknoglobals // Required for zerolog cont
 //
 // It returns the fully constructed *cobra.Command ready to be executed.
 //
-//nolint:funlen // CLI root command requires comprehensive configuration
+// NewRootCmd creates the root Cobra command for the pulumicost CLI and wires up global
+// configuration, logging, tracing, and subcommands.
+//
+// The created command is preconfigured with persistent lifecycle handlers that initialize
+// the global logger (including file or stderr output, environment and --debug overrides),
+// generate and attach a trace ID to the command context, create and attach an audit logger,
+// and emit a startup log. On command exit the audit logger and any opened log file are closed.
+//
+// The root command includes the "cost", "plugin", "config", and "analyzer" subcommands
+// and defines a persistent "debug" flag that forces console debug logging and disables file output.
+//
+// ver is used as the command version and is included in startup logs.
+//
+// Returns a fully constructed *cobra.Command ready for execution.
 func NewRootCmd(ver string) *cobra.Command {
 	// Track log result for cleanup in PersistentPostRunE.
 	var logResult *logging.LogPathResult

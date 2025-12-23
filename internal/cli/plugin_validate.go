@@ -38,7 +38,16 @@ func NewPluginValidateCmd() *cobra.Command {
 	return cmd
 }
 
-// ValidatePlugin validates a plugin by checking its binary and optional manifest file.
+// ValidatePlugin validates a plugin's binary and its optional manifest.
+// It ensures the binary exists at plugin.Path, is not a directory, and has the executable bit set.
+// If a manifest file named "plugin.manifest.json" exists in the same directory, it is loaded
+// and its Name and Version fields are compared to plugin.Name and plugin.Version.
+// The function returns nil when all checks pass; otherwise it returns an error describing the
+// first failing check (missing binary, stat error, path is a directory, not executable,
+// invalid manifest, or manifest name/version mismatch).
+//
+// ctx is reserved for future use and is not inspected.
+// plugin provides the plugin's Path, Name, and Version used for validation.
 func ValidatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	if _, err := os.Stat(plugin.Path); err != nil {
 		return fmt.Errorf("plugin binary not found: %s", plugin.Path)
@@ -82,6 +91,18 @@ func ValidatePlugin(_ context.Context, plugin registry.PluginInfo) error {
 	return nil
 }
 
+// runPluginValidateCmd validates installed plugins or a specific plugin and prints status to the provided command output.
+// It loads configuration to locate the plugin directory, lists installed plugins from the default registry,
+// filters by the optional targetPlugin, and executes the validation run for the selected plugins.
+//
+// Parameters:
+//  - cmd: the Cobra command used for printing progress and messages.
+//  - targetPlugin: optional plugin name to validate; when empty all installed plugins are validated.
+//
+// Returns:
+//  - an error if the requested plugin cannot be found (when the plugin directory is missing or no plugins are installed),
+//    if listing plugins fails (wrapped), or if filtering plugins fails. Returns nil when validation is performed or when
+//    there are no plugins to validate and no specific target was requested.
 func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 	ctx := context.Background()
 
@@ -120,6 +141,15 @@ func runPluginValidateCmd(cmd *cobra.Command, targetPlugin string) error {
 	return runValidation(ctx, cmd, plugins)
 }
 
+// filterPlugins returns a slice containing only plugins whose Name equals targetPlugin.
+// If targetPlugin is empty, the original plugins slice is returned unchanged.
+// If targetPlugin is non-empty and no plugins match, an error is returned.
+//
+// plugins is the list of available plugins to filter.
+// targetPlugin is the plugin name to select.
+//
+// The returned slice contains all matching PluginInfo entries when matches exist,
+// otherwise returns an error indicating the plugin was not found.
 func filterPlugins(
 	plugins []registry.PluginInfo,
 	targetPlugin string,
@@ -140,6 +170,20 @@ func filterPlugins(
 	return filtered, nil
 }
 
+// runValidation validates a set of plugins, prints per-plugin progress and a final summary.
+// 
+// It validates each plugin in the provided slice and prints progress messages to the supplied
+// Cobra command's output. If any plugin fails validation the process is terminated with exit
+// status 1. Otherwise the function returns nil.
+//
+// Parameters:
+//   - ctx: the context for validation operations.
+//   - cmd: the Cobra command used for printing progress and summary messages.
+//   - plugins: the list of plugins to validate.
+//
+// Returns:
+//   - error: always returns nil when it returns; the process may exit with status 1 if any
+//     plugin fails validation.
 func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.PluginInfo) error {
 	cmd.Printf("Validating %d plugin(s)...\n\n", len(plugins))
 
@@ -158,6 +202,17 @@ func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.P
 	return nil
 }
 
+// validateSinglePlugin validates the given plugin and reports progress to the provided command output.
+// It prints a per-plugin status line, prints any validation error, and a success message on success.
+//
+// Parameters:
+//   ctx: context for cancellation and deadlines affecting validation operations.
+//   cmd: Cobra command used to write progress and result messages to the command's output.
+//   plugin: plugin information (name, version, path) identifying the plugin to validate.
+//
+// Returns:
+//   true if the plugin passed validation and a success message was printed, false if validation failed
+//   and an error message was printed.
 func validateSinglePlugin(
 	ctx context.Context,
 	cmd *cobra.Command,

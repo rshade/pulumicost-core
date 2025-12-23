@@ -912,6 +912,18 @@ func tryMonthlyEstimate(pricing map[string]interface{}) (float64, float64, bool)
 	return 0, 0, false
 }
 
+// tryHourlyRates attempts to extract an hourly rate from the given pricing map
+// and derives a monthly estimate from it.
+//
+// The function looks for known hourly keys ("onDemandHourly", "hourlyRate") and,
+// if found, returns the computed monthly cost (hourly * hoursPerMonth), the
+// hourly rate, and true. If no hourly rate is present, it returns 0, 0, false.
+//
+// pricing: a map of pricing fields keyed by string; values are expected to contain
+// numeric float64 entries for hourly rates.
+//
+// Returns the monthly estimate, the hourly rate, and a boolean indicating whether
+// a valid hourly rate was found.
 func tryHourlyRates(pricing map[string]interface{}) (float64, float64, bool) {
 	hourlyKeys := []string{"onDemandHourly", "hourlyRate"}
 	for _, key := range hourlyKeys {
@@ -924,6 +936,14 @@ func tryHourlyRates(pricing map[string]interface{}) (float64, float64, bool) {
 	return 0, 0, false
 }
 
+// tryStoragePricing determines monthly and hourly costs for a storage resource when
+// pricing contains a per-GB-per-month value.
+//
+// It returns the computed monthly cost (sizeGB * pricePerGBMonth), the hourly
+// equivalent (monthly divided by hoursPerMonth), and `true` if both a storage size
+// and a `pricePerGBMonth` numeric value were available. If the resource lacks a
+// size or the pricing does not contain `pricePerGBMonth` as a float64, it returns
+// zeros and `false`.
 func tryStoragePricing(
 	pricing map[string]interface{},
 	resource ResourceDescriptor,
@@ -1365,7 +1385,7 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 //   - ErrEmptyResults if `results` is empty.
 //   - ErrInvalidGroupBy if `groupBy` is not a time-based grouping.
 //   - ErrInvalidDateRange if any result has an EndDate not after its StartDate.
-//   - ErrMixedCurrencies if results contain more than one distinct currency.
+// - the results contain more than one distinct currency (ErrMixedCurrencies).
 func CreateCrossProviderAggregation(
 	results []CostResult,
 	groupBy GroupBy,
@@ -1616,7 +1636,19 @@ func distributeDailyCosts(
 // The base currency is taken from the first result's Currency if present, otherwise the package defaultCurrency is used.
 // Parameters:
 //   - results: slice of CostResult to group and aggregate.
-//   - groupBy: grouping granularity (e.g., daily or monthly) used to format period keys and compute period costs.
+// groupResultsByPeriod groups cost results into time-based periods and sums costs per provider.
+// It assigns each CostResult's cost to a period derived from its StartDate using the given
+// groupBy granularity (daily or monthly). If a result contains DailyCosts and a valid
+// StartDate, those daily amounts are distributed across the corresponding periods; otherwise
+// the result's total cost or monthly projection is used for the single period containing
+// StartDate.
+// Parameters:
+//   - results: slice of CostResult entries to group.
+//   - groupBy: grouping granularity (e.g., GroupByDaily or GroupByMonthly) used to format
+//     period keys and compute period costs.
+// Returns a map keyed by period string to a map of provider -> aggregated cost, and the
+// base currency determined from the first result (or defaultCurrency when absent or when
+// results is empty).
 func groupResultsByPeriod(
 	results []CostResult,
 	groupBy GroupBy,
@@ -1813,7 +1845,14 @@ func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
 // sum of all provider costs and `Currency` set to `baseCurrency`.
 //
 // The resulting slice is sorted by the `Period` field in ascending (lexicographic) order. If `periods` is empty, an
-// empty slice is returned.
+// createSortedAggregations converts a map of period -> provider -> cost into a
+// sorted slice of CrossProviderAggregation entries.
+//
+// The `periods` parameter maps a period string (e.g., "YYYY-MM" or "YYYY-MM-DD")
+// to a map of provider names and their aggregated cost for that period. The
+// `baseCurrency` parameter is used as the Currency value for every aggregation.
+// The returned slice is sorted in ascending order by the Period field. If
+// `periods` is empty an empty slice is returned.
 func createSortedAggregations(
 	periods map[string]map[string]float64,
 	baseCurrency string,

@@ -55,7 +55,11 @@ const (
 // NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
 // The client has an HTTP client with a 5-minute timeout (for large plugin downloads) and
 // BaseURL set to https://api.github.com. It initializes the authentication token by reading
-// GITHUB_TOKEN or, if unset, attempting to obtain it from the `gh` CLI.
+// NewGitHubClient creates and returns a GitHubClient configured for the GitHub API.
+// It sets BaseURL to "https://api.github.com", constructs an HTTP client using the
+// package downloadTimeout for request timeouts, and initializes the client's token
+// from the GITHUB_TOKEN environment variable or, if unset, by attempting to obtain
+// it from the `gh` CLI.
 func NewGitHubClient() *GitHubClient {
 	token := getGitHubToken()
 	return &GitHubClient{
