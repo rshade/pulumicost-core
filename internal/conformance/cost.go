@@ -9,7 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// testGetProjectedCostValid verifies GetProjectedCost returns cost for a valid resource.
+// testGetProjectedCostValid verifies that GetProjectedCost returns a projected monthly cost and currency for a valid resource descriptor.
+// 
+// The ctx parameter supplies the test context and plugin client used to call the service.
+// It returns a *TestResult with StatusPass and a Details message containing the estimated monthly cost and currency when successful.
+// On failure it returns a *TestResult with StatusFail describing the RPC error or a missing currency; if the plugin client has an unexpected type it returns StatusError.
 func testGetProjectedCostValid(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {
@@ -44,7 +48,14 @@ func testGetProjectedCostValid(ctx *TestContext) *TestResult {
 	}
 }
 
-// testGetProjectedCostInvalid verifies GetProjectedCost returns NotFound for unsupported resource.
+// testGetProjectedCostInvalid exercises GetProjectedCost with an invalid/unsupported resource
+// descriptor and reports whether the service returns an appropriate error status.
+//
+// The ctx parameter provides the test context and plugin client. The function returns a
+// *TestResult describing the outcome: StatusError if the plugin client is the wrong type,
+// StatusFail if the RPC unexpectedly succeeds, is not a gRPC status error, or returns a
+// code other than NotFound or InvalidArgument, and StatusPass when the service returns
+// either NotFound or InvalidArgument.
 func testGetProjectedCostInvalid(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {

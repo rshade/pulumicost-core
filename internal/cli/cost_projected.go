@@ -37,7 +37,7 @@ func displayErrorSummary(
 // and emits structured audit entries for failures and for successful completion.
 // Flags: --pulumi-json (required), --spec-dir, --adapter, --output, and --filter.
 //
-//nolint:funlen // CLI command setup requires many configuration steps
+// The command is fully configured and ready to be added to a Cobra command tree.
 func NewCostProjectedCmd() *cobra.Command {
 	var planPath, specDir, adapter, output, filter string
 	var utilization float64

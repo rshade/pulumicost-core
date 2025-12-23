@@ -124,7 +124,12 @@ func RenderCrossProviderAggregation(
 // costs, counts, optional breakdowns by provider, service, and adapter, and a per-
 // resource list with monthly/hourly costs and notes.
 // aggregated is the precomputed aggregation to render.
-// It returns an error if writing to or flushing the tabulated output fails.
+// renderTable writes the aggregated cost results to w in a human-readable tabular format.
+// It creates an internal tab writer and emits the following sections in order: cost summary,
+// breakdowns (by provider/service/adapter), sustainability summary, and resource details.
+// writer is the destination for the rendered table. aggregated contains the precomputed
+// results to render.
+// Returns an error if writing to or flushing the tabulated output fails.
 func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
@@ -136,6 +141,13 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 	return w.Flush()
 }
 
+// renderSummary writes a COST SUMMARY section to w containing the total monthly cost,
+// total hourly cost, and the total number of resources from aggregated, followed by a blank line.
+// 
+// Parameters:
+//   - w: destination writer for the formatted summary.
+//   - aggregated: aggregated results whose Summary (TotalMonthly, TotalHourly, Currency)
+//     and Resources are used to populate the output.
 func renderSummary(w io.Writer, aggregated *AggregatedResults) {
 	fmt.Fprintf(w, "COST SUMMARY\n")
 	fmt.Fprintf(w, "============\n")
@@ -145,6 +157,12 @@ func renderSummary(w io.Writer, aggregated *AggregatedResults) {
 	fmt.Fprintf(w, "\n")
 }
 
+// renderBreakdowns writes provider, service, and adapter cost breakdown sections to w
+// using the maps found in aggregated.Summary. For each non-empty breakdown it prints a
+// section header followed by lines in the form "name:\t<cost> <currency>" with costs
+// formatted to two decimal places and a blank line after the section. The writer w
+// receives the formatted output and aggregated provides the Summary (ByProvider,
+// ByService, ByAdapter and Currency) used for the breakdowns.
 func renderBreakdowns(w io.Writer, aggregated *AggregatedResults) {
 	// Print breakdown by provider
 	if len(aggregated.Summary.ByProvider) > 0 {
@@ -177,6 +195,12 @@ func renderBreakdowns(w io.Writer, aggregated *AggregatedResults) {
 	}
 }
 
+// renderSustainabilitySummary aggregates sustainability metrics across all resources
+// in aggregated and writes a sorted summary to w. For each metric key it writes a
+// line containing the key, the summed value formatted with two decimal places, and
+// the metric unit. If no sustainability metrics are present, it writes nothing.
+//
+// It assumes the same unit is used for a given metric key across resources.
 func renderSustainabilitySummary(w io.Writer, aggregated *AggregatedResults) {
 	sustainTotals := make(map[string]SustainabilityMetric)
 	for _, r := range aggregated.Resources {
@@ -204,6 +228,14 @@ func renderSustainabilitySummary(w io.Writer, aggregated *AggregatedResults) {
 	}
 }
 
+// renderResourceDetails writes the "RESOURCE DETAILS" section to w, listing each aggregated resource
+// with columns for Resource, Adapter, Monthly, Hourly, Currency, and Notes.
+// The Resource column is formatted as "ResourceType/ResourceID" and is truncated with an ellipsis
+// if it exceeds maxResourceDisplayLen. Notes include the resource's existing notes and any
+// sustainability metrics.
+// Parameters:
+//   - w: destination writer for the rendered table.
+//   - aggregated: aggregated results containing the resources to render.
 func renderResourceDetails(w io.Writer, aggregated *AggregatedResults) {
 	fmt.Fprintf(w, "RESOURCE DETAILS\n")
 	fmt.Fprintf(w, "================\n")
@@ -229,6 +261,7 @@ func renderResourceDetails(w io.Writer, aggregated *AggregatedResults) {
 	}
 }
 
+// otherwise the notes consist solely of the sustainability list.
 func formatResourceNotes(result CostResult) string {
 	notes := result.Notes
 	if len(result.Sustainability) > 0 {
@@ -253,6 +286,17 @@ func formatResourceNotes(result CostResult) string {
 	return notes
 }
 
+// renderActualCostTable writes an actual-cost table representation of the provided
+// CostResult slice to the given writer. It inspects results to determine whether
+// any entries contain actual cost data (TotalCost > 0 or a non-empty CostPeriod)
+// and selects an appropriate header, then renders a row for each result and
+// flushes the internal tabwriter.
+//
+// Parameters:
+//  - writer: destination for the rendered table output.
+//  - results: slice of CostResult values to render.
+//
+// Returns an error if flushing the tabwriter fails.
 func renderActualCostTable(writer io.Writer, results []CostResult) error {
 	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
@@ -274,6 +318,9 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 	return w.Flush()
 }
 
+// renderActualCostHeader writes the table header for actual-cost output to w.
+// If hasActualCosts is true it writes columns for Total Cost and Period;
+// otherwise it writes a header for Projected Monthly values.
 func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 	if hasActualCosts {
 		fmt.Fprintln(w, "Resource\tAdapter\tTotal Cost\tPeriod\tCurrency\tNotes")
@@ -284,6 +331,25 @@ func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 	}
 }
 
+// renderActualCostRow writes a single row for a cost result into the actual-cost table.
+// It formats the resource as "ResourceType/ResourceID" (truncated with an ellipsis if too long),
+// appends formatted notes (including any sustainability metrics), and emits either actual-cost
+// columns or projected-monthly columns depending on hasActualCosts.
+//
+// Parameters:
+//  - w: destination writer to receive the formatted table row.
+//  - result: the CostResult to render.
+//  - hasActualCosts: when true, the row contains Total Cost and Period columns; when false,
+//    the row contains the Projected Monthly column.
+//
+// Behavior details:
+//  - If hasActualCosts is true, the Total Cost column shows result.TotalCost formatted with
+//    two decimals. If TotalCost is zero but result.Monthly > 0, the Total Cost column shows
+//    the monthly value with " (est)" appended. The Period column uses result.CostPeriod or
+//    defaults to "monthly (est)" when empty.
+//  - If hasActualCosts is false, the row shows result.Monthly formatted with two decimals.
+//  - The Currency and Notes columns are always emitted. Notes include existing notes and a
+//    bracketed list of sustainability metrics when present.
 func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool) {
 	resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
 	if len(resource) > maxResourceDisplayLen {
@@ -322,6 +388,9 @@ func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool) {
 	}
 }
 
+// renderJSON writes the aggregated results as indented JSON to the provided writer.
+// It encodes the AggregatedResults with two-space indentation.
+// It returns any error encountered during encoding.
 func renderJSON(writer io.Writer, aggregated *AggregatedResults) error {
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
@@ -376,7 +445,16 @@ func renderNDJSON(writer io.Writer, results []CostResult) error {
 // aggregations is a slice of CrossProviderAggregation describing per-period totals and per-provider breakdowns.
 // groupBy controls the period label used in the table header (e.g., daily uses "Date", otherwise "Month").
 //
-// It returns an error if writing to stdout or flushing the table writer fails.
+// renderCrossProviderTable writes a tabular cross-provider cost aggregation to the provided writer.
+// It outputs a header (Date or Month and Total Cost), a separator row, and one row per aggregation
+// containing the period label, total cost, and per-provider costs. The columns for providers are
+// ordered alphabetically for deterministic output. If `aggregations` is empty, a single-line message
+// "No cost data available for cross-provider aggregation" is written instead.
+// Parameters:
+//  - writer: destination for the formatted table output.
+//  - aggregations: slice of CrossProviderAggregation values to render as rows.
+//  - groupBy: controls whether the first column is labeled "Date" (GroupByDaily) or "Month".
+// The function returns any error encountered while writing to the writer or flushing the tabwriter.
 func renderCrossProviderTable(
 	writer io.Writer,
 	aggregations []CrossProviderAggregation,

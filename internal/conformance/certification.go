@@ -16,7 +16,13 @@ type CertificationReport struct {
 	SuiteSummary  Summary   `json:"suite_summary"`
 }
 
-// Certify evaluates a SuiteReport and generates a CertificationReport.
+// Certify evaluates a SuiteReport and returns a CertificationReport for the specified plugin name and version.
+// It sets CertifiedAt to the current time and copies the suite summary from suiteReport.
+// If the suite summary indicates any failures, Certified is set to false and Issues is populated with entries
+// formatted as "<TestName>: <Error>" for each result whose status is StatusFail or StatusError.
+// If there are no failures, Certified is set to true.
+// The returned *CertificationReport contains the plugin identification, certification status, timestamp,
+// any collected issues, and the suite summary.
 func Certify(suiteReport *SuiteReport, name, version string) *CertificationReport {
 	report := &CertificationReport{
 		PluginName:    name,

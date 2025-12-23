@@ -83,7 +83,23 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 //
 //	A pointer to a CostResultWithErrors containing a Results slice with one or more CostResult entries
 //	(including placeholders for failures or empty responses) and an Errors slice with one ErrorDetail per
-//	resource that experienced an RPC error.
+// GetProjectedCostWithErrors queries projected costs for each resource and aggregates successful results
+// together with per-resource error details.
+//
+// For each resource it calls the provided CostSourceClient. If the RPC returns an error, the function
+// appends an ErrorDetail (using the resource Type as a placeholder ResourceID) containing the pluginName,
+// error, and timestamp, and adds a placeholder CostResult with zero costs and an error note. If the RPC
+// succeeds and returns results, those results are appended; if the RPC succeeds but returns no results,
+// a zero-cost CostResult is appended.
+//
+// Parameters:
+//   - ctx: the context for RPC calls.
+//   - client: the CostSourceClient used to fetch projected costs.
+//   - pluginName: name of the plugin to record on any ErrorDetail.
+//   - resources: slice of ResourceDescriptor to query.
+//
+// Returns:
+//   A CostResultWithErrors containing aggregated CostResult entries and any ErrorDetail entries collected.
 func GetProjectedCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,
@@ -150,7 +166,25 @@ func GetProjectedCostWithErrors(
 // Returns:
 //
 //	A pointer to a CostResultWithErrors containing a Results slice (converted from ActualCostResult)
-//	and an Errors slice with one ErrorDetail per resource ID that experienced an RPC error.
+// GetActualCostWithErrors retrieves actual cost data for each resource ID in req
+// and returns both successful CostResult entries and per-resource ErrorDetail records.
+// For each ResourceID the function calls the provided CostSourceClient.GetActualCost.
+// If an RPC call fails for a resource, an ErrorDetail is added to the Errors slice
+// and a placeholder CostResult with zero cost and an error note is appended to Results.
+// If the RPC succeeds but returns no results for a resource, a zero-cost CostResult
+// is appended. Successful ActualCostResult entries are converted into CostResult
+// values, preserving currency, total cost, cost breakdown, and sustainability metrics.
+//
+// Parameters:
+//  ctx - request context passed to the client RPCs.
+//  client - the CostSourceClient used to fetch actual costs.
+//  pluginName - name of the plugin performing the requests; recorded on errors.
+//  req - GetActualCostRequest containing the ResourceIDs and time range.
+//
+// Returns:
+//  A pointer to a CostResultWithErrors containing Results for every input resource ID
+//  (either converted results or zero-cost placeholders) and an Errors slice with one
+//  ErrorDetail per resource ID that experienced an RPC error.
 func GetActualCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,
@@ -329,6 +363,12 @@ func (c *clientAdapter) Name(
 }
 
 // resolveSKUAndRegion extracts the SKU and region from resource properties based on the cloud provider.
+// It recognizes provider values such as "aws", "azure", "azure-native", "gcp", and "google-native" and
+// uses provider-specific extraction; for other providers it uses generic extraction helpers.
+// If the region cannot be determined from properties, the function falls back to the AWS_REGION or
+// AWS_DEFAULT_REGION environment variables.
+// provider is the cloud provider identifier; properties contains resource-specific key/value attributes.
+// It returns the resolved SKU and region as strings (either or both may be empty if not found).
 func resolveSKUAndRegion(provider string, properties map[string]string) (string, string) {
 	var sku, region string
 	switch strings.ToLower(provider) {

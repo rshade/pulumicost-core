@@ -53,7 +53,12 @@ func NewPluginListCmd() *cobra.Command {
 // cause. If no entries exist the function prints "No plugins available in registry."
 // to the command output and returns nil. For entries with an empty security level the
 // security column defaults to "community". Any error produced while flushing the
-// output is returned.
+// runPluginListAvailable loads all plugin entries from the registry and writes a tabulated
+// list of Name, Description, Repository, and Security columns to the command's output.
+// If the registry cannot be loaded an error wrapping the underlying cause is returned.
+// If no entries exist, the function prints "No plugins available in registry." and returns nil.
+// The provided cmd is used as the output destination.
+// Returns an error if registry loading or writing the output fails.
 func runPluginListAvailable(cmd *cobra.Command) error {
 	entries, err := registry.GetAllPluginEntries()
 	if err != nil {

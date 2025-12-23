@@ -10,7 +10,21 @@ import (
 // testBatchHandling verifies plugin handles multiple resources in a single RPC call if supported.
 // Note: Currently GetProjectedCost handles single resource per RPC in v1 proto,
 // but we might add a batch RPC later. For now, we'll verify it handles multiple
-// calls correctly.
+// testBatchHandling verifies that the plugin can process a sequence of GetProjectedCost
+// requests without failing and returns a TestResult summarizing the outcome.
+// 
+// It expects ctx.PluginClient to implement pbc.CostSourceServiceClient; if the assertion
+// fails it returns a TestResult with StatusError. The function issues a fixed number of
+// GetProjectedCost requests for a representative AWS EC2 resource, counts successful RPCs,
+// and returns a TestResult with StatusPass when all requests succeed or StatusFail when
+// one or more requests fail.
+// 
+// Parameters:
+//   - ctx: the TestContext providing the plugin client used to perform RPC calls.
+// 
+// Returns:
+//   - *TestResult describing whether the batch of sequential calls all succeeded, or an
+//     error result if the plugin client is of the wrong type.
 func testBatchHandling(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {

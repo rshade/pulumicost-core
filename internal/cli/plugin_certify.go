@@ -18,7 +18,12 @@ const (
 )
 
 // NewPluginCertifyCmd creates the plugin certify command for running certification
-// tests against a plugin binary and generating a certification report.
+// NewPluginCertifyCmd returns a Cobra command that runs the conformance suite against a plugin binary and generates a Markdown certification report.
+// The command accepts a single plugin path argument and provides flags to control output and execution:
+//  - --output, -o: path to write the certification report (default: stdout)
+//  - --mode: communication mode, either "tcp" or "stdio" (default: "tcp")
+//  - --timeout: global certification timeout as a duration string (default: "10m")
+// The command prints progress and a summary; it exits with a non-zero code when certification is not achieved.
 func NewPluginCertifyCmd() *cobra.Command {
 	var (
 		outputFile string
@@ -63,6 +68,21 @@ A plugin is certified if:
 	return cmd
 }
 
+// runPluginCertifyCmd runs the conformance test suite against the plugin at pluginPath,
+// produces a certification report in Markdown, and writes the report to outputFile or stdout.
+//
+// The cmd parameter supplies the command context and I/O helpers used for printing.
+// pluginPath is the filesystem path to the plugin to certify.
+// outputFile, if non-empty, is the path to write the generated Markdown report; if empty,
+// the report is printed to stdout.
+// mode selects the communication mode with the plugin ("tcp" or "stdio").
+// timeout is a duration string (e.g., "10m") that sets the global timeout for the suite.
+//
+// Returns nil on successful certification (all tests passed).
+// Returns a non-nil error if the plugin path does not exist, the timeout cannot be parsed,
+// the communication mode is invalid, suite creation or execution fails, or writing the report fails.
+// If the suite runs but the plugin is not certified, an exitError with code 1 and message
+// "certification failed" is returned.
 func runPluginCertifyCmd(
 	cmd *cobra.Command,
 	pluginPath, outputFile, mode, timeout string,
