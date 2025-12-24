@@ -5,7 +5,7 @@
       "id": "test-lambda-function",
       "inputs": {
         "memorySize": 128,
-        "runtime": "nodejs14.x"
+        "runtime": "nodejs20.x"
       },
       "provider": "aws"
     }

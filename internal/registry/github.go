@@ -21,6 +21,9 @@ const (
 	extExe    = ".exe"
 	extZip    = ".zip"
 	extTarGz  = ".tar.gz"
+
+	// downloadTimeout is the timeout for large plugin downloads (15MB+).
+	downloadTimeout = 5 * time.Minute
 )
 
 // GitHubRelease represents release metadata from GitHub API.
@@ -46,11 +49,6 @@ type GitHubClient struct {
 	BaseURL    string
 	token      string
 }
-
-const (
-	// downloadTimeout is the timeout for large plugin downloads (15MB+).
-	downloadTimeout = 5 * time.Minute
-)
 
 // NewGitHubClient creates and returns a GitHubClient configured to access the GitHub API.
 // The client has an HTTP client with a 5-minute timeout (for large plugin downloads) and

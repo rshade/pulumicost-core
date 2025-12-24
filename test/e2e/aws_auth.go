@@ -43,7 +43,8 @@ func GetAWSCredentialsEnv(ctx context.Context) ([]string, error) {
 	}
 
 	// Also include the region if it was loaded from config and not already in env
-	if cfg.Region != "" && os.Getenv("AWS_REGION") == "" {
+	// Check both AWS_REGION and AWS_DEFAULT_REGION for compatibility
+	if cfg.Region != "" && os.Getenv("AWS_REGION") == "" && os.Getenv("AWS_DEFAULT_REGION") == "" {
 		env = append(env, fmt.Sprintf("AWS_REGION=%s", cfg.Region))
 	}
 

@@ -63,43 +63,8 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 	return summary.String()
 }
 
-// GetProjectedCostWithErrors calculates projected costs for resources with error tracking.
-// GetProjectedCostWithErrors queries the provided CostSourceClient for projected costs for each resource
-// and aggregates both successful CostResult entries and per-resource error details.
-//
-// GetProjectedCostWithErrors calls the client's GetProjectedCost once per resource in `resources`.
-// For each resource, a successful response appends its returned results to the aggregated Results slice.
-// If a per-resource RPC fails, an ErrorDetail is recorded in Errors (including timestamp and pluginName)
-// and a placeholder CostResult with an error note is appended to Results. If a call succeeds but returns
-// no results, a zero-cost placeholder CostResult is appended.
-//
-// Parameters:
-//   - ctx: request context passed to the client calls.
-//   - client: the CostSourceClient used to fetch projected cost data.
-//   - pluginName: the name of the plugin making the requests; recorded on ErrorDetail entries.
-//   - resources: slice of ResourceDescriptor values to query.
-//
-// Returns:
-//
-//	A pointer to a CostResultWithErrors containing a Results slice with one or more CostResult entries
-//	(including placeholders for failures or empty responses) and an Errors slice with one ErrorDetail per
 // GetProjectedCostWithErrors queries projected costs for each resource and aggregates successful results
 // together with per-resource error details.
-//
-// For each resource it calls the provided CostSourceClient. If the RPC returns an error, the function
-// appends an ErrorDetail (using the resource Type as a placeholder ResourceID) containing the pluginName,
-// error, and timestamp, and adds a placeholder CostResult with zero costs and an error note. If the RPC
-// succeeds and returns results, those results are appended; if the RPC succeeds but returns no results,
-// a zero-cost CostResult is appended.
-//
-// Parameters:
-//   - ctx: the context for RPC calls.
-//   - client: the CostSourceClient used to fetch projected costs.
-//   - pluginName: name of the plugin to record on any ErrorDetail.
-//   - resources: slice of ResourceDescriptor to query.
-//
-// Returns:
-//   A CostResultWithErrors containing aggregated CostResult entries and any ErrorDetail entries collected.
 func GetProjectedCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,
@@ -153,38 +118,8 @@ func GetProjectedCostWithErrors(
 	return result
 }
 
-// GetActualCostWithErrors calculates actual costs for resource IDs with error tracking.
-// It queries the provided CostSourceClient for actual costs for each resource ID in `req.ResourceIDs`
-// and aggregates both successful ActualCostResult entries and per-resource error details.
-//
-// Parameters:
-//   - ctx: request context passed to the client calls.
-//   - client: the CostSourceClient used to fetch actual cost data.
-//   - pluginName: the name of the plugin making the requests; recorded on ErrorDetail entries.
-//   - req: the GetActualCostRequest containing resource IDs and time range.
-//
-// Returns:
-//
-//	A pointer to a CostResultWithErrors containing a Results slice (converted from ActualCostResult)
 // GetActualCostWithErrors retrieves actual cost data for each resource ID in req
 // and returns both successful CostResult entries and per-resource ErrorDetail records.
-// For each ResourceID the function calls the provided CostSourceClient.GetActualCost.
-// If an RPC call fails for a resource, an ErrorDetail is added to the Errors slice
-// and a placeholder CostResult with zero cost and an error note is appended to Results.
-// If the RPC succeeds but returns no results for a resource, a zero-cost CostResult
-// is appended. Successful ActualCostResult entries are converted into CostResult
-// values, preserving currency, total cost, cost breakdown, and sustainability metrics.
-//
-// Parameters:
-//  ctx - request context passed to the client RPCs.
-//  client - the CostSourceClient used to fetch actual costs.
-//  pluginName - name of the plugin performing the requests; recorded on errors.
-//  req - GetActualCostRequest containing the ResourceIDs and time range.
-//
-// Returns:
-//  A pointer to a CostResultWithErrors containing Results for every input resource ID
-//  (either converted results or zero-cost placeholders) and an Errors slice with one
-//  ErrorDetail per resource ID that experienced an RPC error.
 func GetActualCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,

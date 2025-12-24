@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,10 +12,7 @@ import (
 // actual and expected are the observed and expected cost values.
 // tolerance is the allowed relative difference (for example, 0.1 represents 10%).
 func ValidateCost(t *testing.T, resourceID string, actual, expected, tolerance float64) {
-	delta := math.Abs(actual - expected)
-	allowedDelta := expected * tolerance
-	
-	assert.True(t, delta <= allowedDelta, 
-		"Cost for %s mismatch: actual=%f, expected=%f, tolerance=%f, delta=%f, allowed=%f",
-		resourceID, actual, expected, tolerance, delta, allowedDelta)
+	assert.InEpsilon(t, expected, actual, tolerance,
+		"Cost for %s mismatch: actual=%f, expected=%f, tolerance=%f",
+		resourceID, actual, expected, tolerance)
 }

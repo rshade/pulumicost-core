@@ -1,4 +1,8 @@
-# Plugin Development Guide
+---
+title: Plugin Development Guide
+description: How to develop plugins for PulumiCost Core
+layout: default
+---
 
 This guide explains how to develop plugins for PulumiCost Core.
 

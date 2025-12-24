@@ -14,6 +14,7 @@ PulumiCost Core is a CLI tool that analyzes Pulumi infrastructure definitions to
 - **📊 Projected Costs**: Estimate monthly costs before deploying infrastructure
 - **💰 Actual Costs**: Track historical spending with detailed breakdowns  
 - **🔌 Plugin-Based**: Extensible architecture supporting multiple cost data sources
+- **🌱 Sustainability**: Estimate carbon footprint and energy usage
 - **📈 Advanced Analytics**: Resource grouping, filtering, and aggregation
 - **📱 Multiple Formats**: Table, JSON, and NDJSON output options
 - **🔍 Smart Filtering**: Filter by resource type, tags, or custom expressions
@@ -54,7 +55,7 @@ pulumi preview --json > plan.json
 pulumicost cost projected --pulumi-json plan.json
 ```
 
-**Actual Costs** - View historical spending (requires plugins):
+**Actual Costs** (FUTURE) - View historical spending (requires plugins):
 ```bash
 # Last 7 days
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
@@ -75,7 +76,7 @@ aws:s3/bucket:Bucket             none        $0.00     USD       No pricing info
 aws:rds/instance:Instance        none        $0.00     USD       No pricing information available
 ```
 
-### Actual Cost Analysis
+### Actual Cost Analysis (FUTURE)
 ```bash
 $ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type --output json
 {
@@ -112,11 +113,11 @@ PulumiCost uses plugins to fetch cost data from various sources:
 # Filter by resource type
 pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
 
-# Filter by tag
+# Filter by tag (FUTURE)
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
 ```
 
-### Cost Aggregation  
+### Cost Aggregation (FUTURE)
 ```bash
 # Group by provider
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
@@ -142,7 +143,7 @@ pulumicost cost projected --pulumi-json plan.json --output ndjson
 
 ## Configuration
 
-### Basic Configuration
+### Basic Configuration (FUTURE)
 PulumiCost can be configured using a YAML file at `~/.pulumicost/config.yaml`:
 
 ```bash
@@ -176,7 +177,7 @@ export PULUMICOST_PLUGIN_VANTAGE_API_TOKEN="your-token"
 
 Environment variables override configuration file values and are the recommended way to handle sensitive data. The naming convention is: `PULUMICOST_PLUGIN_<PLUGIN_NAME>_<KEY_NAME>` in uppercase.
 
-### Configuration Management Commands
+### Configuration Management Commands (FUTURE)
 ```bash
 # View configuration
 pulumicost config get output.default_format
@@ -193,9 +194,29 @@ pulumicost config validate
 pulumicost plugin list
 ```
 
+### Install Plugin (FUTURE)
+```bash
+pulumicost plugin install <plugin>
+```
+
+### Update Plugin (FUTURE)
+```bash
+pulumicost plugin update <plugin>
+```
+
+### Remove Plugin (FUTURE)
+```bash
+pulumicost plugin remove <plugin>
+```
+
 ### Validate Plugin Installation  
 ```bash
 pulumicost plugin validate
+```
+
+### Certify Plugin
+```bash
+pulumicost plugin certify <plugin>
 ```
 
 ### Plugin Directory Structure

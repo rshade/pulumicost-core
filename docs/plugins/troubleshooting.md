@@ -1,4 +1,8 @@
-# Plugin Troubleshooting
+---
+title: Plugin Troubleshooting
+description: Troubleshooting guide for common plugin issues
+layout: default
+---
 
 ## Common Issues
 

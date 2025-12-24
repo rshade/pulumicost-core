@@ -17,7 +17,8 @@ func TestE2E_AWS_ProjectedCost(t *testing.T) {
 	binary := findPulumicostBinary()
 	require.NotEmpty(t, binary)
 
-	planPath, _ := filepath.Abs("../fixtures/plans/aws/simple.json")
+	planPath, err := filepath.Abs("../fixtures/plans/aws/simple.json")
+	require.NoError(t, err)
 
 	cmd := exec.Command(binary, "cost", "projected", "--pulumi-json", planPath, "--output", "json")
 	output, err := cmd.CombinedOutput()
@@ -27,23 +28,8 @@ func TestE2E_AWS_ProjectedCost(t *testing.T) {
 	err = json.Unmarshal(output, &result)
 	require.NoError(t, err)
 
-	// Check for AWS resources
-	resources := result["resources"].([]interface{})
-	found := false
-	for _, r := range resources {
-		res := r.(map[string]interface{})
-		if provider, ok := res["provider"].(string); ok && provider == "aws" {
-			found = true
-			break
-		}
-		// Also check resource type prefix
-		if typeStr, ok := res["resourceType"].(string); ok && len(typeStr) > 4 && typeStr[:4] == "aws:" {
-			found = true
-			break
-		}
-	}
-	// Note: The fixture might not set 'provider' field explicitly on resource, 
-	// but the Type should imply it.
-	// For simple tests we assume success if command runs and returns JSON.
-	assert.True(t, true, "AWS test completed")
+	// Verify we got valid output structure
+	resources, ok := result["resources"].([]interface{})
+	require.True(t, ok, "expected resources to be an array")
+	assert.NotEmpty(t, resources, "expected at least one resource in output")
 }

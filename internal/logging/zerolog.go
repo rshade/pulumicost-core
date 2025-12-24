@@ -249,7 +249,7 @@ func TraceIDFromContext(ctx context.Context) string {
 
 // FromContext returns a logger from context, creating a default if none exists.
 // FromContext returns a pointer to a zerolog.Logger associated with ctx, or a new default logger if none is present.
-// 
+//
 // If no logger exists in the context, a default logger is created that writes to stderr, includes timestamps, and has the TracingHook applied so trace IDs from context are injected into log events. The default log level is taken from the environment variable named by pluginsdk.EnvLogLevel when valid; otherwise the level defaults to info. This function never returns nil.
 func FromContext(ctx context.Context) *zerolog.Logger {
 	logger := zerolog.Ctx(ctx)

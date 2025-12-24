@@ -9,6 +9,7 @@ import (
 
 // BenchmarkParse_PulumiPlan benchmarks parsing of a typical Pulumi plan JSON.
 func BenchmarkParse_PulumiPlan(b *testing.B) {
+	b.ReportAllocs()
 	// Generate a simple plan string
 	resources := make([]string, 100)
 	for i := 0; i < 100; i++ {
@@ -31,6 +32,7 @@ func BenchmarkParse_PulumiPlan(b *testing.B) {
 
 // BenchmarkParse_LargePlan benchmarks parsing of a large Pulumi plan JSON (10k resources).
 func BenchmarkParse_LargePlan(b *testing.B) {
+	b.ReportAllocs()
 	// Generate a large plan string
 	count := 10000
 	resources := make([]string, count)

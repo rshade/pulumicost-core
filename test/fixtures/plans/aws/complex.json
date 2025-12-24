@@ -47,7 +47,7 @@
         "engineVersion": "13.7",
         "identifier": "my-database",
         "username": "admin",
-        "password": "supersecret123",
+        "password": "${pulumi.secret}",
         "skipFinalSnapshot": true,
         "tags": {
           "Name": "Application Database",

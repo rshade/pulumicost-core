@@ -31,7 +31,8 @@ func Certify(suiteReport *SuiteReport, name, version string) *CertificationRepor
 		SuiteSummary:  suiteReport.Summary,
 	}
 
-	if suiteReport.Summary.Failed > 0 {
+	// Include both failures and errors in certification check
+	if suiteReport.Summary.Failed > 0 || suiteReport.Summary.Errors > 0 {
 		report.Certified = false
 		for _, res := range suiteReport.Results {
 			if res.Status == StatusFail || res.Status == StatusError {
@@ -63,6 +64,7 @@ func (r *CertificationReport) GenerateMarkdown() string {
 	sb.WriteString(fmt.Sprintf("- Total Tests: %d\n", r.SuiteSummary.Total))
 	sb.WriteString(fmt.Sprintf("- Passed: %d\n", r.SuiteSummary.Passed))
 	sb.WriteString(fmt.Sprintf("- Failed: %d\n", r.SuiteSummary.Failed))
+	sb.WriteString(fmt.Sprintf("- Errors: %d\n", r.SuiteSummary.Errors))
 	sb.WriteString(fmt.Sprintf("- Skipped: %d\n\n", r.SuiteSummary.Skipped))
 
 	if len(r.Issues) > 0 {

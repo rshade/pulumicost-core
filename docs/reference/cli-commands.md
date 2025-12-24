@@ -43,6 +43,7 @@ pulumicost cost projected --pulumi-json <file> [options]
 | `--pulumi-json` | Path to Pulumi preview JSON | Required |
 | `--filter` | Filter resources (tag:key=value, type=*) | None |
 | `--output` | Output format: table, json, ndjson | table |
+| `--utilization` | Assumed resource utilization (0.0-1.0) | 1.0 |
 | `--help` | Show help | |
 
 ### Examples

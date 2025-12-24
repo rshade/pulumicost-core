@@ -40,8 +40,9 @@ jobs:
 estimate_cost:
   stage: test
   script:
-    - curl -sL https://... -o pulumicost
+    - curl -sL https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
     - chmod +x pulumicost
     - pulumi preview --json > plan.json
     - ./pulumicost cost projected --pulumi-json plan.json
 ```
+

@@ -14,14 +14,13 @@ type Config struct {
 }
 
 // LoadConfig returns a Config populated from environment variables with sensible defaults.
-// 
+//
 // It initializes defaults (AWSRegion "us-east-1", Tolerance 0.05, Timeout 10 minutes) and
 // overrides them when the following environment variables are set and valid:
 // PULUMICOST_E2E_AWS_REGION (string), PULUMICOST_E2E_TOLERANCE (float64), and
 // PULUMICOST_E2E_TIMEOUT (duration parseable by time.ParseDuration).
-// Invalid numeric or duration values are ignored and the defaults are retained.
-// The function always returns a non-nil *Config and a nil error.
-func LoadConfig() (*Config, error) {
+// Invalid numeric or duration values are silently ignored and defaults are retained.
+func LoadConfig() *Config {
 	cfg := &Config{
 		AWSRegion: "us-east-1",
 		Tolerance: 0.05,
@@ -44,5 +43,5 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
-	return cfg, nil
+	return cfg
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // testGetProjectedCostValid verifies that GetProjectedCost returns a projected monthly cost and currency for a valid resource descriptor.
-// 
+//
 // The ctx parameter supplies the test context and plugin client used to call the service.
 // It returns a *TestResult with StatusPass and a Details message containing the estimated monthly cost and currency when successful.
 // On failure it returns a *TestResult with StatusFail describing the RPC error or a missing currency; if the plugin client has an unexpected type it returns StatusError.
@@ -30,7 +30,11 @@ func testGetProjectedCostValid(ctx *TestContext) *TestResult {
 		},
 	}
 
-	resp, err := client.GetProjectedCost(context.Background(), req)
+	// Use context with timeout from TestContext
+	rpcCtx, cancel := context.WithTimeout(context.Background(), ctx.Timeout)
+	defer cancel()
+
+	resp, err := client.GetProjectedCost(rpcCtx, req)
 	if err != nil {
 		return &TestResult{
 			Status: StatusFail,
@@ -72,7 +76,11 @@ func testGetProjectedCostInvalid(ctx *TestContext) *TestResult {
 		},
 	}
 
-	_, err := client.GetProjectedCost(context.Background(), req)
+	// Use context with timeout from TestContext
+	rpcCtx, cancel := context.WithTimeout(context.Background(), ctx.Timeout)
+	defer cancel()
+
+	_, err := client.GetProjectedCost(rpcCtx, req)
 	if err == nil {
 		return &TestResult{
 			Status: StatusFail,

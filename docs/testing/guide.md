@@ -4,8 +4,6 @@ description: Comprehensive guide to testing in Pulumicost Core
 layout: default
 ---
 
-# Pulumicost Core Testing Guide
-
 This guide covers the testing philosophy, strategy, and practical instructions for Pulumicost Core.
 
 ## Testing Philosophy

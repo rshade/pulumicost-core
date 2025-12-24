@@ -143,7 +143,7 @@ func renderTable(writer io.Writer, aggregated *AggregatedResults) error {
 
 // renderSummary writes a COST SUMMARY section to w containing the total monthly cost,
 // total hourly cost, and the total number of resources from aggregated, followed by a blank line.
-// 
+//
 // Parameters:
 //   - w: destination writer for the formatted summary.
 //   - aggregated: aggregated results whose Summary (TotalMonthly, TotalHourly, Currency)
@@ -293,8 +293,8 @@ func formatResourceNotes(result CostResult) string {
 // flushes the internal tabwriter.
 //
 // Parameters:
-//  - writer: destination for the rendered table output.
-//  - results: slice of CostResult values to render.
+//   - writer: destination for the rendered table output.
+//   - results: slice of CostResult values to render.
 //
 // Returns an error if flushing the tabwriter fails.
 func renderActualCostTable(writer io.Writer, results []CostResult) error {
@@ -337,19 +337,19 @@ func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 // columns or projected-monthly columns depending on hasActualCosts.
 //
 // Parameters:
-//  - w: destination writer to receive the formatted table row.
-//  - result: the CostResult to render.
-//  - hasActualCosts: when true, the row contains Total Cost and Period columns; when false,
-//    the row contains the Projected Monthly column.
+//   - w: destination writer to receive the formatted table row.
+//   - result: the CostResult to render.
+//   - hasActualCosts: when true, the row contains Total Cost and Period columns; when false,
+//     the row contains the Projected Monthly column.
 //
 // Behavior details:
-//  - If hasActualCosts is true, the Total Cost column shows result.TotalCost formatted with
-//    two decimals. If TotalCost is zero but result.Monthly > 0, the Total Cost column shows
-//    the monthly value with " (est)" appended. The Period column uses result.CostPeriod or
-//    defaults to "monthly (est)" when empty.
-//  - If hasActualCosts is false, the row shows result.Monthly formatted with two decimals.
-//  - The Currency and Notes columns are always emitted. Notes include existing notes and a
-//    bracketed list of sustainability metrics when present.
+//   - If hasActualCosts is true, the Total Cost column shows result.TotalCost formatted with
+//     two decimals. If TotalCost is zero but result.Monthly > 0, the Total Cost column shows
+//     the monthly value with " (est)" appended. The Period column uses result.CostPeriod or
+//     defaults to "monthly (est)" when empty.
+//   - If hasActualCosts is false, the row shows result.Monthly formatted with two decimals.
+//   - The Currency and Notes columns are always emitted. Notes include existing notes and a
+//     bracketed list of sustainability metrics when present.
 func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool) {
 	resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
 	if len(resource) > maxResourceDisplayLen {
@@ -451,9 +451,10 @@ func renderNDJSON(writer io.Writer, results []CostResult) error {
 // ordered alphabetically for deterministic output. If `aggregations` is empty, a single-line message
 // "No cost data available for cross-provider aggregation" is written instead.
 // Parameters:
-//  - writer: destination for the formatted table output.
-//  - aggregations: slice of CrossProviderAggregation values to render as rows.
-//  - groupBy: controls whether the first column is labeled "Date" (GroupByDaily) or "Month".
+//   - writer: destination for the formatted table output.
+//   - aggregations: slice of CrossProviderAggregation values to render as rows.
+//   - groupBy: controls whether the first column is labeled "Date" (GroupByDaily) or "Month".
+//
 // The function returns any error encountered while writing to the writer or flushing the tabwriter.
 func renderCrossProviderTable(
 	writer io.Writer,

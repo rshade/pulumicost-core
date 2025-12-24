@@ -2,6 +2,9 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExtractRunID(t *testing.T) {
@@ -23,18 +26,29 @@ func TestExtractRunID(t *testing.T) {
 			expected: "",
 			wantErr:  true,
 		},
+		{
+			name:     "empty body",
+			body:     "",
+			expected: "",
+			wantErr:  true,
+		},
+		{
+			name:     "partial url without run id",
+			body:     "Check https://github.com/rshade/pulumicost-core/actions for details",
+			expected: "",
+			wantErr:  true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := extractRunID(tt.body)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("extractRunID() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err, "expected error for input: %q", tt.body)
+			} else {
+				require.NoError(t, err, "unexpected error for input: %q", tt.body)
 			}
-			if got != tt.expected {
-				t.Errorf("extractRunID() = %v, want %v", got, tt.expected)
-			}
+			assert.Equal(t, tt.expected, got, "extractRunID() result mismatch")
 		})
 	}
 }

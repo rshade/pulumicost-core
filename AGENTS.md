@@ -148,18 +148,11 @@ maintain its effectiveness:
 
 ## Active Technologies
 
-- Go 1.25.5 + existing CLI infrastructure, test helpers (020-cost-filter-tests)
-- N/A (CLI tool processing JSON files) (020-cost-filter-tests)
-
-- Go 1.25.5 + pluginsdk from pulumicost-spec (014-pluginsdk-env-adoption)
-- Environment variable constants via pluginsdk (014-pluginsdk-env-adoption)
-
+- Go 1.25.5 + existing CLI infrastructure, test helpers
+- Go 1.25.5 + pluginsdk from pulumicost-spec
+- Environment variable constants via pluginsdk
 - Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.37.0
-  (104-shared-tui-package)
-- N/A (in-memory UI components) (104-shared-tui-package)
-- N/A (UI rendering package) (104-shared-tui-package)
 
 ## Recent Changes
 
-- 104-shared-tui-package: Added charmbracelet/lipgloss v1.0.0 and
-  golang.org/x/term for TUI components
+- Added charmbracelet/lipgloss v1.0.0 and golang.org/x/term for TUI components

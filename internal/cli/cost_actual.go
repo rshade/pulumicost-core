@@ -9,9 +9,7 @@ import (
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/ingest"
 	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -32,26 +30,14 @@ type costActualParams struct {
 	groupBy  string
 }
 
-// NewCostActualCmd returns a *cobra.Command that fetches actual historical costs from cloud provider billing APIs.
-//
-// The command accepts a Pulumi plan JSON and queries provider billing data for the specified time range.
-// Flags:
-//
-//	--pulumi-json (required): path to Pulumi preview JSON output.
-//	--from (required): start date in YYYY-MM-DD or RFC3339 format.
-//	--to: end date in YYYY-MM-DD or RFC3339 format (defaults to now when omitted).
-//	--adapter: restrict queries to a single adapter plugin.
-//	--output: output format ("table", "json", or "ndjson"); defaults follow configuration.
-//	--group-by: grouping mode: "resource", "type", "provider", "date", "daily", "monthly", or a tag filter of the form "tag:key=value".
-//
-// NewCostActualCmd creates the `actual` subcommand which fetches actual historical costs
-// for resources declared in a Pulumi plan by querying cloud provider billing APIs.
-// The command accepts a time range, supports grouping (resource, type, provider, date, daily, monthly)
-// and tag-based filtering (`tag:key=value`), opens adapter plugins as needed, and renders results
-// NewCostActualCmd creates the "actual" subcommand that fetches historical cloud provider billing costs for resources.
-// The command accepts flags for the Pulumi preview JSON path (--pulumi-json, required), start date (--from, required),
-// optional end date (--to, defaults to now), optional adapter plugin (--adapter), output format (--output, defaults
-// to the configured default), and grouping or tag filter (--group-by). It returns a configured *cobra.Command ready
+// defaultToNow returns s if non-empty, otherwise returns the current time in RFC3339 format.
+func defaultToNow(s string) string {
+	if s == "" {
+		return time.Now().Format(time.RFC3339)
+	}
+	return s
+}
+
 // NewCostActualCmd creates the "actual" subcommand which fetches historical cloud-provider billing
 // costs for resources described in a Pulumi preview JSON.
 //
@@ -62,9 +48,6 @@ type costActualParams struct {
 //   - --adapter: restrict to a specific adapter plugin
 //   - --output: output format (table, json, ndjson; defaults from configuration)
 //   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
-//
-// The command's execution collects the flag values into a costActualParams and delegates to
-// executeCostActual for performing the work.
 func NewCostActualCmd() *cobra.Command {
 	var planPath, adapter, output, fromStr, toStr, groupBy string
 
@@ -123,199 +106,72 @@ func NewCostActualCmd() *cobra.Command {
 	return cmd
 }
 
-// executeCostActual executes the "actual" cost workflow using the provided command context and parameters.
-// It loads and maps a Pulumi plan, resolves the query time range (defaulting the end to now if omitted),
-// opens registry adapters, requests actual cost data from the engine, renders the results, and prints an
-// error summary if any per-resource errors occurred.
-//
-// Parameters:
-//   - cmd: the Cobra command used to access output streams and printing helpers.
-//   - params: command parameters including the Pulumi plan path, adapter name, output format, time range, and grouping/tag filter.
-//
-// Returns an error when any step fails, including but not limited to:
-//   - loading or mapping the Pulumi plan,
-//   - parsing the from/to time range,
-//   - opening adapter plugins,
-//   - fetching actual cost data from the engine,
-//   - rendering the output.
-//
-// executeCostActual orchestrates the "actual" cost workflow: it loads a Pulumi plan, maps resources,
-// validates the time range, opens adapter plugins, calculates actual costs, renders output, and emits
-// audit and operational logs.
-//
-// The cmd parameter provides command context and I/O; params configures input paths, adapters, date
-// range, grouping, and output formatting.
-//
-// It returns an error when any step of the workflow fails (for example: loading the Pulumi plan,
-// mapping resources, parsing the time range, opening adapter plugins, fetching costs, or rendering
-// output). On success it returns nil.
-//
-// executeCostActual orchestrates the "actual" cost workflow for a Pulumi plan and writes the formatted results to the command output.
-// 
-// It loads and maps resources from the specified Pulumi plan, parses the requested time range, opens adapter plugins,
-// requests actual cost data from the engine, renders the results, displays any error summary, and emits audit entries.
-//
-// Parameters:
-//  - cmd: the Cobra command whose context and output writer are used.
-//  - params: command parameters including plan path, adapter, output format, time range, and grouping/tag filter.
-//
-// Returns an error if any step fails — for example, loading or mapping the Pulumi plan, parsing the time range,
-// opening plugins, fetching actual costs from the engine, or rendering the output.
+// executeCostActual orchestrates the "actual" cost workflow for a Pulumi plan.
+// It loads and maps resources, parses the time range, opens adapter plugins, fetches actual costs,
+// renders the results, and emits audit entries.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
-	start := time.Now()
 	ctx := cmd.Context()
-
-	// Get logger from context (set by PersistentPreRunE)
 	log := logging.FromContext(ctx)
-	log.Debug().
-		Ctx(ctx).
-		Str("operation", "cost_actual").
-		Str("plan_path", params.planPath).
-		Str("from", params.fromStr).
-		Str("to", params.toStr).
-		Str("group_by", params.groupBy).
+
+	log.Debug().Ctx(ctx).Str("operation", "cost_actual").Str("plan_path", params.planPath).
+		Str("from", params.fromStr).Str("to", params.toStr).Str("group_by", params.groupBy).
 		Msg("starting actual cost calculation")
 
-	// Get audit logger and trace ID for audit entry
-	auditLogger := logging.AuditLoggerFromContext(ctx)
-	traceID := logging.TraceIDFromContext(ctx)
+	// Setup audit context for logging
 	auditParams := map[string]string{
-		"pulumi_json": params.planPath,
-		"output":      params.output,
-		"from":        params.fromStr,
-		"to":          params.toStr,
+		"pulumi_json": params.planPath, "output": params.output,
+		"from": params.fromStr, "to": params.toStr,
 	}
 	if params.groupBy != "" {
 		auditParams["group_by"] = params.groupBy
 	}
+	audit := newAuditContext(ctx, "cost actual", auditParams)
 
-	plan, err := ingest.LoadPulumiPlanWithContext(ctx, params.planPath)
+	resources, err := loadAndMapResources(ctx, params.planPath, audit)
 	if err != nil {
-		log.Error().
-			Ctx(ctx).
-			Err(err).
-			Str("plan_path", params.planPath).
-			Msg("failed to load Pulumi plan")
-		// Log audit entry for failure
-		auditEntry := logging.NewAuditEntry("cost actual", traceID).
-			WithParameters(auditParams).
-			WithError(err.Error()).
-			WithDuration(start)
-		auditLogger.Log(ctx, *auditEntry)
-		return fmt.Errorf("loading Pulumi plan: %w", err)
+		return err
 	}
 
-	pulumiResources := plan.GetResourcesWithContext(ctx)
-	resources, err := ingest.MapResources(pulumiResources)
-	if err != nil {
-		log.Error().Ctx(ctx).Err(err).Msg("failed to map resources")
-		// Log audit entry for failure
-		auditEntry := logging.NewAuditEntry("cost actual", traceID).
-			WithParameters(auditParams).
-			WithError(err.Error()).
-			WithDuration(start)
-		auditLogger.Log(ctx, *auditEntry)
-		return fmt.Errorf("mapping resources: %w", err)
-	}
-
-	log.Debug().
-		Ctx(ctx).
-		Int("resource_count", len(resources)).
-		Msg("resources loaded from plan")
-
-	// Default to now if --to is not provided
-	toStr := params.toStr
-	if toStr == "" {
-		toStr = time.Now().Format(time.RFC3339)
-	}
-
-	from, to, err := ParseTimeRange(params.fromStr, toStr)
+	from, to, err := ParseTimeRange(params.fromStr, defaultToNow(params.toStr))
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Msg("failed to parse time range")
-		// Log audit entry for failure
-		auditEntry := logging.NewAuditEntry("cost actual", traceID).
-			WithParameters(auditParams).
-			WithError(err.Error()).
-			WithDuration(start)
-		auditLogger.Log(ctx, *auditEntry)
+		audit.logFailure(ctx, err)
 		return fmt.Errorf("parsing time range: %w", err)
 	}
 
-	reg := registry.NewDefault()
-	clients, cleanup, err := reg.Open(ctx, params.adapter)
+	clients, cleanup, err := openPlugins(ctx, params.adapter, audit)
 	if err != nil {
-		log.Error().Ctx(ctx).Err(err).Str("adapter", params.adapter).Msg("failed to open plugins")
-		// Log audit entry for failure
-		auditEntry := logging.NewAuditEntry("cost actual", traceID).
-			WithParameters(auditParams).
-			WithError(err.Error()).
-			WithDuration(start)
-		auditLogger.Log(ctx, *auditEntry)
-		return fmt.Errorf("opening plugins: %w", err)
+		return err
 	}
 	defer cleanup()
 
-	log.Debug().
-		Ctx(ctx).
-		Int("plugin_count", len(clients)).
-		Msg("plugins opened")
-
-	eng := engine.New(clients, nil)
-
-	// Parse tags from groupBy if it's in tag:key=value format
 	tags, actualGroupBy := parseTagFilter(params.groupBy)
-
 	request := engine.ActualCostRequest{
-		Resources: resources,
-		From:      from,
-		To:        to,
-		Adapter:   params.adapter,
-		GroupBy:   actualGroupBy,
-		Tags:      tags,
+		Resources: resources, From: from, To: to,
+		Adapter: params.adapter, GroupBy: actualGroupBy, Tags: tags,
 	}
 
-	resultWithErrors, err := eng.GetActualCostWithOptionsAndErrors(ctx, request)
+	resultWithErrors, err := engine.New(clients, nil).GetActualCostWithOptionsAndErrors(ctx, request)
 	if err != nil {
 		log.Error().Ctx(ctx).Err(err).Msg("failed to fetch actual costs")
-		// Log audit entry for failure
-		auditEntry := logging.NewAuditEntry("cost actual", traceID).
-			WithParameters(auditParams).
-			WithError(err.Error()).
-			WithDuration(start)
-		auditLogger.Log(ctx, *auditEntry)
+		audit.logFailure(ctx, err)
 		return fmt.Errorf("fetching actual costs: %w", err)
 	}
 
-	// Use configuration-aware output format selection
-	finalOutput := config.GetOutputFormat(params.output)
-	outputFormat := engine.OutputFormat(finalOutput)
-
+	outputFormat := engine.OutputFormat(config.GetOutputFormat(params.output))
 	if renderErr := renderActualCostOutput(cmd.OutOrStdout(), outputFormat, resultWithErrors.Results, actualGroupBy); renderErr != nil {
 		return renderErr
 	}
-
 	displayErrorSummary(cmd, resultWithErrors, outputFormat)
 
-	// Log completion with duration
-	log.Info().
-		Ctx(ctx).
-		Str("operation", "cost_actual").
-		Int("result_count", len(resultWithErrors.Results)).
-		Dur("duration_ms", time.Since(start)).
-		Msg("actual cost calculation complete")
+	log.Info().Ctx(ctx).Str("operation", "cost_actual").Int("result_count", len(resultWithErrors.Results)).
+		Dur("duration_ms", time.Since(audit.start)).Msg("actual cost calculation complete")
 
-	// Log audit entry for success.
-	// Use TotalCost for actual costs (not Monthly, which is for projected costs).
 	totalCost := 0.0
 	for _, r := range resultWithErrors.Results {
 		totalCost += r.TotalCost
 	}
-	auditEntry := logging.NewAuditEntry("cost actual", traceID).
-		WithParameters(auditParams).
-		WithSuccess(len(resultWithErrors.Results), totalCost).
-		WithDuration(start)
-	auditLogger.Log(ctx, *auditEntry)
-
+	audit.logSuccess(ctx, len(resultWithErrors.Results), totalCost)
 	return nil
 }
 
@@ -348,17 +204,8 @@ func ParseTimeRange(fromStr, toStr string) (time.Time, time.Time, error) {
 	return from, to, nil
 }
 
-// ParseTime parses str interpreting it as either `YYYY-MM-DD` or an RFC3339 timestamp.
-// ParseTime parses a date/time string in either YYYY-MM-DD or RFC3339 format.
-// It returns the parsed time on success, or an error if the string does not match either supported format.
-// ParseTime parses str as a date in either "YYYY-MM-DD" or RFC3339 format and returns the corresponding time.
-// It also validates that the parsed time is not in the future and is not more than maxPastYears years in the past.
-// Parameters:
-//   - str: the date string to parse; supported formats are "2006-01-02" (YYYY-MM-DD) and RFC3339.
-// Returns:
-//   - the parsed time on success.
-//   - an error if the string cannot be parsed in either supported format or if the parsed date is in the future
-//     or older than maxPastYears years.
+// ParseTime parses str as a date in either "YYYY-MM-DD" or RFC3339 format.
+// It validates that the parsed time is not in the future and is not more than maxPastYears years in the past.
 func ParseTime(str string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02",
@@ -435,29 +282,9 @@ func parseTagFilter(groupBy string) (map[string]string, string) {
 	return tags, actualGroupBy
 }
 
-// renderActualCostOutput renders cost output for the provided results using the given output format.
-// If actualGroupBy specifies a time-based grouping (daily, monthly, etc.), it aggregates results across providers before rendering.
-// Otherwise it renders the raw actual cost results as-is.
-// Parameters:
-//
-//	outputFormat - the output format to use when rendering.
-//	results - the list of cost results to render or aggregate.
-//	actualGroupBy - the group-by specifier; may influence whether cross-provider time aggregation is performed.
-//
-// renderActualCostOutput renders actual cost results using the specified output format.
-// If actualGroupBy denotes a time-based grouping, the function first creates
-// cross-provider aggregations for the provided results and renders those;
-// otherwise it renders the raw actual cost results.
-// outputFormat is the desired rendering format, results are the cost entries
-// to render or aggregate, and actualGroupBy controls grouping (time-based
-// groupings trigger cross-provider aggregation).
-// renderActualCostOutput renders actual cost results to the provided writer using the given outputFormat.
-// If actualGroupBy denotes a time-based grouping, it creates cross-provider aggregations and renders the aggregated view; otherwise it renders the raw results.
-// writer is the destination for the rendered output.
-// outputFormat selects the output serialization/format.
-// results are the computed cost results to render.
-// actualGroupBy indicates the grouping to apply; when it represents a time-based grouping, cross-provider aggregation is performed prior to rendering.
-// It returns an error if aggregation or rendering fails.
+// renderActualCostOutput renders actual cost results to the provided writer.
+// If actualGroupBy denotes a time-based grouping, it creates cross-provider aggregations;
+// otherwise it renders the raw results.
 func renderActualCostOutput(
 	writer io.Writer,
 	outputFormat engine.OutputFormat,

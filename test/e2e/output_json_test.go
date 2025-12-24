@@ -17,7 +17,8 @@ func TestE2E_Output_JSON(t *testing.T) {
 	binary := findPulumicostBinary()
 	require.NotEmpty(t, binary)
 
-	planPath, _ := filepath.Abs("../fixtures/plans/aws/simple.json")
+	planPath, err := filepath.Abs("../fixtures/plans/aws/simple.json")
+	require.NoError(t, err)
 
 	// Run with JSON output
 	cmd := exec.Command(binary, "cost", "projected", "--pulumi-json", planPath, "--output", "json")

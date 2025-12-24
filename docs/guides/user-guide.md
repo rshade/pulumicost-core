@@ -148,15 +148,16 @@ PulumiCost can integrate directly with the Pulumi CLI as an Analyzer, providing 
 cost estimates during `pulumi preview`. This eliminates the need for a separate
 `pulumicost` command to see projected costs.
 
-For detailed setup instructions, refer to the [Analyzer Setup Guide](../getting-started/analyzer-setup.md).
+For detailed setup instructions, refer to the
+[Analyzer Setup Guide](../getting-started/analyzer-setup.md).
 
 ---
 
-## Cross-Provider Aggregation
+### Cross-Provider Aggregation
 
-PulumiCost supports aggregating costs across multiple cloud providers and services,
-allowing you to get a holistic view of your infrastructure spending. This feature is
-particularly powerful when combining actual cost data from various plugins.
+PulumiCost supports aggregating costs across multiple cloud providers and services, allowing
+you to get a holistic view of your infrastructure spending. This feature is particularly
+powerful when combining actual cost data from various plugins.
 
 ### Daily Cost Trends
 

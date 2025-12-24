@@ -18,9 +18,12 @@ func TestE2E_Errors_MissingFile(t *testing.T) {
 	// Run with non-existent file
 	cmd := exec.Command(binary, "cost", "projected", "--pulumi-json", "nonexistent.json")
 	output, err := cmd.CombinedOutput()
-	
-	// Should fail
+
+	// Should fail with exit code 1
 	require.Error(t, err)
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		assert.Equal(t, 1, exitErr.ExitCode(), "expected exit code 1 for missing file")
+	}
 	assert.Contains(t, string(output), "no such file")
 }
 
@@ -31,8 +34,11 @@ func TestE2E_Errors_InvalidFormat(t *testing.T) {
 	// Run with invalid format
 	cmd := exec.Command(binary, "cost", "projected", "--output", "invalid")
 	output, err := cmd.CombinedOutput()
-	
-	// Should fail
+
+	// Should fail with exit code 1
 	require.Error(t, err)
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		assert.Equal(t, 1, exitErr.ExitCode(), "expected exit code 1 for invalid format")
+	}
 	assert.Contains(t, string(output), "invalid")
 }

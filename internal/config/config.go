@@ -523,7 +523,7 @@ func validateOutputType(outputType string) error {
 	return fmt.Errorf("invalid output type: %s (must be one of: %v)", outputType, validTypes)
 }
 
-//   - MaxSizeMB or MaxFiles is negative (values of 0 are allowed and mean unlimited).
+// - MaxSizeMB or MaxFiles is negative (values of 0 are allowed and mean unlimited).
 func validateFileOutput(output LogOutput) error {
 	if output.Path == "" {
 		return errors.New("file output requires 'path' field")

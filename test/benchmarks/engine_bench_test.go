@@ -13,6 +13,7 @@ import (
 // BenchmarkEngine_GetProjectedCost_Single benchmarks the performance of GetProjectedCost
 // with a single resource to establish baseline performance.
 func BenchmarkEngine_GetProjectedCost_Single(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	resources := []engine.ResourceDescriptor{
@@ -39,6 +40,7 @@ func BenchmarkEngine_GetProjectedCost_Single(b *testing.B) {
 // BenchmarkEngine_GetProjectedCost_Multiple benchmarks the performance of GetProjectedCost
 // with multiple resources (batch of 10) to evaluate batching performance.
 func BenchmarkEngine_GetProjectedCost_Multiple(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	// Create 10 resources for batch testing
@@ -67,6 +69,7 @@ func BenchmarkEngine_GetProjectedCost_Multiple(b *testing.B) {
 // BenchmarkEngine_GetProjectedCost_Large benchmarks the performance of GetProjectedCost
 // with a large batch of resources (100) to identify performance at scale.
 func BenchmarkEngine_GetProjectedCost_Large(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	// Create 100 resources for large batch testing
@@ -95,6 +98,7 @@ func BenchmarkEngine_GetProjectedCost_Large(b *testing.B) {
 // BenchmarkEngine_GetActualCost_Single benchmarks the performance of GetActualCost
 // with a single resource to establish baseline performance for actual cost queries.
 func BenchmarkEngine_GetActualCost_Single(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	resources := []engine.ResourceDescriptor{
@@ -120,6 +124,7 @@ func BenchmarkEngine_GetActualCost_Single(b *testing.B) {
 // BenchmarkEngine_GetActualCost_Multiple benchmarks the performance of GetActualCost
 // with multiple resources (batch of 10) to evaluate batching for actual cost queries.
 func BenchmarkEngine_GetActualCost_Multiple(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	// Create 10 resources for batch testing
@@ -147,6 +152,7 @@ func BenchmarkEngine_GetActualCost_Multiple(b *testing.B) {
 // BenchmarkEngine_ResourceDescriptor_Allocation benchmarks the memory allocation performance
 // when creating and initializing batches of ResourceDescriptor structures.
 func BenchmarkEngine_ResourceDescriptor_Allocation(b *testing.B) {
+	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		resources := make([]engine.ResourceDescriptor, 100)
@@ -173,6 +179,7 @@ func BenchmarkEngine_ResourceDescriptor_Allocation(b *testing.B) {
 // BenchmarkEngine_GetProjectedCost_Concurrent benchmarks the thread-safe concurrent
 // performance of GetProjectedCost when accessed by multiple goroutines in parallel.
 func BenchmarkEngine_GetProjectedCost_Concurrent(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	resources := []engine.ResourceDescriptor{
@@ -200,6 +207,7 @@ func BenchmarkEngine_GetProjectedCost_Concurrent(b *testing.B) {
 // BenchmarkEngine_GetProjectedCost_WithTimeout benchmarks the performance of GetProjectedCost
 // when using context timeout to measure cancellation overhead.
 func BenchmarkEngine_GetProjectedCost_WithTimeout(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 
 	resources := []engine.ResourceDescriptor{
@@ -224,6 +232,7 @@ func BenchmarkEngine_GetProjectedCost_WithTimeout(b *testing.B) {
 // BenchmarkEngine_Properties_Conversion benchmarks the performance of converting
 // resource properties from interface{} maps to string maps for serialization.
 func BenchmarkEngine_Properties_Conversion(b *testing.B) {
+	b.ReportAllocs()
 	properties := map[string]interface{}{
 		"instance_type":     "t3.micro",
 		"region":            "us-east-1",
@@ -257,6 +266,7 @@ func BenchmarkEngine_Properties_Conversion(b *testing.B) {
 // BenchmarkEngine_GetProjectedCost_NoClients benchmarks the performance of GetProjectedCost
 // fallback behavior when no plugins are available, testing error handling performance.
 func BenchmarkEngine_GetProjectedCost_NoClients(b *testing.B) {
+	b.ReportAllocs()
 	// Test fallback performance when no plugins are available
 	eng := engine.New(nil, nil)
 
@@ -307,6 +317,7 @@ func createResources(n int) []engine.ResourceDescriptor {
 
 // BenchmarkEngine_GetProjectedCost_1K benchmarks projected cost with 1,000 resources.
 func BenchmarkEngine_GetProjectedCost_1K(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 	resources := createResources(1000)
 
@@ -321,6 +332,7 @@ func BenchmarkEngine_GetProjectedCost_1K(b *testing.B) {
 
 // BenchmarkEngine_GetProjectedCost_10K benchmarks projected cost with 10,000 resources.
 func BenchmarkEngine_GetProjectedCost_10K(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 	resources := createResources(10000)
 
@@ -335,6 +347,7 @@ func BenchmarkEngine_GetProjectedCost_10K(b *testing.B) {
 
 // BenchmarkEngine_GetProjectedCost_100K benchmarks projected cost with 100,000 resources.
 func BenchmarkEngine_GetProjectedCost_100K(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 	resources := createResources(100000)
 
@@ -349,6 +362,7 @@ func BenchmarkEngine_GetProjectedCost_100K(b *testing.B) {
 
 // BenchmarkEngine_GetActualCost_1K benchmarks actual cost with 1,000 resources.
 func BenchmarkEngine_GetActualCost_1K(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 	resources := createResources(1000)
 	from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -365,6 +379,7 @@ func BenchmarkEngine_GetActualCost_1K(b *testing.B) {
 
 // BenchmarkEngine_GetActualCost_10K benchmarks actual cost with 10,000 resources.
 func BenchmarkEngine_GetActualCost_10K(b *testing.B) {
+	b.ReportAllocs()
 	eng := engine.New(nil, nil)
 	resources := createResources(10000)
 	from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -381,6 +396,7 @@ func BenchmarkEngine_GetActualCost_10K(b *testing.B) {
 
 // BenchmarkEngine_CrossProviderAggregation_1K benchmarks cross-provider aggregation with 1K results.
 func BenchmarkEngine_CrossProviderAggregation_1K(b *testing.B) {
+	b.ReportAllocs()
 	results := make([]engine.CostResult, 1000)
 	startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	providers := []string{"aws", "azure", "gcp"}
@@ -406,6 +422,7 @@ func BenchmarkEngine_CrossProviderAggregation_1K(b *testing.B) {
 
 // BenchmarkEngine_CrossProviderAggregation_10K benchmarks cross-provider aggregation with 10K results.
 func BenchmarkEngine_CrossProviderAggregation_10K(b *testing.B) {
+	b.ReportAllocs()
 	results := make([]engine.CostResult, 10000)
 	startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	providers := []string{"aws", "azure", "gcp"}

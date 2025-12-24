@@ -47,7 +47,7 @@
         "engineVersion": "13.7",
         "identifier": "my-database",
         "username": "admin",
-        "password": "supersecret123",
+        "password": "${pulumi.secret}",
         "skipFinalSnapshot": true,
         "tags": {
           "Name": "Application Database",
@@ -65,7 +65,7 @@
         "name": "api-handler",
         "runtime": "nodejs18.x",
         "handler": "index.handler",
-        "role": "arn:aws:iam::123456789012:role/lambda-role",
+        "role": "arn:aws:iam::000000000000:role/lambda-role",
         "memorySize": 128,
         "timeout": 30,
         "tags": {

@@ -4,8 +4,6 @@ description: Troubleshooting guide for common testing issues
 layout: default
 ---
 
-# Testing Troubleshooting
-
 ## Common Issues
 
 ### 1. Integration Tests Failing with "connection refused"

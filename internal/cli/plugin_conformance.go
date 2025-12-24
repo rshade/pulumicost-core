@@ -238,7 +238,7 @@ func writeReport(
 
 // getOutputWriter returns the writer to use for command output and a cleanup function that closes
 // any created file.
-// 
+//
 // If outputFile is empty, the command's standard output writer is returned and the cleanup is nil.
 // If outputFile is provided, the file is created (or truncated) and a cleanup function that closes
 // the file is returned. An error is returned if the file cannot be created.

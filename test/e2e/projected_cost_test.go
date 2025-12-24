@@ -4,9 +4,7 @@
 package e2e
 
 import (
-	"context"
 	"encoding/json"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -21,7 +19,8 @@ func TestE2E_ProjectedCost(t *testing.T) {
 	require.NotEmpty(t, binary, "pulumicost binary not found")
 
 	// Use fixture plan
-	planPath, _ := filepath.Abs("../fixtures/plans/aws/simple.json")
+	planPath, err := filepath.Abs("../fixtures/plans/aws/simple.json")
+	require.NoError(t, err)
 	require.FileExists(t, planPath)
 
 	// Run command

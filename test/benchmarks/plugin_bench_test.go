@@ -13,6 +13,7 @@ import (
 
 // BenchmarkPlugin_GRPC_Call benchmarks the overhead of a single gRPC call.
 func BenchmarkPlugin_GRPC_Call(b *testing.B) {
+	b.ReportAllocs()
 	// Start mock plugin server
 	server, err := plugin.StartMockServerTCP()
 	require.NoError(b, err)

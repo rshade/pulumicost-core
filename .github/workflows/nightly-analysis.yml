@@ -28,9 +28,10 @@ jobs:
       - name: Analyze Failure Context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           go run scripts/analysis/analyze_failure.go \
-            --issue-body "${{ github.event.issue.body }}" \
+            --issue-body "$ISSUE_BODY" \
             --output context.txt
 
       - name: Generate Analysis Report
@@ -47,4 +48,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body-file analysis.md
+          if [ -f analysis.md ]; then
+            gh issue comment ${{ github.event.issue.number }} --body-file analysis.md
+          else
+            echo "::warning::analysis.md not found, skipping comment"
+          fi

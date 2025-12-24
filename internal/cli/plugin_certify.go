@@ -20,9 +20,10 @@ const (
 // NewPluginCertifyCmd creates the plugin certify command for running certification
 // NewPluginCertifyCmd returns a Cobra command that runs the conformance suite against a plugin binary and generates a Markdown certification report.
 // The command accepts a single plugin path argument and provides flags to control output and execution:
-//  - --output, -o: path to write the certification report (default: stdout)
-//  - --mode: communication mode, either "tcp" or "stdio" (default: "tcp")
-//  - --timeout: global certification timeout as a duration string (default: "10m")
+//   - --output, -o: path to write the certification report (default: stdout)
+//   - --mode: communication mode, either "tcp" or "stdio" (default: "tcp")
+//   - --timeout: global certification timeout as a duration string (default: "10m")
+//
 // The command prints progress and a summary; it exits with a non-zero code when certification is not achieved.
 func NewPluginCertifyCmd() *cobra.Command {
 	var (
@@ -140,9 +141,10 @@ func runPluginCertifyCmd(
 	// Generate markdown
 	markdown := certReport.GenerateMarkdown()
 
-	// Write output
+	// Write output with relaxed permissions for shareable reports
 	if outputFile != "" {
-		if writeErr := os.WriteFile(outputFile, []byte(markdown), 0o600); writeErr != nil {
+		//nolint:gosec // G306: Intentionally using 0o644 for shareable certification reports
+		if writeErr := os.WriteFile(outputFile, []byte(markdown), 0o644); writeErr != nil {
 			return fmt.Errorf("writing certification report: %w", writeErr)
 		}
 		cmd.Printf("📄 Certification report written to %s\n", outputFile)

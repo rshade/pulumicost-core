@@ -13,7 +13,7 @@ go test -bench=. -benchmem ./test/benchmarks/...
 - `engine_bench_test.go`: Benchmarks for engine core logic.
 - `parse_bench_test.go`: Benchmarks for JSON parsing.
 - `plugin_bench_test.go`: Benchmarks for plugin communication.
-- `scale_test.go`: Benchmarks for large scale scenarios.
+- `scale_test.go`: Benchmarks for large-scale scenarios.
 
 ## Baseline
 

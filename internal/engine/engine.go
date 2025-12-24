@@ -552,13 +552,14 @@ func (e *Engine) getActualCostForResource(
 		}
 		if costResult != nil {
 			engineResult := *costResult
-			for k, v := range costResult.Sustainability {
-				if engineResult.Sustainability == nil {
-					engineResult.Sustainability = make(map[string]SustainabilityMetric)
-				}
-				engineResult.Sustainability[k] = SustainabilityMetric{
-					Value: v.Value,
-					Unit:  v.Unit,
+			// Only allocate sustainability map if source has values
+			if len(costResult.Sustainability) > 0 {
+				engineResult.Sustainability = make(map[string]SustainabilityMetric, len(costResult.Sustainability))
+				for k, v := range costResult.Sustainability {
+					engineResult.Sustainability[k] = SustainabilityMetric{
+						Value: v.Value,
+						Unit:  v.Unit,
+					}
 				}
 			}
 			resourceResult = &engineResult
@@ -605,15 +606,8 @@ func (e *Engine) getProjectedCostFromPlugin(
 		},
 	}
 
-	// Pass utilization via context metadata if present
-	if utilization, ok := ctx.Value(ContextKeyUtilization).(float64); ok {
-		// Since we can't easily modify grpc metadata here without importing metadata package which might be an abstraction leak,
-		// we will rely on the adapter to handle it if we pass it down.
-		// However, adapter.GetProjectedCost takes ctx.
-		// Let's assume adapter handles context values or we modify adapter.
-		// For now, let's just pass the context which contains the value.
-		_ = utilization
-	}
+	// Note: Utilization from ctx (ContextKeyUtilization) is available for future use
+	// when adapter supports passing it via gRPC metadata.
 
 	resp, err := client.API.GetProjectedCost(ctx, req)
 	if err == nil && len(resp.Results) > 0 {
@@ -1385,6 +1379,7 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 //   - ErrEmptyResults if `results` is empty.
 //   - ErrInvalidGroupBy if `groupBy` is not a time-based grouping.
 //   - ErrInvalidDateRange if any result has an EndDate not after its StartDate.
+//
 // - the results contain more than one distinct currency (ErrMixedCurrencies).
 func CreateCrossProviderAggregation(
 	results []CostResult,
@@ -1636,6 +1631,7 @@ func distributeDailyCosts(
 // The base currency is taken from the first result's Currency if present, otherwise the package defaultCurrency is used.
 // Parameters:
 //   - results: slice of CostResult to group and aggregate.
+//
 // groupResultsByPeriod groups cost results into time-based periods and sums costs per provider.
 // It assigns each CostResult's cost to a period derived from its StartDate using the given
 // groupBy granularity (daily or monthly). If a result contains DailyCosts and a valid
@@ -1646,6 +1642,7 @@ func distributeDailyCosts(
 //   - results: slice of CostResult entries to group.
 //   - groupBy: grouping granularity (e.g., GroupByDaily or GroupByMonthly) used to format
 //     period keys and compute period costs.
+//
 // Returns a map keyed by period string to a map of provider -> aggregated cost, and the
 // base currency determined from the first result (or defaultCurrency when absent or when
 // results is empty).

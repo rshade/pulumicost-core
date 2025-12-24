@@ -29,7 +29,10 @@ func testNameReturnsIdentifier(ctx *TestContext) *TestResult {
 	return &TestResult{Status: StatusPass, Details: fmt.Sprintf("Plugin name: %s", resp.GetName())}
 }
 
-// - StatusPass with Details containing the plugin's reported name when the Name RPC succeeds.
+// testNameReturnsProtocolVersion verifies basic protocol compatibility by calling the Name RPC.
+// This is a placeholder for future protocol version negotiation when the proto adds version fields.
+// Returns StatusPass with Details containing the plugin name when the Name RPC succeeds,
+// StatusFail if the RPC fails, or StatusError if the plugin client type is invalid.
 func testNameReturnsProtocolVersion(ctx *TestContext) *TestResult {
 	client, ok := ctx.PluginClient.(pbc.CostSourceServiceClient)
 	if !ok {

@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strings"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"github.com/rshade/pulumicost-core/internal/engine"
@@ -60,7 +61,7 @@ func CostToDiagnostic(
 //
 // StackSummaryDiagnostic creates a stack-level AnalyzeDiagnostic that summarizes the total
 // estimated monthly cost across the provided CostResult values.
-// 
+//
 // The `costs` slice is aggregated to compute the total monthly cost, the currency (defaults
 // to "USD" if unspecified), and the count of resources with a positive monthly estimate.
 // The `version` parameter is used as the PolicyPackVersion on the returned diagnostic.
@@ -107,14 +108,50 @@ func StackSummaryDiagnostic(
 //   - Zero cost with notes: Returns the notes directly
 //   - Zero cost no notes: "Unable to estimate cost"
 func formatCostMessage(cost engine.CostResult) string {
-	if cost.Monthly > 0 {
-		return fmt.Sprintf("Estimated Monthly Cost: $%.2f %s (source: %s)",
+	var message string
+	switch {
+	case cost.Monthly > 0:
+		message = fmt.Sprintf("Estimated Monthly Cost: $%.2f %s (source: %s)",
 			cost.Monthly, cost.Currency, cost.Adapter)
+	case cost.Notes != "":
+		message = cost.Notes
+	default:
+		message = "Unable to estimate cost"
 	}
-	if cost.Notes != "" {
-		return cost.Notes
+
+	// Append sustainability metrics if present
+	if len(cost.Sustainability) > 0 {
+		// Use a fixed order for deterministic output
+		var sustainParts []string
+		// We can't easily sort map keys without importing sort package,
+		// but typically there's only one or two metrics (e.g. gCO2e).
+		// Let's just iterate and append. For tests, deterministic order helps,
+		// but map iteration is random.
+		// Since we're just appending to a string for display, strict order isn't critical
+		// unless we're doing string matching in tests.
+		// Let's check keys to provide a stable-ish output for common keys.
+		if m, ok := cost.Sustainability["gCO2e"]; ok {
+			sustainParts = append(sustainParts, fmt.Sprintf("Carbon: %.2f %s", m.Value, m.Unit))
+		}
+		// Add other keys if needed, or iterate remaining.
+		// For now, let's just append all of them.
+		for k, m := range cost.Sustainability {
+			if k == "gCO2e" {
+				continue // Already added
+			}
+			sustainParts = append(sustainParts, fmt.Sprintf("%s: %.2f %s", k, m.Value, m.Unit))
+		}
+
+		if len(sustainParts) > 0 {
+			message += fmt.Sprintf(" [%s]", getJoinedSustainability(sustainParts))
+		}
 	}
-	return "Unable to estimate cost"
+
+	return message
+}
+
+func getJoinedSustainability(parts []string) string {
+	return strings.Join(parts, ", ")
 }
 
 // WarningDiagnostic creates a warning-level diagnostic for error conditions.
