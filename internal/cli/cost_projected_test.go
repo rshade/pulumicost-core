@@ -114,8 +114,16 @@ func TestCostProjectedCmdHelp(t *testing.T) {
 	require.NoError(t, err)
 
 	output := buf.String()
-	assert.Contains(t, output, "Calculate projected costs by analyzing a Pulumi preview JSON output")
-	assert.Contains(t, output, "Calculate projected costs by analyzing a Pulumi preview JSON output")
+	assert.Contains(
+		t,
+		output,
+		"Calculate projected costs by analyzing a Pulumi preview JSON output",
+	)
+	assert.Contains(
+		t,
+		output,
+		"Calculate projected costs by analyzing a Pulumi preview JSON output",
+	)
 	assert.Contains(t, output, "--pulumi-json")
 	assert.Contains(t, output, "--spec-dir")
 	assert.Contains(t, output, "--adapter")

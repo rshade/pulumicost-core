@@ -30,7 +30,7 @@ func TestProjectedCost_EC2_WithoutPlugin(t *testing.T) {
 	tc := NewTestContext(t, "e2e-ec2-noplugin")
 
 	// Setup Project - this deploys real AWS infrastructure using CLI commands
-	err := tc.SetupProject(ctx, "projects/ec2")
+	err := tc.SetupProject(ctx, "fixtures/ec2")
 	require.NoError(t, err, "Failed to setup project")
 	defer tc.Teardown(ctx)
 
@@ -74,7 +74,7 @@ func TestProjectedCost_EC2_WithPlugin(t *testing.T) {
 	t.Logf("Installed plugins:\n%s", plugins)
 
 	// Setup Project - this deploys real AWS infrastructure using CLI commands
-	err = tc.SetupProject(ctx, "projects/ec2")
+	err = tc.SetupProject(ctx, "fixtures/ec2")
 	require.NoError(t, err, "Failed to setup project")
 	defer tc.Teardown(ctx)
 
@@ -110,7 +110,7 @@ func TestProjectedCost_EC2(t *testing.T) {
 	ctx := context.Background()
 
 	// Setup Project - this deploys real AWS infrastructure using CLI commands
-	err := tc.SetupProject(ctx, "projects/ec2")
+	err := tc.SetupProject(ctx, "fixtures/ec2")
 	require.NoError(t, err, "Failed to setup project")
 	defer tc.Teardown(ctx)
 
@@ -146,16 +146,16 @@ func TestProjectedCost_EC2(t *testing.T) {
 }
 
 // TestProjectedCost_EBS verifies the projected cost calculation for an EBS volume.
-// NOTE: This test is deferred until we create the projects/ebs project directory.
+// NOTE: This test is deferred until we create the fixtures/ebs project directory.
 // For now, it validates the cost validator logic with the expected pricing.
 func TestProjectedCost_EBS(t *testing.T) {
-	t.Skip("Skipping EBS test - projects/ebs not yet implemented")
+	t.Skip("Skipping EBS test - fixtures/ebs not yet implemented")
 
 	tc := NewTestContext(t, "e2e-ebs")
 	ctx := context.Background()
 
 	// Setup Project
-	err := tc.SetupProject(ctx, "projects/ebs")
+	err := tc.SetupProject(ctx, "fixtures/ebs")
 	require.NoError(t, err, "Failed to setup project")
 	defer tc.Teardown(ctx)
 
@@ -207,7 +207,7 @@ func TestCleanupVerification(t *testing.T) {
 	ctx := context.Background()
 
 	// Setup the EC2 project
-	err := tc.SetupProject(ctx, "projects/ec2")
+	err := tc.SetupProject(ctx, "fixtures/ec2")
 	require.NoError(t, err, "Failed to setup project")
 
 	// Verify work directory exists before cleanup
@@ -233,8 +233,8 @@ func TestCostValidatorTolerance(t *testing.T) {
 		shouldPass bool
 	}{
 		{"exact match", 7.59, 7.59, 5.0, true},
-		{"within 5%", 7.20, 7.59, 5.0, true},
-		{"at 5% boundary", 7.21, 7.59, 5.0, true},
+		{"within 5%", 7.22, 7.59, 5.0, true},
+		{"at 5% boundary", 7.211, 7.59, 5.0, true},
 		{"outside 5%", 7.00, 7.59, 5.0, false},
 		{"10% tolerance passes", 7.00, 7.59, 10.0, true},
 		{"zero expected zero actual", 0.0, 0.0, 5.0, true},
@@ -256,11 +256,11 @@ func TestCostValidatorTolerance(t *testing.T) {
 // TestComparisonReport verifies the comparison report generation.
 func TestComparisonReport(t *testing.T) {
 	validator := NewDefaultCostValidator(5.0)
-	report := validator.Compare(7.20, 7.59)
+	report := validator.Compare(7.22, 7.59)
 
-	assert.Equal(t, 7.20, report.Actual)
+	assert.Equal(t, 7.22, report.Actual)
 	assert.Equal(t, 7.59, report.Expected)
-	assert.InDelta(t, 5.14, report.PercentDiff, 0.5) // ~5.14% difference
+	assert.InDelta(t, 4.87, report.PercentDiff, 0.5) // ~4.87% difference
 	assert.True(t, report.WithinLimit)
 
 	// Log the report

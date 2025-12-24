@@ -599,7 +599,12 @@ func TestCreateCrossProviderAggregation(t *testing.T) {
 				}
 
 				if actual.Total != expected.Total {
-					t.Errorf("Period %s: expected total %.2f, got %.2f", expected.Period, expected.Total, actual.Total)
+					t.Errorf(
+						"Period %s: expected total %.2f, got %.2f",
+						expected.Period,
+						expected.Total,
+						actual.Total,
+					)
 				}
 
 				if actual.Currency != expected.Currency {
@@ -614,7 +619,11 @@ func TestCreateCrossProviderAggregation(t *testing.T) {
 				for provider, expectedCost := range expected.Providers {
 					actualCost, providerExists := actual.Providers[provider]
 					if !providerExists {
-						t.Errorf("Period %s: expected provider %s not found", expected.Period, provider)
+						t.Errorf(
+							"Period %s: expected provider %s not found",
+							expected.Period,
+							provider,
+						)
 						continue
 					}
 
@@ -772,7 +781,12 @@ func TestCurrencySymbolMapping(t *testing.T) {
 
 	// We can't easily test the output formatting without mocking stdout,
 	// but we can at least verify the function doesn't panic with different currencies
-	err := engine.RenderCrossProviderAggregation(io.Discard, engine.OutputJSON, aggregations, engine.GroupByDaily)
+	err := engine.RenderCrossProviderAggregation(
+		io.Discard,
+		engine.OutputJSON,
+		aggregations,
+		engine.GroupByDaily,
+	)
 	require.NoError(t, err)
 }
 

@@ -4,8 +4,6 @@ title: Installation Guide
 description: Detailed installation instructions for PulumiCost
 ---
 
-# Installation Guide
-
 Detailed steps to install PulumiCost on your system.
 
 ## Prerequisites

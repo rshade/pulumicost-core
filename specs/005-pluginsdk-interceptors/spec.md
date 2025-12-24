@@ -1,6 +1,6 @@
 # Feature Specification: Add UnaryInterceptors Support to ServeConfig
 
-**Feature Branch**: `001-pluginsdk-interceptors`
+**Feature Branch**: `005-pluginsdk-interceptors`
 **Created**: 2025-11-28
 **Status**: Draft
 **Input**: User description: "feat(pluginsdk): Add UnaryInterceptors support to ServeConfig"

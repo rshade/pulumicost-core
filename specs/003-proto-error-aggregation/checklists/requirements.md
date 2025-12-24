@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: November 23, 2025
-**Feature**: [specs/001-proto-error-aggregation/spec.md](specs/001-proto-error-aggregation/spec.md)
+**Feature**: [specs/003-proto-error-aggregation/spec.md](specs/003-proto-error-aggregation/spec.md)
 
 ## Content Quality
 

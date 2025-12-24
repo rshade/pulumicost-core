@@ -30,7 +30,11 @@ func FuzzJSON(f *testing.F) {
 	f.Add([]byte(`garbage`))
 
 	// Add seed corpus - deeply nested
-	f.Add([]byte(`{"steps":[{"op":"create","urn":"test","type":"test","inputs":{"a":{"b":{"c":{"d":"value"}}}}}]}`))
+	f.Add(
+		[]byte(
+			`{"steps":[{"op":"create","urn":"test","type":"test","inputs":{"a":{"b":{"c":{"d":"value"}}}}}]}`,
+		),
+	)
 
 	// Add seed corpus - unicode and special characters
 	f.Add([]byte(`{"steps":[{"op":"create","urn":"bucket-日本語","type":"test"}]}`))
@@ -53,8 +57,16 @@ func FuzzJSON(f *testing.F) {
 func FuzzPulumiPlanParse(f *testing.F) {
 	// Add seed corpus
 	f.Add([]byte(`{"steps":[]}`))
-	f.Add([]byte(`{"steps":[{"op":"create","urn":"test","type":"aws:ec2:Instance","provider":"aws"}]}`))
-	f.Add([]byte(`{"steps":[{"op":"same","urn":"test","type":"aws:s3/bucket:Bucket","inputs":{"acl":"private"}}]}`))
+	f.Add(
+		[]byte(
+			`{"steps":[{"op":"create","urn":"test","type":"aws:ec2:Instance","provider":"aws"}]}`,
+		),
+	)
+	f.Add(
+		[]byte(
+			`{"steps":[{"op":"same","urn":"test","type":"aws:s3/bucket:Bucket","inputs":{"acl":"private"}}]}`,
+		),
+	)
 
 	// Edge cases
 	f.Add([]byte(`{}`))

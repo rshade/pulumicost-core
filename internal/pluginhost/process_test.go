@@ -722,7 +722,11 @@ func TestProcessLauncher_EnvironmentVariableConstants(t *testing.T) {
 	// This ensures we haven't accidentally drifted from the spec.
 	expectedEnvPort := "PULUMICOST_PLUGIN_PORT"
 	if pluginsdk.EnvPort != expectedEnvPort {
-		t.Errorf("pluginsdk.EnvPort changed: expected %q, got %q", expectedEnvPort, pluginsdk.EnvPort)
+		t.Errorf(
+			"pluginsdk.EnvPort changed: expected %q, got %q",
+			expectedEnvPort,
+			pluginsdk.EnvPort,
+		)
 	}
 }
 
@@ -833,8 +837,11 @@ func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
 		// Note: We need to check for standalone "PORT=" not as part of "PULUMICOST_PLUGIN_PORT="
 		for _, line := range strings.Split(stdoutStr, "\n") {
 			if strings.HasPrefix(line, "PORT=") && !strings.Contains(line, "WARNING") {
-				t.Errorf("PORT should NOT be set by core (issue #232), but found line: %s\nstdout: %s",
-					line, stdoutStr)
+				t.Errorf(
+					"PORT should NOT be set by core (issue #232), but found line: %s\nstdout: %s",
+					line,
+					stdoutStr,
+				)
 			}
 		}
 

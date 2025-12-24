@@ -178,7 +178,12 @@ func TestRenderCrossProviderAggregation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RenderCrossProviderAggregation(io.Discard, tt.format, tt.aggregations, tt.groupBy)
+			err := RenderCrossProviderAggregation(
+				io.Discard,
+				tt.format,
+				tt.aggregations,
+				tt.groupBy,
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderCrossProviderAggregation() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -288,7 +293,11 @@ func TestJSONMarshaling(t *testing.T) {
 			t.Errorf("Total = %f, want %f", unmarshaled.Total, agg.Total)
 		}
 		if len(unmarshaled.Providers) != len(agg.Providers) {
-			t.Errorf("Providers length = %d, want %d", len(unmarshaled.Providers), len(agg.Providers))
+			t.Errorf(
+				"Providers length = %d, want %d",
+				len(unmarshaled.Providers),
+				len(agg.Providers),
+			)
 		}
 	})
 
@@ -318,7 +327,11 @@ func TestJSONMarshaling(t *testing.T) {
 		}
 
 		if unmarshaled.Summary.TotalMonthly != aggregated.Summary.TotalMonthly {
-			t.Errorf("TotalMonthly = %f, want %f", unmarshaled.Summary.TotalMonthly, aggregated.Summary.TotalMonthly)
+			t.Errorf(
+				"TotalMonthly = %f, want %f",
+				unmarshaled.Summary.TotalMonthly,
+				aggregated.Summary.TotalMonthly,
+			)
 		}
 	})
 }
@@ -364,7 +377,12 @@ func TestRenderingWithEmptyResults(t *testing.T) {
 	})
 
 	t.Run("RenderCrossProviderAggregation with empty slice", func(t *testing.T) {
-		err := RenderCrossProviderAggregation(io.Discard, OutputTable, []CrossProviderAggregation{}, GroupByDaily)
+		err := RenderCrossProviderAggregation(
+			io.Discard,
+			OutputTable,
+			[]CrossProviderAggregation{},
+			GroupByDaily,
+		)
 		if err != nil {
 			t.Errorf("RenderCrossProviderAggregation with empty should not error: %v", err)
 		}

@@ -9,7 +9,8 @@ import (
 )
 
 // NewPluginInstallCmd creates the install command for installing plugins from registry or URL.
-// On success the command prints the installed plugin's name, version, and path.
+//
+//	--plugin-dir    Custom plugin directory (default: ~/.pulumicost/plugins)
 func NewPluginInstallCmd() *cobra.Command {
 	var (
 		force     bool
@@ -98,7 +99,8 @@ Plugins can be specified in several formats:
 
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Reinstall even if version already exists")
 	cmd.Flags().BoolVar(&noSave, "no-save", false, "Don't add plugin to config file")
-	cmd.Flags().StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.pulumicost/plugins)")
+	cmd.Flags().
+		StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.pulumicost/plugins)")
 
 	return cmd
 }

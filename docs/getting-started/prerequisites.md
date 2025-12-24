@@ -4,8 +4,6 @@ title: Prerequisites
 description: System requirements and dependencies for PulumiCost
 ---
 
-# Prerequisites
-
 ## System Requirements
 
 ### Minimum

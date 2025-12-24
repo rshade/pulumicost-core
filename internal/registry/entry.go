@@ -60,7 +60,12 @@ var (
 //   - `Repository` must not be empty and must match the "owner/repo" format.
 //   - If `SecurityLevel` is set, it must be one of "official", "community", or "experimental".
 //
-// The returned error message indicates which field is invalid and includes the entry name when available.
+// ValidateRegistryEntry validates required fields and formats of a RegistryEntry.
+// It checks that Name and Repository are present, that Repository matches the
+// "owner/repo" pattern, and that SecurityLevel (if set) is one of "official",
+// "community", or "experimental".
+// On failure it returns an error describing which field is invalid and includes
+// the entry name when available. On success it returns nil.
 func ValidateRegistryEntry(entry RegistryEntry) error {
 	if entry.Name == "" {
 		return errors.New("registry entry missing required field: name")
@@ -77,7 +82,11 @@ func ValidateRegistryEntry(entry RegistryEntry) error {
 	}
 	validLevels := map[string]bool{"official": true, "community": true, "experimental": true}
 	if entry.SecurityLevel != "" && !validLevels[entry.SecurityLevel] {
-		return fmt.Errorf("registry entry %q has invalid security_level: %s", entry.Name, entry.SecurityLevel)
+		return fmt.Errorf(
+			"registry entry %q has invalid security_level: %s",
+			entry.Name,
+			entry.SecurityLevel,
+		)
 	}
 	return nil
 }

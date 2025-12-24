@@ -90,18 +90,18 @@
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T020 [P] [US2] Unit test for GetActualCost error tracking in internal/proto/adapter_test.go
-- [ ] T021 [P] [US2] Integration test for CLI error summary display after table in internal/cli/cost_actual_test.go
-- [ ] T022 [P] [US2] Unit test for Engine.GetActualCost return type in internal/engine/engine_test.go
+- [x] T020 [P] [US2] Unit test for GetActualCost error tracking in internal/proto/adapter_test.go
+- [x] T021 [P] [US2] Integration test for CLI error summary display after table in internal/cli/cost_actual_test.go
+- [x] T022 [P] [US2] Unit test for Engine.GetActualCost return type in internal/engine/engine_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Update Adapter.GetActualCost to return *CostResultWithErrors in internal/proto/adapter.go
-- [ ] T024 [US2] Add error tracking loop in GetActualCost for plugin failures in internal/proto/adapter.go
-- [ ] T025 [US2] Add placeholder CostResult for failed resources in GetActualCost in internal/proto/adapter.go
-- [ ] T026 [US2] Update Engine.GetActualCost to return *CostResultWithErrors in internal/engine/engine.go
-- [ ] T027 [US2] Update CLI cost_actual command to handle CostResultWithErrors in internal/cli/cost_actual.go
-- [ ] T028 [US2] Add error summary display after table in cost_actual command in internal/cli/cost_actual.go
+- [x] T023 [US2] Update Adapter.GetActualCost to return *CostResultWithErrors in internal/proto/adapter.go
+- [x] T024 [US2] Add error tracking loop in GetActualCost for plugin failures in internal/proto/adapter.go
+- [x] T025 [US2] Add placeholder CostResult for failed resources in GetActualCost in internal/proto/adapter.go
+- [x] T026 [US2] Update Engine.GetActualCost to return *CostResultWithErrors in internal/engine/engine.go
+- [x] T027 [US2] Update CLI cost_actual command to handle CostResultWithErrors in internal/cli/cost_actual.go
+- [x] T028 [US2] Add error summary display after table in cost_actual command in internal/cli/cost_actual.go
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -115,15 +115,15 @@
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T029 [P] [US3] Unit test for ErrorSummary with >5 errors truncation in internal/proto/adapter_test.go
-- [ ] T030 [P] [US3] Unit test for ErrorSummary with exactly 5 errors in internal/proto/adapter_test.go
-- [ ] T031 [P] [US3] Unit test for ErrorSummary with 0 errors in internal/proto/adapter_test.go
+- [x] T029 [P] [US3] Unit test for ErrorSummary with >5 errors truncation in internal/proto/adapter_test.go
+- [x] T030 [P] [US3] Unit test for ErrorSummary with exactly 5 errors in internal/proto/adapter_test.go
+- [x] T031 [P] [US3] Unit test for ErrorSummary with 0 errors in internal/proto/adapter_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Add zerolog structured logging for errors in Engine.GetProjectedCost in internal/engine/engine.go
-- [ ] T033 [US3] Add zerolog structured logging for errors in Engine.GetActualCost in internal/engine/engine.go
-- [ ] T034 [US3] Verify ErrorSummary truncation logic handles edge cases in internal/proto/adapter.go
+- [x] T032 [US3] Add zerolog structured logging for errors in Engine.GetProjectedCost in internal/engine/engine.go
+- [x] T033 [US3] Add zerolog structured logging for errors in Engine.GetActualCost in internal/engine/engine.go
+- [x] T034 [US3] Verify ErrorSummary truncation logic handles edge cases in internal/proto/adapter.go
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -133,11 +133,11 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T035 Run `make test` and verify 80%+ coverage
-- [ ] T036 Run `make lint` and fix any issues
-- [ ] T037 Update CLAUDE.md with error aggregation documentation
-- [ ] T038 Manual testing with example plans per quickstart.md
-- [ ] T039 Verify all acceptance criteria from spec.md are met
+- [x] T035 Run `make test` and verify 80%+ coverage
+- [x] T036 Run `make lint` and fix any issues
+- [x] T037 Update CLAUDE.md with error aggregation documentation
+- [x] T038 Manual testing with example plans per quickstart.md
+- [x] T039 Verify all acceptance criteria from spec.md are met
 
 ---
 

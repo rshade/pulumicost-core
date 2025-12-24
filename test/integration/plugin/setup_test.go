@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -39,6 +40,7 @@ func StartMockRegistry(t *testing.T) (*httptest.Server, func()) {
 	t.Helper()
 
 	// Track created artifacts to serve them later
+	var mu sync.Mutex
 	artifacts := make(map[string][]byte)
 
 	// Helper to create a release response
@@ -55,11 +57,14 @@ func StartMockRegistry(t *testing.T) (*httptest.Server, func()) {
 		assetName := fmt.Sprintf("test_%s_%s_%s.%s", tagName, osName, arch, ext)
 		downloadPath := fmt.Sprintf("/download/%s", assetName)
 
+		mu.Lock()
 		// Create a dummy artifact if it doesn't exist
 		if _, exists := artifacts[assetName]; !exists {
 			content := createTestArtifactContent(t, "test-plugin", tagName)
 			artifacts[assetName] = content
 		}
+		artifactSize := int64(len(artifacts[assetName]))
+		mu.Unlock()
 
 		return MockRelease{
 			TagName: tagName,
@@ -67,7 +72,7 @@ func StartMockRegistry(t *testing.T) (*httptest.Server, func()) {
 				{
 					Name:               assetName,
 					BrowserDownloadURL: serverURL + downloadPath,
-					Size:               int64(len(artifacts[assetName])),
+					Size:               artifactSize,
 				},
 			},
 		}
@@ -77,7 +82,10 @@ func StartMockRegistry(t *testing.T) (*httptest.Server, func()) {
 		// Handle download requests
 		if strings.HasPrefix(r.URL.Path, "/download/") {
 			filename := strings.TrimPrefix(r.URL.Path, "/download/")
-			if content, ok := artifacts[filename]; ok {
+			mu.Lock()
+			content, ok := artifacts[filename]
+			mu.Unlock()
+			if ok {
 				w.Header().Set("Content-Type", "application/octet-stream")
 				w.WriteHeader(http.StatusOK)
 				w.Write(content)
@@ -202,6 +210,7 @@ func StartMockRegistryWithConfig(t *testing.T, cfg MockRegistryConfig) (*httptes
 	t.Helper()
 
 	// Track created artifacts to serve them later
+	var mu sync.Mutex
 	artifacts := make(map[string][]byte)
 
 	// Helper to create a release response for a specific plugin/version
@@ -218,11 +227,14 @@ func StartMockRegistryWithConfig(t *testing.T, cfg MockRegistryConfig) (*httptes
 		assetName := fmt.Sprintf("%s_%s_%s_%s.%s", pluginName, tagName, osName, arch, ext)
 		downloadPath := fmt.Sprintf("/download/%s", assetName)
 
+		mu.Lock()
 		// Create artifact if it doesn't exist
 		if _, exists := artifacts[assetName]; !exists {
 			content := CreateTestPluginArchive(t, pluginName, tagName, osName, arch)
 			artifacts[assetName] = content
 		}
+		artifactSize := int64(len(artifacts[assetName]))
+		mu.Unlock()
 
 		return MockRelease{
 			TagName: tagName,
@@ -230,7 +242,7 @@ func StartMockRegistryWithConfig(t *testing.T, cfg MockRegistryConfig) (*httptes
 				{
 					Name:               assetName,
 					BrowserDownloadURL: serverURL + downloadPath,
-					Size:               int64(len(artifacts[assetName])),
+					Size:               artifactSize,
 				},
 			},
 		}
@@ -244,7 +256,10 @@ func StartMockRegistryWithConfig(t *testing.T, cfg MockRegistryConfig) (*httptes
 				return
 			}
 			filename := strings.TrimPrefix(r.URL.Path, "/download/")
-			if content, ok := artifacts[filename]; ok {
+			mu.Lock()
+			content, ok := artifacts[filename]
+			mu.Unlock()
+			if ok {
 				w.Header().Set("Content-Type", "application/octet-stream")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(content)

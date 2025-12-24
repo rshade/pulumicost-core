@@ -74,7 +74,10 @@ func NewInstaller(pluginDir string) *Installer {
 // NewInstallerWithClient creates a new Installer using the provided GitHub client.
 // If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; if the home
 // directory cannot be determined it falls back to the current directory.
-// The returned Installer uses the given client and the resolved plugin directory.
+// NewInstallerWithClient creates an Installer that uses the provided GitHub client and a resolved plugin directory.
+// If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the user home directory cannot be determined
+// it falls back to the current directory ("./") and uses "./.pulumicost/plugins".
+// The returned Installer's client field is set to the provided client and its pluginDir field is set to the resolved path.
 func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -91,7 +94,11 @@ func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 }
 
 // Install installs a plugin from a specifier (name or URL with optional version).
-func (i *Installer) Install(specifier string, opts InstallOptions, progress func(msg string)) (*InstallResult, error) {
+func (i *Installer) Install(
+	specifier string,
+	opts InstallOptions,
+	progress func(msg string),
+) (*InstallResult, error) {
 	spec, err := ParsePluginSpecifier(specifier)
 	if err != nil {
 		return nil, err
@@ -151,7 +158,14 @@ func (i *Installer) installFromRegistry(
 	assetHints := convertToAssetNamingHints(entry.AssetHints)
 
 	// Install the release
-	result, err := i.installRelease(spec.Name, release, entry.Repository, opts, progress, assetHints)
+	result, err := i.installRelease(
+		spec.Name,
+		release,
+		entry.Repository,
+		opts,
+		progress,
+		assetHints,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +185,14 @@ func (i *Installer) installFromURL(
 	var err error
 	if spec.Version != "" {
 		if progress != nil {
-			progress(fmt.Sprintf("Fetching release %s from %s/%s...", spec.Version, spec.Owner, spec.Repo))
+			progress(
+				fmt.Sprintf(
+					"Fetching release %s from %s/%s...",
+					spec.Version,
+					spec.Owner,
+					spec.Repo,
+				),
+			)
 		}
 		release, err = i.client.GetReleaseByTag(spec.Owner, spec.Repo, spec.Version)
 	} else {
@@ -218,7 +239,11 @@ func (i *Installer) installRelease(
 	// Check if already installed
 	installDir := filepath.Join(pluginDir, name, version)
 	if _, err := os.Stat(installDir); err == nil && !opts.Force {
-		return nil, fmt.Errorf("plugin %s@%s already installed. Use --force to reinstall", name, version)
+		return nil, fmt.Errorf(
+			"plugin %s@%s already installed. Use --force to reinstall",
+			name,
+			version,
+		)
 	}
 
 	// Find platform-specific asset (use hints if provided)
@@ -402,7 +427,11 @@ type UpdateResult struct {
 // Update updates an installed plugin to the latest or specified version.
 //
 //nolint:gocognit // Complex but necessary update logic with version comparison
-func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg string)) (*UpdateResult, error) {
+func (i *Installer) Update(
+	name string,
+	opts UpdateOptions,
+	progress func(msg string),
+) (*UpdateResult, error) {
 	// Get installed plugin info
 	installed, err := config.GetInstalledPlugin(name)
 	if err != nil {
@@ -515,7 +544,9 @@ func (i *Installer) Update(name string, opts UpdateOptions, progress func(msg st
 // It first looks up the plugin in the embedded registry. If not found, it parses
 // the installed URL to extract owner and repo. Returns an error if neither lookup
 // succeeds.
-func (i *Installer) resolvePluginSource(name, installedURL string) (string, string, *AssetNamingHints, error) {
+func (i *Installer) resolvePluginSource(
+	name, installedURL string,
+) (string, string, *AssetNamingHints, error) {
 	// Try registry first
 	entry, err := GetPlugin(name)
 	if err == nil {
@@ -578,7 +609,9 @@ func (i *Installer) Remove(name string, opts RemoveOptions, progress func(msg st
 	entries, err := os.ReadDir(parentDir)
 	if err == nil && len(entries) == 0 {
 		if rmErr := os.Remove(parentDir); rmErr != nil && progress != nil {
-			progress(fmt.Sprintf("Warning: failed to remove parent directory %s: %v", parentDir, rmErr))
+			progress(
+				fmt.Sprintf("Warning: failed to remove parent directory %s: %v", parentDir, rmErr),
+			)
 		}
 	}
 

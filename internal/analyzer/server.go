@@ -51,7 +51,10 @@ func zeroCostResult(resourceType, resourceID string) engine.CostResult {
 // This interface abstracts the cost calculation engine, allowing for
 // easier testing and decoupling from the concrete engine implementation.
 type CostCalculator interface {
-	GetProjectedCost(ctx context.Context, resources []engine.ResourceDescriptor) ([]engine.CostResult, error)
+	GetProjectedCost(
+		ctx context.Context,
+		resources []engine.ResourceDescriptor,
+	) ([]engine.CostResult, error)
 }
 
 // Server implements the Pulumi Analyzer gRPC service for cost estimation.

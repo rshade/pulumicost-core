@@ -169,7 +169,11 @@ func TestIntegration_RapidCreateDestroy(t *testing.T) {
 		cancel()
 
 		if err != nil {
-			t.Logf("Rapid create/destroy iteration %d failure (expected with mock plugin): %v", i, err)
+			t.Logf(
+				"Rapid create/destroy iteration %d failure (expected with mock plugin): %v",
+				i,
+				err,
+			)
 		} else {
 			t.Logf("Rapid create/destroy iteration %d unexpectedly succeeded", i)
 		}

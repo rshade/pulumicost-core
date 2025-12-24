@@ -1,6 +1,6 @@
 # Implementation Plan: Error Aggregation in Proto Adapter
 
-**Branch**: `001-proto-error-aggregation` | **Date**: 2025-11-24 | **Spec**: [spec.md](./spec.md)
+**Branch**: `003-proto-error-aggregation` | **Date**: 2025-11-24 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/003-proto-error-aggregation/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.

@@ -271,7 +271,11 @@ func TestResourceTypeMappingIntegration(t *testing.T) {
 
 			// Validate the resource mappings
 			if len(descriptors) != len(tt.expected) {
-				t.Fatalf("expected %d resource descriptors, got %d", len(tt.expected), len(descriptors))
+				t.Fatalf(
+					"expected %d resource descriptors, got %d",
+					len(tt.expected),
+					len(descriptors),
+				)
 			}
 
 			for i, expected := range tt.expected {
@@ -415,7 +419,10 @@ func getEdgeCaseTestData() []struct {
 
 				desc := descriptors[0]
 				if desc.Provider != "malformed" {
-					t.Errorf("expected provider 'malformed' extracted from URN, got %s", desc.Provider)
+					t.Errorf(
+						"expected provider 'malformed' extracted from URN, got %s",
+						desc.Provider,
+					)
 				}
 				if desc.Type != "malformed" {
 					t.Errorf("expected type 'malformed' extracted from URN, got %s", desc.Type)

@@ -81,7 +81,10 @@ func (r *ResourceDescriptor) Validate() error {
 }
 
 // validatePropertyKey checks if a property key is a valid identifier.
-// Valid keys contain only alphanumeric characters, underscores, hyphens, and dots.
+// validatePropertyKey validates a resource property key.
+// It ensures the key is not empty, does not exceed the maximum allowed length,
+// and contains only letters, digits, underscores (_), hyphens (-), or dots (.).
+// Returns an error describing the violation when the key is invalid, or nil when valid.
 func validatePropertyKey(key string) error {
 	if key == "" {
 		return errors.New("property key cannot be empty")
@@ -92,27 +95,39 @@ func validatePropertyKey(key string) error {
 
 	for _, ch := range key {
 		if !isValidPropertyKeyChar(ch) {
-			return fmt.Errorf("invalid character in property key %q: %c (must be alphanumeric, _, -, or .)", key, ch)
+			return fmt.Errorf(
+				"invalid character in property key %q: %c (must be alphanumeric, _, -, or .)",
+				key,
+				ch,
+			)
 		}
 	}
 	return nil
 }
 
-// isValidPropertyKeyChar returns true if the character is valid in a property key.
+// isValidPropertyKeyChar reports whether ch is a valid character for a property key.
+// Valid characters are letters, digits, underscore ('_'), hyphen ('-'), or dot ('.').
 func isValidPropertyKeyChar(ch rune) bool {
 	return unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_' || ch == '-' || ch == '.'
 }
 
+// SustainabilityMetric represents a single sustainability impact measurement.
+type SustainabilityMetric struct {
+	Value float64 `json:"value"`
+	Unit  string  `json:"unit"`
+}
+
 // CostResult contains the calculated cost information for a single resource.
 type CostResult struct {
-	ResourceType string             `json:"resourceType"`
-	ResourceID   string             `json:"resourceId"`
-	Adapter      string             `json:"adapter"`
-	Currency     string             `json:"currency"`
-	Monthly      float64            `json:"monthly"`
-	Hourly       float64            `json:"hourly"`
-	Notes        string             `json:"notes"`
-	Breakdown    map[string]float64 `json:"breakdown"`
+	ResourceType   string                          `json:"resourceType"`
+	ResourceID     string                          `json:"resourceId"`
+	Adapter        string                          `json:"adapter"`
+	Currency       string                          `json:"currency"`
+	Monthly        float64                         `json:"monthly"`
+	Hourly         float64                         `json:"hourly"`
+	Notes          string                          `json:"notes"`
+	Breakdown      map[string]float64              `json:"breakdown"`
+	Sustainability map[string]SustainabilityMetric `json:"sustainability,omitempty"`
 	// Actual cost specific fields
 	TotalCost  float64   `json:"totalCost,omitempty"`
 	DailyCosts []float64 `json:"dailyCosts,omitempty"`
@@ -153,10 +168,14 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 
 	for i, err := range c.Errors {
 		if i >= maxErrorsToDisplay {
-			summary.WriteString(fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay))
+			summary.WriteString(
+				fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay),
+			)
 			break
 		}
-		summary.WriteString(fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error))
+		summary.WriteString(
+			fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error),
+		)
 	}
 
 	return summary.String()
@@ -274,7 +293,13 @@ const (
 //	}
 func (g GroupBy) IsValid() bool {
 	switch g {
-	case GroupByResource, GroupByType, GroupByProvider, GroupByDate, GroupByDaily, GroupByMonthly, GroupByNone:
+	case GroupByResource,
+		GroupByType,
+		GroupByProvider,
+		GroupByDate,
+		GroupByDaily,
+		GroupByMonthly,
+		GroupByNone:
 		return true
 	default:
 		return false

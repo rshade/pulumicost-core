@@ -60,7 +60,13 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost projected with filter",
 			command: "cost",
-			args:    []string{"projected", "--pulumi-json", planPath, "--filter", "type=aws:ec2/instance"},
+			args: []string{
+				"projected",
+				"--pulumi-json",
+				planPath,
+				"--filter",
+				"type=aws:ec2/instance",
+			},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
@@ -88,7 +94,15 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost actual with date range",
 			command: "cost",
-			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--to", "2025-01-31"},
+			args: []string{
+				"actual",
+				"--pulumi-json",
+				planPath,
+				"--from",
+				"2025-01-01",
+				"--to",
+				"2025-01-31",
+			},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
@@ -97,7 +111,15 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost actual with group-by",
 			command: "cost",
-			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--group-by", "type"},
+			args: []string{
+				"actual",
+				"--pulumi-json",
+				planPath,
+				"--from",
+				"2025-01-01",
+				"--group-by",
+				"type",
+			},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
 				// Command should complete successfully
@@ -193,8 +215,15 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid date format",
-			args:        []string{"cost", "actual", "--pulumi-json", "test.json", "--from", "invalid-date"},
+			name: "invalid date format",
+			args: []string{
+				"cost",
+				"actual",
+				"--pulumi-json",
+				"test.json",
+				"--from",
+				"invalid-date",
+			},
 			expectError: true,
 			errorCheck: func(t *testing.T, err error) {
 				assert.Contains(t, err.Error(), "loading Pulumi plan")
@@ -355,7 +384,9 @@ func TestOutputFormats(t *testing.T) {
 			cmd := cli.NewRootCmd("test-version")
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
-			cmd.SetArgs([]string{"cost", "projected", "--pulumi-json", planPath, "--output", format})
+			cmd.SetArgs(
+				[]string{"cost", "projected", "--pulumi-json", planPath, "--output", format},
+			)
 
 			execErr := cmd.Execute()
 			require.NoError(t, execErr)
@@ -369,7 +400,16 @@ func TestOutputFormats(t *testing.T) {
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
 			cmd.SetArgs(
-				[]string{"cost", "actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--output", format},
+				[]string{
+					"cost",
+					"actual",
+					"--pulumi-json",
+					planPath,
+					"--from",
+					"2025-01-01",
+					"--output",
+					format,
+				},
 			)
 
 			execErr := cmd.Execute()

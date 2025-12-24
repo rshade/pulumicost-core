@@ -21,7 +21,8 @@ pulumicost
 │   ├── update     # Update an installed plugin
 │   ├── remove     # Remove an installed plugin
 │   ├── list       # List installed plugins
-│   └── validate   # Validate plugin installations
+│   ├── validate   # Validate plugin installations
+│   └── certify    # Run certification tests for a plugin
 └── analyzer
     └── serve      # Starts the PulumiCost analyzer gRPC server (usually run by Pulumi CLI)
 ```

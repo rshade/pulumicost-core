@@ -1,0 +1,81 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "azurerm_resource_group.main",
+          "type": "azurerm_resource_group",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "values": {
+            "name": "rg-myapp-prod",
+            "location": "East US",
+            "tags": {
+              "Environment": "production",
+              "Project": "myapp"
+            }
+          }
+        },
+        {
+          "address": "azurerm_virtual_machine.main",
+          "type": "azurerm_virtual_machine",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "values": {
+            "name": "vm-myapp-prod",
+            "location": "East US",
+            "resource_group_name": "rg-myapp-prod",
+            "vm_size": "Standard_B2s",
+            "storage_image_reference": {
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "20.04-LTS",
+              "version": "latest"
+            },
+            "storage_os_disk": {
+              "name": "osdisk",
+              "caching": "ReadWrite",
+              "create_option": "FromImage",
+              "managed_disk_type": "Standard_LRS"
+            },
+            "os_profile": {
+              "computer_name": "hostname",
+              "admin_username": "adminuser"
+            },
+            "tags": {
+              "Environment": "production",
+              "Project": "myapp"
+            }
+          }
+        },
+        {
+          "address": "azurerm_storage_account.main",
+          "type": "azurerm_storage_account",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "values": {
+            "name": "storageacctmyapp12345",
+            "resource_group_name": "rg-myapp-prod",
+            "location": "East US",
+            "account_tier": "Standard",
+            "account_replication_type": "LRS",
+            "account_kind": "StorageV2",
+            "enable_https_traffic_only": true,
+            "tags": {
+              "Environment": "production",
+              "Project": "myapp"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "azurerm": {
+        "name": "azurerm",
+        "version_constraint": "~> 3.0"
+      }
+    }
+  },
+  "variables": {},
+  "terraform_version": "1.5.0",
+  "format_version": "1.2"
+}

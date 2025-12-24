@@ -13,14 +13,16 @@ pulumicost                 # Help
 pulumicost cost            # Cost commands
 pulumicost cost projected  # Estimate costs from plan
 pulumicost cost actual     # Get actual historical costs
-pulumicost plugin          # Plugin commands
-pulumicost plugin init     # Initialize a new plugin
-pulumicost plugin install  # Install a plugin
-pulumicost plugin update   # Update a plugin
-pulumicost plugin remove   # Remove a plugin
-pulumicost plugin list     # List installed plugins
-pulumicost plugin validate # Validate plugin setup
-pulumicost analyzer        # Analyzer commands
+pulumicost plugin             # Plugin commands
+pulumicost plugin init        # Initialize a new plugin
+pulumicost plugin install     # Install a plugin
+pulumicost plugin update      # Update a plugin
+pulumicost plugin remove      # Remove a plugin
+pulumicost plugin list        # List installed plugins
+pulumicost plugin validate    # Validate plugin setup
+pulumicost plugin conformance # Run conformance tests
+pulumicost plugin certify     # Run certification tests
+pulumicost analyzer           # Analyzer commands
 pulumicost analyzer serve  # Start the analyzer gRPC server
 ```
 
@@ -41,6 +43,7 @@ pulumicost cost projected --pulumi-json <file> [options]
 | `--pulumi-json` | Path to Pulumi preview JSON | Required |
 | `--filter` | Filter resources (tag:key=value, type=*) | None |
 | `--output` | Output format: table, json, ndjson | table |
+| `--utilization` | Assumed resource utilization (0.0-1.0) | 1.0 |
 | `--help` | Show help | |
 
 ### Examples
@@ -268,6 +271,103 @@ pulumicost plugin validate
 # vantage (0.1.0): OK
 # kubecost (0.2.0): OK
 ```
+
+## plugin conformance
+
+Run conformance tests against a plugin binary to verify protocol compliance.
+
+### Usage
+
+```bash
+pulumicost plugin conformance <plugin-path> [options]
+```
+
+### Options
+
+| Flag | Description | Default |
+| --- | --- | --- |
+| `--mode` | Communication mode: tcp, stdio | tcp |
+| `--verbosity` | Output detail: quiet, normal, verbose, debug | normal |
+| `--output` | Output format: table, json, junit | table |
+| `--output-file` | Write output to file | stdout |
+| `--timeout` | Global suite timeout | 5m |
+| `--category` | Filter by category (repeatable): protocol, error, performance, context | all |
+| `--filter` | Regex filter for test names | |
+| `--help` | Show help | |
+
+### Examples
+
+```bash
+# Basic conformance check
+pulumicost plugin conformance ./plugins/aws-cost
+
+# Verbose output with JSON
+pulumicost plugin conformance --verbosity verbose --output json ./plugins/aws-cost
+
+# Filter to protocol tests only
+pulumicost plugin conformance --category protocol ./plugins/aws-cost
+
+# JUnit XML for CI
+pulumicost plugin conformance --output junit --output-file report.xml ./plugins/aws-cost
+
+# Use stdio mode
+pulumicost plugin conformance --mode stdio ./plugins/aws-cost
+```
+
+## plugin certify
+
+Run full certification tests and generate a certification report.
+
+### Usage
+
+```bash
+pulumicost plugin certify <plugin-path> [options]
+```
+
+### Options
+
+| Flag | Description | Default |
+| --- | --- | --- |
+| `-o, --output` | Output file for certification report | stdout |
+| `--mode` | Communication mode: tcp, stdio | tcp |
+| `--timeout` | Global certification timeout | 10m |
+| `--help` | Show help | |
+
+### Certification Requirements
+
+A plugin is certified if all conformance tests pass:
+
+- All protocol tests (Name, GetProjectedCost, GetActualCost)
+- All error handling tests
+- All context/timeout tests
+- All performance tests
+
+### Examples
+
+```bash
+# Basic certification
+pulumicost plugin certify ./plugins/aws-cost
+
+# Save report to file
+pulumicost plugin certify --output certification.md ./plugins/aws-cost
+
+# Use stdio mode
+pulumicost plugin certify --mode stdio ./plugins/aws-cost
+
+# Output:
+# 🔍 Certifying plugin at ./plugins/aws-cost...
+# Running conformance tests...
+# ✅ CERTIFIED - Plugin passed all conformance tests
+```
+
+### Certification Report
+
+The command generates a markdown report containing:
+
+- Plugin name and version
+- Certification status (CERTIFIED or FAILED)
+- Test summary (total, passed, failed, skipped)
+- List of issues (if any failed)
 
 ## analyzer serve
 

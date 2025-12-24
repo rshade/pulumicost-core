@@ -25,13 +25,17 @@ var (
 
 // GetEmbeddedRegistry returns the parsed embedded registry catalog.
 // It initializes and parses the embedded registry data on first call in a thread-safe manner.
-// Returns the parsed *EmbeddedRegistry, or nil and a non-nil error if parsing the embedded registry failed.
+// GetEmbeddedRegistry parses and returns the embedded plugin registry, initializing it once on first use.
+// It returns the parsed *EmbeddedRegistry and a non-nil error if parsing the embedded registry failed; the initialization is performed exactly once and is safe for concurrent use.
 func GetEmbeddedRegistry() (*EmbeddedRegistry, error) {
 	embeddedRegistryOnce.Do(func() {
 		embeddedRegistry = &EmbeddedRegistry{}
 		errEmbeddedRegistry = json.Unmarshal(registryData, embeddedRegistry)
 		if errEmbeddedRegistry != nil {
-			errEmbeddedRegistry = fmt.Errorf("failed to parse embedded registry: %w", errEmbeddedRegistry)
+			errEmbeddedRegistry = fmt.Errorf(
+				"failed to parse embedded registry: %w",
+				errEmbeddedRegistry,
+			)
 		}
 	})
 	return embeddedRegistry, errEmbeddedRegistry

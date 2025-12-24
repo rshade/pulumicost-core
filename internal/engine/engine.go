@@ -28,6 +28,14 @@ const (
 	defaultComputeMonthlyCost   = 20.0  // Default monthly cost for compute resources
 	defaultServiceName          = "default"
 	defaultCurrency             = "USD" // Default currency for cost calculations
+)
+
+// ContextKey is a custom type for context keys to avoid collisions.
+type ContextKey string
+
+const (
+	// ContextKeyUtilization is the context key for passing utilization rate.
+	ContextKeyUtilization ContextKey = "utilization"
 
 	// Timeout constants for engine operations.
 	defaultQueryTimeout = 60 * time.Second // Overall query timeout.
@@ -69,7 +77,10 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 // GetProjectedCost calculates projected costs for the given resources using plugins or specs.
 //
 //nolint:gocognit,funlen // Comprehensive cost calculation requires multiple nested conditions and fallbacks.
-func (e *Engine) GetProjectedCost(ctx context.Context, resources []ResourceDescriptor) ([]CostResult, error) {
+func (e *Engine) GetProjectedCost(
+	ctx context.Context,
+	resources []ResourceDescriptor,
+) ([]CostResult, error) {
 	log := logging.FromContext(ctx)
 	start := time.Now()
 
@@ -248,7 +259,9 @@ func (e *Engine) GetProjectedCostWithErrors(
 				continue
 			}
 			if pluginResult != nil {
-				resourceResults = append(resourceResults, *pluginResult)
+				engineResult := *pluginResult
+				// Ensure sustainability map is copied if needed (though it should already be correct from getProjectedCostFromPlugin)
+				resourceResults = append(resourceResults, engineResult)
 			}
 		}
 
@@ -373,7 +386,13 @@ func (e *Engine) GetActualCostWithOptions(
 
 			// Apply per-resource timeout for plugin calls
 			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
-			result, err := e.getActualCostFromPlugin(resourceCtx, client, resource, request.From, request.To)
+			result, err := e.getActualCostFromPlugin(
+				resourceCtx,
+				client,
+				resource,
+				request.From,
+				request.To,
+			)
 			resourceCancel()
 			if err != nil {
 				log.Debug().
@@ -503,7 +522,13 @@ func (e *Engine) getActualCostForResource(
 			continue
 		}
 
-		costResult, err := e.getActualCostFromPlugin(ctx, client, resource, request.From, request.To)
+		costResult, err := e.getActualCostFromPlugin(
+			ctx,
+			client,
+			resource,
+			request.From,
+			request.To,
+		)
 		if err != nil {
 			// Log error with structured fields using context-based logger
 			log := logging.FromContext(ctx)
@@ -526,7 +551,18 @@ func (e *Engine) getActualCostForResource(
 			continue
 		}
 		if costResult != nil {
-			resourceResult = costResult
+			engineResult := *costResult
+			// Only allocate sustainability map if source has values
+			if len(costResult.Sustainability) > 0 {
+				engineResult.Sustainability = make(map[string]SustainabilityMetric, len(costResult.Sustainability))
+				for k, v := range costResult.Sustainability {
+					engineResult.Sustainability[k] = SustainabilityMetric{
+						Value: v.Value,
+						Unit:  v.Unit,
+					}
+				}
+			}
+			resourceResult = &engineResult
 			break
 		}
 	}
@@ -570,25 +606,40 @@ func (e *Engine) getProjectedCostFromPlugin(
 		},
 	}
 
+	// Note: Utilization from ctx (ContextKeyUtilization) is available for future use
+	// when adapter supports passing it via gRPC metadata.
+
 	resp, err := client.API.GetProjectedCost(ctx, req)
 	if err == nil && len(resp.Results) > 0 {
 		result := resp.Results[0]
-		return &CostResult{
-			ResourceType: resource.Type,
-			ResourceID:   resource.ID,
-			Adapter:      client.Name,
-			Currency:     result.Currency,
-			Monthly:      result.MonthlyCost,
-			Hourly:       result.HourlyCost,
-			Notes:        result.Notes,
-			Breakdown:    result.CostBreakdown,
-		}, nil
+		engineResult := &CostResult{
+			ResourceType:   resource.Type,
+			ResourceID:     resource.ID,
+			Adapter:        client.Name,
+			Currency:       result.Currency,
+			Monthly:        result.MonthlyCost,
+			Hourly:         result.HourlyCost,
+			Notes:          result.Notes,
+			Breakdown:      result.CostBreakdown,
+			Sustainability: make(map[string]SustainabilityMetric),
+		}
+
+		for k, v := range result.Sustainability {
+			engineResult.Sustainability[k] = SustainabilityMetric{
+				Value: v.Value,
+				Unit:  v.Unit,
+			}
+		}
+		return engineResult, nil
 	}
 
 	return nil, ErrNoCostData
 }
 
-func (e *Engine) getProjectedCostFromSpec(ctx context.Context, resource ResourceDescriptor) *CostResult {
+func (e *Engine) getProjectedCostFromSpec(
+	ctx context.Context,
+	resource ResourceDescriptor,
+) *CostResult {
 	service := extractService(resource.Type)
 	sku := extractSKU(resource)
 
@@ -601,7 +652,10 @@ func (e *Engine) getProjectedCostFromSpec(ctx context.Context, resource Resource
 	return e.createSpecBasedResult(resource, spec, monthly, hourly)
 }
 
-func (e *Engine) loadSpecWithFallback(ctx context.Context, provider, service, sku string) *PricingSpec {
+func (e *Engine) loadSpecWithFallback(
+	ctx context.Context,
+	provider, service, sku string,
+) *PricingSpec {
 	// Try provider-service-sku pattern first
 	if sku != "" {
 		if spec := e.tryLoadSpec(ctx, provider, service, sku); spec != nil {
@@ -661,7 +715,12 @@ func (e *Engine) createSpecBasedResult(
 		Currency:     spec.Currency,
 		Monthly:      monthly,
 		Hourly:       hourly,
-		Notes:        fmt.Sprintf("Calculated from local spec: %s-%s-%s", spec.Provider, spec.Service, spec.SKU),
+		Notes: fmt.Sprintf(
+			"Calculated from local spec: %s-%s-%s",
+			spec.Provider,
+			spec.Service,
+			spec.SKU,
+		),
 		Breakdown: map[string]float64{
 			"base_cost": monthly,
 		},
@@ -726,11 +785,15 @@ func (e *Engine) getActualCostFromPlugin(
 		Hourly:       hourlyRate,
 		TotalCost:    result.TotalCost,
 		DailyCosts:   dailyCosts,
-		Notes:        fmt.Sprintf("Actual cost from %s to %s", from.Format("2006-01-02"), to.Format("2006-01-02")),
-		Breakdown:    result.CostBreakdown,
-		StartDate:    from,
-		EndDate:      to,
-		CostPeriod:   FormatPeriod(from, to),
+		Notes: fmt.Sprintf(
+			"Actual cost from %s to %s",
+			from.Format("2006-01-02"),
+			to.Format("2006-01-02"),
+		),
+		Breakdown:  result.CostBreakdown,
+		StartDate:  from,
+		EndDate:    to,
+		CostPeriod: FormatPeriod(from, to),
 	}, nil
 }
 
@@ -843,6 +906,18 @@ func tryMonthlyEstimate(pricing map[string]interface{}) (float64, float64, bool)
 	return 0, 0, false
 }
 
+// tryHourlyRates attempts to extract an hourly rate from the given pricing map
+// and derives a monthly estimate from it.
+//
+// The function looks for known hourly keys ("onDemandHourly", "hourlyRate") and,
+// if found, returns the computed monthly cost (hourly * hoursPerMonth), the
+// hourly rate, and true. If no hourly rate is present, it returns 0, 0, false.
+//
+// pricing: a map of pricing fields keyed by string; values are expected to contain
+// numeric float64 entries for hourly rates.
+//
+// Returns the monthly estimate, the hourly rate, and a boolean indicating whether
+// a valid hourly rate was found.
 func tryHourlyRates(pricing map[string]interface{}) (float64, float64, bool) {
 	hourlyKeys := []string{"onDemandHourly", "hourlyRate"}
 	for _, key := range hourlyKeys {
@@ -855,7 +930,18 @@ func tryHourlyRates(pricing map[string]interface{}) (float64, float64, bool) {
 	return 0, 0, false
 }
 
-func tryStoragePricing(pricing map[string]interface{}, resource ResourceDescriptor) (float64, float64, bool) {
+// tryStoragePricing determines monthly and hourly costs for a storage resource when
+// pricing contains a per-GB-per-month value.
+//
+// It returns the computed monthly cost (sizeGB * pricePerGBMonth), the hourly
+// equivalent (monthly divided by hoursPerMonth), and `true` if both a storage size
+// and a `pricePerGBMonth` numeric value were available. If the resource lacks a
+// size or the pricing does not contain `pricePerGBMonth` as a float64, it returns
+// zeros and `false`.
+func tryStoragePricing(
+	pricing map[string]interface{},
+	resource ResourceDescriptor,
+) (float64, float64, bool) {
 	sizeGB, hasSize := getStorageSize(resource)
 	if !hasSize {
 		return 0, 0, false
@@ -1293,8 +1379,12 @@ func AggregateResultsInternal(results []CostResult, groupName string) CostResult
 //   - ErrEmptyResults if `results` is empty.
 //   - ErrInvalidGroupBy if `groupBy` is not a time-based grouping.
 //   - ErrInvalidDateRange if any result has an EndDate not after its StartDate.
-//   - ErrMixedCurrencies if results contain more than one distinct currency.
-func CreateCrossProviderAggregation(results []CostResult, groupBy GroupBy) ([]CrossProviderAggregation, error) {
+//
+// - the results contain more than one distinct currency (ErrMixedCurrencies).
+func CreateCrossProviderAggregation(
+	results []CostResult,
+	groupBy GroupBy,
+) ([]CrossProviderAggregation, error) {
 	// Input validation
 	if err := validateAggregationInputs(results, groupBy); err != nil {
 		return nil, err
@@ -1541,8 +1631,25 @@ func distributeDailyCosts(
 // The base currency is taken from the first result's Currency if present, otherwise the package defaultCurrency is used.
 // Parameters:
 //   - results: slice of CostResult to group and aggregate.
-//   - groupBy: grouping granularity (e.g., daily or monthly) used to format period keys and compute period costs.
-func groupResultsByPeriod(results []CostResult, groupBy GroupBy) (map[string]map[string]float64, string) {
+//
+// groupResultsByPeriod groups cost results into time-based periods and sums costs per provider.
+// It assigns each CostResult's cost to a period derived from its StartDate using the given
+// groupBy granularity (daily or monthly). If a result contains DailyCosts and a valid
+// StartDate, those daily amounts are distributed across the corresponding periods; otherwise
+// the result's total cost or monthly projection is used for the single period containing
+// StartDate.
+// Parameters:
+//   - results: slice of CostResult entries to group.
+//   - groupBy: grouping granularity (e.g., GroupByDaily or GroupByMonthly) used to format
+//     period keys and compute period costs.
+//
+// Returns a map keyed by period string to a map of provider -> aggregated cost, and the
+// base currency determined from the first result (or defaultCurrency when absent or when
+// results is empty).
+func groupResultsByPeriod(
+	results []CostResult,
+	groupBy GroupBy,
+) (map[string]map[string]float64, string) {
 	periods := make(map[string]map[string]float64) // period -> provider -> cost
 	baseCurrency := defaultCurrency                // Default currency
 
@@ -1735,8 +1842,18 @@ func calculateCostForPeriod(result CostResult, groupBy GroupBy) float64 {
 // sum of all provider costs and `Currency` set to `baseCurrency`.
 //
 // The resulting slice is sorted by the `Period` field in ascending (lexicographic) order. If `periods` is empty, an
-// empty slice is returned.
-func createSortedAggregations(periods map[string]map[string]float64, baseCurrency string) []CrossProviderAggregation {
+// createSortedAggregations converts a map of period -> provider -> cost into a
+// sorted slice of CrossProviderAggregation entries.
+//
+// The `periods` parameter maps a period string (e.g., "YYYY-MM" or "YYYY-MM-DD")
+// to a map of provider names and their aggregated cost for that period. The
+// `baseCurrency` parameter is used as the Currency value for every aggregation.
+// The returned slice is sorted in ascending order by the Period field. If
+// `periods` is empty an empty slice is returned.
+func createSortedAggregations(
+	periods map[string]map[string]float64,
+	baseCurrency string,
+) []CrossProviderAggregation {
 	var aggregations []CrossProviderAggregation
 
 	for period, providers := range periods {

@@ -7,8 +7,9 @@
       "provider": "urn:pulumi:test::test-app::pulumi:providers:aws::default",
       "inputs": {
         "ami": "ami-12345678",
-        "instanceType": "t2.micro"
-      }
-    }
-  ]
-}
+                "instanceType": "t3.micro"
+              }
+            }
+          ]
+        }
+        

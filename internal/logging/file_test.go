@@ -156,7 +156,11 @@ func TestPrintLogPathMessage(t *testing.T) {
 func TestPrintFallbackWarning(t *testing.T) {
 	var buf bytes.Buffer
 	PrintFallbackWarning(&buf, "permission denied")
-	assert.Equal(t, "Warning: Could not write to log file, falling back to stderr (permission denied)\n", buf.String())
+	assert.Equal(
+		t,
+		"Warning: Could not write to log file, falling back to stderr (permission denied)\n",
+		buf.String(),
+	)
 
 	buf.Reset()
 	PrintFallbackWarning(&buf, "")

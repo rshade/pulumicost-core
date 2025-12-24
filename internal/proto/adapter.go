@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -49,36 +50,21 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 
 	for i, err := range c.Errors {
 		if i >= maxErrorsToDisplay {
-			summary.WriteString(fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay))
+			summary.WriteString(
+				fmt.Sprintf("  ... and %d more errors\n", len(c.Errors)-maxErrorsToDisplay),
+			)
 			break
 		}
-		summary.WriteString(fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error))
+		summary.WriteString(
+			fmt.Sprintf("  - %s (%s): %v\n", err.ResourceType, err.ResourceID, err.Error),
+		)
 	}
 
 	return summary.String()
 }
 
-// GetProjectedCostWithErrors calculates projected costs for resources with error tracking.
-// GetProjectedCostWithErrors queries the provided CostSourceClient for projected costs for each resource
-// and aggregates both successful CostResult entries and per-resource error details.
-//
-// GetProjectedCostWithErrors calls the client's GetProjectedCost once per resource in `resources`.
-// For each resource, a successful response appends its returned results to the aggregated Results slice.
-// If a per-resource RPC fails, an ErrorDetail is recorded in Errors (including timestamp and pluginName)
-// and a placeholder CostResult with an error note is appended to Results. If a call succeeds but returns
-// no results, a zero-cost placeholder CostResult is appended.
-//
-// Parameters:
-//   - ctx: request context passed to the client calls.
-//   - client: the CostSourceClient used to fetch projected cost data.
-//   - pluginName: the name of the plugin making the requests; recorded on ErrorDetail entries.
-//   - resources: slice of ResourceDescriptor values to query.
-//
-// Returns:
-//
-//	A pointer to a CostResultWithErrors containing a Results slice with one or more CostResult entries
-//	(including placeholders for failures or empty responses) and an Errors slice with one ErrorDetail per
-//	resource that experienced an RPC error.
+// GetProjectedCostWithErrors queries projected costs for each resource and aggregates successful results
+// together with per-resource error details.
 func GetProjectedCostWithErrors(
 	ctx context.Context,
 	client CostSourceClient,
@@ -132,6 +118,76 @@ func GetProjectedCostWithErrors(
 	return result
 }
 
+// GetActualCostWithErrors retrieves actual cost data for each resource ID in req
+// and returns both successful CostResult entries and per-resource ErrorDetail records.
+func GetActualCostWithErrors(
+	ctx context.Context,
+	client CostSourceClient,
+	pluginName string,
+	req *GetActualCostRequest,
+) *CostResultWithErrors {
+	result := &CostResultWithErrors{
+		Results: []*CostResult{},
+		Errors:  []ErrorDetail{},
+	}
+
+	for _, resourceID := range req.ResourceIDs {
+		singleReq := &GetActualCostRequest{
+			ResourceIDs: []string{resourceID},
+			StartTime:   req.StartTime,
+			EndTime:     req.EndTime,
+		}
+
+		resp, err := client.GetActualCost(ctx, singleReq)
+		if err != nil {
+			result.Errors = append(result.Errors, ErrorDetail{
+				ResourceID: resourceID,
+				PluginName: pluginName,
+				Error:      fmt.Errorf("plugin call failed: %w", err),
+				Timestamp:  time.Now(),
+			})
+
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+				Notes:       fmt.Sprintf("ERROR: %v", err),
+			})
+			continue
+		}
+
+		// Aggregate total cost from results and convert to CostResult
+		if len(resp.Results) > 0 {
+			for _, actual := range resp.Results {
+				costResult := &CostResult{
+					Currency:       actual.Currency,
+					MonthlyCost:    actual.TotalCost, // Total cost for the period
+					HourlyCost:     0,
+					CostBreakdown:  actual.CostBreakdown,
+					Sustainability: make(map[string]SustainabilityMetric),
+				}
+
+				// Map impact metrics
+				for k, v := range actual.Sustainability {
+					costResult.Sustainability[k] = SustainabilityMetric{
+						Value: v.Value,
+						Unit:  v.Unit,
+					}
+				}
+				result.Results = append(result.Results, costResult)
+			}
+		} else {
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+			})
+		}
+	}
+
+	return result
+}
+
 // Empty represents an empty request/response for compatibility with existing engine code.
 type Empty struct{}
 
@@ -151,11 +207,18 @@ type GetProjectedCostRequest struct {
 // CostResult represents the calculated cost information for a single resource.
 // It includes monthly and hourly costs, currency, and detailed cost breakdowns.
 type CostResult struct {
-	Currency      string
-	MonthlyCost   float64
-	HourlyCost    float64
-	Notes         string
-	CostBreakdown map[string]float64
+	Currency       string
+	MonthlyCost    float64
+	HourlyCost     float64
+	Notes          string
+	CostBreakdown  map[string]float64
+	Sustainability map[string]SustainabilityMetric
+}
+
+// SustainabilityMetric represents a single sustainability impact measurement.
+type SustainabilityMetric struct {
+	Value float64
+	Unit  string
 }
 
 // GetProjectedCostResponse contains the results of projected cost calculations.
@@ -174,9 +237,10 @@ type GetActualCostRequest struct {
 // ActualCostResult represents the calculated actual cost data retrieved from cloud providers.
 // It includes the total cost and detailed breakdowns by service or resource.
 type ActualCostResult struct {
-	Currency      string
-	TotalCost     float64
-	CostBreakdown map[string]float64
+	Currency       string
+	TotalCost      float64
+	CostBreakdown  map[string]float64
+	Sustainability map[string]SustainabilityMetric
 }
 
 // GetActualCostResponse contains the results of actual cost queries.
@@ -221,7 +285,11 @@ type clientAdapter struct {
 	client pbc.CostSourceServiceClient
 }
 
-func (c *clientAdapter) Name(ctx context.Context, _ *Empty, opts ...grpc.CallOption) (*NameResponse, error) {
+func (c *clientAdapter) Name(
+	ctx context.Context,
+	_ *Empty,
+	opts ...grpc.CallOption,
+) (*NameResponse, error) {
 	resp, err := c.client.Name(ctx, &pbc.NameRequest{}, opts...)
 	if err != nil {
 		return nil, err
@@ -229,82 +297,47 @@ func (c *clientAdapter) Name(ctx context.Context, _ *Empty, opts ...grpc.CallOpt
 	return &NameResponse{Name: resp.GetName()}, nil
 }
 
-// extractSKUFromProperties extracts the SKU/instance type from Pulumi resource properties.
-// Different cloud resources use different property names for the instance/resource type:
-//   - EC2 instances: "instanceType" (e.g., "t3.micro")
-//   - EBS volumes: "type" or "volumeType" (e.g., "gp3")
-//   - RDS instances: "instanceClass" (e.g., "db.t3.micro")
-//   - Lambda functions: "runtime" (partial, e.g., "python3.9")
-//
-// The function tries each known property name in order of preference.
-//
-// TODO: Migrate to pluginsdk/mapping package once available.
-// See: https://github.com/rshade/pulumicost-spec/issues/128 (Create pluginsdk/mapping)
-// See: https://github.com/rshade/pulumicost-core/issues/231 (Migrate to pluginsdk/mapping).
-func extractSKUFromProperties(properties map[string]string) string {
-	// Try common property names in order of preference for various resource types
-	skuPropertyKeys := []string{
-		"instanceType",  // EC2 instances
-		"type",          // EBS volumes, generic
-		"volumeType",    // EBS volumes (alternative)
-		"instanceClass", // RDS instances
-		"sku",           // Explicit SKU field
-		"size",          // Azure/generic sizing
-		"runtime",       // Lambda (partial match)
-		"tier",          // Service tiers
-	}
-
-	for _, key := range skuPropertyKeys {
-		if val, ok := properties[key]; ok && val != "" {
-			return val
+// resolveSKUAndRegion extracts the SKU and region from resource properties based on the cloud provider.
+// It recognizes provider values such as "aws", "azure", "azure-native", "gcp", and "google-native" and
+// uses provider-specific extraction; for other providers it uses generic extraction helpers.
+// If the region cannot be determined from properties, the function falls back to the AWS_REGION or
+// AWS_DEFAULT_REGION environment variables.
+// provider is the cloud provider identifier; properties contains resource-specific key/value attributes.
+// It returns the resolved SKU and region as strings (either or both may be empty if not found).
+func resolveSKUAndRegion(provider string, properties map[string]string) (string, string) {
+	var sku, region string
+	switch strings.ToLower(provider) {
+	case "aws":
+		sku = mapping.ExtractAWSSKU(properties)
+		if sku == "" {
+			// Fallback for RDS and other AWS resources not covered by ExtractAWSSKU
+			sku = mapping.ExtractSKU(properties, "dbInstanceClass", "sku", "type", "tier")
 		}
+		region = mapping.ExtractAWSRegion(properties)
+	case "azure", "azure-native":
+		sku = mapping.ExtractAzureSKU(properties)
+		region = mapping.ExtractAzureRegion(properties)
+	case "gcp", "google-native":
+		sku = mapping.ExtractGCPSKU(properties)
+		region = mapping.ExtractGCPRegion(properties)
+	default:
+		sku = mapping.ExtractSKU(properties)
+		region = mapping.ExtractRegion(properties)
 	}
-	return ""
-}
 
-// extractRegionFromProperties extracts the AWS region from Pulumi resource properties.
-// Pulumi resources typically have an "availabilityZone" property (e.g., "us-east-1a")
-// rather than a direct region. This function:
-//  1. Extracts from "availabilityZone" and strips the AZ suffix (a-z)
-//  2. Falls back to explicit "region" property
-//  3. Falls back to AWS_REGION environment variable
-//
-// TODO: Migrate to pluginsdk/mapping package once available.
-// See: https://github.com/rshade/pulumicost-spec/issues/128 (Create pluginsdk/mapping)
-// See: https://github.com/rshade/pulumicost-core/issues/231 (Migrate to pluginsdk/mapping)
-// Examples:
-//   - "us-east-1a" → "us-east-1"
-//   - "eu-west-2b" → "eu-west-2"
-func extractRegionFromProperties(properties map[string]string) string {
-	// Try availability zone first (most common in Pulumi AWS resources)
-	if az, ok := properties["availabilityZone"]; ok && az != "" {
-		// Strip the AZ suffix (a-z) to get the region
-		// "us-east-1a" → "us-east-1"
-		if len(az) > 0 {
-			lastChar := az[len(az)-1]
-			if lastChar >= 'a' && lastChar <= 'z' {
-				return az[:len(az)-1]
+	// Fallback to environment variables for region if still empty
+	if region == "" {
+		if envReg := os.Getenv("AWS_REGION"); envReg != "" {
+			region = envReg
+		} else {
+			envReg = os.Getenv("AWS_DEFAULT_REGION")
+			if envReg != "" {
+				region = envReg
 			}
 		}
-		return az
 	}
 
-	// Try explicit region property
-	if region, ok := properties["region"]; ok && region != "" {
-		return region
-	}
-
-	// Fallback to AWS_REGION environment variable
-	if envRegion := os.Getenv("AWS_REGION"); envRegion != "" {
-		return envRegion
-	}
-
-	// Last resort: try AWS_DEFAULT_REGION
-	if envRegion := os.Getenv("AWS_DEFAULT_REGION"); envRegion != "" {
-		return envRegion
-	}
-
-	return ""
+	return sku, region
 }
 
 func (c *clientAdapter) GetProjectedCost(
@@ -317,8 +350,7 @@ func (c *clientAdapter) GetProjectedCost(
 
 	for _, resource := range in.Resources {
 		// Extract SKU and region from properties using intelligent mapping
-		sku := extractSKUFromProperties(resource.Properties)
-		region := extractRegionFromProperties(resource.Properties)
+		sku, region := resolveSKUAndRegion(resource.Provider, resource.Properties)
 
 		req := &pbc.GetProjectedCostRequest{
 			Resource: &pbc.ResourceDescriptor{
@@ -344,6 +376,28 @@ func (c *clientAdapter) GetProjectedCost(
 			CostBreakdown: map[string]float64{
 				"unit_price": resp.GetUnitPrice(),
 			},
+			Sustainability: make(map[string]SustainabilityMetric),
+		}
+
+		// Map impact metrics
+		for _, metric := range resp.GetImpactMetrics() {
+			var key string
+			switch metric.GetKind() {
+			case pbc.MetricKind_METRIC_KIND_CARBON_FOOTPRINT:
+				key = "carbon_footprint"
+			case pbc.MetricKind_METRIC_KIND_ENERGY_CONSUMPTION:
+				key = "energy_consumption"
+			case pbc.MetricKind_METRIC_KIND_WATER_USAGE:
+				key = "water_usage"
+			case pbc.MetricKind_METRIC_KIND_UNSPECIFIED:
+				key = "unspecified"
+			default:
+				key = strings.ToLower(metric.GetKind().String())
+			}
+			result.Sustainability[key] = SustainabilityMetric{
+				Value: metric.GetValue(),
+				Unit:  metric.GetUnit(),
+			}
 		}
 		results = append(results, result)
 	}
@@ -385,9 +439,34 @@ func (c *clientAdapter) GetActualCost(
 		}
 
 		result := &ActualCostResult{
-			Currency:      "USD", // Default to USD if not specified
-			TotalCost:     totalCost,
-			CostBreakdown: breakdown,
+			Currency:       "USD", // Default to USD if not specified
+			TotalCost:      totalCost,
+			CostBreakdown:  breakdown,
+			Sustainability: make(map[string]SustainabilityMetric),
+		}
+
+		// Aggregate impact metrics (summing values for same kind across results)
+		for _, pbcResult := range resp.GetResults() {
+			for _, metric := range pbcResult.GetImpactMetrics() {
+				var key string
+				switch metric.GetKind() {
+				case pbc.MetricKind_METRIC_KIND_CARBON_FOOTPRINT:
+					key = "carbon_footprint"
+				case pbc.MetricKind_METRIC_KIND_ENERGY_CONSUMPTION:
+					key = "energy_consumption"
+				case pbc.MetricKind_METRIC_KIND_WATER_USAGE:
+					key = "water_usage"
+				case pbc.MetricKind_METRIC_KIND_UNSPECIFIED:
+					key = "unspecified"
+				default:
+					key = strings.ToLower(metric.GetKind().String())
+				}
+
+				m := result.Sustainability[key]
+				m.Value += metric.GetValue()
+				m.Unit = metric.GetUnit()
+				result.Sustainability[key] = m
+			}
 		}
 		results = append(results, result)
 	}

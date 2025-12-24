@@ -1,0 +1,27 @@
+{
+  "resources": [
+    {
+      "type": "gcp:container/cluster:Cluster",
+      "id": "test-gke-cluster",
+      "inputs": {
+        "initialNodeCount": 3,
+        "nodeConfig": {
+          "machineType": "e2-medium"
+        }
+      },
+      "provider": "gcp"
+    },
+    {
+      "type": "gcp:cloudrun/service:Service",
+      "id": "test-cloud-run",
+      "inputs": {
+        "template": {
+          "spec": {
+            "containers": [{ "image": "gcr.io/hello/world" }]
+          }
+        }
+      },
+      "provider": "gcp"
+    }
+  ]
+}

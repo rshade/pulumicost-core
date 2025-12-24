@@ -115,7 +115,12 @@ func FuzzSpecFilename(f *testing.F) {
 		// If parsing succeeded, verify results are non-empty
 		if ok {
 			if provider == "" || service == "" || sku == "" {
-				t.Errorf("ParseSpecFilename returned ok=true but empty parts: %q, %q, %q", provider, service, sku)
+				t.Errorf(
+					"ParseSpecFilename returned ok=true but empty parts: %q, %q, %q",
+					provider,
+					service,
+					sku,
+				)
 			}
 		}
 	})

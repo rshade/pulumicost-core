@@ -1,6 +1,6 @@
 # Implementation Plan: Create shared TUI package with Bubble Tea and Lip Gloss components
 
-**Branch**: `011-shared-tui-package` | **Date**: Tue Dec 09 2025 | **Spec**: /mnt/c/GitHub/go/src/worktrees/bubbletea/specs/011-shared-tui-package/spec.md
+**Branch**: `011-shared-tui-package` | **Date**: Tue Dec 09 2025 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/011-shared-tui-package/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.

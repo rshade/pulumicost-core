@@ -86,6 +86,7 @@ func skipIfPulumiNotInstalled(t *testing.T) {
 func runAnalyzerPreview(t *testing.T, tc *TestContext) string {
 	skipIfPulumiNotInstalled(t)
 	ctx := context.Background()
+	tc.SetupAWSEnv(ctx)
 
 	// Install aws-public plugin (assumed needed for all tests for now)
 	pm := NewPluginManager(t)
@@ -94,7 +95,7 @@ func runAnalyzerPreview(t *testing.T, tc *TestContext) string {
 	defer pm.DeferPluginCleanup(ctx, "aws-public")()
 
 	// Prepare project
-	projectPath := "projects/analyzer"
+	projectPath := "fixtures/analyzer"
 	absProjectPath, err := filepath.Abs(projectPath)
 	require.NoError(t, err)
 	tc.ProjectDir = absProjectPath
@@ -126,6 +127,7 @@ func runAnalyzerPreview(t *testing.T, tc *TestContext) string {
 		"PULUMI_BACKEND_URL=file://" + stateDir,
 		"PATH=" + pathEnv,
 	}
+
 	err = tc.runCmdWithEnv(ctx, workDir, env, "pulumi", "login", "--local")
 	require.NoError(t, err)
 	err = tc.runCmdWithEnv(ctx, workDir, env, "pulumi", "stack", "init", tc.StackName)
@@ -180,6 +182,7 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 	skipIfPulumiNotInstalled(t)
 	tc := NewTestContext(t, "e2e-analyzer-degradation")
 	ctx := context.Background()
+	tc.SetupAWSEnv(ctx)
 	defer tc.Teardown(ctx)
 
 	// Install aws-public plugin
@@ -189,7 +192,7 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 	defer pm.DeferPluginCleanup(ctx, "aws-public")()
 
 	// Prepare project
-	projectPath := "projects/analyzer"
+	projectPath := "fixtures/analyzer"
 	absProjectPath, err := filepath.Abs(projectPath)
 	require.NoError(t, err)
 	tc.ProjectDir = absProjectPath
@@ -229,6 +232,7 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 		"PULUMI_BACKEND_URL=file://" + stateDir,
 		"PATH=" + pathEnv,
 	}
+
 	err = tc.runCmdWithEnv(ctx, workDir, env, "pulumi", "login", "--local")
 	require.NoError(t, err)
 	err = tc.runCmdWithEnv(ctx, workDir, env, "pulumi", "stack", "init", tc.StackName)

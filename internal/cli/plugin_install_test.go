@@ -181,7 +181,9 @@ func TestPluginInstallCmd_RegistryPluginNotFound(t *testing.T) {
 
 	var stderr bytes.Buffer
 	rootCmd.SetErr(&stderr)
-	rootCmd.SetArgs([]string{"plugin", "install", "nonexistent-registry-plugin", "--plugin-dir", tmpDir})
+	rootCmd.SetArgs(
+		[]string{"plugin", "install", "nonexistent-registry-plugin", "--plugin-dir", tmpDir},
+	)
 
 	err := rootCmd.Execute()
 	if err == nil {

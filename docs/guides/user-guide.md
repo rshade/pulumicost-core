@@ -148,15 +148,16 @@ PulumiCost can integrate directly with the Pulumi CLI as an Analyzer, providing 
 cost estimates during `pulumi preview`. This eliminates the need for a separate
 `pulumicost` command to see projected costs.
 
-For detailed setup instructions, refer to the [Analyzer Setup Guide](../getting-started/analyzer-setup.md).
+For detailed setup instructions, refer to the
+[Analyzer Setup Guide](../getting-started/analyzer-setup.md).
 
 ---
 
-## Cross-Provider Aggregation
+### Cross-Provider Aggregation
 
-PulumiCost supports aggregating costs across multiple cloud providers and services,
-allowing you to get a holistic view of your infrastructure spending. This feature is
-particularly powerful when combining actual cost data from various plugins.
+PulumiCost supports aggregating costs across multiple cloud providers and services, allowing
+you to get a holistic view of your infrastructure spending. This feature is particularly
+powerful when combining actual cost data from various plugins.
 
 ### Daily Cost Trends
 
@@ -172,6 +173,29 @@ Generate a monthly cost comparison. You can output this as JSON for further proc
 
 ```bash
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by monthly --output json
+```
+
+## Sustainability Metrics
+
+PulumiCost now supports sustainability metrics, allowing you to estimate the carbon footprint of your infrastructure.
+
+### Carbon Footprint
+
+The table output includes a "CO₂" column showing the estimated carbon emissions for supported resources.
+
+**Example Output:**
+
+```text
+RESOURCE                      TYPE              MONTHLY   CURRENCY  CO₂
+aws:ec2/instance:Instance     aws:ec2:Instance  $7.50     USD       12.5 kg
+```
+
+### Utilization Rate
+
+You can adjust the assumed utilization rate for sustainability calculations using the `--utilization` flag. The default is 1.0 (100%).
+
+```bash
+pulumicost cost projected --pulumi-json plan.json --utilization 0.8
 ```
 
 ---

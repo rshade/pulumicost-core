@@ -28,9 +28,9 @@ implementation and testing of each story.
 
 **Purpose**: Package initialization and shared type definitions
 
-- [X] T001 Update package documentation in internal/conformance/doc.go
-- [X] T002 [P] Create shared types (Status, Category, Verbosity, CommMode) in internal/conformance/types.go
-- [X] T003 [P] Create test fixtures directory structure at test/e2e/aws/fixtures/
+- [x] T001 Update package documentation in internal/conformance/doc.go
+- [x] T002 [P] Create shared types (Status, Category, Verbosity, CommMode) in internal/conformance/types.go
+- [x] T003 [P] Create test fixtures directory structure at test/e2e/aws/fixtures/
 
 ---
 
@@ -41,13 +41,13 @@ can be implemented
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T004 Implement ConformanceTestCase type in internal/conformance/types.go
-- [X] T005 [P] Implement TestResult type in internal/conformance/types.go
-- [X] T006 [P] Implement PluginUnderTest type in internal/conformance/types.go
-- [X] T007 [P] Implement ConformanceSuiteConfig type in internal/conformance/types.go
-- [X] T008 [P] Implement SuiteReport type with Summary in internal/conformance/types.go
-- [X] T009 Create reference plugin implementation for testing in test/mocks/plugin/conformance.go
-- [X] T010 Write unit tests for all types in internal/conformance/types_test.go
+- [x] T004 Implement ConformanceTestCase type in internal/conformance/types.go
+- [x] T005 [P] Implement TestResult type in internal/conformance/types.go
+- [x] T006 [P] Implement PluginUnderTest type in internal/conformance/types.go
+- [x] T007 [P] Implement ConformanceSuiteConfig type in internal/conformance/types.go
+- [x] T008 [P] Implement SuiteReport type with Summary in internal/conformance/types.go
+- [x] T009 Create reference plugin implementation for testing in test/mocks/plugin/conformance.go
+- [x] T010 Write unit tests for all types in internal/conformance/types_test.go
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -63,27 +63,27 @@ receive pass/fail report for each protocol requirement
 
 ### Tests for User Story 1 (MANDATORY - TDD Required)
 
-- [X] T011 [P] [US1] Write test for Suite.Run() in internal/conformance/suite_test.go
-- [X] T012 [P] [US1] Write test for TestRunner in internal/conformance/runner_test.go
-- [X] T013 [P] [US1] Write test for protocol version checking in internal/conformance/version_test.go
-- [X] T014 [P] [US1] Write test for table output in internal/conformance/reporter_test.go
+- [x] T011 [P] [US1] Write test for Suite.Run() in internal/conformance/suite_test.go
+- [x] T012 [P] [US1] Write test for TestRunner in internal/conformance/runner_test.go
+- [x] T013 [P] [US1] Write test for protocol version checking in internal/conformance/version_test.go
+- [x] T014 [P] [US1] Write test for table output in internal/conformance/reporter_test.go
 
 ### Implementation for User Story 1
 
-- [X] T015 [US1] Implement version checking logic in internal/conformance/version.go (FR-008a)
-- [X] T016 [US1] Implement TestRunner that executes individual tests in internal/conformance/runner.go
-- [ ] T017 [P] [US1] Implement protocol tests (Name RPC) in internal/conformance/tests/protocol.go (FR-001, FR-004)
-- [ ] T018 [P] [US1] Implement context cancellation tests in internal/conformance/tests/context.go (FR-002)
-- [ ] T019 [P] [US1] Implement error code tests in internal/conformance/tests/error.go (FR-003)
-- [ ] T020 [P] [US1] Implement timeout tests in internal/conformance/tests/timeout.go (FR-005)
-- [ ] T021 [P] [US1] Implement batch handling tests in internal/conformance/tests/batch.go (FR-006)
-- [X] T022 [US1] Implement ConformanceSuite orchestrator in internal/conformance/suite.go (FR-001)
-- [ ] T023 [US1] Implement crash handling with plugin restart in internal/conformance/runner.go (FR-020)
-- [X] T024 [US1] Implement table output reporter in internal/conformance/reporter.go (FR-007, FR-017)
-- [X] T025 [US1] Add verbosity support to TestRunner in internal/conformance/runner.go (FR-019)
-- [ ] T026 [US1] Add TCP and stdio mode support in internal/conformance/suite.go (FR-008)
-- [X] T027 [US1] Implement CLI command `plugin conformance` in internal/cli/plugin_conformance.go
-- [X] T028 [US1] Write CLI command tests in internal/cli/plugin_conformance_test.go
+- [x] T015 [US1] Implement version checking logic in internal/conformance/version.go (FR-008a)
+- [x] T016 [US1] Implement TestRunner that executes individual tests in internal/conformance/runner.go
+- [x] T017 [P] [US1] Implement protocol tests (Name RPC) in internal/conformance/tests/protocol.go (FR-001, FR-004)
+- [x] T018 [P] [US1] Implement context cancellation tests in internal/conformance/tests/context.go (FR-002)
+- [x] T019 [P] [US1] Implement error code tests in internal/conformance/tests/error.go (FR-003)
+- [x] T020 [P] [US1] Implement timeout tests in internal/conformance/tests/timeout.go (FR-005)
+- [x] T021 [P] [US1] Implement batch handling tests in internal/conformance/tests/batch.go (FR-006)
+- [x] T022 [US1] Implement ConformanceSuite orchestrator in internal/conformance/suite.go (FR-001)
+- [x] T023 [US1] Implement crash handling with plugin restart in internal/conformance/runner.go (FR-020)
+- [x] T024 [US1] Implement table output reporter in internal/conformance/reporter.go (FR-007, FR-017)
+- [x] T025 [US1] Add verbosity support to TestRunner in internal/conformance/runner.go (FR-019)
+- [x] T026 [US1] Add TCP and stdio mode support in internal/conformance/suite.go (FR-008)
+- [x] T027 [US1] Implement CLI command `plugin conformance` in internal/cli/plugin_conformance.go
+- [x] T028 [US1] Write CLI command tests in internal/cli/plugin_conformance_test.go
 
 **Checkpoint**: Plugin developers can validate their implementation via CLI
 
@@ -101,19 +101,19 @@ protocol definitions change; CI fails on breaking changes
 
 ### Tests for User Story 2 (MANDATORY - TDD Required)
 
-- [ ] T029 [P] [US2] Write test for JUnit XML output in internal/conformance/reporter_test.go
-- [ ] T030 [P] [US2] Write test for JSON output in internal/conformance/reporter_test.go
-- [ ] T031 [P] [US2] Write test for category filtering in internal/conformance/suite_test.go
+- [x] T029 [P] [US2] Write test for JUnit XML output in internal/conformance/reporter_test.go
+- [x] T030 [P] [US2] Write test for JSON output in internal/conformance/reporter_test.go
+- [x] T031 [P] [US2] Write test for category filtering in internal/conformance/suite_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Implement JUnit XML reporter in internal/conformance/reporter.go (FR-016)
-- [ ] T033 [US2] Implement JSON reporter in internal/conformance/reporter.go (FR-016)
-- [ ] T034 [US2] Implement category filtering (protocol, performance, error) in internal/conformance/suite.go (FR-018)
-- [ ] T035 [US2] Implement test name regex filtering in internal/conformance/suite.go (FR-018)
-- [ ] T036 [US2] Add --output-file flag support to CLI in internal/cli/plugin_conformance.go
-- [ ] T037 [US2] Create GitHub Actions workflow for conformance in .github/workflows/conformance.yml (FR-015)
-- [ ] T038 [US2] Document CI integration in docs/plugins/conformance-ci.md
+- [x] T032 [US2] Implement JUnit XML reporter in internal/conformance/reporter.go (FR-016)
+- [x] T033 [US2] Implement JSON reporter in internal/conformance/reporter.go (FR-016)
+- [x] T034 [US2] Implement category filtering (protocol, performance, error) in internal/conformance/suite.go (FR-018)
+- [x] T035 [US2] Implement test name regex filtering in internal/conformance/suite.go (FR-018)
+- [x] T036 [US2] Add --output-file flag support to CLI in internal/cli/plugin_conformance.go
+- [x] T037 [US2] Create GitHub Actions workflow for conformance in .github/workflows/conformance.yml (FR-015)
+- [x] T038 [US2] Document CI integration in docs/plugins/conformance-ci.md
 
 **Checkpoint**: Conformance tests run in CI on every commit
 
@@ -129,18 +129,18 @@ within 5% tolerance of actual billing
 
 ### Tests for User Story 3 (MANDATORY - TDD Required)
 
-- [ ] T039 [P] [US3] Write test for E2ETestConfig in test/e2e/config_test.go
-- [ ] T040 [P] [US3] Write test for credential skip logic in test/e2e/skip_test.go
+- [x] T039 [P] [US3] Write test for E2ETestConfig in test/e2e/config_test.go
+- [x] T040 [P] [US3] Write test for credential skip logic in test/e2e/skip_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Implement E2ETestConfig type in test/e2e/config.go (FR-009, FR-010)
-- [ ] T042 [US3] Implement credential loading from environment in test/e2e/credentials.go (FR-010)
-- [ ] T043 [US3] Implement graceful skip when credentials missing in test/e2e/skip.go (FR-011)
-- [ ] T044 [US3] Create AWS E2E test framework in test/e2e/aws/cost_test.go (FR-009)
-- [ ] T045 [US3] Create expected cost fixtures in test/e2e/aws/fixtures/expected_costs.json (FR-012)
-- [ ] T046 [US3] Implement cost tolerance comparison (5%) in test/e2e/aws/validation.go (FR-013)
-- [ ] T047 [US3] Document test account setup in docs/plugins/e2e-setup.md (FR-014)
+- [x] T041 [US3] Implement E2ETestConfig type in test/e2e/config.go (FR-009, FR-010)
+- [x] T042 [US3] Implement credential loading from environment in test/e2e/credentials.go (FR-010)
+- [x] T043 [US3] Implement graceful skip when credentials missing in test/e2e/skip.go (FR-011)
+- [x] T044 [US3] Create AWS E2E test framework in test/e2e/aws/cost_test.go (FR-009)
+- [x] T045 [US3] Create expected cost fixtures in test/e2e/aws/fixtures/expected_costs.json (FR-012)
+- [x] T046 [US3] Implement cost tolerance comparison (5%) in test/e2e/aws/validation.go (FR-013)
+- [x] T047 [US3] Document test account setup in docs/plugins/e2e-setup.md (FR-014)
 
 **Checkpoint**: QA can run E2E tests against AWS test account
 
@@ -156,16 +156,16 @@ with compatibility status and any issues
 
 ### Tests for User Story 4 (MANDATORY - TDD Required)
 
-- [ ] T048 [P] [US4] Write test for certification report generation in internal/conformance/certification_test.go
-- [ ] T049 [P] [US4] Write test for CLI certification command in internal/cli/plugin_certify_test.go
+- [x] T048 [P] [US4] Write test for certification report generation in internal/conformance/certification_test.go
+- [x] T049 [P] [US4] Write test for CLI certification command in internal/cli/plugin_certify_test.go
 
 ### Implementation for User Story 4
 
-- [ ] T050 [US4] Implement CertificationReport type in internal/conformance/certification.go
-- [ ] T051 [US4] Implement certification logic (all tests must pass) in internal/conformance/certification.go
-- [ ] T052 [US4] Implement certification report formatter in internal/conformance/certification.go
-- [ ] T053 [US4] Implement CLI command `plugin certify` in internal/cli/plugin_certify.go
-- [ ] T054 [US4] Document certification process in docs/plugins/certification.md
+- [x] T050 [US4] Implement CertificationReport type in internal/conformance/certification.go
+- [x] T051 [US4] Implement certification logic (all tests must pass) in internal/conformance/certification.go
+- [x] T052 [US4] Implement certification report formatter in internal/conformance/certification.go
+- [x] T053 [US4] Implement CLI command `plugin certify` in internal/cli/plugin_certify.go
+- [x] T054 [US4] Document certification process in docs/plugins/certification.md
 
 **Checkpoint**: Enterprise admins can certify plugins before deployment
 
@@ -175,12 +175,13 @@ with compatibility status and any issues
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T055 [P] Update quickstart guide with actual CLI examples in specs/009-plugin-ecosystem-maturity/quickstart.md
-- [ ] T056 [P] Add docstrings to all exported functions per Constitution (80% coverage)
-- [ ] T057 Run `make lint` and fix any issues
-- [ ] T058 Run `make test` and ensure 80% coverage
-- [ ] T059 [P] Create plugin developer documentation in docs/plugins/plugin-development.md
-- [ ] T060 [P] Add troubleshooting guide to docs/plugins/troubleshooting.md
+- [x] T055 [P] Update quickstart guide with actual CLI examples in specs/009-plugin-ecosystem-maturity/quickstart.md
+- [x] T056 [P] Add docstrings to all exported functions per Constitution (80% coverage)
+- [x] T057 Run `make lint` and fix any issues
+- [x] T058 Run `make test` and ensure 80% coverage
+- [x] T059 [P] Create plugin developer documentation in docs/plugins/plugin-development.md
+- [x] T060 [P] Add troubleshooting guide to docs/plugins/troubleshooting.md
+- [x] T061 Verify certification works against recorder plugin (e.g. `pulumicost plugin certify ./bin/pulumicost-plugin-recorder`)
 
 ---
 

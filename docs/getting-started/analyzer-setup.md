@@ -1,61 +1,98 @@
 ---
-title: Analyzer Setup Quickstart
-description: Quick setup guide for PulumiCost Pulumi Analyzer integration
+title: Analyzer Setup
+description: Setting up PulumiCost as a Pulumi Analyzer Policy Pack
 layout: default
 ---
 
-## Zero-Click Cost Estimation
+PulumiCost integrates with Pulumi's analyzer framework as a **Policy Pack**. This allows you to see real-time cost
+estimates directly within your `pulumi preview` and `pulumi up` workflow.
 
-PulumiCost integrates directly with the Pulumi CLI as an analyzer, providing cost
-estimates automatically during `pulumi preview`.
+## Prerequisites
 
-### Prerequisites
+- [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/) installed
+- `pulumicost` binary built (run `make build`)
 
-- Pulumi CLI installed
-- `pulumicost` installed and in your PATH
+## Setup Instructions
 
-### Configuration
+Pulumi expects analyzer policy packs to follow a specific naming and directory convention.
 
-Add the analyzer to your project's `Pulumi.yaml`:
+### 1. Create a Policy Pack Directory
 
-```yaml
-name: my-project
-runtime: go # or your chosen runtime
-description: A Pulumi project with cost analysis
-plugins:
-  - path: pulumicost
-    args: ["analyzer", "serve"]
+Create a dedicated directory to hold your PulumiCost policy pack:
+
+```bash
+mkdir -p ~/.pulumicost/analyzer
 ```
 
-### Usage
+### 2. Configure the Policy Pack
 
-Run a preview as normal. Cost estimates will appear in the diagnostics output:
+Create a `PulumiPolicy.yaml` file in that directory. This file tells Pulumi to use the `pulumicost` runtime.
+
+```bash
+cat > ~/.pulumicost/analyzer/PulumiPolicy.yaml << 'EOF'
+runtime: pulumicost
+name: pulumicost
+version: 0.1.0
+EOF
+```
+
+### 3. Install the Binary
+
+Copy your `pulumicost` binary to the policy pack directory, renaming it to match Pulumi's expected naming convention:
+`pulumi-analyzer-policy-<runtime>`.
+
+```bash
+# From the pulumicost-core root directory
+cp bin/pulumicost ~/.pulumicost/analyzer/pulumi-analyzer-policy-pulumicost
+chmod +x ~/.pulumicost/analyzer/pulumi-analyzer-policy-pulumicost
+```
+
+### 4. Enable the Analyzer
+
+To use the analyzer, you must point Pulumi to the policy pack directory during preview or update.
+
+#### Option A: CLI Flag (Recommended for testing)
+
+```bash
+pulumi preview --policy-pack ~/.pulumicost/analyzer
+```
+
+#### Option B: Environment Variable (Recommended for CI/CD)
+
+```bash
+export PULUMI_POLICY_PACK_PATH="$HOME/.pulumicost/analyzer"
+pulumi preview
+```
+
+## Usage
+
+Once configured, cost estimates will appear as **advisory diagnostics** in your Pulumi output:
 
 ```text
-Diagnostics:
-  pulumicost:
-    Type: aws:ec2/instance:Instance
-    ID:   web-server
-    Cost: $7.59/month (est.)
+Policies:
+    pulumicost@v0.1.0 (local: ~/.pulumicost/analyzer)
+        - [advisory] [severity: low]  cost-estimate  (aws:ec2/instance:Instance: my-instance)
+          Estimated Monthly Cost: $7.50 USD (source: pulumicost-plugin-aws)
+        - [advisory] [severity: low]  stack-cost-summary  (pulumi:pulumi:Stack: my-stack)
+          Total Estimated Monthly Cost: $7.50 USD (1 resources analyzed)
 ```
 
-### Troubleshooting
+## Troubleshooting
 
-If you don't see cost estimates:
+### "could not start policy pack"
 
-1. **Check Logs**: Run with debug logging enabled:
+Ensure the binary name in `~/.pulumicost/analyzer/` matches exactly: `pulumi-analyzer-policy-pulumicost`.
 
-   ```bash
-   PULUMICOST_LOG_LEVEL=debug pulumi preview
-   ```
+### No cost diagnostics appear
 
-   Check `~/.pulumicost/logs/pulumicost.log`.
-
-2. **Verify Port**: The analyzer runs on a dynamic port. Ensure no firewalls are
-   blocking localhost traffic.
-
-3. **Strict Mode**: If config issues are suspected, enable strict mode:
+1. Verify that `PulumiPolicy.yaml` exists in the same directory as the binary.
+2. Ensure you are passing the correct path to `--policy-pack`.
+3. Check logs by enabling debug mode:
 
    ```bash
-   PULUMICOST_CONFIG_STRICT=true pulumi preview
+   PULUMICOST_LOG_LEVEL=debug pulumi preview --policy-pack ~/.pulumicost/analyzer
    ```
+
+## Technical Details
+
+For a deep dive into how the analyzer works, see the [Analyzer Integration Guide](../analyzer-integration.md).

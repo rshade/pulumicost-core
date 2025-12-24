@@ -1,6 +1,6 @@
 # Feature Specification: Error Aggregation in Proto Adapter
 
-**Feature Branch**: `001-proto-error-aggregation`  
+**Feature Branch**: `003-proto-error-aggregation`  
 **Created**: November 23, 2025  
 **Status**: Draft
 

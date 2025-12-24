@@ -1,7 +1,7 @@
 # Implementation Plan: Engine Test Coverage Completion
 
-**Branch**: `001-engine-test-coverage` | **Date**: 2025-12-02 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/001-engine-test-coverage/spec.md`
+**Branch**: `007-engine-test-coverage` | **Date**: 2025-12-02 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/007-engine-test-coverage/spec.md`
 
 ## Summary
 
@@ -54,7 +54,7 @@ Verify compliance with PulumiCost Core Constitution:
 ### Documentation (this feature)
 
 ```text
-specs/001-engine-test-coverage/
+specs/007-engine-test-coverage/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
 ├── tasks.md             # Phase 2 output (created by /speckit.tasks)

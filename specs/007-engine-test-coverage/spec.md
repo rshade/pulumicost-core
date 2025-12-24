@@ -1,6 +1,6 @@
 # Feature Specification: Engine Test Coverage Completion
 
-**Feature Branch**: `001-engine-test-coverage`
+**Feature Branch**: `007-engine-test-coverage`
 **Created**: 2025-12-02
 **Status**: Draft
 **Input**: Epic: Engine Test Coverage Completion - Complete the engine package test coverage to meet the 80% threshold with comprehensive edge case and integration testing.

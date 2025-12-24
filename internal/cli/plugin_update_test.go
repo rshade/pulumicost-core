@@ -168,7 +168,16 @@ func TestPluginUpdateCmd_AllFlagsCombined(t *testing.T) {
 	rootCmd.SetOut(&stdout)
 	rootCmd.SetErr(&stderr)
 	rootCmd.SetArgs(
-		[]string{"plugin", "update", "test-plugin", "--dry-run", "--version", "v1.0.0", "--plugin-dir", tmpDir},
+		[]string{
+			"plugin",
+			"update",
+			"test-plugin",
+			"--dry-run",
+			"--version",
+			"v1.0.0",
+			"--plugin-dir",
+			tmpDir,
+		},
 	)
 
 	// Should error because plugin not installed

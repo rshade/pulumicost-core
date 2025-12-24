@@ -1,188 +1,83 @@
-# CLAUDE.md
+# CLAUDE.md - internal/pluginhost
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with the `internal/pluginhost` package.
 
-## PluginHost Package Overview
+## Package Overview
 
-The `internal/pluginhost` package implements the plugin communication layer for PulumiCost, providing a flexible architecture for launching and managing gRPC-based plugins through multiple transport mechanisms.
+The `internal/pluginhost` package manages the lifecycle and communication with external plugin processes. It is responsible for launching plugins, establishing gRPC connections, and managing their termination.
+
+**Key Responsibilities:**
+- **Launch**: Spawning plugin processes (TCP or stdio).
+- **Connect**: Establishing gRPC connections with retry logic.
+- **Health**: Monitoring plugin health (via connection state).
+- **Cleanup**: Ensuring plugins are terminated when no longer needed.
 
 ## Architecture
 
-### Core Components
+### Launchers
 
-1. **Client** (`host.go`)
-   - Wraps gRPC connection and proto API client
-   - Manages plugin lifecycle with Close function
-   - Automatically retrieves plugin name on initialization via `Name()` RPC call
+The package defines a `Launcher` interface with two implementations:
 
-2. **Launcher Interface**
-   - Abstract interface for different plugin launching strategies
-   - Returns: `*grpc.ClientConn`, cleanup function, and error
-   - Two implementations: ProcessLauncher and StdioLauncher
+1.  **ProcessLauncher** (`process.go`): Launches plugins as independent processes listening on a TCP port.
+    - Used for production plugins.
+    - Supports concurrent plugin execution.
+    - Handles port allocation and collision avoidance.
+2.  **StdioLauncher** (`stdio.go`): Launches plugins communicating via stdin/stdout.
+    - Used for testing or special environments.
+    - Proxies stdio to a local TCP listener for gRPC compatibility.
 
-3. **ProcessLauncher** (`process.go`)
-   - Launches plugins as separate TCP server processes
-   - Auto-allocates ports using ephemeral port binding
-   - Passes port via `--port` flag and `PULUMICOST_PLUGIN_PORT` env var
-   - Implements connection retry with exponential backoff
+### Client
 
-4. **StdioLauncher** (`stdio.go`)
-   - Launches plugins using stdin/stdout communication
-   - Creates local TCP proxy to bridge stdio to gRPC
-   - Passes `--stdio` flag to plugin binary
-   - Useful for debugging and constrained environments
+The `Client` struct wraps the gRPC connection and the generated protobuf client. It provides a high-level API for interacting with plugins.
 
-### Plugin Lifecycle
+## Port Management (ProcessLauncher)
 
-```text
-1. Launcher.Start() → Spawn process/setup communication
-2. Connect to plugin via gRPC
-3. Call plugin.Name() to verify connection
-4. Return Client with API handle
-5. Client.Close() → Cleanup connections and kill process
-```
+### Allocation Strategy
 
-## Testing Commands
+1.  **Allocate**: `allocatePortWithListener` opens a TCP listener on port 0 (OS-assigned random port).
+2.  **Hold**: The listener is held open to reserve the port and prevent other processes from taking it.
+3.  **Release**: Just before starting the plugin, `releasePortListener` closes the listener.
+4.  **Bind**: The plugin process starts and binds to the now-available port.
 
-```bash
-# Run all pluginhost tests
-go test ./internal/pluginhost/...
+### Race Condition Mitigation
 
-# Run with race detection
-go test -race ./internal/pluginhost/...
-
-# Run integration tests (includes mock plugin creation)
-go test -v ./internal/pluginhost/... -run TestIntegration
-
-# Skip integration tests (short mode)
-go test -short ./internal/pluginhost/...
-
-# Test specific launcher
-go test -v ./internal/pluginhost/... -run TestProcessLauncher
-go test -v ./internal/pluginhost/... -run TestStdioLauncher
-```
-
-## Communication Patterns
-
-### ProcessLauncher Flow
-
-1. Allocate ephemeral port (bind to :0, get port, close)
-2. Start plugin with `--port=XXXXX` argument
-3. Set `PULUMICOST_PLUGIN_PORT` environment variable
-4. Connect via gRPC to `127.0.0.1:port`
-5. Retry connection with 100ms delays up to 10s timeout
-
-### StdioLauncher Flow
-
-1. Create stdin/stdout pipes to plugin process
-2. Start plugin with `--stdio` argument
-3. Create local TCP listener on ephemeral port
-4. Spawn goroutine to proxy between TCP and stdio
-5. Connect via gRPC to local proxy address
-
-### Connection Management
-
-- **Timeouts**: 10 seconds for both launchers
-- **Retry Logic**: 100ms delay between connection attempts
-- **State Checking**: Verify connectivity.Ready or connectivity.Idle states
-- **Cleanup**: Always kill process and close connections on error or shutdown
-
-## Critical Implementation Details
-
-### Port Allocation Pattern
-
-```go
-// Allocate ephemeral port safely
-lc := &net.ListenConfig{}
-listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
-port := listener.Addr().(*net.TCPAddr).Port
-listener.Close() // Port remains reserved briefly
-```
-
-### Process Cleanup Pattern
-
-```go
-defer func() {
-    conn.Close()      // Close gRPC connection first
-    cmd.Process.Kill() // Then kill process
-    cmd.Wait()        // Reap zombie process
-}()
-```
-
-### Error Handling with Cleanup
-
-```go
-if err != nil {
-    if closeErr := closeFn(); closeErr != nil {
-        return fmt.Errorf("action: %w (close error: %w)", err, closeErr)
-    }
-    return fmt.Errorf("action: %w", err)
-}
-```
-
-## Testing Patterns
-
-### Mock Plugin Creation
-
-- Tests create temporary executable scripts
-- Unix: Shell scripts with proper shebang
-- Windows: Batch files or PowerShell scripts
-- Set executable permissions: `os.Chmod(path, 0755)`
-
-### Integration Testing
-
-- Use `testing.Short()` to skip integration tests
-- Create failing mock plugins to test error paths
-- Test launcher switching with same binary
-- Verify no zombie processes after tests
-
-### Concurrent Client Testing
-
-- Test multiple clients with same launcher
-- Verify port allocation doesn't conflict
-- Ensure cleanup doesn't affect other clients
-
-## Common Gotchas
-
-1. **Port Race Condition**: Brief window between port allocation and plugin startup where port could be taken
-2. **Process Zombies**: Always call `cmd.Wait()` after `Kill()` to reap zombie processes
-3. **Connection State**: Check both `Ready` and `Idle` states as valid
-4. **Stdout/Stderr Routing**: Plugin stderr goes to parent stderr for debugging
-5. **Context Cancellation**: Properly handle context cancellation during connection attempts
-6. **Windows Differences**: Different executable patterns and process management
-
-## Plugin Protocol Requirements
-
-Plugins must implement:
-
-1. **TCP Mode**: Accept `--port=XXXXX` flag and listen on specified port
-2. **Stdio Mode**: Accept `--stdio` flag and use stdin/stdout for gRPC
-3. **Name RPC**: Respond to `Name()` call with plugin identifier
-4. **CostSource Service**: Implement full proto.CostSourceService interface
+There is a small window between releasing the port and the plugin binding to it. To mitigate this:
+- **Retries**: `StartWithRetry` attempts to launch the plugin multiple times if binding fails.
+- **Error Detection**: `isPortCollisionError` detects bind errors to trigger retries.
 
 ## Environment Variables
 
-- `PULUMICOST_PLUGIN_PORT`: Port number passed to plugin (ProcessLauncher) - for debugging/tooling only
-- Plugin inherits full parent environment via `os.Environ()`
+The `pluginhost` package manages environment variables passed to plugins:
 
-### Port Communication (Issue #232)
+-   `PULUMICOST_PLUGIN_PORT`: (Required) The port the plugin should listen on.
+-   `PORT`: **REMOVED** (Deprecated). Core no longer sets this variable to avoid conflicts with cloud environment variables (e.g., Cloud Run).
+-   `PULUMICOST_LOG_LEVEL`: Propagated from core configuration.
+-   `PULUMICOST_TRACE_ID`: Propagated for distributed tracing.
 
-The `--port` flag is the **authoritative** mechanism for port communication. Plugins MUST read the port from:
+**Note**: Plugins should prefer the `--port` flag over environment variables, but `PULUMICOST_PLUGIN_PORT` is provided for backward compatibility and ease of development.
 
-1. **Primary**: `--port=XXXXX` command-line flag (authoritative)
-2. **Fallback**: `PULUMICOST_PLUGIN_PORT` environment variable (for debugging/tooling)
+## Testing
 
-**Note**: The legacy `PORT` environment variable is **NOT** set by core (removed in issue #232). If a user has `PORT` in their shell environment, a DEBUG message is logged to indicate it will be ignored. Plugins should use `pluginsdk.GetPort()` which reads from `--port` flag or `PULUMICOST_PLUGIN_PORT`.
+### Unit Tests
 
-### Guidance Logging
+-   **Mock Commands**: Tests use shell scripts (`createMockServerCommand`) to simulate plugin behavior.
+-   **Timeout Handling**: Tests verify that timeouts are respected during launch and connection.
+-   **Race Conditions**: Specific tests target port allocation and concurrency.
 
-When a plugin fails to bind to its assigned port, the launcher logs a guidance message suggesting the plugin may need updating to support the `--port` flag. This helps users diagnose issues with older plugins that only read from the `PORT` environment variable.
+### Integration Tests
 
-## Timeout Configuration
+-   **Real Binary**: Integration tests use a compiled `recorder` plugin or test binary.
+-   **Full Lifecycle**: Tests verify the complete launch -> connect -> request -> close cycle.
 
-- **Default Timeout**: 10 seconds for both launchers
-- **Connection Delay**: 100ms between retry attempts  
-- **Connection Test Timeout**: 100ms for state change verification
+## Critical Patterns
 
-These timeouts are currently hardcoded constants but could be made configurable if needed.
+-   **Zombie Prevention**: Always call `cmd.Wait()` after `cmd.Process.Kill()`.
+-   **Context Propagation**: Pass contexts through to all blocking operations (dialing, command execution).
+-   **Error Wrapping**: Wrap errors with context (e.g., `fmt.Errorf("starting plugin: %w", err)`).
+-   **Logging**: Use `logging.FromContext(ctx)` for structured logging with trace IDs.
 
+## Recent Changes
+
+-   **Remove PORT Env Var**: The `PORT` environment variable is no longer set by `ProcessLauncher`. Plugins must use `--port` flag or `PULUMICOST_PLUGIN_PORT` env var.
+-   **Guidance Logging**: Added helpful log messages when plugins fail to bind, suggesting `--port` flag support.
+-   **Debug Logging**: Added debug logs if `PORT` is detected in the user's environment (to indicate it's being ignored/shadowed).

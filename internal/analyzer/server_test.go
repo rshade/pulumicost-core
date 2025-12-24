@@ -80,7 +80,11 @@ func TestServer_AnalyzeStack(t *testing.T) {
 			wantAnalyzeDiagCount: 1,
 			wantStackDiagCount:   1, // Summary only
 			wantAnalyzeContains:  []string{"$8.45 USD"},
-			wantStackContains:    []string{"Total Estimated Monthly Cost", "$8.45 USD", "1 resources analyzed"},
+			wantStackContains: []string{
+				"Total Estimated Monthly Cost",
+				"$8.45 USD",
+				"1 resources analyzed",
+			},
 		},
 		{
 			name: "multiple resources",
@@ -148,7 +152,9 @@ func TestServer_AnalyzeStack(t *testing.T) {
 			wantAnalyzeDiagCount: 1,
 			wantStackDiagCount:   1, // Summary only
 			wantAnalyzeContains:  []string{"Unsupported resource type"},
-			wantStackContains:    []string{"0 resources analyzed"}, // Zero cost resources don't count as "analyzed"
+			wantStackContains: []string{
+				"0 resources analyzed",
+			}, // Zero cost resources don't count as "analyzed"
 		},
 	}
 

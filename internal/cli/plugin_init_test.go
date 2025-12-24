@@ -227,7 +227,11 @@ func TestIsValidPluginName(t *testing.T) {
 		{"contains underscore", "aws_plugin", false},
 		{"contains space", "aws plugin", false},
 		{"contains dot", "aws.plugin", false},
-		{"too long", "this-is-a-very-long-plugin-name-that-exceeds-the-maximum-allowed-length", false},
+		{
+			"too long",
+			"this-is-a-very-long-plugin-name-that-exceeds-the-maximum-allowed-length",
+			false,
+		},
 	}
 
 	for _, tc := range testCases {

@@ -26,7 +26,10 @@ const (
 )
 
 // NewPluginConformanceCmd creates the plugin conformance command for running
-// conformance tests against a plugin binary.
+// NewPluginConformanceCmd returns a Cobra command configured to run conformance tests against a plugin binary.
+// The command verifies a plugin's protocol compliance and supports the following flags:
+// --mode (tcp|stdio), --verbosity (quiet|normal|verbose|debug), --output (table|json|junit), --output-file,
+// --timeout, --category (repeatable: protocol, error, performance, context), and --filter (regex for test names).
 func NewPluginConformanceCmd() *cobra.Command {
 	var (
 		mode       string
@@ -69,7 +72,8 @@ and context cancellation.`,
 	}
 
 	cmd.Flags().StringVar(&mode, "mode", "tcp", "Communication mode: tcp, stdio")
-	cmd.Flags().StringVar(&verbosity, "verbosity", "normal", "Output detail: quiet, normal, verbose, debug")
+	cmd.Flags().
+		StringVar(&verbosity, "verbosity", "normal", "Output detail: quiet, normal, verbose, debug")
 	cmd.Flags().StringVar(&output, "output", "table", "Output format: table, json, junit")
 	cmd.Flags().StringVar(&outputFile, "output-file", "", "Write output to file (default: stdout)")
 	cmd.Flags().StringVar(&timeout, "timeout", "5m", "Global suite timeout")
@@ -170,20 +174,43 @@ func buildSuiteConfig(
 	}, nil
 }
 
-// parseCategories validates and converts category strings to Category types.
+// parseCategories validates the provided category strings and converts them to
+// conformance.Category values. It returns a slice of converted categories or an
+// error if any input is not one of: "protocol", "error", "performance", or
+// "context".
+//
+// The returned slice preserves the order of the input slice.
 func parseCategories(categories []string) ([]conformance.Category, error) {
 	var categoryList []conformance.Category
 	for _, cat := range categories {
 		if !conformance.IsValidCategory(cat) {
-			return nil, fmt.Errorf("invalid category %q: must be protocol, error, performance, or context", cat)
+			return nil, fmt.Errorf(
+				"invalid category %q: must be protocol, error, performance, or context",
+				cat,
+			)
 		}
 		categoryList = append(categoryList, conformance.Category(cat))
 	}
 	return categoryList, nil
 }
 
-// writeReport writes the conformance report to the appropriate destination.
-func writeReport(cmd *cobra.Command, report *conformance.SuiteReport, output, outputFile string) error {
+// writeReport writes the conformance SuiteReport to the specified destination using the requested format.
+// It selects an output writer based on outputFile (writes to stdout when empty) and writes the report
+// in the given output format (`"table"`, `"json"`, or `"junit"`). The cmd parameter is used to obtain
+// the command's stdout when no output file is provided.
+//
+// Parameters:
+//   - cmd: the Cobra command used to determine standard output when outputFile is empty.
+//   - report: the conformance.SuiteReport to be written.
+//   - output: the desired output format; recognized values are "table", "json", and "junit".
+//   - outputFile: optional path to a file to write the output; if empty, stdout is used.
+//
+// Returns an error if acquiring the output writer fails or if writing the report in the chosen format fails.
+func writeReport(
+	cmd *cobra.Command,
+	report *conformance.SuiteReport,
+	output, outputFile string,
+) error {
 	writer, cleanup, err := getOutputWriter(cmd, outputFile)
 	if err != nil {
 		return err
@@ -209,7 +236,12 @@ func writeReport(cmd *cobra.Command, report *conformance.SuiteReport, output, ou
 	return nil
 }
 
-// getOutputWriter returns the appropriate writer and cleanup function.
+// getOutputWriter returns the writer to use for command output and a cleanup function that closes
+// any created file.
+//
+// If outputFile is empty, the command's standard output writer is returned and the cleanup is nil.
+// If outputFile is provided, the file is created (or truncated) and a cleanup function that closes
+// the file is returned. An error is returned if the file cannot be created.
 func getOutputWriter(cmd *cobra.Command, outputFile string) (io.Writer, func(), error) {
 	if outputFile == "" {
 		return cmd.OutOrStdout(), nil, nil
@@ -222,7 +254,11 @@ func getOutputWriter(cmd *cobra.Command, outputFile string) (io.Writer, func(), 
 	return f, func() {
 		if closeErr := f.Close(); closeErr != nil {
 			// Log but don't fail - we've already written output
-			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "warning: failed to close output file: %v\n", closeErr)
+			_, _ = fmt.Fprintf(
+				cmd.ErrOrStderr(),
+				"warning: failed to close output file: %v\n",
+				closeErr,
+			)
 		}
 	}, nil
 }

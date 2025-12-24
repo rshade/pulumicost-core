@@ -26,7 +26,13 @@ func TestFormatMoney(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := FormatMoney(tt.amount, tt.currency)
 			if result != tt.expected {
-				t.Errorf("FormatMoney(%.2f, %q) = %q, expected %q", tt.amount, tt.currency, result, tt.expected)
+				t.Errorf(
+					"FormatMoney(%.2f, %q) = %q, expected %q",
+					tt.amount,
+					tt.currency,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -88,15 +94,39 @@ func TestMoneyFormatting_EdgeCases(t *testing.T) {
 		function func() string
 		expected string
 	}{
-		{"FormatMoney with NaN", func() string { return FormatMoney(math.NaN(), "USD") }, "$0.00 USD"},
-		{"FormatMoneyShort with NaN", func() string { return FormatMoneyShort(math.NaN()) }, "$0.00"},
+		{
+			"FormatMoney with NaN",
+			func() string { return FormatMoney(math.NaN(), "USD") },
+			"$0.00 USD",
+		},
+		{
+			"FormatMoneyShort with NaN",
+			func() string { return FormatMoneyShort(math.NaN()) },
+			"$0.00",
+		},
 		{"FormatPercent with NaN", func() string { return FormatPercent(math.NaN()) }, "0.0%"},
 		// +Inf and -Inf should be handled gracefully
-		{"FormatMoney with +Inf", func() string { return FormatMoney(math.Inf(1), "USD") }, "$0.00 USD"},
-		{"FormatMoneyShort with +Inf", func() string { return FormatMoneyShort(math.Inf(1)) }, "$0.00"},
+		{
+			"FormatMoney with +Inf",
+			func() string { return FormatMoney(math.Inf(1), "USD") },
+			"$0.00 USD",
+		},
+		{
+			"FormatMoneyShort with +Inf",
+			func() string { return FormatMoneyShort(math.Inf(1)) },
+			"$0.00",
+		},
 		{"FormatPercent with +Inf", func() string { return FormatPercent(math.Inf(1)) }, "0.0%"},
-		{"FormatMoney with -Inf", func() string { return FormatMoney(math.Inf(-1), "USD") }, "$0.00 USD"},
-		{"FormatMoneyShort with -Inf", func() string { return FormatMoneyShort(math.Inf(-1)) }, "$0.00"},
+		{
+			"FormatMoney with -Inf",
+			func() string { return FormatMoney(math.Inf(-1), "USD") },
+			"$0.00 USD",
+		},
+		{
+			"FormatMoneyShort with -Inf",
+			func() string { return FormatMoneyShort(math.Inf(-1)) },
+			"$0.00",
+		},
 		{"FormatPercent with -Inf", func() string { return FormatPercent(math.Inf(-1)) }, "0.0%"},
 	}
 

@@ -107,7 +107,10 @@ func (r *Registry) findBinary(dir string) string {
 
 // Open launches plugin processes and returns active gRPC clients with a cleanup function.
 // If onlyName is non-empty, only that specific plugin is opened.
-func (r *Registry) Open(ctx context.Context, onlyName string) ([]*pluginhost.Client, func(), error) {
+func (r *Registry) Open(
+	ctx context.Context,
+	onlyName string,
+) ([]*pluginhost.Client, func(), error) {
 	log := logging.FromContext(ctx)
 	log.Debug().
 		Ctx(ctx).

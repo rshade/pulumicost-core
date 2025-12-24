@@ -1,7 +1,7 @@
 # Implementation Plan: Add UnaryInterceptors Support to ServeConfig
 
-**Branch**: `001-pluginsdk-interceptors` | **Date**: 2025-11-28 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/001-pluginsdk-interceptors/spec.md`
+**Branch**: `005-pluginsdk-interceptors` | **Date**: 2025-11-28 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/005-pluginsdk-interceptors/spec.md`
 **Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
 
 ## Summary
@@ -45,7 +45,7 @@ Verify compliance with PulumiCost Core Constitution:
 ### Documentation (this feature)
 
 ```text
-specs/001-pluginsdk-interceptors/
+specs/005-pluginsdk-interceptors/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output

@@ -130,7 +130,12 @@ type AnalyzerPlugin struct {
 
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
-// By default, config errors are logged as warnings and defaults are used.
+// New creates a Config populated with sensible defaults and attempts to load overrides from the user's config file.
+// It sets legacy plugin/spec paths under the user's home directory (defaulting to ~/.pulumicost), default output and logging settings,
+// analyzer timeouts, and an internal configPath of ~/.pulumicost/config.yaml.
+// If a config file exists it is loaded; on load errors the function logs warnings and continues using defaults.
+// When the environment variable PULUMICOST_CONFIG_STRICT is set to "true" or "1", permission errors or corrupted config content cause a panic instead of falling back to defaults.
+// Environment variable overrides are applied after loading the file.
 func New() *Config {
 	homeDir, _ := os.UserHomeDir()
 	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
@@ -190,7 +195,11 @@ func New() *Config {
 			if strictMode {
 				panic(fmt.Sprintf("STRICT MODE: Config file appears corrupted: %v", err))
 			}
-			fmt.Fprintf(os.Stderr, "Warning: Config file may be corrupted, using defaults: %v\n", err)
+			fmt.Fprintf(
+				os.Stderr,
+				"Warning: Config file may be corrupted, using defaults: %v\n",
+				err,
+			)
 		}
 	}
 
@@ -354,7 +363,11 @@ func (c *Config) Validate() error {
 		}
 	}
 	if !valid {
-		return fmt.Errorf("invalid output format: %s (must be one of: %v)", c.Output.DefaultFormat, validFormats)
+		return fmt.Errorf(
+			"invalid output format: %s (must be one of: %v)",
+			c.Output.DefaultFormat,
+			validFormats,
+		)
 	}
 
 	// Validate precision
@@ -510,6 +523,7 @@ func validateOutputType(outputType string) error {
 	return fmt.Errorf("invalid output type: %s (must be one of: %v)", outputType, validTypes)
 }
 
+// - MaxSizeMB or MaxFiles is negative (values of 0 are allowed and mean unlimited).
 func validateFileOutput(output LogOutput) error {
 	if output.Path == "" {
 		return errors.New("file output requires 'path' field")
@@ -529,10 +543,16 @@ func validateFileOutput(output LogOutput) error {
 
 	// Validate rotation settings
 	if output.MaxSizeMB < 0 {
-		return fmt.Errorf("max_size_mb must be non-negative (0 means unlimited), got: %d", output.MaxSizeMB)
+		return fmt.Errorf(
+			"max_size_mb must be non-negative (0 means unlimited), got: %d",
+			output.MaxSizeMB,
+		)
 	}
 	if output.MaxFiles < 0 {
-		return fmt.Errorf("max_files must be non-negative (0 means unlimited), got: %d", output.MaxFiles)
+		return fmt.Errorf(
+			"max_files must be non-negative (0 means unlimited), got: %d",
+			output.MaxFiles,
+		)
 	}
 
 	return nil

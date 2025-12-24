@@ -302,18 +302,30 @@ func getMapResourcesTestData() []struct {
 			validate: func(t *testing.T, descriptors []engine.ResourceDescriptor) {
 				// Verify first resource
 				if descriptors[0].Type != "aws:ec2/instance:Instance" {
-					t.Errorf("expected first resource type 'aws:ec2/instance:Instance', got %s", descriptors[0].Type)
+					t.Errorf(
+						"expected first resource type 'aws:ec2/instance:Instance', got %s",
+						descriptors[0].Type,
+					)
 				}
 				if descriptors[0].Provider != "aws" {
-					t.Errorf("expected first resource provider 'aws', got %s", descriptors[0].Provider)
+					t.Errorf(
+						"expected first resource provider 'aws', got %s",
+						descriptors[0].Provider,
+					)
 				}
 
 				// Verify second resource
 				if descriptors[1].Type != "aws:s3/bucket:Bucket" {
-					t.Errorf("expected second resource type 'aws:s3/bucket:Bucket', got %s", descriptors[1].Type)
+					t.Errorf(
+						"expected second resource type 'aws:s3/bucket:Bucket', got %s",
+						descriptors[1].Type,
+					)
 				}
 				if descriptors[1].Provider != "aws" {
-					t.Errorf("expected second resource provider 'aws', got %s", descriptors[1].Provider)
+					t.Errorf(
+						"expected second resource provider 'aws', got %s",
+						descriptors[1].Provider,
+					)
 				}
 			},
 		},

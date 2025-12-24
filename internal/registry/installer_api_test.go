@@ -55,7 +55,11 @@ func TestInstall_FromRegistry(t *testing.T) {
 		}
 
 		// Match download URL
-		if r.URL.Path == fmt.Sprintf("/download/aws-public_v1.0.0_%s_%s.tar.gz", runtime.GOOS, runtime.GOARCH) ||
+		if r.URL.Path == fmt.Sprintf(
+			"/download/aws-public_v1.0.0_%s_%s.tar.gz",
+			runtime.GOOS,
+			runtime.GOARCH,
+		) ||
 			r.URL.Path == fmt.Sprintf("/download/aws-public_v1.0.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH) {
 			// Return asset content
 			w.Write(createMockArchive(t, "aws-public"))

@@ -1,6 +1,6 @@
 # Tasks: Add UnaryInterceptors Support to ServeConfig
 
-**Input**: Design documents from `/specs/001-pluginsdk-interceptors/`
+**Input**: Design documents from `/specs/005-pluginsdk-interceptors/`
 **Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md
 **Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
 
@@ -50,8 +50,8 @@ tooling configured.
 **⚠️ CRITICAL**: The ServeConfig struct extension must be complete before
 any user story can be tested.
 
-- [x] T001 Add UnaryInterceptors field to ServeConfig struct in sdk/go/pluginsdk/sdk.go
-- [x] T002 Modify Serve() to build interceptor chain with tracing first in sdk/go/pluginsdk/sdk.go
+- [ ] T001 Add UnaryInterceptors field to ServeConfig struct in sdk/go/pluginsdk/sdk.go
+- [ ] T002 Modify Serve() to build interceptor chain with tracing first in sdk/go/pluginsdk/sdk.go
 
 **Checkpoint**: Foundation ready - user story validation can now begin
 
@@ -69,14 +69,14 @@ verify trace IDs from gRPC metadata are available in handler context.
 
 > **CONSTITUTION REQUIREMENT: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [x] T003 [P] [US1] Test single interceptor invocation in sdk/go/pluginsdk/sdk_test.go
-- [x] T004 [P] [US1] Test trace ID propagation through interceptor in sdk/go/pluginsdk/sdk_test.go
+- [ ] T003 [P] [US1] Test single interceptor invocation in sdk/go/pluginsdk/sdk_test.go
+- [ ] T004 [P] [US1] Test trace ID propagation through interceptor in sdk/go/pluginsdk/sdk_test.go
 
 ### Implementation for User Story 1
 
-- [x] T005 [US1] Update ServeConfig godoc with UnaryInterceptors docs in sdk.go
-- [x] T006 [US1] Run make lint and fix any linting issues in sdk/go/pluginsdk/
-- [x] T007 [US1] Run make test and verify all tests pass in sdk/go/pluginsdk/
+- [ ] T005 [US1] Update ServeConfig godoc with UnaryInterceptors docs in sdk.go
+- [ ] T006 [US1] Run make lint and fix any linting issues in sdk/go/pluginsdk/
+- [ ] T007 [US1] Run make test and verify all tests pass in sdk/go/pluginsdk/
 
 **Checkpoint**: User Story 1 complete - single interceptor registration works
 
@@ -92,16 +92,16 @@ in the correct order for each request.
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
-- [x] T008 [P] [US2] Test multiple interceptors execute in order in sdk/go/pluginsdk/sdk_test.go
-- [x] T009 [P] [US2] Test context mods propagate between interceptors in sdk_test.go
+- [ ] T008 [P] [US2] Test multiple interceptors execute in order in sdk/go/pluginsdk/sdk_test.go
+- [ ] T009 [P] [US2] Test context mods propagate between interceptors in sdk_test.go
 
 ### Implementation for User Story 2
 
 Implementation was covered in Foundational phase (T002). This phase focuses on
 validating the chaining behavior.
 
-- [x] T010 [US2] Add example of multiple interceptors to quickstart.md in specs/001-pluginsdk-interceptors/
-- [x] T011 [US2] Run full test suite with race detection in sdk/go/pluginsdk/
+- [ ] T010 [US2] Add example of multiple interceptors to quickstart.md in specs/005-pluginsdk-interceptors/
+- [ ] T011 [US2] Run full test suite with race detection in sdk/go/pluginsdk/
 
 **Checkpoint**: User Story 2 complete - multiple interceptor chaining works
 
@@ -117,16 +117,16 @@ and verify it operates identically to before this change.
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [x] T012 [P] [US3] Test nil UnaryInterceptors field behavior in sdk/go/pluginsdk/sdk_test.go
-- [x] T013 [P] [US3] Test empty slice UnaryInterceptors behavior in sdk/go/pluginsdk/sdk_test.go
+- [ ] T012 [P] [US3] Test nil UnaryInterceptors field behavior in sdk/go/pluginsdk/sdk_test.go
+- [ ] T013 [P] [US3] Test empty slice UnaryInterceptors behavior in sdk/go/pluginsdk/sdk_test.go
 
 ### Implementation for User Story 3
 
 No additional implementation needed - backward compatibility is ensured by
 Go's zero-value semantics (nil slice).
 
-- [x] T014 [US3] Document backward compatibility in ServeConfig godoc in sdk/go/pluginsdk/sdk.go
-- [x] T015 [US3] Verify coverage in sdk/go/pluginsdk/
+- [ ] T014 [US3] Document backward compatibility in ServeConfig godoc in sdk/go/pluginsdk/sdk.go
+- [ ] T015 [US3] Verify coverage in sdk/go/pluginsdk/
   - Note: Package coverage is 70.3%; new functionality fully tested
   - Serve() (0% coverage) starts real gRPC server - not unit testable
   - TestInterceptorChainBuilding covers new code paths (100%)
@@ -139,11 +139,11 @@ Go's zero-value semantics (nil slice).
 
 **Purpose**: Documentation, cleanup, and final validation
 
-- [x] T016 [P] Update pulumicost-spec CHANGELOG.md with new feature
-- [x] T017 [P] Run complete test suite with race detection (-race flag)
-- [x] T018 [P] Run golangci-lint with project configuration
-- [x] T019 Validate quickstart.md examples compile and work correctly
-- [x] T020 Final review: all acceptance scenarios from spec.md covered
+- [ ] T016 [P] Update pulumicost-spec CHANGELOG.md with new feature
+- [ ] T017 [P] Run complete test suite with race detection (-race flag)
+- [ ] T018 [P] Run golangci-lint with project configuration
+- [ ] T019 Validate quickstart.md examples compile and work correctly
+- [ ] T020 Final review: all acceptance scenarios from spec.md covered
   - SC-004: startup time not impacted (~10 LOC with single slice allocation)
 
 ---

@@ -8,6 +8,7 @@
 - `pkg/version`: shared version/build metadata used by the CLI.
 - `examples/` and `testdata/`: Pulumi plan fixtures and sample specs; prefer
   extending these for reproducible tests.
+- `test/e2e/fixtures/`: Real Pulumi project fixtures for E2E tests.
 - `docs/`: Jekyll site and contributor docs; `scripts/` contains helper tooling;
   `bin/` is populated by builds.
 
@@ -26,6 +27,7 @@
 - `pulumicost plugin install`: Install a plugin from a registry or URL.
 - `pulumicost plugin update`: Update an installed plugin.
 - `pulumicost plugin remove`: Remove an installed plugin.
+- `pulumicost plugin certify`: Run certification tests for a plugin.
 - `pulumicost analyzer serve`: Start the Pulumi Analyzer gRPC server.
 - Docs: `make docs-lint`, `make docs-build`, `make docs-serve` for the Jekyll
   site.
@@ -146,18 +148,11 @@ maintain its effectiveness:
 
 ## Active Technologies
 
-- Go 1.25.5 + existing CLI infrastructure, test helpers (105-cost-filter-tests)
-- N/A (CLI tool processing JSON files) (105-cost-filter-tests)
-
-- Go 1.25.5 + pluginsdk from pulumicost-spec (001-pluginsdk-env-adoption)
-- Environment variable constants via pluginsdk (001-pluginsdk-env-adoption)
-
+- Go 1.25.5 + existing CLI infrastructure, test helpers
+- Go 1.25.5 + pluginsdk from pulumicost-spec
+- Environment variable constants via pluginsdk
 - Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.37.0
-  (104-shared-tui-package)
-- N/A (in-memory UI components) (104-shared-tui-package)
-- N/A (UI rendering package) (104-shared-tui-package)
 
 ## Recent Changes
 
-- 104-shared-tui-package: Added charmbracelet/lipgloss v1.0.0 and
-  golang.org/x/term for TUI components
+- Added charmbracelet/lipgloss v1.0.0 and golang.org/x/term for TUI components

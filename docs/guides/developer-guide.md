@@ -494,6 +494,14 @@ For testing with real plugins:
 ./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 ```
 
+### Plugin Certification
+
+Before releasing a plugin, run the certification suite to ensure full protocol compliance:
+
+```bash
+pulumicost plugin certify ./path/to/your-plugin
+```
+
 #### Analyzer Integration Testing
 
 Testing the Analyzer involves running `pulumi preview` against a Pulumi project

@@ -44,17 +44,11 @@ if ! command -v go &> /dev/null; then
     exit 1
 fi
 
-# Export AWS credentials from CLI profile
+# Check for AWS credentials
 echo ""
-echo -e "${YELLOW}Setting up AWS credentials...${NC}"
+echo -e "${YELLOW}Checking AWS credentials...${NC}"
 if aws sts get-caller-identity &> /dev/null; then
-    # Check if AWS CLI v2 export-credentials is available
-    if aws configure export-credentials --help &> /dev/null; then
-        eval "$(aws configure export-credentials --format env)"
-        echo "  AWS credentials: Exported from CLI (v2)"
-    else
-        echo "  AWS credentials: Already configured (CLI v1 or env vars)"
-    fi
+    echo "  AWS credentials: Found and valid"
 else
     echo -e "${RED}ERROR: AWS credentials not configured. Run 'aws configure' or set environment variables.${NC}"
     exit 1

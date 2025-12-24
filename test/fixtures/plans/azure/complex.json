@@ -1,0 +1,25 @@
+{
+  "resources": [
+    {
+      "type": "azure-native:web:WebApp",
+      "id": "test-app-service",
+      "inputs": {
+        "serverFarmId": "plan-id"
+      },
+      "provider": "azure-native"
+    },
+    {
+      "type": "azure-native:containerservice:ManagedCluster",
+      "id": "test-aks-cluster",
+      "inputs": {
+        "agentPoolProfiles": [
+          {
+            "count": 3,
+            "vmSize": "Standard_DS2_v2"
+          }
+        ]
+      },
+      "provider": "azure-native"
+    }
+  ]
+}

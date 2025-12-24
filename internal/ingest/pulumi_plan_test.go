@@ -152,7 +152,11 @@ func TestLoadPulumiPlan(t *testing.T) {
 					return
 				}
 				if tt.errMsg != "" && !containsString(err.Error(), tt.errMsg) {
-					t.Errorf("LoadPulumiPlan() error = %v, want error containing %v", err, tt.errMsg)
+					t.Errorf(
+						"LoadPulumiPlan() error = %v, want error containing %v",
+						err,
+						tt.errMsg,
+					)
 				}
 				return
 			}
@@ -384,8 +388,12 @@ func getPulumiPlanGetResourcesTestData() []struct {
 
 				for i, expected := range expectedOrder {
 					if i < len(resources) && resources[i].URN != expected {
-						t.Errorf("resource ordering not preserved: expected %s at position %d, got %s",
-							expected, i, resources[i].URN)
+						t.Errorf(
+							"resource ordering not preserved: expected %s at position %d, got %s",
+							expected,
+							i,
+							resources[i].URN,
+						)
 					}
 				}
 
@@ -420,7 +428,11 @@ func TestPulumiPlan_GetResources(t *testing.T) {
 			resources := tt.plan.GetResources()
 
 			if len(resources) != tt.wantCount {
-				t.Errorf("GetResources() returned %d resources, want %d", len(resources), tt.wantCount)
+				t.Errorf(
+					"GetResources() returned %d resources, want %d",
+					len(resources),
+					tt.wantCount,
+				)
 			}
 
 			if tt.validate != nil {

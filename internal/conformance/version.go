@@ -8,7 +8,10 @@ import (
 )
 
 // CheckProtocolVersion validates that the plugin's protocol version is compatible
-// with the expected version. Returns an error if versions are incompatible.
+// CheckProtocolVersion verifies that pluginVersion is compatible with expectedVersion.
+// Versions must be in "major.minor" format. It returns an error if pluginVersion is empty,
+// if either version cannot be parsed, or if the major versions do not match or the plugin's
+// minor version is less than the expected minor version. On success it returns nil.
 func CheckProtocolVersion(pluginVersion, expectedVersion string) error {
 	if pluginVersion == "" {
 		return errors.New("protocol version is empty")
@@ -27,7 +30,8 @@ func CheckProtocolVersion(pluginVersion, expectedVersion string) error {
 	if !IsCompatibleVersion(pluginMajor, pluginMinor, expectedMajor, expectedMinor) {
 		return fmt.Errorf(
 			"protocol version mismatch: got %s, want %s (major versions must match, plugin minor must be >= expected)",
-			pluginVersion, expectedVersion,
+			pluginVersion,
+			expectedVersion,
 		)
 	}
 

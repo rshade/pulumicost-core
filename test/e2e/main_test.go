@@ -26,9 +26,10 @@ type TestContext struct {
 	T           *testing.T
 	StartTime   time.Time
 	Region      string
-	ProjectDir  string // Path to the Pulumi project directory
-	WorkDir     string // Working directory (copy of project)
-	PreviewJSON string // Path to the preview JSON file
+	ProjectDir  string   // Path to the Pulumi project directory
+	WorkDir     string   // Working directory (copy of project)
+	PreviewJSON string   // Path to the preview JSON file
+	AWSEnv      []string // AWS credentials from SDK
 	Cleanup     *CleanupManager
 }
 
@@ -61,6 +62,17 @@ func NewTestContext(t *testing.T, prefix string) *TestContext {
 	}
 }
 
+// SetupAWSEnv loads AWS credentials using the SDK and populates AWSEnv.
+func (tc *TestContext) SetupAWSEnv(ctx context.Context) {
+	awsEnv, err := GetAWSCredentialsEnv(ctx)
+	if err != nil {
+		tc.T.Logf("Warning: failed to load AWS credentials from SDK: %v", err)
+	} else {
+		tc.AWSEnv = awsEnv
+		tc.T.Log("Loaded AWS credentials from SDK")
+	}
+}
+
 // SetupProject initializes a Pulumi project from the given project directory.
 // The steps are:
 // 1. Create temp directory
@@ -71,6 +83,9 @@ func NewTestContext(t *testing.T, prefix string) *TestContext {
 // 6. pulumi up -y
 func (tc *TestContext) SetupProject(ctx context.Context, projectPath string) error {
 	tc.T.Logf("Setting up project from %s with stack %s (region: %s)", projectPath, tc.StackName, tc.Region)
+
+	// Load AWS credentials using SDK
+	tc.SetupAWSEnv(ctx)
 
 	// Get absolute path to project
 	absProjectPath, err := filepath.Abs(projectPath)
@@ -342,8 +357,18 @@ func (tc *TestContext) runCmd(ctx context.Context, dir string, name string, args
 func (tc *TestContext) runCmdWithEnv(ctx context.Context, dir string, env []string, name string, args ...string) error {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), env...)
-	cmd.Env = append(cmd.Env, "PULUMI_CONFIG_PASSPHRASE="+os.Getenv("PULUMI_CONFIG_PASSPHRASE"))
+	cmd.Env = os.Environ() // Start with full current environment
+	for _, e := range tc.AWSEnv {
+		cmd.Env = append(cmd.Env, e)
+	}
+	for _, e := range env {
+		cmd.Env = append(cmd.Env, e)
+	}
+
+	// Ensure passphrase from current environment is preserved
+	if passphrase := os.Getenv("PULUMI_CONFIG_PASSPHRASE"); passphrase != "" {
+		cmd.Env = append(cmd.Env, "PULUMI_CONFIG_PASSPHRASE="+passphrase)
+	}
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -358,15 +383,24 @@ func (tc *TestContext) runCmdWithEnv(ctx context.Context, dir string, env []stri
 func (tc *TestContext) runCmdOutput(ctx context.Context, dir string, env []string, name string, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), env...)
-	cmd.Env = append(cmd.Env, "PULUMI_CONFIG_PASSPHRASE="+os.Getenv("PULUMI_CONFIG_PASSPHRASE"))
 
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	cmd.Env = os.Environ() // Start with full current environment
+	for _, e := range tc.AWSEnv {
+		cmd.Env = append(cmd.Env, e)
+	}
+	for _, e := range env {
+		cmd.Env = append(cmd.Env, e)
+	}
 
-	output, err := cmd.Output()
+	// Ensure passphrase from env if not already in env slice
+	passphrase := os.Getenv("PULUMI_CONFIG_PASSPHRASE")
+	if passphrase != "" {
+		cmd.Env = append(cmd.Env, "PULUMI_CONFIG_PASSPHRASE="+passphrase)
+	}
+
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("%s %v failed: %w\nstderr: %s", name, args, err, stderr.String())
+		return output, fmt.Errorf("%s %v failed: %w\noutput: %s", name, args, err, string(output))
 	}
 	return output, nil
 }
