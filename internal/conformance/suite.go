@@ -165,9 +165,6 @@ func (s *Suite) registerDefaultTests() {
 	}
 }
 
-// Placeholder test functions - return Skip until properly implemented.
-// TODO: Implement actual test logic in error.go, etc.
-
 // GetTestCases returns the filtered list of test cases based on configuration.
 func (s *Suite) GetTestCases() []TestCase {
 	filtered := make([]TestCase, 0, len(s.testCases))
