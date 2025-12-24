@@ -77,7 +77,11 @@ func NewInstaller(pluginDir string) *Installer {
 // NewInstallerWithClient creates an Installer that uses the provided GitHub client and a resolved plugin directory.
 // If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the user home directory cannot be determined
 // it falls back to the current directory ("./") and uses "./.pulumicost/plugins".
-// The returned Installer's client field is set to the provided client and its pluginDir field is set to the resolved path.
+// NewInstallerWithClient creates an Installer that uses the provided GitHub client and plugin directory.
+// If pluginDir is empty, it is resolved to $HOME/.pulumicost/plugins; if the user's home directory
+// cannot be determined, it falls back to the current working directory.
+// The returned Installer's client field is set to the provided client and its pluginDir field to the
+// resolved path.
 func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 	if pluginDir == "" {
 		homeDir, err := os.UserHomeDir()

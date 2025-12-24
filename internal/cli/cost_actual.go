@@ -49,7 +49,11 @@ func defaultToNow(s string) string {
 //   - --adapter: restrict to a specific adapter plugin
 //   - --output: output format (table, json, ndjson; defaults from configuration)
 //   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
-//   - --filter: resource filter expressions (e.g., 'type=aws:ec2/instance', 'tag:env=prod')
+// NewCostActualCmd creates the "actual" subcommand for fetching historical costs.
+// The command is configured with flags for Pulumi preview JSON path, time range
+// (--from and --to), adapter selection, output format, grouping (--group-by) and
+// resource filters (--filter). The --pulumi-json and --from flags are required.
+// The returned *cobra.Command is ready to be added to the CLI command tree.
 func NewCostActualCmd() *cobra.Command {
 	var params costActualParams
 
@@ -104,7 +108,12 @@ func NewCostActualCmd() *cobra.Command {
 
 // executeCostActual orchestrates the "actual" cost workflow for a Pulumi plan.
 // It loads and maps resources, parses the time range, opens adapter plugins, fetches actual costs,
-// renders the results, and emits audit entries.
+// executeCostActual orchestrates the "actual" cost workflow: it loads resources from a Pulumi plan, applies resource filters, parses the time range, opens adapter plugins, requests actual costs, renders the output, and emits audit entries.
+//
+// cmd is the Cobra command whose context and output writer are used.
+// params supplies the plan path, adapter, output format, time range strings, grouping, and resource filter expressions.
+//
+// Returns an error when resource loading fails, a provided filter is invalid, the time range cannot be parsed or is out of bounds, plugins cannot be opened, cost fetching fails, or output rendering fails.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	ctx := cmd.Context()
 	log := logging.FromContext(ctx)

@@ -1100,7 +1100,10 @@ func extractProviderFromType(resourceType string) string {
 	return "unknown"
 }
 
-// FilterResources filters resources based on the provided filter expression.
+// FilterResources selects resources that match the provided filter expression.
+// The filter is a single key=value expression (for example "provider=aws" or "tag:env=prod").
+// An empty filter returns the input slice unchanged.
+// The returned slice contains only the resources that satisfy the filter.
 func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDescriptor {
 	if filter == "" {
 		return resources
@@ -1116,7 +1119,7 @@ func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDe
 }
 
 // ValidateFilter validates the syntax of a filter expression.
-// It returns an error if the filter does not follow the 'key=value' format.
+// does not contain exactly one '=' separator (for example: `type=aws:ec2/instance` or `tag:env=prod`).
 func ValidateFilter(filter string) error {
 	if filter == "" {
 		return nil
@@ -1129,6 +1132,18 @@ func ValidateFilter(filter string) error {
 	return nil
 }
 
+// matchesFilter reports whether the given resource satisfies the simple filter expression.
+// The filter must be in the form "key=value". If the filter is empty or malformed, the
+// function returns true (resource is included).
+//
+// Matching is case-insensitive and uses substring matching (contains).
+// Supported builtin keys:
+//   - "type": matches against ResourceDescriptor.Type
+//   - "provider": matches the provider extracted from the type
+//   - "service": matches the service extracted from the type
+//   - "id": matches ResourceDescriptor.ID
+//
+// Any other key is evaluated against the resource's properties via matchesProperties.
 func matchesFilter(resource ResourceDescriptor, filter string) bool {
 	// Parse filter format like "type=aws:ec2/instance" or "provider=aws"
 	parts := strings.SplitN(filter, "=", filterKeyValueParts)
@@ -1155,7 +1170,15 @@ func matchesFilter(resource ResourceDescriptor, filter string) bool {
 	}
 }
 
-// matchesProperties checks if the resource properties (including tags/labels maps) match the filter.
+// matchesProperties reports whether the properties of resource match the provided key and value.
+// It performs case-insensitive comparisons. If key has the prefix "tag:", the prefix is removed
+// and the function searches within "tags" or "labels" maps for a matching entry. The value is
+// matched as a case-insensitive substring of the property's string representation or of a map
+// entry's string value.
+// resource: the resource whose Properties map is inspected.
+// key: the property key to match; may be prefixed with "tag:" to force searching tags/labels.
+// value: the substring to search for within the property's value.
+// Returns true if a matching property or tag/label entry is found, false otherwise.
 func matchesProperties(resource ResourceDescriptor, key, value string) bool {
 	if resource.Properties == nil {
 		return false
@@ -1185,7 +1208,12 @@ func matchesProperties(resource ResourceDescriptor, key, value string) bool {
 	return false
 }
 
-// matchInMap checks if a map contains a key-value pair matching the filter.
+// matchInMap reports whether m contains an entry whose key equals propKey (case-insensitive)
+// and whose value, when formatted to a string, contains value as a substring (case-insensitive).
+//
+// propKey and value are matched against the map contents in a case-insensitive manner; if a
+// matching key is found and its stringified value contains the provided value, the function
+// returns true, otherwise it returns false.
 func matchInMap(m map[string]interface{}, propKey, value string) bool {
 	for mk, mv := range m {
 		if strings.ToLower(mk) == propKey {
