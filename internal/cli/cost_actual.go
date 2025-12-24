@@ -49,6 +49,7 @@ func defaultToNow(s string) string {
 //   - --adapter: restrict to a specific adapter plugin
 //   - --output: output format (table, json, ndjson; defaults from configuration)
 //   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
+//
 // NewCostActualCmd creates the "actual" subcommand for fetching historical costs.
 // The command is configured with flags for Pulumi preview JSON path, time range
 // (--from and --to), adapter selection, output format, grouping (--group-by) and

@@ -11,7 +11,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 - Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking) (021-plugin-integration-tests)
 - Filesystem (mocked via `t.TempDir()`) (021-plugin-integration-tests)
 - Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/pflag` (023-add-cli-filter-flag)
-- N/A (CLI logic) (023-add-cli-filter-flag)
+- Pure Go (no external dependencies for filter logic) (023-add-cli-filter-flag)
 
 - Local Pulumi state (ephemeral), no persistent DB. (008-e2e-cost-testing)
 - N/A (Stateless operation) (009-analyzer-plugin)

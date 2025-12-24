@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// testGetProjectedCostPermissionDenied verifies that GetProjectedCost returns PermissionDenied
 // testGetProjectedCostPermissionDenied verifies that GetProjectedCost returns a PermissionDenied gRPC error when requesting a forbidden resource.
 // ctx provides the test environment and configuration for the request.
 // It returns a TestResult indicating whether the observed error code matched the expected PermissionDenied code.
@@ -17,7 +16,6 @@ func testGetProjectedCostPermissionDenied(ctx *TestContext) *TestResult {
 	return testGetProjectedCostErrorCode(ctx, "forbidden:resource", codes.PermissionDenied)
 }
 
-// testGetProjectedCostInternal verifies that GetProjectedCost returns Internal
 // testGetProjectedCostInternal verifies that GetProjectedCost returns a gRPC Internal error for a resource that triggers an internal server error.
 // ctx provides the test environment, including the plugin client and timeout settings.
 // It returns a *TestResult describing whether the observed error code matched the expected Internal code.
@@ -25,10 +23,9 @@ func testGetProjectedCostInternal(ctx *TestContext) *TestResult {
 	return testGetProjectedCostErrorCode(ctx, "error:internal", codes.Internal)
 }
 
-// testGetProjectedCostUnavailable verifies that GetProjectedCost returns Unavailable
 // testGetProjectedCostUnavailable verifies that GetProjectedCost returns a gRPC
 // Unavailable error for a resource that signals service unavailability.
-// 
+//
 // ctx is the test context providing the PluginClient and timeout settings.
 // The function returns a *TestResult indicating pass when the received gRPC
 // status code matches codes.Unavailable, or a failing result with details
@@ -44,6 +41,7 @@ func testGetProjectedCostUnavailable(ctx *TestContext) *TestResult {
 //   - ctx: test context containing the PluginClient and Timeout used for the RPC.
 //   - resourceType: resource type string to send in the request's ResourceDescriptor.
 //   - expectedCode: the gRPC codes.Code expected from the GetProjectedCost call.
+//
 // Returns:
 //   - *TestResult describing the outcome and any relevant error or detail message.
 func testGetProjectedCostErrorCode(ctx *TestContext, resourceType string, expectedCode codes.Code) *TestResult {

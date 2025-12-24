@@ -3,11 +3,10 @@ package conformance
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Runner executes individual conformance test cases.
@@ -227,27 +226,35 @@ func (r *Runner) RunTests(ctx context.Context, tests []TestCase, connectFn Conne
 }
 
 // isCrash determines if a test result indicates a plugin crash.
+// It uses string-based heuristics because the original gRPC error is converted
+// to a string in TestResult.Error, and status.FromError cannot recover
+// gRPC status information from a string representation.
 func (r *Runner) isCrash(result *TestResult) bool {
 	if result.Status != StatusError && result.Status != StatusFail {
 		return false
 	}
 
-	// We look for typical gRPC error codes that indicate connection loss
-	// or internal errors that often accompany a crash.
-	st, ok := status.FromError(fmt.Errorf("%s", result.Error))
-	if !ok {
-		// Not a gRPC error, check string content for common failure messages
-		// This is a bit heuristic but better than nothing
-		isUnavailable := result.Error == "rpc error: code = Unavailable desc = transport is closing"
-		isInternal := result.Error == "rpc error: code = Internal desc = transport is closing"
-		return result.Status == StatusError && (isUnavailable || isInternal)
+	// Check for gRPC error codes that indicate connection loss or crashes.
+	// We use string matching because result.Error is a string representation
+	// of the original error, not the error value itself.
+	errorStr := result.Error
+
+	// Common crash indicators in gRPC error strings
+	crashIndicators := []string{
+		"code = Unavailable",
+		"code = Internal",
+		"code = Aborted",
+		"transport is closing",
+		"connection refused",
+		"broken pipe",
+		"EOF",
 	}
 
-	//nolint:exhaustive // only interested in crash-related error codes
-	switch st.Code() {
-	case codes.Unavailable, codes.Internal, codes.Aborted:
-		return true
-	default:
-		return false
+	for _, indicator := range crashIndicators {
+		if strings.Contains(errorStr, indicator) {
+			return true
+		}
 	}
+
+	return false
 }

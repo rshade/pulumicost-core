@@ -1119,7 +1119,8 @@ func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDe
 }
 
 // ValidateFilter validates the syntax of a filter expression.
-// does not contain exactly one '=' separator (for example: `type=aws:ec2/instance` or `tag:env=prod`).
+// It returns an error if the filter is malformed: missing '=' separator,
+// or if either the key or value is empty (for example: `type=aws:ec2/instance` or `tag:env=prod`).
 func ValidateFilter(filter string) error {
 	if filter == "" {
 		return nil
@@ -1128,6 +1129,9 @@ func ValidateFilter(filter string) error {
 	if len(parts) != filterKeyValueParts {
 		return errors.New(
 			"invalid filter syntax: expected 'key=value' (e.g., 'type=aws:ec2/instance' or 'tag:env=prod')")
+	}
+	if strings.TrimSpace(parts[0]) == "" || strings.TrimSpace(parts[1]) == "" {
+		return errors.New("filter key and value must be non-empty")
 	}
 	return nil
 }

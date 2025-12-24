@@ -240,7 +240,8 @@ func TestFilter_AllOutputFormats(t *testing.T) {
 				var result map[string]interface{}
 				err = json.Unmarshal([]byte(output), &result)
 				assert.NoError(t, err)
-				resources := result["resources"].([]interface{})
+				resources, ok := result["resources"].([]interface{})
+				require.True(t, ok, "expected resources to be an array")
 				assert.NotEmpty(t, resources)
 			}
 		})
