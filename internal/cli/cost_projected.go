@@ -38,7 +38,10 @@ type costProjectedParams struct {
 	utilization float64
 }
 
-// NewCostProjectedCmd creates the "projected" subcommand for calculating estimated costs from a Pulumi preview JSON.
+// NewCostProjectedCmd creates the "projected" subcommand that calculates estimated costs from a Pulumi preview JSON.
+// 
+// The returned command registers these flags: --pulumi-json (required), --spec-dir, --adapter, --output, --filter (can be provided multiple times), and --utilization.
+// When executed the command collects the flag values and calls executeCostProjected with the assembled parameters.
 func NewCostProjectedCmd() *cobra.Command {
 	var params costProjectedParams
 
@@ -81,7 +84,20 @@ const costProjectedExample = `  # Basic usage
   # Use custom spec directory
   pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`
 
-// executeCostProjected orchestrates the "projected" cost workflow for a Pulumi plan.
+// executeCostProjected runs the projected cost workflow for a Pulumi plan.
+// It validates and injects the utilization into the context, loads and maps resources
+// from the provided Pulumi preview JSON, applies any resource filter expressions,
+// opens adapter plugins, computes projected costs, renders results to the command output,
+// and records audit information.
+//
+// Parameters:
+//  - cmd: the Cobra command whose context and output stream are used.
+//  - params: configuration for the operation (plan path, spec directory, adapter, output format,
+//    filter expressions, and utilization).
+//
+// Returns an error if validation fails (e.g., utilization out of range or invalid filter),
+// resource loading/mapping or plugin initialization fails, cost calculation fails, or
+// result rendering fails.
 func executeCostProjected(cmd *cobra.Command, params costProjectedParams) error {
 	ctx := cmd.Context()
 
