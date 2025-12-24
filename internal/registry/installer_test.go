@@ -314,3 +314,40 @@ func TestParseOwnerRepoOnlySlash(t *testing.T) {
 		t.Error("expected error for empty owner/repo segments")
 	}
 }
+
+func TestInstallerLock(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "test-plugin"
+
+	// Acquire lock first time
+	unlock1, err := installer.acquireLock(name)
+	if err != nil {
+		t.Fatalf("Failed to acquire lock: %v", err)
+	}
+	if unlock1 == nil {
+		t.Fatal("Unlock function is nil")
+	}
+
+	// Try to acquire lock second time - should fail
+	unlock2, err := installer.acquireLock(name)
+	if err == nil {
+		t.Error("Expected error when acquiring already held lock")
+		if unlock2 != nil {
+			unlock2()
+		}
+	}
+
+	// Release first lock
+	unlock1()
+
+	// Try to acquire lock again - should succeed now
+	unlock3, err := installer.acquireLock(name)
+	if err != nil {
+		t.Fatalf("Failed to acquire lock after release: %v", err)
+	}
+	if unlock3 == nil {
+		t.Fatal("Unlock function is nil")
+	}
+	unlock3()
+}

@@ -134,6 +134,9 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	// Apply resource filters
 	for _, f := range params.filter {
 		if f != "" {
+			if filterErr := engine.ValidateFilter(f); filterErr != nil {
+				return filterErr
+			}
 			resources = engine.FilterResources(resources, f)
 			log.Debug().Ctx(ctx).Str("filter", f).Int("filtered_count", len(resources)).
 				Msg("applied resource filter")

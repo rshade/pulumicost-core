@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Runner executes individual conformance test cases.
@@ -91,8 +93,15 @@ func (r *Runner) RunTest(ctx context.Context, tc TestCase, client interface{}) *
 			result.Error = "test returned nil result"
 		}
 	case <-testCtx.Done():
-		result.Status = StatusError
-		result.Error = fmt.Sprintf("timeout after %v", timeout)
+		if ctx.Err() != nil {
+			// Parent context was cancelled
+			result.Status = StatusSkip
+			result.Error = "context cancelled"
+		} else {
+			// Test timeout
+			result.Status = StatusError
+			result.Error = fmt.Sprintf("timeout after %v", timeout)
+		}
 	}
 
 	// Record duration
@@ -106,7 +115,7 @@ func (r *Runner) RunTest(ctx context.Context, tc TestCase, client interface{}) *
 }
 
 // logResult logs the test result based on the configured verbosity level.
-func (r *Runner) logResult(tc TestCase, result *TestResult) {
+func (r *Runner) logResult(_ TestCase, result *TestResult) {
 	event := r.logger.Info()
 
 	switch result.Status {
@@ -121,8 +130,8 @@ func (r *Runner) logResult(tc TestCase, result *TestResult) {
 	}
 
 	event.
-		Str("test", tc.Name).
-		Str("category", string(tc.Category)).
+		Str("test", result.TestName).
+		Str("category", string(result.Category)).
 		Str("status", string(result.Status)).
 		Dur("duration", result.Duration)
 
@@ -138,8 +147,32 @@ func (r *Runner) logResult(tc TestCase, result *TestResult) {
 }
 
 // RunTests executes multiple test cases and returns all results.
-func (r *Runner) RunTests(ctx context.Context, tests []TestCase, client interface{}) []TestResult {
+// It supports plugin restarts if a test fails due to a crash.
+//
+//nolint:gocognit // complex restart logic is intentional for reliability
+func (r *Runner) RunTests(ctx context.Context, tests []TestCase, connectFn ConnectFunc) []TestResult {
 	results := make([]TestResult, 0, len(tests))
+
+	// Initial connection
+	client, closeFn, err := connectFn(ctx)
+	if err != nil {
+		// If we can't even connect once, fail all tests with error
+		for _, tc := range tests {
+			results = append(results, TestResult{
+				TestName:  tc.Name,
+				Category:  tc.Category,
+				Status:    StatusError,
+				Error:     fmt.Sprintf("failed to connect to plugin: %v", err),
+				Timestamp: time.Now(),
+			})
+		}
+		return results
+	}
+	defer func() {
+		if closeFn != nil {
+			_ = closeFn()
+		}
+	}()
 
 	for _, tc := range tests {
 		// Check if context is cancelled
@@ -161,7 +194,60 @@ func (r *Runner) RunTests(ctx context.Context, tests []TestCase, client interfac
 
 		result := r.RunTest(ctx, tc, client)
 		results = append(results, *result)
+
+		// Check if the result indicates a plugin crash/lost connection
+		if r.isCrash(result) {
+			r.logger.Warn().Str("test", tc.Name).Msg("plugin appears to have crashed, attempting restart")
+
+			// Close old connection
+			if closeFn != nil {
+				_ = closeFn()
+			}
+
+			// Attempt to restart
+			client, closeFn, err = connectFn(ctx)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to restart plugin, skipping remaining tests")
+				// Mark remaining tests as error
+				for i := len(results); i < len(tests); i++ {
+					results = append(results, TestResult{
+						TestName:  tests[i].Name,
+						Category:  tests[i].Category,
+						Status:    StatusError,
+						Error:     fmt.Sprintf("plugin crashed and failed to restart: %v", err),
+						Timestamp: time.Now(),
+					})
+				}
+				return results
+			}
+		}
 	}
 
 	return results
+}
+
+// isCrash determines if a test result indicates a plugin crash.
+func (r *Runner) isCrash(result *TestResult) bool {
+	if result.Status != StatusError && result.Status != StatusFail {
+		return false
+	}
+
+	// We look for typical gRPC error codes that indicate connection loss
+	// or internal errors that often accompany a crash.
+	st, ok := status.FromError(fmt.Errorf("%s", result.Error))
+	if !ok {
+		// Not a gRPC error, check string content for common failure messages
+		// This is a bit heuristic but better than nothing
+		isUnavailable := result.Error == "rpc error: code = Unavailable desc = transport is closing"
+		isInternal := result.Error == "rpc error: code = Internal desc = transport is closing"
+		return result.Status == StatusError && (isUnavailable || isInternal)
+	}
+
+	//nolint:exhaustive // only interested in crash-related error codes
+	switch st.Code() {
+	case codes.Unavailable, codes.Internal, codes.Aborted:
+		return true
+	default:
+		return false
+	}
 }

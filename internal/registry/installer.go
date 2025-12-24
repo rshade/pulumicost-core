@@ -93,6 +93,33 @@ func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 	}
 }
 
+// acquireLock attempts to acquire a file-based lock for the specified plugin name.
+// It returns a function to release the lock, or an error if the lock cannot be acquired.
+func (i *Installer) acquireLock(name string) (func(), error) {
+	// Ensure plugin base directory exists
+	if err := os.MkdirAll(i.pluginDir, 0750); err != nil {
+		return nil, fmt.Errorf("failed to create plugin directory: %w", err)
+	}
+
+	lockPath := filepath.Join(i.pluginDir, name+".lock")
+
+	// Try to create the lock file exclusively
+	file, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		if os.IsExist(err) {
+			return nil, fmt.Errorf(
+				"plugin %q is currently being modified by another process (lock file %s exists)",
+				name, lockPath)
+		}
+		return nil, fmt.Errorf("failed to create lock file: %w", err)
+	}
+	_ = file.Close()
+
+	return func() {
+		_ = os.Remove(lockPath)
+	}, nil
+}
+
 // Install installs a plugin from a specifier (name or URL with optional version).
 func (i *Installer) Install(
 	specifier string,
@@ -103,6 +130,13 @@ func (i *Installer) Install(
 	if err != nil {
 		return nil, err
 	}
+
+	// Acquire lock for this plugin
+	unlock, err := i.acquireLock(spec.Name)
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	if spec.IsURL {
 		return i.installFromURL(spec, opts, progress)
@@ -426,12 +460,19 @@ type UpdateResult struct {
 
 // Update updates an installed plugin to the latest or specified version.
 //
-//nolint:gocognit // Complex but necessary update logic with version comparison
+//nolint:gocognit,funlen // Complex but necessary update logic with version comparison
 func (i *Installer) Update(
 	name string,
 	opts UpdateOptions,
 	progress func(msg string),
 ) (*UpdateResult, error) {
+	// Acquire lock for this plugin
+	unlock, err := i.acquireLock(name)
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
+
 	// Get installed plugin info
 	installed, err := config.GetInstalledPlugin(name)
 	if err != nil {
@@ -583,6 +624,13 @@ type RemoveOptions struct {
 
 // Remove removes an installed plugin.
 func (i *Installer) Remove(name string, opts RemoveOptions, progress func(msg string)) error {
+	// Acquire lock for this plugin
+	unlock, err := i.acquireLock(name)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
 	// Get installed plugin info
 	installed, err := config.GetInstalledPlugin(name)
 	if err != nil {

@@ -1115,6 +1115,20 @@ func FilterResources(resources []ResourceDescriptor, filter string) []ResourceDe
 	return filtered
 }
 
+// ValidateFilter validates the syntax of a filter expression.
+// It returns an error if the filter does not follow the 'key=value' format.
+func ValidateFilter(filter string) error {
+	if filter == "" {
+		return nil
+	}
+	parts := strings.SplitN(filter, "=", filterKeyValueParts)
+	if len(parts) != filterKeyValueParts {
+		return errors.New(
+			"invalid filter syntax: expected 'key=value' (e.g., 'type=aws:ec2/instance' or 'tag:env=prod')")
+	}
+	return nil
+}
+
 func matchesFilter(resource ResourceDescriptor, filter string) bool {
 	// Parse filter format like "type=aws:ec2/instance" or "provider=aws"
 	parts := strings.SplitN(filter, "=", filterKeyValueParts)

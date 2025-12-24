@@ -166,3 +166,83 @@ func TestActualCost_FilterByTagAndType(t *testing.T) {
 	assert.True(t, foundAzure, "Should find Azure VM")
 	assert.True(t, foundRDS, "Should find RDS")
 }
+
+func TestProjectedCost_FilterNoMatch(t *testing.T) {
+	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
+
+	// Filter by something that won't match
+	output, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile,
+		"--filter", "type=nonexistent", "--output", "json",
+	)
+	require.NoError(t, err)
+
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
+
+	resources, ok := result["resources"].([]interface{})
+	require.True(t, ok, "expected resources to be an array")
+	assert.Empty(t, resources, "Expected no resources to match 'type=nonexistent'")
+}
+
+func TestProjectedCost_FilterInvalidSyntax(t *testing.T) {
+	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
+
+	// Invalid filter syntax (missing '=')
+	_, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile,
+		"--filter", "invalid-syntax",
+	)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid filter syntax")
+}
+
+func TestFilter_CaseSensitivity(t *testing.T) {
+	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
+
+	// Test that filters are case-insensitive
+	output, err := h.Execute(
+		"cost", "projected", "--pulumi-json", planFile,
+		"--filter", "TYPE=AWS:EC2/INSTANCE:INSTANCE", "--output", "json",
+	)
+	require.NoError(t, err)
+
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(output), &result)
+	require.NoError(t, err)
+
+	resources, ok := result["resources"].([]interface{})
+	require.True(t, ok)
+	assert.NotEmpty(t, resources, "Filter should be case-insensitive")
+}
+
+func TestFilter_AllOutputFormats(t *testing.T) {
+	h := helpers.NewCLIHelper(t)
+	planFile := filepath.Join("..", "..", "..", "test", "fixtures", "plans", "multi-resource-plan.json")
+	filter := "type=aws:ec2/instance:Instance"
+
+	formats := []string{"table", "json", "ndjson"}
+
+	for _, format := range formats {
+		t.Run(format, func(t *testing.T) {
+			output, err := h.Execute(
+				"cost", "projected", "--pulumi-json", planFile,
+				"--filter", filter, "--output", format,
+			)
+			require.NoError(t, err)
+			assert.NotEmpty(t, output)
+
+			if format == "json" {
+				var result map[string]interface{}
+				err = json.Unmarshal([]byte(output), &result)
+				assert.NoError(t, err)
+				resources := result["resources"].([]interface{})
+				assert.NotEmpty(t, resources)
+			}
+		})
+	}
+}

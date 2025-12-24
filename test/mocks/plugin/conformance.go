@@ -89,8 +89,14 @@ func (p *ConformancePlugin) GetProjectedCost(
 		return nil, err
 	}
 
-	if err := p.simulateLatency(ctx); err != nil {
-		return nil, err
+	// Check for magic resource types that trigger specific error codes for conformance testing
+	switch resourceType {
+	case "forbidden:resource":
+		return nil, status.Error(codes.PermissionDenied, "permission denied for this resource")
+	case "error:internal":
+		return nil, status.Error(codes.Internal, "simulated internal error")
+	case "error:unavailable":
+		return nil, status.Error(codes.Unavailable, "service unavailable")
 	}
 
 	// Check if resource type is supported

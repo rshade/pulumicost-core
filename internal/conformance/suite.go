@@ -112,6 +112,30 @@ func (s *Suite) registerDefaultTests() {
 			RequiredMethods: []string{"GetProjectedCost"},
 			TestFunc:        testGetProjectedCostInvalid,
 		},
+		{
+			Name:            "GetProjectedCost_PermissionDenied",
+			Category:        CategoryError,
+			Description:     "Verifies GetProjectedCost returns PermissionDenied for forbidden resource",
+			Timeout:         DefaultTimeout,
+			RequiredMethods: []string{"GetProjectedCost"},
+			TestFunc:        testGetProjectedCostPermissionDenied,
+		},
+		{
+			Name:            "GetProjectedCost_InternalError",
+			Category:        CategoryError,
+			Description:     "Verifies GetProjectedCost returns Internal for internal errors",
+			Timeout:         DefaultTimeout,
+			RequiredMethods: []string{"GetProjectedCost"},
+			TestFunc:        testGetProjectedCostInternal,
+		},
+		{
+			Name:            "GetProjectedCost_Unavailable",
+			Category:        CategoryError,
+			Description:     "Verifies GetProjectedCost returns Unavailable when service is down",
+			Timeout:         DefaultTimeout,
+			RequiredMethods: []string{"GetProjectedCost"},
+			TestFunc:        testGetProjectedCostUnavailable,
+		},
 		// Context tests
 		{
 			Name:            "Context_Cancellation",
@@ -191,19 +215,26 @@ func (s *Suite) Run(ctx context.Context) (*SuiteReport, error) {
 		Int("test_count", len(testCases)).
 		Msg("starting conformance suite")
 
-	// Start plugin process and establish connection
+	// Create a factory function for connecting to the plugin
 	launcher := pluginhost.NewProcessLauncher()
-	conn, closeFn, err := launcher.Start(suiteCtx, s.config.PluginPath)
+	connectFn := func(ctx context.Context) (interface{}, func() error, error) {
+		conn, closeFn, err := launcher.Start(ctx, s.config.PluginPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		return pbc.NewCostSourceServiceClient(conn), closeFn, nil
+	}
+
+	// Initial connection to fetch plugin info for report
+	clientRaw, closeFn, err := connectFn(suiteCtx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start plugin: %w", err)
 	}
-	defer func() {
-		if closeErr := closeFn(); closeErr != nil {
-			s.logger.Warn().Err(closeErr).Msg("error closing plugin process")
-		}
-	}()
-
-	client := pbc.NewCostSourceServiceClient(conn)
+	client, ok := clientRaw.(pbc.CostSourceServiceClient)
+	if !ok {
+		_ = closeFn()
+		return nil, errors.New("invalid plugin client type")
+	}
 
 	// Fetch plugin info for report
 	nameResp, err := client.Name(suiteCtx, &pbc.NameRequest{})
@@ -211,14 +242,14 @@ func (s *Suite) Run(ctx context.Context) (*SuiteReport, error) {
 	pluginVersion := "unknown"
 	if err == nil {
 		pluginName = nameResp.GetName()
-		// Version might be in metadata or we might add a Version() RPC
 	}
+	_ = closeFn() // Close initial connection
 
 	// Create runner
 	runner := NewRunner(s.logger, s.config.Verbosity)
 
-	// Run tests
-	results := runner.RunTests(suiteCtx, testCases, client)
+	// Run tests with restart support
+	results := runner.RunTests(suiteCtx, testCases, connectFn)
 
 	endTime := time.Now()
 

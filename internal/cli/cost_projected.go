@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/config"
@@ -33,7 +34,7 @@ type costProjectedParams struct {
 	specDir     string
 	adapter     string
 	output      string
-	filter      string
+	filter      []string
 	utilization float64
 }
 
@@ -56,7 +57,8 @@ func NewCostProjectedCmd() *cobra.Command {
 	cmd.Flags().StringVar(&params.adapter, "adapter", "", "Use only the specified adapter plugin")
 	cmd.Flags().StringVar(
 		&params.output, "output", config.GetDefaultOutputFormat(), "Output format: table, json, or ndjson")
-	cmd.Flags().StringVar(&params.filter, "filter", "", "Resource filter expressions (e.g., 'type=aws:ec2/instance')")
+	cmd.Flags().StringArrayVar(&params.filter, "filter", []string{},
+		"Resource filter expressions (e.g., 'type=aws:ec2/instance')")
 	cmd.Flags().Float64Var(
 		&params.utilization, "utilization", 1.0, "Utilization rate for sustainability calculations (0.0 to 1.0)")
 	_ = cmd.MarkFlagRequired("pulumi-json")
@@ -93,8 +95,8 @@ func executeCostProjected(cmd *cobra.Command, params costProjectedParams) error 
 		Msg("starting projected cost calculation")
 
 	auditParams := map[string]string{"pulumi_json": params.planPath, "output": params.output}
-	if params.filter != "" {
-		auditParams["filter"] = params.filter
+	if len(params.filter) > 0 {
+		auditParams["filter"] = strings.Join(params.filter, ",")
 	}
 	audit := newAuditContext(ctx, "cost projected", auditParams)
 
@@ -103,10 +105,15 @@ func executeCostProjected(cmd *cobra.Command, params costProjectedParams) error 
 		return err
 	}
 
-	if params.filter != "" {
-		resources = engine.FilterResources(resources, params.filter)
-		log.Debug().Ctx(ctx).Str("filter", params.filter).Int("filtered_count", len(resources)).
-			Msg("applied resource filter")
+	for _, f := range params.filter {
+		if f != "" {
+			if filterErr := engine.ValidateFilter(f); filterErr != nil {
+				return filterErr
+			}
+			resources = engine.FilterResources(resources, f)
+			log.Debug().Ctx(ctx).Str("filter", f).Int("filtered_count", len(resources)).
+				Msg("applied resource filter")
+		}
 	}
 
 	specDir := params.specDir

@@ -98,8 +98,8 @@ func TestCostProjectedCmdFlags(t *testing.T) {
 
 	filterFlag := cmd.Flags().Lookup("filter")
 	assert.NotNil(t, filterFlag)
-	assert.Equal(t, "string", filterFlag.Value.Type())
-	assert.Empty(t, filterFlag.DefValue)
+	assert.Equal(t, "stringArray", filterFlag.Value.Type())
+	assert.Equal(t, "[]", filterFlag.DefValue)
 }
 
 func TestCostProjectedCmdHelp(t *testing.T) {

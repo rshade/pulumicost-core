@@ -103,16 +103,16 @@ description: 'Task list for integration tests for --filter flag'
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T022 [P] [US3] Write TestProjectedCost_FilterNoMatch test for empty result handling
-- [ ] T023 [P] [US3] Write TestProjectedCost_FilterInvalidSyntax test for error message validation
-- [ ] T024 [P] [US3] Write TestFilter_CaseSensitivity test for case-sensitive behavior
+- [x] T022 [P] [US3] Write TestProjectedCost_FilterNoMatch test for empty result handling
+- [x] T023 [P] [US3] Write TestProjectedCost_FilterInvalidSyntax test for error message validation
+- [x] T024 [P] [US3] Write TestFilter_CaseSensitivity test for case-sensitive behavior
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Implement no-match scenario validation in test/integration/cli/filter_test.go
-- [ ] T026 [US3] Add invalid syntax error message checking
-- [ ] T027 [US3] Implement case sensitivity test assertions
-- [ ] T028 [US3] Add special character handling tests for filter strings
+- [x] T025 [US3] Implement no-match scenario validation in test/integration/cli/filter_test.go
+- [x] T026 [US3] Add invalid syntax error message checking
+- [x] T027 [US3] Implement case sensitivity test assertions
+- [x] T028 [US3] Add special character handling tests for filter strings
 
 **Checkpoint**: Edge case handling should now work across all filter operations
 
@@ -126,16 +126,16 @@ description: 'Task list for integration tests for --filter flag'
 
 ### Tests for User Story 4 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T029 [P] [US4] Write TestFilter_AllOutputFormats test for table output filtering
-- [ ] T030 [P] [US4] Write TestFilter_AllOutputFormats test for JSON output filtering
-- [ ] T031 [P] [US4] Write TestFilter_AllOutputFormats test for NDJSON output filtering
+- [x] T029 [P] [US4] Write TestFilter_AllOutputFormats test for table output filtering
+- [x] T030 [P] [US4] Write TestFilter_AllOutputFormats test for JSON output filtering
+- [x] T031 [x] T031 [P] [US4] Write TestFilter_AllOutputFormats test for NDJSON output filtering
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Implement output format validation logic in test/integration/cli/filter_test.go
-- [ ] T033 [US4] Add JSON parsing and structure validation for filtered results
-- [ ] T034 [US4] Add NDJSON line-by-line validation for filtered results
-- [ ] T035 [US4] Implement table output parsing and filtering verification
+- [x] T032 [US4] Implement output format validation logic in test/integration/cli/filter_test.go
+- [x] T033 [US4] Add JSON parsing and structure validation for filtered results
+- [x] T034 [US4] Add NDJSON line-by-line validation for filtered results
+- [x] T035 [US4] Implement table output parsing and filtering verification
 
 **Checkpoint**: All user stories should now work with consistent output format handling
 
@@ -145,12 +145,12 @@ description: 'Task list for integration tests for --filter flag'
 
 **Purpose**: Final improvements and validation across all implemented tests
 
-- [ ] T036 [P] Run complete test suite and verify no regressions with `make test`
-- [ ] T037 [P] Run linting and verify code quality with `make lint`
-- [ ] T038 Validate test coverage meets 80% requirement for filter functionality
-- [ ] T039 [P] Update documentation in README.md if needed for new test capabilities
-- [ ] T040 Execute quickstart.md validation steps
-- [ ] T041 [P] Add any missing edge case tests identified during implementation
+- [x] T036 [P] Run complete test suite and verify no regressions with `make test`
+- [x] T037 [P] Run linting and verify code quality with `make lint`
+- [x] T038 Validate test coverage meets 80% requirement for filter functionality
+- [x] T039 [P] Update documentation in README.md if needed for new test capabilities
+- [x] T040 Execute quickstart.md validation steps
+- [x] T041 [P] Add any missing edge case tests identified during implementation
 
 ---
 
