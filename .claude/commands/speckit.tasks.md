@@ -68,6 +68,8 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 **CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
 
+**Implementation Completeness**: All generated tasks MUST target full implementation. NEVER generate tasks that imply stubbing or partial work. Every task must be specific enough to be fully coded.
+
 **Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
 
 ### Checklist Format (REQUIRED)

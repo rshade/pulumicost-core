@@ -64,10 +64,10 @@ description: 'Task list for integration tests for --filter flag'
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement test logic for type filtering validation in test/integration/cli/filter_test.go
-- [ ] T013 [US1] Implement test logic for provider filtering validation in test/integration/cli/filter_test.go
-- [ ] T014 [US1] Add test assertions for output format validation (JSON structure)
-- [ ] T015 [US1] Add resource count validation for filtered results
+- [x] T012 [US1] Implement test logic for type filtering validation in test/integration/cli/filter_test.go
+- [x] T013 [US1] Implement test logic for provider filtering validation in test/integration/cli/filter_test.go
+- [x] T014 [US1] Add test assertions for output format validation (JSON structure)
+- [x] T015 [US1] Add resource count validation for filtered results
 
 **Checkpoint**: At this point, User Story 1 tests should pass and validate projected cost filtering independently
 

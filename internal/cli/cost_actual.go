@@ -28,6 +28,7 @@ type costActualParams struct {
 	fromStr  string
 	toStr    string
 	groupBy  string
+	filter   []string
 }
 
 // defaultToNow returns s if non-empty, otherwise returns the current time in RFC3339 format.
@@ -48,8 +49,9 @@ func defaultToNow(s string) string {
 //   - --adapter: restrict to a specific adapter plugin
 //   - --output: output format (table, json, ndjson; defaults from configuration)
 //   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
+//   - --filter: resource filter expressions (e.g., 'type=aws:ec2/instance', 'tag:env=prod')
 func NewCostActualCmd() *cobra.Command {
-	var planPath, adapter, output, fromStr, toStr, groupBy string
+	var params costActualParams
 
 	cmd := &cobra.Command{
 		Use:   "actual",
@@ -76,29 +78,23 @@ func NewCostActualCmd() *cobra.Command {
   # Use RFC3339 timestamps
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			params := costActualParams{
-				planPath: planPath,
-				adapter:  adapter,
-				output:   output,
-				fromStr:  fromStr,
-				toStr:    toStr,
-				groupBy:  groupBy,
-			}
 			return executeCostActual(cmd, params)
 		},
 	}
 
 	cmd.Flags().
-		StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
-	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
-	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
-	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
+		StringVar(&params.planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
+	cmd.Flags().StringVar(&params.fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
+	cmd.Flags().StringVar(&params.toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
+	cmd.Flags().StringVar(&params.adapter, "adapter", "", "Use only the specified adapter plugin")
 
 	// Use configuration default if no output format specified
 	defaultFormat := config.GetDefaultOutputFormat()
-	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
+	cmd.Flags().StringVar(&params.output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().
-		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value")
+		StringVar(&params.groupBy, "group-by", "", "Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value")
+	cmd.Flags().StringArrayVar(&params.filter, "filter", []string{},
+		"Resource filter expressions (e.g., 'type=aws:ec2/instance', 'tag:env=prod')")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 	_ = cmd.MarkFlagRequired("from")
@@ -125,11 +121,23 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	if params.groupBy != "" {
 		auditParams["group_by"] = params.groupBy
 	}
+	if len(params.filter) > 0 {
+		auditParams["filter"] = strings.Join(params.filter, ",")
+	}
 	audit := newAuditContext(ctx, "cost actual", auditParams)
 
 	resources, err := loadAndMapResources(ctx, params.planPath, audit)
 	if err != nil {
 		return err
+	}
+
+	// Apply resource filters
+	for _, f := range params.filter {
+		if f != "" {
+			resources = engine.FilterResources(resources, f)
+			log.Debug().Ctx(ctx).Str("filter", f).Int("filtered_count", len(resources)).
+				Msg("applied resource filter")
+		}
 	}
 
 	from, to, err := ParseTimeRange(params.fromStr, defaultToNow(params.toStr))

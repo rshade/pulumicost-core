@@ -121,16 +121,16 @@ make build
 
 ## Acceptance Criteria Checklist
 
-- [ ] ErrorDetail and CostResultWithErrors types created
-- [ ] GetProjectedCost tracks errors
-- [ ] GetActualCost tracks errors
-- [ ] Placeholder results for failed resources
-- [ ] ErrorSummary() truncates after 5 errors
-- [ ] Engine logs errors with zerolog
-- [ ] CLI displays inline errors + summary
-- [ ] Tests achieve 80%+ coverage
-- [ ] All tests pass: `make test`
-- [ ] Lint passes: `make lint`
+- [x] ErrorDetail and CostResultWithErrors types created
+- [x] GetProjectedCost tracks errors
+- [x] GetActualCost tracks errors
+- [x] Placeholder results for failed resources
+- [x] ErrorSummary() truncates after 5 errors
+- [x] Engine logs errors with zerolog
+- [x] CLI displays inline errors + summary
+- [x] Tests achieve 80%+ coverage
+- [x] All tests pass: `make test`
+- [x] Lint passes: `make lint`
 
 ---
 

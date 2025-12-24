@@ -1137,16 +1137,50 @@ func matchesFilter(resource ResourceDescriptor, filter string) bool {
 	case "id":
 		return strings.Contains(strings.ToLower(resource.ID), value)
 	default:
-		// Check properties (case-insensitive key matching)
-		if resource.Properties != nil {
-			for propKey, propValue := range resource.Properties {
-				if strings.ToLower(propKey) == key {
-					return strings.Contains(strings.ToLower(fmt.Sprintf("%v", propValue)), value)
+		return matchesProperties(resource, key, value)
+	}
+}
+
+// matchesProperties checks if the resource properties (including tags/labels maps) match the filter.
+func matchesProperties(resource ResourceDescriptor, key, value string) bool {
+	if resource.Properties == nil {
+		return false
+	}
+
+	propKey := key
+	if strings.HasPrefix(key, "tag:") {
+		propKey = strings.TrimPrefix(key, "tag:")
+	}
+
+	for k, v := range resource.Properties {
+		if strings.ToLower(k) == propKey {
+			if strings.Contains(strings.ToLower(fmt.Sprintf("%v", v)), value) {
+				return true
+			}
+		}
+		// Also check if this property is a map and contains the key (for tags/labels)
+		kl := strings.ToLower(k)
+		if kl == "tags" || kl == "labels" {
+			if m, ok := v.(map[string]interface{}); ok {
+				if matchInMap(m, propKey, value) {
+					return true
 				}
 			}
 		}
-		return false
 	}
+	return false
+}
+
+// matchInMap checks if a map contains a key-value pair matching the filter.
+func matchInMap(m map[string]interface{}, propKey, value string) bool {
+	for mk, mv := range m {
+		if strings.ToLower(mk) == propKey {
+			if strings.Contains(strings.ToLower(fmt.Sprintf("%v", mv)), value) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // MatchesTags checks if resource properties match the specified tag filters.

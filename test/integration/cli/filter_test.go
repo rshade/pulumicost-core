@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/rshade/pulumicost-core/test/integration/helpers"
@@ -96,27 +97,26 @@ func TestActualCost_FilterByTag(t *testing.T) {
 	// Filter by env=prod tag
 	output, err := h.Execute(
 		"cost", "actual", "--pulumi-json", planFile,
+		"--from", "2025-01-01",
 		"--filter", "tag:env=prod", "--output", "json",
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	var resources []map[string]interface{}
+	err = json.Unmarshal([]byte(output), &resources)
 	require.NoError(t, err)
 
 	// Expect results filtered to only those with the tag
-	resources, ok := result["resources"].([]interface{})
-	require.True(t, ok, "expected resources to be an array")
 	assert.NotEmpty(t, resources)
 
-	for _, r := range resources {
-		res, ok := r.(map[string]interface{})
-		require.True(t, ok, "expected resource to be an object")
-
+	for _, res := range resources {
 		id, ok := res["resourceId"].(string)
 		require.True(t, ok, "expected resourceId to be a string")
 		// Only these resources have env=prod in the fixture
-		assert.True(t, id == "i-1234567890abcdef0" || id == "vm-azure-1" || id == "db-1",
+		assert.True(t,
+			strings.HasSuffix(id, "i-1234567890abcdef0") ||
+				strings.HasSuffix(id, "vm-azure-1") ||
+				strings.HasSuffix(id, "db-1"),
 			"Found unexpected resource ID in filtered output: %s", id)
 	}
 }
@@ -127,17 +127,16 @@ func TestActualCost_FilterByTagAndType(t *testing.T) {
 
 	// Test filter combined with group-by
 	output, err := h.Execute(
-		"cost", "actual", "--pulumi-json", planFile, "--filter",
-		"tag:env=prod", "--group-by", "type", "--output", "json",
+		"cost", "actual", "--pulumi-json", planFile,
+		"--from", "2025-01-01",
+		"--filter", "tag:env=prod", "--group-by", "type", "--output", "json",
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	var resources []map[string]interface{}
+	err = json.Unmarshal([]byte(output), &resources)
 	require.NoError(t, err)
 
-	resources, ok := result["resources"].([]interface{})
-	require.True(t, ok, "expected resources to be an array")
 	assert.NotEmpty(t, resources)
 
 	// With group-by type, we should see aggregated results for types that have env=prod resources
@@ -145,9 +144,7 @@ func TestActualCost_FilterByTagAndType(t *testing.T) {
 	foundAzure := false
 	foundRDS := false
 
-	for _, r := range resources {
-		res, ok := r.(map[string]interface{})
-		require.True(t, ok, "expected resource to be an object")
+	for _, res := range resources {
 		rType, ok := res["resourceType"].(string)
 		require.True(t, ok, "expected resourceType to be a string")
 
