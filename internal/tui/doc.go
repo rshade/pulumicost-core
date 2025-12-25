@@ -23,6 +23,14 @@
 //	progress := tui.DefaultProgressBar().Render(75.0)
 //	cost := tui.FormatMoneyShort(1234.56)
 //
+//	// Create a spinner for loading states
+//	spinner := tui.DefaultSpinner()
+//
+//	// Create a table with consistent styling
+//	columns := []table.Column{{Title: "Name", Width: 20}, {Title: "Cost", Width: 10}}
+//	rows := []table.Row{{"EC2 Instance", "$25.00"}, {"S3 Bucket", "$1.50"}}
+//	tbl := tui.NewTable(columns, rows, 5)
+//
 // # Output Modes
 //
 // The package supports three output modes based on terminal capabilities:
@@ -48,6 +56,8 @@
 // Reusable UI components include:
 //
 //   - ProgressBar: Visual progress indicators with color coding
+//   - Spinner: Loading spinner with standard styling (via DefaultSpinner)
+//   - Table: Data tables with standard headers and selection styles (via NewTable/DefaultTableStyles)
 //   - RenderStatus(): Status messages with icons and colors
 //   - RenderDelta(): Cost change indicators with directional arrows
 //   - RenderPriority(): Priority level indicators
@@ -77,5 +87,6 @@
 //
 // This package depends on:
 //   - github.com/charmbracelet/lipgloss for styling
+//   - github.com/charmbracelet/bubbles for UI components
 //   - golang.org/x/term for terminal detection
 package tui
