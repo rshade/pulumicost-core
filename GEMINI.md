@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 - GitHub Actions, `gh` CLI, OpenCode CLI/API (019-nightly-failure-analysis)
 - Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking) (021-plugin-integration-tests)
 - Filesystem (mocked via `t.TempDir()`) (021-plugin-integration-tests)
+- Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/pflag` (023-add-cli-filter-flag)
+- Pure Go (no external dependencies for filter logic) (023-add-cli-filter-flag)
 
 - Local Pulumi state (ephemeral), no persistent DB. (008-e2e-cost-testing)
 - N/A (Stateless operation) (009-analyzer-plugin)
@@ -132,10 +134,10 @@ Configuration validation with >85% coverage:
 - **Property Extraction**: Core (`adapter.go`) relies on populated `Inputs` to extract SKU and Region. If `Inputs` are empty (due to ingest issues), pricing lookup fails.
 
 ## Recent Changes
+- 023-add-cli-filter-flag: Added Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/pflag`
 - 021-plugin-integration-tests: Added Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking)
 
 - 019-nightly-failure-analysis: Added GitHub Actions, `gh` CLI, OpenCode CLI/API
-- 010-sync-docs-codebase: Added Markdown, Go 1.25.5 (for code verification)
   plus Jekyll (for docs site), GitHub Pages
   plan JSON.
 

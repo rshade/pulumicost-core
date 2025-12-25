@@ -1,5 +1,56 @@
 <!--
-Sync Impact Report - Constitution v1.1.0 (Quality Gate Enhancements)
+Sync Impact Report - Constitution v1.3.0 (Implementation Completeness)
+====================================================================
+
+Version Change: 1.2.0 → 1.3.0
+Change Type: New principle added (MINOR)
+
+Changes Made:
+- Promoted "Implementation Completeness" to Core Principle VI
+- Mandates full implementation of code, prohibiting stubs and placeholders
+- Forbids TODO comments in committed code
+- Requires task list items to be fully implemented before completion
+- Enforces that tests MUST exercise real behavior
+
+Rationale:
+- Prevents technical debt from stubbed functions and deferred logic
+- Ensures AI agents and developers deliver production-ready code
+- Maintains high quality standards across the ecosystem
+
+Templates Requiring Updates:
+- ✅ .specify/templates/plan-template.md (Added Principle VI to Constitution Check)
+- ✅ .specify/templates/tasks-template.md (Added note on Principle VI requirements)
+
+Follow-up TODOs:
+- None
+
+Date: 2025-12-23
+
+---
+
+Previous Version - Constitution v1.2.0 (Implementation Completeness & Protocol Updates)
+======================================================================================
+
+Version Change: 1.1.0 → 1.2.0
+Change Type: Expanded guidance (MINOR)
+
+Changes Made:
+- Added "Implementation Completeness" section to Governance
+- Forbids stubs, placeholders, and TODO comments in committed code
+- Mandates full implementation before marking tasks complete
+- Added "Dependency Version Policy" for Pulumi SDK
+- Formalized import paths for protobuf types
+
+Rationale:
+- Ensures code quality and prevents technical debt
+- Resolves compatibility issues with Pulumi SDK v3.210.0+
+- Provides clear guidance for Analyzer plugin development
+
+Date: 2025-12-06
+
+---
+
+Previous Version - Constitution v1.1.0 (Quality Gate Enhancements)
 ====================================================================
 
 Version Change: 1.0.0 → 1.1.0
@@ -18,43 +69,7 @@ Rationale:
 - Enforces quality gate compliance at development time
 - Prevents wasted CI cycles from preventable lint errors
 
-Templates Requiring Updates:
-- None (quality gate additions don't affect templates)
-
-Follow-up TODOs:
-- None
-
 Date: 2025-11-24
-
----
-
-Previous Version - Constitution v1.0.0 (Initial Ratification)
-==============================================================
-
-Version Change: [TEMPLATE] → 1.0.0
-Change Type: Initial ratification (MAJOR)
-
-Principles Established:
-- I. Plugin-First Architecture
-- II. Test-Driven Development (NON-NEGOTIABLE)
-- III. Cross-Platform Compatibility
-- IV. Documentation as Code
-- V. Protocol Stability
-
-Sections Added:
-- Quality Gates (CI/CD requirements)
-- Multi-Repo Governance (cross-repo coordination)
-- Governance (amendment process)
-
-Templates Requiring Updates:
-- ✅ plan-template.md (Constitution Check section aligned)
-- ✅ spec-template.md (Requirements align with quality standards)
-- ✅ tasks-template.md (Test requirements match TDD principle)
-
-Follow-up TODOs:
-- None (all placeholders filled)
-
-Date: 2025-11-06
 -->
 
 # PulumiCost Core Constitution
@@ -113,6 +128,27 @@ for at least two minor versions.
 
 **Rationale**: Plugins are developed by third parties. Protocol stability
 prevents breaking existing integrations and ensures ecosystem reliability.
+
+### VI. Implementation Completeness
+
+Code changes MUST be complete implementations, not stubs or placeholders.
+"Stubbing out" functionality for future implementation is strictly prohibited
+in the main codebase.
+
+1.  **No TODOs**: TODO comments are FORBIDDEN in committed code. Implement
+    the feature fully or track it via a GitHub issue.
+2.  **No Stubs**: Stub implementations that bypass actual functionality or
+    return hardcoded/simulated results where real logic is required are
+    FORBIDDEN.
+3.  **Task Finality**: All task list items in `tasks.md` MUST be fully
+    implemented, tested, and verified before being marked as complete `[x]`.
+4.  **Real Tests**: Tests MUST exercise real behavior and logic. Mocking is
+    permitted only for external systems (e.g., cloud APIs, gRPC services)
+    as defined in the testing framework.
+
+**Rationale**: Maintains a high standard of code readiness, prevents
+technical debt accumulation, and ensures that every merged feature is
+genuinely functional.
 
 ## Quality Gates
 
@@ -216,4 +252,4 @@ When using the Pulumi SDK (`github.com/pulumi/pulumi/sdk/v3`):
 - Earlier versions may have different package structures or missing types
 - This ensures compatibility with the current Pulumi Analyzer protocol
 
-**Version**: 1.2.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-12-06
+**Version**: 1.3.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-12-23

@@ -1,6 +1,7 @@
 package conformance
 
 import (
+	"context"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -117,6 +118,10 @@ type TestCase struct {
 // TestFunc is the signature for test execution functions.
 // It receives a TestContext and returns a TestResult.
 type TestFunc func(ctx *TestContext) *TestResult
+
+// ConnectFunc is a factory function for connecting to a plugin.
+// It returns a gRPC client, a function to close the connection/process, and any error.
+type ConnectFunc func(ctx context.Context) (pbc interface{}, closeFn func() error, err error)
 
 // TestContext provides context for test execution.
 type TestContext struct {

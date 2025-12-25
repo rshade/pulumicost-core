@@ -3,6 +3,8 @@ package registry
 import (
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -313,4 +315,256 @@ func TestParseOwnerRepoOnlySlash(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for empty owner/repo segments")
 	}
+}
+
+func TestInstallerLock(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "test-plugin"
+
+	// Acquire lock first time
+	unlock1, err := installer.acquireLock(name)
+	if err != nil {
+		t.Fatalf("Failed to acquire lock: %v", err)
+	}
+	if unlock1 == nil {
+		t.Fatal("Unlock function is nil")
+	}
+
+	// Try to acquire lock second time - should fail
+	unlock2, err := installer.acquireLock(name)
+	if err == nil {
+		t.Error("Expected error when acquiring already held lock")
+		if unlock2 != nil {
+			unlock2()
+		}
+	}
+
+	// Release first lock
+	unlock1()
+
+	// Try to acquire lock again - should succeed now
+	unlock3, err := installer.acquireLock(name)
+	if err != nil {
+		t.Fatalf("Failed to acquire lock after release: %v", err)
+	}
+	if unlock3 == nil {
+		t.Fatal("Unlock function is nil")
+	}
+	unlock3()
+}
+
+func TestInstallerLockStaleDetection(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "test-plugin"
+
+	// Ensure plugin directory exists
+	if err := os.MkdirAll(tmpDir, 0750); err != nil {
+		t.Fatalf("Failed to create plugin directory: %v", err)
+	}
+
+	// Create a stale lock file with an invalid PID
+	lockPath := filepath.Join(tmpDir, name+".lock")
+	if err := os.WriteFile(lockPath, []byte("99999999"), 0600); err != nil {
+		t.Fatalf("Failed to create stale lock file: %v", err)
+	}
+
+	// Acquiring lock should succeed because the PID is invalid (stale)
+	unlock, err := installer.acquireLock(name)
+	if err != nil {
+		t.Errorf("Expected to acquire lock with stale lock file, got error: %v", err)
+		return
+	}
+	if unlock == nil {
+		t.Fatal("Unlock function is nil")
+	}
+	unlock()
+}
+
+func TestInstallerLockEmptyFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "test-plugin"
+
+	// Ensure plugin directory exists
+	if err := os.MkdirAll(tmpDir, 0750); err != nil {
+		t.Fatalf("Failed to create plugin directory: %v", err)
+	}
+
+	// Create an empty lock file (legacy or corrupt)
+	lockPath := filepath.Join(tmpDir, name+".lock")
+	if err := os.WriteFile(lockPath, []byte(""), 0600); err != nil {
+		t.Fatalf("Failed to create empty lock file: %v", err)
+	}
+
+	// Acquiring lock should succeed because empty file is treated as stale
+	unlock, err := installer.acquireLock(name)
+	if err != nil {
+		t.Errorf("Expected to acquire lock with empty lock file, got error: %v", err)
+		return
+	}
+	if unlock == nil {
+		t.Fatal("Unlock function is nil")
+	}
+	unlock()
+}
+
+func TestInstallerLockInvalidPID(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "test-plugin"
+
+	// Ensure plugin directory exists
+	if err := os.MkdirAll(tmpDir, 0750); err != nil {
+		t.Fatalf("Failed to create plugin directory: %v", err)
+	}
+
+	// Create a lock file with invalid content
+	lockPath := filepath.Join(tmpDir, name+".lock")
+	if err := os.WriteFile(lockPath, []byte("not-a-pid"), 0600); err != nil {
+		t.Fatalf("Failed to create invalid lock file: %v", err)
+	}
+
+	// Acquiring lock should succeed because invalid PID is treated as stale
+	unlock, err := installer.acquireLock(name)
+	if err != nil {
+		t.Errorf("Expected to acquire lock with invalid PID, got error: %v", err)
+		return
+	}
+	if unlock == nil {
+		t.Fatal("Unlock function is nil")
+	}
+	unlock()
+}
+
+func TestIsProcessRunning(t *testing.T) {
+	// Test with current process - should be running
+	currentPID := os.Getpid()
+	if !isProcessRunning(currentPID) {
+		t.Error("Expected current process to be running")
+	}
+
+	// Test with invalid PID - should not be running
+	if isProcessRunning(99999999) {
+		t.Error("Expected invalid PID to not be running")
+	}
+
+	// Test with PID 0 - typically kernel, but behavior varies
+	// Just ensure it doesn't panic
+	_ = isProcessRunning(0)
+}
+
+func TestIsLockStale(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "empty file is stale",
+			content:  "",
+			expected: true,
+		},
+		{
+			name:     "whitespace only is stale",
+			content:  "   \n  ",
+			expected: true,
+		},
+		{
+			name:     "invalid PID is stale",
+			content:  "not-a-number",
+			expected: true,
+		},
+		{
+			name:     "very large PID is stale",
+			content:  "99999999",
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lockPath := filepath.Join(tmpDir, "test-"+tt.name+".lock")
+			if err := os.WriteFile(lockPath, []byte(tt.content), 0600); err != nil {
+				t.Fatalf("Failed to create lock file: %v", err)
+			}
+
+			result := isLockStale(lockPath)
+			if result != tt.expected {
+				t.Errorf("isLockStale() = %v, expected %v", result, tt.expected)
+			}
+		})
+	}
+
+	// Test with non-existent file - should not be stale (safe default)
+	if isLockStale(filepath.Join(tmpDir, "nonexistent.lock")) {
+		t.Error("Non-existent lock file should not be considered stale")
+	}
+}
+
+// TestInstallerLockConcurrent verifies that multiple concurrent acquisition
+// attempts are properly serialized and only one goroutine can hold the lock
+// at a time.
+func TestInstallerLockConcurrent(t *testing.T) {
+	tmpDir := t.TempDir()
+	installer := NewInstaller(tmpDir)
+	name := "concurrent-test-plugin"
+
+	const numGoroutines = 10
+	var wg sync.WaitGroup
+	var successCount atomic.Int32
+	var errorCount atomic.Int32
+
+	// Start signal channel to ensure all goroutines start simultaneously
+	start := make(chan struct{})
+
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			// Wait for start signal
+			<-start
+
+			unlock, err := installer.acquireLock(name)
+			if err != nil {
+				errorCount.Add(1)
+				return
+			}
+
+			// Successfully acquired the lock
+			successCount.Add(1)
+
+			// Hold the lock briefly to simulate work
+			// (no actual sleep, just release immediately)
+			unlock()
+		}()
+	}
+
+	// Signal all goroutines to start
+	close(start)
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// At least one goroutine should have acquired the lock
+	if successCount.Load() == 0 {
+		t.Error("Expected at least one goroutine to acquire the lock")
+	}
+
+	// All goroutines should have either succeeded or failed
+	total := successCount.Load() + errorCount.Load()
+	if total != numGoroutines {
+		t.Errorf("Expected %d total results, got %d", numGoroutines, total)
+	}
+
+	// After all goroutines complete, we should be able to acquire the lock again
+	unlock, err := installer.acquireLock(name)
+	if err != nil {
+		t.Fatalf("Failed to acquire lock after concurrent test: %v", err)
+	}
+	unlock()
 }

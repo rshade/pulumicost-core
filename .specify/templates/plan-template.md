@@ -38,6 +38,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [ ] **Cross-Platform Compatibility**: Will this work on Linux, macOS, Windows?
 - [ ] **Documentation as Code**: Are audience-specific docs planned?
 - [ ] **Protocol Stability**: Do protocol changes follow semantic versioning?
+- [ ] **Implementation Completeness**: Is the feature fully implemented without stubs or TODOs?
 - [ ] **Quality Gates**: Are all CI checks (tests, lint, security) passing?
 - [ ] **Multi-Repo Coordination**: Are cross-repo dependencies documented?
 

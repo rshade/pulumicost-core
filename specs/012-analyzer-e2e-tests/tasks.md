@@ -40,8 +40,8 @@ Implementation will follow a prioritized approach:
 
 **Goal**: Initialize the test environment and fixture project.
 
-- [ ] T001 Create fixture directory `test/e2e/projects/analyzer`
-- [ ] T002 Create `test/e2e/projects/analyzer/Pulumi.yaml` with initial
+- [x] T001 Create fixture directory `test/e2e/projects/analyzer`
+- [x] T002 Create `test/e2e/projects/analyzer/Pulumi.yaml` with initial
       configuration (random resource)
 
 ---
@@ -50,11 +50,11 @@ Implementation will follow a prioritized approach:
 
 **Goal**: Create the test structure and binary configuration logic.
 
-- [ ] T003 Create `test/e2e/analyzer_e2e_test.go` with initial package and
+- [x] T003 Create `test/e2e/analyzer_e2e_test.go` with initial package and
       imports
-- [ ] T003a Verify `go.mod` uses Pulumi SDK v3.210.0+ and ensure `TestMain`
+- [x] T003a Verify `go.mod` uses Pulumi SDK v3.210.0+ and ensure `TestMain`
       correctly builds the binary
-- [ ] T004 Implement `ensureAnalyzerConfig` helper in
+- [x] T004 Implement `ensureAnalyzerConfig` helper in
       `test/e2e/analyzer_e2e_test.go` to inject absolute binary path into
       `Pulumi.yaml`
 
@@ -65,9 +65,9 @@ Implementation will follow a prioritized approach:
 **Goal**: Ensure the analyzer plugin starts and communicates with Pulumi CLI.
 **Priority**: P1
 
-- [ ] T005 [US1] Implement `TestAnalyzer_Handshake` in
+- [x] T005 [US1] Implement `TestAnalyzer_Handshake` in
       `test/e2e/analyzer_e2e_test.go` verifying process start
-- [ ] T006 [US1] Verify `pulumi preview` succeeds with the analyzer configured
+- [x] T006 [US1] Verify `pulumi preview` succeeds with the analyzer configured
       (exit code 0) in `test/e2e/analyzer_e2e_test.go`
 
 ---
@@ -77,11 +77,11 @@ Implementation will follow a prioritized approach:
 **Goal**: Ensure per-resource cost estimates appear in the output.
 **Priority**: P1
 
-- [ ] T007 [US2] Update `test/e2e/projects/analyzer/Pulumi.yaml` to include a
+- [x] T007 [US2] Update `test/e2e/projects/analyzer/Pulumi.yaml` to include a
       priced resource (AWS EC2)
-- [ ] T008 [P] [US2] Define `AnalyzerDiagnostic` struct/helpers in
+- [x] T008 [P] [US2] Define `AnalyzerDiagnostic` struct/helpers in
       `test/e2e/analyzer_e2e_test.go` for output validation
-- [ ] T009 [US2] Implement `TestAnalyzer_CostDiagnostics` in
+- [x] T009 [US2] Implement `TestAnalyzer_CostDiagnostics` in
       `test/e2e/analyzer_e2e_test.go` validating "Estimated Monthly Cost" string
 
 ---
@@ -91,7 +91,7 @@ Implementation will follow a prioritized approach:
 **Goal**: Ensure total stack cost is summarized.
 **Priority**: P2
 
-- [ ] T010 [P] [US3] Implement `TestAnalyzer_StackSummary` in
+- [x] T010 [P] [US3] Implement `TestAnalyzer_StackSummary` in
       `test/e2e/analyzer_e2e_test.go` validating "Total Estimated Monthly Cost"
 
 ---
@@ -101,7 +101,7 @@ Implementation will follow a prioritized approach:
 **Goal**: Ensure failures in cost calculation do not break the preview.
 **Priority**: P2
 
-- [ ] T011 [US4] Implement `TestAnalyzer_GracefulDegradation` in
+- [x] T011 [US4] Implement `TestAnalyzer_GracefulDegradation` in
       `test/e2e/analyzer_e2e_test.go` using an invalid region or unsupported
       resource to verify non-blocking error diagnostics
 
@@ -112,8 +112,8 @@ Implementation will follow a prioritized approach:
 **Goal**: Ensure tests run correctly in CI/CD without hard cloud dependencies.
 **Priority**: P3
 
-- [ ] T012 [P] [US5] Add `SkipIfNoPulumi` check to `test/e2e/analyzer_e2e_test.go`
-- [ ] T013 [US5] Verify tests pass in local environment using `make test-e2e`
+- [x] T012 [P] [US5] Add `SkipIfNoPulumi` check to `test/e2e/analyzer_e2e_test.go`
+- [x] T013 [US5] Verify tests pass in local environment using `make test-e2e`
 
 ---
 
@@ -121,9 +121,9 @@ Implementation will follow a prioritized approach:
 
 **Goal**: Final code quality checks and cleanup.
 
-- [ ] T014 Run `go mod tidy` to ensure dependencies are clean
-- [ ] T015 Run `golangci-lint run test/e2e/...` to check for linting issues
-- [ ] T016 Update `test/README.md` with instructions for running the new
+- [x] T014 Run `go mod tidy` to ensure dependencies are clean
+- [x] T015 Run `golangci-lint run test/e2e/...` to check for linting issues
+- [x] T016 Update `test/README.md` with instructions for running the new
       analyzer E2E tests
 
 ---

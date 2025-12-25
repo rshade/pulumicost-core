@@ -117,6 +117,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Setup first**: Initialize project structure, dependencies, configuration
    - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
    - **Core development**: Implement models, services, CLI commands, endpoints
+   - **No Stubs**: NEVER create stub functions or placeholders. All code MUST be fully implemented according to the design.
    - **Integration work**: Database connections, middleware, logging, external services
    - **Polish and validation**: Unit tests, performance optimization, documentation
 

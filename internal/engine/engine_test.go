@@ -130,6 +130,73 @@ func TestFilterResources(t *testing.T) {
 	}
 }
 
+func TestValidateFilter(t *testing.T) {
+	tests := []struct {
+		name      string
+		filter    string
+		wantError bool
+		errorMsg  string
+	}{
+		{
+			name:      "empty filter is valid",
+			filter:    "",
+			wantError: false,
+		},
+		{
+			name:      "valid filter",
+			filter:    "type=aws:ec2/instance",
+			wantError: false,
+		},
+		{
+			name:      "valid tag filter",
+			filter:    "tag:env=prod",
+			wantError: false,
+		},
+		{
+			name:      "missing equals sign",
+			filter:    "type",
+			wantError: true,
+			errorMsg:  "invalid filter syntax",
+		},
+		{
+			name:      "empty value",
+			filter:    "type=",
+			wantError: true,
+			errorMsg:  "filter key and value must be non-empty",
+		},
+		{
+			name:      "empty key",
+			filter:    "=value",
+			wantError: true,
+			errorMsg:  "filter key and value must be non-empty",
+		},
+		{
+			name:      "whitespace only value",
+			filter:    "type=   ",
+			wantError: true,
+			errorMsg:  "filter key and value must be non-empty",
+		},
+		{
+			name:      "whitespace only key",
+			filter:    "   =value",
+			wantError: true,
+			errorMsg:  "filter key and value must be non-empty",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := engine.ValidateFilter(tt.filter)
+			if tt.wantError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestGetProjectedCostEmpty(t *testing.T) {
 	// Test with no clients and no loader
 	eng := engine.New(nil, nil)

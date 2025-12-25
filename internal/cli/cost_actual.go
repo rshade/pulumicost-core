@@ -28,6 +28,7 @@ type costActualParams struct {
 	fromStr  string
 	toStr    string
 	groupBy  string
+	filter   []string
 }
 
 // defaultToNow returns s if non-empty, otherwise returns the current time in RFC3339 format.
@@ -48,8 +49,14 @@ func defaultToNow(s string) string {
 //   - --adapter: restrict to a specific adapter plugin
 //   - --output: output format (table, json, ndjson; defaults from configuration)
 //   - --group-by: grouping or tag filter (resource, type, provider, date, daily, monthly, or tag:key=value)
+//
+// NewCostActualCmd creates the "actual" subcommand for fetching historical costs.
+// The command is configured with flags for Pulumi preview JSON path, time range
+// (--from and --to), adapter selection, output format, grouping (--group-by) and
+// resource filters (--filter). The --pulumi-json and --from flags are required.
+// The returned *cobra.Command is ready to be added to the CLI command tree.
 func NewCostActualCmd() *cobra.Command {
-	var planPath, adapter, output, fromStr, toStr, groupBy string
+	var params costActualParams
 
 	cmd := &cobra.Command{
 		Use:   "actual",
@@ -76,29 +83,23 @@ func NewCostActualCmd() *cobra.Command {
   # Use RFC3339 timestamps
   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			params := costActualParams{
-				planPath: planPath,
-				adapter:  adapter,
-				output:   output,
-				fromStr:  fromStr,
-				toStr:    toStr,
-				groupBy:  groupBy,
-			}
 			return executeCostActual(cmd, params)
 		},
 	}
 
 	cmd.Flags().
-		StringVar(&planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
-	cmd.Flags().StringVar(&fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
-	cmd.Flags().StringVar(&toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
-	cmd.Flags().StringVar(&adapter, "adapter", "", "Use only the specified adapter plugin")
+		StringVar(&params.planPath, "pulumi-json", "", "Path to Pulumi preview JSON output (required)")
+	cmd.Flags().StringVar(&params.fromStr, "from", "", "Start date (YYYY-MM-DD or RFC3339) (required)")
+	cmd.Flags().StringVar(&params.toStr, "to", "", "End date (YYYY-MM-DD or RFC3339) (defaults to now)")
+	cmd.Flags().StringVar(&params.adapter, "adapter", "", "Use only the specified adapter plugin")
 
 	// Use configuration default if no output format specified
 	defaultFormat := config.GetDefaultOutputFormat()
-	cmd.Flags().StringVar(&output, "output", defaultFormat, "Output format: table, json, or ndjson")
+	cmd.Flags().StringVar(&params.output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().
-		StringVar(&groupBy, "group-by", "", "Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value")
+		StringVar(&params.groupBy, "group-by", "", "Group results by: resource, type, provider, date, daily, monthly, or filter by tag:key=value")
+	cmd.Flags().StringArrayVar(&params.filter, "filter", []string{},
+		"Resource filter expressions (e.g., 'type=aws:ec2/instance', 'tag:env=prod')")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 	_ = cmd.MarkFlagRequired("from")
@@ -108,7 +109,12 @@ func NewCostActualCmd() *cobra.Command {
 
 // executeCostActual orchestrates the "actual" cost workflow for a Pulumi plan.
 // It loads and maps resources, parses the time range, opens adapter plugins, fetches actual costs,
-// renders the results, and emits audit entries.
+// executeCostActual orchestrates the "actual" cost workflow: it loads resources from a Pulumi plan, applies resource filters, parses the time range, opens adapter plugins, requests actual costs, renders the output, and emits audit entries.
+//
+// cmd is the Cobra command whose context and output writer are used.
+// params supplies the plan path, adapter, output format, time range strings, grouping, and resource filter expressions.
+//
+// Returns an error when resource loading fails, a provided filter is invalid, the time range cannot be parsed or is out of bounds, plugins cannot be opened, cost fetching fails, or output rendering fails.
 func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	ctx := cmd.Context()
 	log := logging.FromContext(ctx)
@@ -125,11 +131,26 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 	if params.groupBy != "" {
 		auditParams["group_by"] = params.groupBy
 	}
+	if len(params.filter) > 0 {
+		auditParams["filter"] = strings.Join(params.filter, ",")
+	}
 	audit := newAuditContext(ctx, "cost actual", auditParams)
 
 	resources, err := loadAndMapResources(ctx, params.planPath, audit)
 	if err != nil {
 		return err
+	}
+
+	// Apply resource filters
+	for _, f := range params.filter {
+		if f != "" {
+			if filterErr := engine.ValidateFilter(f); filterErr != nil {
+				return filterErr
+			}
+			resources = engine.FilterResources(resources, f)
+			log.Debug().Ctx(ctx).Str("filter", f).Int("filtered_count", len(resources)).
+				Msg("applied resource filter")
+		}
 	}
 
 	from, to, err := ParseTimeRange(params.fromStr, defaultToNow(params.toStr))
