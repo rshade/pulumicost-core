@@ -179,11 +179,9 @@ func executeCostActual(cmd *cobra.Command, params costActualParams) error {
 		return fmt.Errorf("fetching actual costs: %w", err)
 	}
 
-	outputFormat := engine.OutputFormat(config.GetOutputFormat(params.output))
-	if renderErr := renderActualCostOutput(cmd.OutOrStdout(), outputFormat, resultWithErrors.Results, actualGroupBy); renderErr != nil {
+	if renderErr := RenderActualCostOutput(ctx, cmd, params.output, resultWithErrors, actualGroupBy); renderErr != nil {
 		return renderErr
 	}
-	displayErrorSummary(cmd, resultWithErrors, outputFormat)
 
 	log.Info().Ctx(ctx).Str("operation", "cost_actual").Int("result_count", len(resultWithErrors.Results)).
 		Dur("duration_ms", time.Since(audit.start)).Msg("actual cost calculation complete")

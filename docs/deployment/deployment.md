@@ -3,8 +3,6 @@ title: Deployment Overview
 layout: default
 ---
 
-# Deployment Overview
-
 PulumiCost can be deployed in various environments, from local developer machines to CI/CD pipelines and containerized setups.
 
 ## Deployment Options

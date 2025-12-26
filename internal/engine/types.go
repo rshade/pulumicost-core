@@ -172,6 +172,11 @@ type CostResult struct {
 	CostPeriod string    `json:"costPeriod,omitempty"`
 	StartDate  time.Time `json:"startDate,omitempty"`
 	EndDate    time.Time `json:"endDate,omitempty"`
+
+	// Delta represents the cost change (trend) compared to a baseline, in the same currency as the cost.
+	// Positive values indicate cost increase, negative values indicate decrease.
+	// The baseline depends on context (e.g., previous period for actual costs, budget for projected costs).
+	Delta float64 `json:"delta,omitempty"`
 }
 
 // ErrorDetail captures information about a failed resource cost calculation.

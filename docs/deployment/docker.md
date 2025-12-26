@@ -3,9 +3,7 @@ title: Docker Deployment
 layout: default
 ---
 
-# PulumiCost Docker Image
-
-This directory contains the Docker configuration for building and running
+This guide describes the Docker configuration for building and running
 PulumiCost in a containerized environment.
 
 ## Quick Start
@@ -125,10 +123,16 @@ The Dockerfile supports the following build-time variables:
 
 The image includes a health check that runs `pulumicost --help`:
 
+<!-- markdownlint-disable MD031 -->
+{% raw %}
+
 ```bash
 # Check container health
 docker inspect --format='{{.State.Health.Status}}' <container_id>
 ```
+
+{% endraw %}
+<!-- markdownlint-enable MD031 -->
 
 ## Troubleshooting
 
@@ -145,5 +149,3 @@ sudo chown -R 1001:1001 ~/.pulumicost
 
 Currently, plugins must be manually installed in the `~/.pulumicost/plugins`
 directory. Future versions will include automated plugin downloading capabilities.
-
-```

@@ -3,8 +3,6 @@ title: Competitive Comparison
 layout: default
 ---
 
-# PulumiCost vs. Alternatives
-
 PulumiCost is designed specifically for the Pulumi ecosystem, offering unique advantages over generic cost estimation tools.
 
 ## Feature Comparison

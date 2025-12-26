@@ -175,6 +175,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Sync documentation
+        run: make docs-sync
+
       - name: Check llms.txt exists and is updated
         run: |
           if [ ! -f "docs/llms.txt" ]; then

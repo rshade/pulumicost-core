@@ -842,8 +842,10 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+
 - Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
 - N/A (display-only feature) (106-analyzer-recommendations)
+- N/A (no persistent storage for TUI state) (106-cost-tui-upgrade)
 
 - Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
