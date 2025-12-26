@@ -6,7 +6,7 @@ import (
 )
 
 // DefaultSpinner returns a spinner model configured with the standard style.
-// The default spinner uses the "Dot" type and is colored with the Info color.
+// DefaultSpinner returns a spinner.Model configured with the Dot spinner and styled using ColorInfo.
 func DefaultSpinner() spinner.Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
