@@ -46,6 +46,13 @@ func (m *mockCostCalculator) GetProjectedCost(
 	return m.costs, m.err
 }
 
+func (m *mockCostCalculator) GetRecommendationsForResources(
+	_ context.Context,
+	_ []engine.ResourceDescriptor,
+) (*engine.RecommendationsResult, error) {
+	return &engine.RecommendationsResult{}, nil
+}
+
 // TestAnalyzer_FullStackFlow tests the complete flow from handshake to analysis.
 func TestAnalyzer_FullStackFlow(t *testing.T) {
 	// Create mock cost results

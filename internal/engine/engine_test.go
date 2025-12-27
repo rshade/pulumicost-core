@@ -999,3 +999,157 @@ func TestGetActualCostWithOptionsAndErrors(t *testing.T) {
 		assert.GreaterOrEqual(t, len(result.Results), 1)
 	})
 }
+
+// T050: Test Engine.GetRecommendationsForResources method returns empty results when no plugins available.
+func TestGetRecommendationsForResources_NoPlugins(t *testing.T) {
+	eng := engine.New(nil, nil) // No plugins
+
+	resources := []engine.ResourceDescriptor{
+		{
+			Type:     "aws:ec2:Instance",
+			ID:       "i-123",
+			Provider: "aws",
+		},
+	}
+
+	result, err := eng.GetRecommendationsForResources(context.Background(), resources)
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Empty(t, result.Recommendations, "Should return empty recommendations when no plugins")
+	assert.Empty(t, result.Errors, "Should have no errors when no plugins")
+}
+
+// T050: Test Engine.GetRecommendationsForResources with empty resource list.
+func TestGetRecommendationsForResources_EmptyResources(t *testing.T) {
+	eng := engine.New(nil, nil)
+
+	result, err := eng.GetRecommendationsForResources(context.Background(), []engine.ResourceDescriptor{})
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Empty(t, result.Recommendations)
+}
+
+// T051: Test MergeRecommendations function combines recommendations from multiple sources.
+func TestMergeRecommendations(t *testing.T) {
+	costResults := []engine.CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			ResourceID:   "i-123",
+			Monthly:      100.0,
+		},
+		{
+			ResourceType: "aws:rds:Instance",
+			ResourceID:   "db-456",
+			Monthly:      200.0,
+		},
+	}
+
+	recommendations := []engine.Recommendation{
+		{
+			ResourceID:       "i-123",
+			Type:             "Right-sizing",
+			Description:      "Downsize instance to t3.small",
+			EstimatedSavings: 25.0,
+			Currency:         "USD",
+		},
+		{
+			ResourceID:       "db-456",
+			Type:             "Terminate",
+			Description:      "Terminate idle instance",
+			EstimatedSavings: 100.0,
+			Currency:         "USD",
+		},
+	}
+
+	// Test merging recommendations based on resource IDs
+	merged := engine.MergeRecommendations(costResults, recommendations)
+
+	require.Len(t, merged, 2)
+	// First resource should have first recommendation
+	assert.Len(t, merged[0].Recommendations, 1)
+	assert.Equal(t, "Right-sizing", merged[0].Recommendations[0].Type)
+	// Second resource should have second recommendation
+	assert.Len(t, merged[1].Recommendations, 1)
+	assert.Equal(t, "Terminate", merged[1].Recommendations[0].Type)
+}
+
+// T051: Test MergeRecommendations with no recommendations.
+func TestMergeRecommendations_Empty(t *testing.T) {
+	costResults := []engine.CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			ResourceID:   "i-123",
+			Monthly:      100.0,
+		},
+	}
+
+	merged := engine.MergeRecommendations(costResults, nil)
+
+	require.Len(t, merged, 1)
+	assert.Empty(t, merged[0].Recommendations)
+}
+
+// T052: Test RecommendationsResult type structure.
+func TestRecommendationsResult_Structure(t *testing.T) {
+	result := &engine.RecommendationsResult{
+		Recommendations: []engine.Recommendation{
+			{
+				Type:             "Right-sizing",
+				Description:      "Switch to t3.small",
+				EstimatedSavings: 15.0,
+				Currency:         "USD",
+			},
+		},
+		Errors: []engine.RecommendationError{
+			{
+				PluginName: "aws-plugin",
+				Error:      "connection timeout",
+			},
+		},
+		TotalSavings: 15.0,
+		Currency:     "USD",
+	}
+
+	assert.True(t, result.HasErrors())
+	assert.Len(t, result.Recommendations, 1)
+	assert.Equal(t, 15.0, result.TotalSavings)
+}
+
+// T053: Test error handling for recommendation failures.
+func TestRecommendationsResult_ErrorHandling(t *testing.T) {
+	result := &engine.RecommendationsResult{
+		Recommendations: []engine.Recommendation{},
+		Errors: []engine.RecommendationError{
+			{
+				PluginName: "plugin-1",
+				Error:      "error 1",
+			},
+			{
+				PluginName: "plugin-2",
+				Error:      "error 2",
+			},
+		},
+	}
+
+	assert.True(t, result.HasErrors())
+	summary := result.ErrorSummary()
+	assert.Contains(t, summary, "plugin-1")
+	assert.Contains(t, summary, "plugin-2")
+	assert.Contains(t, summary, "error 1")
+}
+
+// T053: Test RecommendationsResult without errors.
+func TestRecommendationsResult_NoErrors(t *testing.T) {
+	result := &engine.RecommendationsResult{
+		Recommendations: []engine.Recommendation{
+			{Type: "Right-sizing", EstimatedSavings: 50.0, Currency: "USD"},
+		},
+		TotalSavings: 50.0,
+		Currency:     "USD",
+	}
+
+	assert.False(t, result.HasErrors())
+	assert.Empty(t, result.ErrorSummary())
+}

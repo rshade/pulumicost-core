@@ -256,36 +256,6 @@ func (tc *TestContext) RunPulumicost(ctx context.Context) (float64, error) {
 	return result.Summary.TotalMonthly, nil
 }
 
-// findPulumicostBinary locates the pulumicost binary.
-func findPulumicostBinary() string {
-	// Check common locations
-	locations := []string{
-		os.Getenv("PULUMICOST_BINARY"), // Environment override
-		"../../bin/pulumicost",         // From test/e2e relative to repo root
-		"../../../bin/pulumicost",      // Alternative
-	}
-
-	for _, loc := range locations {
-		if loc == "" {
-			continue
-		}
-		absPath, err := filepath.Abs(loc)
-		if err != nil {
-			continue
-		}
-		if _, err := os.Stat(absPath); err == nil {
-			return absPath
-		}
-	}
-
-	// Try PATH
-	if path, err := exec.LookPath("pulumicost"); err == nil {
-		return path
-	}
-
-	return ""
-}
-
 // Teardown ensures resources are cleaned up.
 func (tc *TestContext) Teardown(ctx context.Context) {
 	// Capture interrupt signals to ensure cleanup happens

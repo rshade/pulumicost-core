@@ -7,6 +7,7 @@ import (
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/pulumicost-core/internal/logging"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -55,6 +56,11 @@ type CostCalculator interface {
 		ctx context.Context,
 		resources []engine.ResourceDescriptor,
 	) ([]engine.CostResult, error)
+
+	GetRecommendationsForResources(
+		ctx context.Context,
+		resources []engine.ResourceDescriptor,
+	) (*engine.RecommendationsResult, error)
 }
 
 // Server implements the Pulumi Analyzer gRPC service for cost estimation.
@@ -147,6 +153,7 @@ func (s *Server) Analyze(
 	ctx context.Context,
 	req *pulumirpc.AnalyzeRequest,
 ) (*pulumirpc.AnalyzeResponse, error) {
+	log := logging.FromContext(ctx)
 	resourceType := req.GetType()
 	resourceID := extractResourceID(req.GetUrn())
 
@@ -187,6 +194,25 @@ func (s *Server) Analyze(
 				),
 			},
 		}, nil
+	}
+
+	// Fetch recommendations (graceful failure - don't block costs if recs fail)
+	recs, recErr := s.calculator.GetRecommendationsForResources(ctx, []engine.ResourceDescriptor{resource})
+	if recErr == nil && recs != nil && len(recs.Recommendations) > 0 {
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "analyzer").
+			Str("resource_id", resource.ID).
+			Int("recommendation_count", len(recs.Recommendations)).
+			Msg("received recommendations for resource")
+		costs = engine.MergeRecommendations(costs, recs.Recommendations)
+	} else if recErr != nil {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "analyzer").
+			Str("resource_id", resource.ID).
+			Err(recErr).
+			Msg("failed to fetch recommendations")
 	}
 
 	// Build diagnostics and cache costs for AnalyzeStack summary

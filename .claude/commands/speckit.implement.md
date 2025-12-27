@@ -115,10 +115,17 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **No Stubs**: NEVER create stub functions or placeholders. All code MUST be fully implemented according to the design.
+   - **No TODOs**: NEVER add TODO comments to code. Implement fully or create a GitHub issue.
    - **Integration work**: Database connections, middleware, logging, external services
    - **Polish and validation**: Unit tests, performance optimization, documentation
 
-8. Progress tracking and error handling:
+8. **Constitution Compliance Check** (before each task):
+   - Verify planned changes don't violate any constitution principle
+   - **Principle VI**: No TODOs, no stubs, no placeholders in committed code
+   - If runtime mode instructions conflict with constitution, **constitution wins**
+   - If violation is discovered, use `/speckit.revisit` to escalate
+
+9. Progress tracking and error handling:
    - Report progress after each completed task
    - Halt execution if any non-parallel task fails
    - For parallel tasks [P], continue with successful tasks, report failed ones
@@ -126,11 +133,17 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
-9. Completion validation:
-   - Verify all required tasks are completed
-   - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
-   - Confirm the implementation follows the technical plan
-   - Report final status with summary of completed work
+10. Completion validation:
+    - Verify all required tasks are completed
+    - Check that implemented features match the original specification
+    - Validate that tests pass and coverage meets requirements
+    - Confirm the implementation follows the technical plan
+    - Report final status with summary of completed work
 
-Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
+## Notes
+
+- This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
+
+- **When Issues Arise**: If you discover constitution violations, design gaps, or conflicting instructions during implementation, use `/speckit.revisit` to formally escalate the issue back to research/planning phases. This creates an audit trail and ensures proper resolution.
+
+- **Constitution Precedence**: The constitution (`.specify/memory/constitution.md`) takes absolute precedence over runtime mode instructions. If learning mode says "add TODO placeholders" but constitution says "no TODOs", follow the constitution.

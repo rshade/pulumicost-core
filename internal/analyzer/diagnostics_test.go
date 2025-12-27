@@ -304,3 +304,669 @@ func TestCostToDiagnostic_ErrorInNotes(t *testing.T) {
 	// Should use MEDIUM severity for errors
 	assert.Equal(t, pulumirpc.PolicySeverity_POLICY_SEVERITY_MEDIUM, diag.GetSeverity())
 }
+
+// Phase 2 (Foundational) - Recommendation Formatting Tests
+
+func TestFormatRecommendation(t *testing.T) {
+	tests := []struct {
+		name string
+		rec  engine.Recommendation
+		want string
+	}{
+		{
+			name: "recommendation with savings",
+			rec: engine.Recommendation{
+				Type:             "Right-sizing",
+				Description:      "Switch to t3.small",
+				EstimatedSavings: 15.00,
+				Currency:         "USD",
+			},
+			want: "Right-sizing: Switch to t3.small (save $15.00/mo)",
+		},
+		{
+			name: "recommendation without savings",
+			rec: engine.Recommendation{
+				Type:        "Review",
+				Description: "Consider adjusting storage class",
+			},
+			want: "Review: Consider adjusting storage class",
+		},
+		{
+			name: "recommendation with zero savings",
+			rec: engine.Recommendation{
+				Type:             "Terminate",
+				Description:      "Remove idle instance",
+				EstimatedSavings: 0,
+				Currency:         "USD",
+			},
+			want: "Terminate: Remove idle instance",
+		},
+		{
+			name: "recommendation with non-USD currency",
+			rec: engine.Recommendation{
+				Type:             "Right-sizing",
+				Description:      "Downgrade to smaller instance",
+				EstimatedSavings: 25.50,
+				Currency:         "EUR",
+			},
+			want: "Right-sizing: Downgrade to smaller instance (save €25.50/mo)",
+		},
+		{
+			name: "recommendation with small savings",
+			rec: engine.Recommendation{
+				Type:             "Delete Unused",
+				Description:      "Remove orphaned EBS volume",
+				EstimatedSavings: 0.50,
+				Currency:         "USD",
+			},
+			want: "Delete Unused: Remove orphaned EBS volume (save $0.50/mo)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatRecommendation(tt.rec)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestFormatRecommendations(t *testing.T) {
+	tests := []struct {
+		name string
+		recs []engine.Recommendation
+		want string
+	}{
+		{
+			name: "single recommendation",
+			recs: []engine.Recommendation{
+				{
+					Type:             "Right-sizing",
+					Description:      "Switch to t3.small",
+					EstimatedSavings: 15.00,
+					Currency:         "USD",
+				},
+			},
+			want: "Recommendations: Right-sizing: Switch to t3.small (save $15.00/mo)",
+		},
+		{
+			name: "two recommendations",
+			recs: []engine.Recommendation{
+				{
+					Type:             "Right-sizing",
+					Description:      "Switch to t3.small",
+					EstimatedSavings: 15.00,
+					Currency:         "USD",
+				},
+				{
+					Type:             "Terminate",
+					Description:      "Remove idle instance",
+					EstimatedSavings: 100.00,
+					Currency:         "USD",
+				},
+			},
+			want: "Recommendations: Right-sizing: Switch to t3.small (save $15.00/mo); " +
+				"Terminate: Remove idle instance (save $100.00/mo)",
+		},
+		{
+			name: "three recommendations (at limit)",
+			recs: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Switch to t3.small",
+					EstimatedSavings: 15.00, Currency: "USD",
+				},
+				{
+					Type: "Terminate", Description: "Remove idle instance",
+					EstimatedSavings: 100.00, Currency: "USD",
+				},
+				{
+					Type: "Delete Unused", Description: "Remove orphaned volume",
+					EstimatedSavings: 5.00, Currency: "USD",
+				},
+			},
+			want: "Recommendations: " +
+				"Right-sizing: Switch to t3.small (save $15.00/mo); " +
+				"Terminate: Remove idle instance (save $100.00/mo); " +
+				"Delete Unused: Remove orphaned volume (save $5.00/mo)",
+		},
+		{
+			name: "four recommendations (exceeds limit)",
+			recs: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Switch to t3.small",
+					EstimatedSavings: 15.00, Currency: "USD",
+				},
+				{
+					Type: "Terminate", Description: "Remove idle instance",
+					EstimatedSavings: 100.00, Currency: "USD",
+				},
+				{
+					Type: "Delete Unused", Description: "Remove orphaned volume",
+					EstimatedSavings: 5.00, Currency: "USD",
+				},
+				{
+					Type: "Purchase Commitment", Description: "Buy reserved",
+					EstimatedSavings: 200.00, Currency: "USD",
+				},
+			},
+			want: "Recommendations: " +
+				"Right-sizing: Switch to t3.small (save $15.00/mo); " +
+				"Terminate: Remove idle instance (save $100.00/mo); " +
+				"Delete Unused: Remove orphaned volume (save $5.00/mo); " +
+				"and 1 more",
+		},
+		{
+			name: "six recommendations (multiple beyond limit)",
+			recs: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Switch to t3.small",
+					EstimatedSavings: 15.00, Currency: "USD",
+				},
+				{
+					Type: "Terminate", Description: "Remove idle instance",
+					EstimatedSavings: 100.00, Currency: "USD",
+				},
+				{
+					Type: "Delete Unused", Description: "Remove orphaned volume",
+					EstimatedSavings: 5.00, Currency: "USD",
+				},
+				{
+					Type: "Purchase Commitment", Description: "Buy reserved",
+					EstimatedSavings: 200.00, Currency: "USD",
+				},
+				{
+					Type: "Adjust Requests", Description: "Lower CPU requests",
+					EstimatedSavings: 10.00, Currency: "USD",
+				},
+				{Type: "Review", Description: "Consider spot instances"},
+			},
+			want: "Recommendations: " +
+				"Right-sizing: Switch to t3.small (save $15.00/mo); " +
+				"Terminate: Remove idle instance (save $100.00/mo); " +
+				"Delete Unused: Remove orphaned volume (save $5.00/mo); " +
+				"and 3 more",
+		},
+		{
+			name: "empty recommendations",
+			recs: []engine.Recommendation{},
+			want: "",
+		},
+		{
+			name: "nil recommendations",
+			recs: nil,
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatRecommendations(tt.recs)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// Phase 3 (US1) - CostToDiagnostic with Recommendations Tests
+
+func TestCostToDiagnostic_SingleRecommendation(t *testing.T) {
+	// T008: Test CostToDiagnostic with a single recommendation
+	cost := engine.CostResult{
+		ResourceType: "aws:ec2/instance:Instance",
+		ResourceID:   "webserver",
+		Adapter:      "aws-plugin",
+		Currency:     "USD",
+		Monthly:      25.50,
+		Hourly:       0.035,
+		Recommendations: []engine.Recommendation{
+			{
+				Type:             "Right-sizing",
+				Description:      "Switch to t3.small",
+				EstimatedSavings: 15.00,
+				Currency:         "USD",
+			},
+		},
+	}
+
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+		"0.1.0",
+	)
+
+	require.NotNil(t, diag)
+	assert.Contains(t, diag.GetMessage(), "$25.50 USD")
+	assert.Contains(t, diag.GetMessage(), "Recommendations:")
+	assert.Contains(t, diag.GetMessage(), "Right-sizing: Switch to t3.small")
+	assert.Contains(t, diag.GetMessage(), "save $15.00/mo")
+}
+
+func TestCostToDiagnostic_MultipleRecommendations(t *testing.T) {
+	// T009: Test CostToDiagnostic with multiple recommendations
+	cost := engine.CostResult{
+		ResourceType: "aws:ec2/instance:Instance",
+		ResourceID:   "webserver",
+		Adapter:      "aws-plugin",
+		Currency:     "USD",
+		Monthly:      150.00,
+		Hourly:       0.205,
+		Recommendations: []engine.Recommendation{
+			{
+				Type:             "Right-sizing",
+				Description:      "Switch to t3.medium",
+				EstimatedSavings: 50.00,
+				Currency:         "USD",
+			},
+			{
+				Type:             "Terminate",
+				Description:      "Remove idle instance",
+				EstimatedSavings: 100.00,
+				Currency:         "USD",
+			},
+		},
+	}
+
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+		"0.1.0",
+	)
+
+	require.NotNil(t, diag)
+	assert.Contains(t, diag.GetMessage(), "$150.00 USD")
+	assert.Contains(t, diag.GetMessage(), "Right-sizing: Switch to t3.medium")
+	assert.Contains(t, diag.GetMessage(), "Terminate: Remove idle instance")
+	// Recommendations should be separated by semicolon
+	assert.Contains(t, diag.GetMessage(), "; ")
+}
+
+func TestCostToDiagnostic_NoRecommendations(t *testing.T) {
+	// T010: Test CostToDiagnostic with no recommendations (empty slice)
+	cost := engine.CostResult{
+		ResourceType:    "aws:ec2/instance:Instance",
+		ResourceID:      "webserver",
+		Adapter:         "aws-plugin",
+		Currency:        "USD",
+		Monthly:         25.50,
+		Hourly:          0.035,
+		Recommendations: []engine.Recommendation{},
+	}
+
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+		"0.1.0",
+	)
+
+	require.NotNil(t, diag)
+	assert.Contains(t, diag.GetMessage(), "$25.50 USD")
+	// Should NOT contain recommendations section when empty
+	assert.NotContains(t, diag.GetMessage(), "Recommendations:")
+}
+
+func TestCostToDiagnostic_RecommendationsWithSustainability(t *testing.T) {
+	// T011: Test recommendations combined with sustainability metrics
+	cost := engine.CostResult{
+		ResourceType: "aws:ec2/instance:Instance",
+		ResourceID:   "webserver",
+		Adapter:      "aws-plugin",
+		Currency:     "USD",
+		Monthly:      25.50,
+		Hourly:       0.035,
+		Sustainability: map[string]engine.SustainabilityMetric{
+			"gCO2e": {Value: 12.5, Unit: "gCO2e/month"},
+		},
+		Recommendations: []engine.Recommendation{
+			{
+				Type:             "Right-sizing",
+				Description:      "Switch to t3.small",
+				EstimatedSavings: 15.00,
+				Currency:         "USD",
+			},
+		},
+	}
+
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+		"0.1.0",
+	)
+
+	require.NotNil(t, diag)
+	// Should contain both sustainability and recommendations
+	assert.Contains(t, diag.GetMessage(), "$25.50 USD")
+	assert.Contains(t, diag.GetMessage(), "Carbon: 12.50 gCO2e/month")
+	assert.Contains(t, diag.GetMessage(), "Recommendations:")
+	assert.Contains(t, diag.GetMessage(), "Right-sizing: Switch to t3.small")
+}
+
+func TestCostToDiagnostic_RecommendationsADVISORYEnforcement(t *testing.T) {
+	// T012: Verify ADVISORY enforcement level for recommendation diagnostics (FR-008)
+	testCases := []struct {
+		name string
+		cost engine.CostResult
+	}{
+		{
+			name: "single recommendation",
+			cost: engine.CostResult{
+				Monthly:  100.00,
+				Currency: "USD",
+				Recommendations: []engine.Recommendation{
+					{
+						Type: "Right-sizing", Description: "Test",
+						EstimatedSavings: 50.00, Currency: "USD",
+					},
+				},
+			},
+		},
+		{
+			name: "multiple recommendations",
+			cost: engine.CostResult{
+				Monthly:  200.00,
+				Currency: "USD",
+				Recommendations: []engine.Recommendation{
+					{
+						Type: "Right-sizing", Description: "Test1",
+						EstimatedSavings: 50.00, Currency: "USD",
+					},
+					{
+						Type: "Terminate", Description: "Test2",
+						EstimatedSavings: 100.00, Currency: "USD",
+					},
+				},
+			},
+		},
+		{
+			name: "high savings recommendation",
+			cost: engine.CostResult{
+				Monthly:  10000.00,
+				Currency: "USD",
+				Recommendations: []engine.Recommendation{
+					{
+						Type: "Right-sizing", Description: "Major savings",
+						EstimatedSavings: 5000.00, Currency: "USD",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			diag := CostToDiagnostic(
+				tc.cost,
+				"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::test",
+				"0.1.0",
+			)
+
+			// FR-008: All diagnostics MUST use ADVISORY enforcement level
+			assert.Equal(t, pulumirpc.EnforcementLevel_ADVISORY, diag.GetEnforcementLevel(),
+				"recommendation diagnostics must use ADVISORY enforcement level")
+			// Must NOT use MANDATORY (which would block deployments)
+			assert.NotEqual(t, pulumirpc.EnforcementLevel_MANDATORY, diag.GetEnforcementLevel(),
+				"recommendation diagnostics must never use MANDATORY enforcement")
+		})
+	}
+}
+
+// Phase 4 (US2) - Stack Summary with Recommendations Tests
+
+func TestStackSummaryDiagnostic_WithRecommendations(t *testing.T) {
+	// T017: Test StackSummaryDiagnostic includes recommendation summary
+	costs := []engine.CostResult{
+		{
+			Monthly:  50.00,
+			Currency: "USD",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Switch to smaller instance",
+					EstimatedSavings: 15.00, Currency: "USD",
+				},
+			},
+		},
+		{
+			Monthly:  100.00,
+			Currency: "USD",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Terminate", Description: "Remove idle resource",
+					EstimatedSavings: 100.00, Currency: "USD",
+				},
+				{
+					Type: "Delete Unused", Description: "Remove orphaned storage",
+					EstimatedSavings: 10.00, Currency: "USD",
+				},
+			},
+		},
+		{
+			Monthly:         25.00,
+			Currency:        "USD",
+			Recommendations: []engine.Recommendation{}, // No recommendations
+		},
+	}
+
+	diag := StackSummaryDiagnostic(costs, "0.1.0")
+
+	require.NotNil(t, diag)
+	// Should show total cost
+	assert.Contains(t, diag.GetMessage(), "$175.00 USD")
+	// Should show recommendation count (3 total recommendations across 2 resources)
+	assert.Contains(t, diag.GetMessage(), "3 recommendations")
+	// Should show potential savings ($15 + $100 + $10 = $125)
+	assert.Contains(t, diag.GetMessage(), "$125.00")
+	assert.Contains(t, diag.GetMessage(), "potential savings")
+}
+
+func TestStackSummaryDiagnostic_AggregateSavingsSameCurrency(t *testing.T) {
+	// T018: Test aggregate savings calculation with same currency
+	costs := []engine.CostResult{
+		{
+			Monthly:  100.00,
+			Currency: "USD",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Test1",
+					EstimatedSavings: 25.00, Currency: "USD",
+				},
+			},
+		},
+		{
+			Monthly:  200.00,
+			Currency: "USD",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Terminate", Description: "Test2",
+					EstimatedSavings: 75.00, Currency: "USD",
+				},
+				{
+					Type: "Delete", Description: "Test3",
+					EstimatedSavings: 50.00, Currency: "USD",
+				},
+			},
+		},
+	}
+
+	diag := StackSummaryDiagnostic(costs, "0.1.0")
+
+	require.NotNil(t, diag)
+	// Total savings: $25 + $75 + $50 = $150
+	assert.Contains(t, diag.GetMessage(), "$150.00")
+	// 3 total recommendations
+	assert.Contains(t, diag.GetMessage(), "3 recommendations")
+}
+
+func TestStackSummaryDiagnostic_MixedCurrencyHandling(t *testing.T) {
+	// T019: Test mixed currency handling in stack summary
+	costs := []engine.CostResult{
+		{
+			Monthly:  100.00,
+			Currency: "USD",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Right-sizing", Description: "Test1",
+					EstimatedSavings: 25.00, Currency: "USD",
+				},
+			},
+		},
+		{
+			Monthly:  200.00,
+			Currency: "EUR",
+			Recommendations: []engine.Recommendation{
+				{
+					Type: "Terminate", Description: "Test2",
+					EstimatedSavings: 75.00, Currency: "EUR",
+				},
+			},
+		},
+	}
+
+	diag := StackSummaryDiagnostic(costs, "0.1.0")
+
+	require.NotNil(t, diag)
+	// Should show recommendation count
+	assert.Contains(t, diag.GetMessage(), "2 recommendations")
+	// Should indicate mixed currencies (not aggregate a numeric total)
+	assert.Contains(t, diag.GetMessage(), "mixed currencies")
+}
+
+func TestStackSummaryDiagnostic_NoRecommendations(t *testing.T) {
+	// Additional test: Stack summary without any recommendations
+	costs := []engine.CostResult{
+		{Monthly: 50.00, Currency: "USD", Recommendations: nil},
+		{Monthly: 100.00, Currency: "USD", Recommendations: []engine.Recommendation{}},
+	}
+
+	diag := StackSummaryDiagnostic(costs, "0.1.0")
+
+	require.NotNil(t, diag)
+	assert.Contains(t, diag.GetMessage(), "$150.00 USD")
+	// Should NOT contain recommendation info when there are none
+	assert.NotContains(t, diag.GetMessage(), "recommendations")
+	assert.NotContains(t, diag.GetMessage(), "potential savings")
+}
+
+// Phase 5 (US3) - Graceful Handling Tests
+
+func TestFormatRecommendations_NilSlice(t *testing.T) {
+	// T024: Test nil Recommendations slice handling
+	var recs []engine.Recommendation = nil
+	result := formatRecommendations(recs)
+	assert.Equal(t, "", result, "nil recommendations should return empty string")
+}
+
+func TestFormatRecommendations_EmptySlice(t *testing.T) {
+	// T025: Test empty Recommendations slice handling
+	recs := []engine.Recommendation{}
+	result := formatRecommendations(recs)
+	assert.Equal(t, "", result, "empty recommendations should return empty string")
+}
+
+func TestFormatRecommendation_ZeroSavings(t *testing.T) {
+	// T026: Test recommendation with zero savings
+	rec := engine.Recommendation{
+		Type:             "Review",
+		Description:      "Check resource utilization",
+		EstimatedSavings: 0,
+		Currency:         "USD",
+	}
+	result := formatRecommendation(rec)
+	assert.Equal(t, "Review: Check resource utilization", result)
+	// Should NOT contain savings info when zero
+	assert.NotContains(t, result, "save")
+	assert.NotContains(t, result, "$")
+}
+
+func TestFormatRecommendation_EmptyDescription(t *testing.T) {
+	// T027: Test recommendation with empty description
+	// Note: formatRecommendation still formats it, but formatRecommendations
+	// will filter it out as malformed
+	rec := engine.Recommendation{
+		Type:             "Right-sizing",
+		Description:      "",
+		EstimatedSavings: 15.00,
+		Currency:         "USD",
+	}
+	result := formatRecommendation(rec)
+	// formatRecommendation formats it as-is (validation happens at list level)
+	assert.Equal(t, "Right-sizing:  (save $15.00/mo)", result)
+}
+
+func TestFormatRecommendations_FiltersInvalid(t *testing.T) {
+	// Test that formatRecommendations filters out invalid recommendations
+	recs := []engine.Recommendation{
+		{Type: "", Description: "No type"},                    // Invalid: empty type
+		{Type: "Valid", Description: "Has both"},              // Valid
+		{Type: "NoDesc", Description: ""},                     // Invalid: empty description
+		{Type: "", Description: ""},                           // Invalid: both empty
+		{Type: "AlsoValid", Description: "Another valid one"}, // Valid
+	}
+
+	result := formatRecommendations(recs)
+
+	// Should only include the 2 valid recommendations
+	assert.Contains(t, result, "Valid: Has both")
+	assert.Contains(t, result, "AlsoValid: Another valid one")
+	// Should NOT include invalid ones
+	assert.NotContains(t, result, "No type")
+	assert.NotContains(t, result, "NoDesc")
+}
+
+func TestFormatRecommendations_SkipsMalformed(t *testing.T) {
+	// T027 extension: Test that malformed recommendations are skipped
+	recs := []engine.Recommendation{
+		{Type: "", Description: "", EstimatedSavings: 10.00, Currency: "USD"}, // Both empty
+		{
+			Type: "Right-sizing", Description: "Valid recommendation",
+			EstimatedSavings: 15.00, Currency: "USD",
+		},
+		{Type: "Delete", Description: ""}, // Empty description only
+	}
+	result := formatRecommendations(recs)
+	// Should include valid recommendation and skip malformed ones
+	assert.Contains(t, result, "Right-sizing: Valid recommendation")
+	// The count should reflect only valid ones (implementation may vary)
+}
+
+func TestCostToDiagnostic_NilRecommendations(t *testing.T) {
+	// Test CostToDiagnostic with nil recommendations (graceful handling)
+	cost := engine.CostResult{
+		ResourceType:    "aws:ec2/instance:Instance",
+		ResourceID:      "webserver",
+		Adapter:         "aws-plugin",
+		Currency:        "USD",
+		Monthly:         25.50,
+		Recommendations: nil,
+	}
+
+	diag := CostToDiagnostic(
+		cost,
+		"urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+		"0.1.0",
+	)
+
+	require.NotNil(t, diag)
+	assert.Contains(t, diag.GetMessage(), "$25.50 USD")
+	// Should NOT contain recommendations when nil
+	assert.NotContains(t, diag.GetMessage(), "Recommendations:")
+}
+
+func TestAggregateRecommendations_EmptyCosts(t *testing.T) {
+	// Test aggregation with empty costs slice
+	costs := []engine.CostResult{}
+	agg := AggregateRecommendations(costs)
+
+	assert.Equal(t, 0, agg.Count)
+	assert.Equal(t, 0.0, agg.TotalSavings)
+	assert.Equal(t, "USD", agg.Currency) // Default
+	assert.False(t, agg.MixedCurrencies)
+}
+
+func TestAggregateRecommendations_NilCosts(t *testing.T) {
+	// Test aggregation with nil costs slice
+	var costs []engine.CostResult = nil
+	agg := AggregateRecommendations(costs)
+
+	assert.Equal(t, 0, agg.Count)
+	assert.Equal(t, 0.0, agg.TotalSavings)
+	assert.Equal(t, "USD", agg.Currency) // Default
+	assert.False(t, agg.MixedCurrencies)
+}

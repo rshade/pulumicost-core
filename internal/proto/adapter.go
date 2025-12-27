@@ -194,6 +194,9 @@ type Empty struct{}
 // ResourceDescriptor describes a cloud resource for cost calculation requests.
 // It contains the resource type, provider, and properties needed for pricing lookups.
 type ResourceDescriptor struct {
+	// ID is a client-generated identifier for request/response correlation.
+	// Plugins copy this to recommendation ResourceID for proper matching.
+	ID         string
 	Type       string
 	Provider   string
 	Properties map[string]string
@@ -258,6 +261,82 @@ func (n *NameResponse) GetName() string {
 	return n.Name
 }
 
+// GetRecommendationsRequest contains parameters for retrieving cost optimization recommendations.
+// It supports filtering by target resources, pagination, and exclusion of dismissed recommendations.
+type GetRecommendationsRequest struct {
+	// TargetResources specifies the resources to analyze for recommendations.
+	// When empty, plugins return recommendations for all resources in scope.
+	TargetResources []*ResourceDescriptor
+
+	// ProjectionPeriod specifies the time period for savings projection.
+	// Valid values: "daily", "monthly" (default), "annual".
+	ProjectionPeriod string
+
+	// PageSize is the maximum number of recommendations to return (default: 50, max: 1000).
+	PageSize int32
+
+	// PageToken is the continuation token from a previous response.
+	PageToken string
+
+	// ExcludedRecommendationIDs contains IDs of recommendations to exclude from results.
+	ExcludedRecommendationIDs []string
+}
+
+// GetRecommendationsResponse contains the recommendations and summary from a GetRecommendations call.
+type GetRecommendationsResponse struct {
+	// Recommendations is the list of cost optimization recommendations.
+	Recommendations []*Recommendation
+
+	// NextPageToken is the token for retrieving the next page (empty if last page).
+	NextPageToken string
+}
+
+// Recommendation represents a single cost optimization recommendation from a plugin.
+// This is the internal representation that maps to the protobuf Recommendation message.
+type Recommendation struct {
+	// ID is a unique identifier for this recommendation.
+	ID string
+
+	// Category classifies the type of recommendation (e.g., "COST", "PERFORMANCE").
+	Category string
+
+	// ActionType specifies what action is recommended (e.g., "RIGHTSIZE", "TERMINATE").
+	ActionType string
+
+	// Description is a human-readable summary of the recommendation.
+	Description string
+
+	// ResourceID identifies the affected resource.
+	ResourceID string
+
+	// Source identifies the data source (e.g., "aws", "kubecost", "azure-advisor").
+	Source string
+
+	// Impact contains the financial impact assessment.
+	Impact *RecommendationImpact
+
+	// Metadata contains additional provider-specific information.
+	Metadata map[string]string
+}
+
+// RecommendationImpact describes the financial impact of implementing a recommendation.
+type RecommendationImpact struct {
+	// EstimatedSavings is the estimated cost savings.
+	EstimatedSavings float64
+
+	// Currency is the ISO 4217 currency code.
+	Currency string
+
+	// CurrentCost is the current cost of the resource.
+	CurrentCost float64
+
+	// ProjectedCost is the projected cost after implementing the recommendation.
+	ProjectedCost float64
+
+	// SavingsPercentage is the savings as a percentage.
+	SavingsPercentage float64
+}
+
 // CostSourceClient wraps the generated gRPC client from pulumicost-spec.
 type CostSourceClient interface {
 	Name(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*NameResponse, error)
@@ -271,6 +350,11 @@ type CostSourceClient interface {
 		in *GetActualCostRequest,
 		opts ...grpc.CallOption,
 	) (*GetActualCostResponse, error)
+	GetRecommendations(
+		ctx context.Context,
+		in *GetRecommendationsRequest,
+		opts ...grpc.CallOption,
+	) (*GetRecommendationsResponse, error)
 }
 
 // NewCostSourceClient creates a new cost source client using the real proto client.
@@ -354,6 +438,7 @@ func (c *clientAdapter) GetProjectedCost(
 
 		req := &pbc.GetProjectedCostRequest{
 			Resource: &pbc.ResourceDescriptor{
+				Id:           resource.ID,
 				Provider:     resource.Provider,
 				ResourceType: resource.Type,
 				Sku:          sku,
@@ -472,4 +557,72 @@ func (c *clientAdapter) GetActualCost(
 	}
 
 	return &GetActualCostResponse{Results: results}, nil
+}
+
+func (c *clientAdapter) GetRecommendations(
+	ctx context.Context,
+	in *GetRecommendationsRequest,
+	opts ...grpc.CallOption,
+) (*GetRecommendationsResponse, error) {
+	// Convert internal request to proto request
+	req := &pbc.GetRecommendationsRequest{
+		ProjectionPeriod:          in.ProjectionPeriod,
+		PageSize:                  in.PageSize,
+		PageToken:                 in.PageToken,
+		ExcludedRecommendationIds: in.ExcludedRecommendationIDs,
+	}
+
+	// Convert target resources if provided
+	for _, resource := range in.TargetResources {
+		sku, region := resolveSKUAndRegion(resource.Provider, resource.Properties)
+		req.TargetResources = append(req.TargetResources, &pbc.ResourceDescriptor{
+			Id:           resource.ID,
+			Provider:     resource.Provider,
+			ResourceType: resource.Type,
+			Sku:          sku,
+			Region:       region,
+			Tags:         resource.Properties,
+		})
+	}
+
+	resp, err := c.client.GetRecommendations(ctx, req, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert proto recommendations to internal format
+	var recommendations []*Recommendation
+	for _, rec := range resp.GetRecommendations() {
+		protoRec := &Recommendation{
+			ID:          rec.GetId(),
+			Category:    rec.GetCategory().String(),
+			ActionType:  rec.GetActionType().String(),
+			Description: rec.GetDescription(),
+			Source:      rec.GetSource(),
+			Metadata:    rec.GetMetadata(),
+		}
+
+		// Extract resource ID from resource info if available
+		if rec.GetResource() != nil {
+			protoRec.ResourceID = rec.GetResource().GetId()
+		}
+
+		// Convert impact if available
+		if rec.GetImpact() != nil {
+			protoRec.Impact = &RecommendationImpact{
+				EstimatedSavings:  rec.GetImpact().GetEstimatedSavings(),
+				Currency:          rec.GetImpact().GetCurrency(),
+				CurrentCost:       rec.GetImpact().GetCurrentCost(),
+				ProjectedCost:     rec.GetImpact().GetProjectedCost(),
+				SavingsPercentage: rec.GetImpact().GetSavingsPercentage(),
+			}
+		}
+
+		recommendations = append(recommendations, protoRec)
+	}
+
+	return &GetRecommendationsResponse{
+		Recommendations: recommendations,
+		NextPageToken:   resp.GetNextPageToken(),
+	}, nil
 }

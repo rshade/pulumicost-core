@@ -25,8 +25,11 @@ func TestE2E_ProjectedCost(t *testing.T) {
 
 	// Run command
 	cmd := exec.Command(binary, "cost", "projected", "--pulumi-json", planPath, "--output", "json")
-	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %s", string(output))
+	output, err := cmd.Output()
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		t.Fatalf("Command failed with stderr: %s", string(exitErr.Stderr))
+	}
+	require.NoError(t, err, "Command failed")
 
 	// Verify JSON output
 	var result map[string]interface{}

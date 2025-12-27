@@ -599,6 +599,7 @@ func (e *Engine) getProjectedCostFromPlugin(
 	req := &proto.GetProjectedCostRequest{
 		Resources: []*proto.ResourceDescriptor{
 			{
+				ID:         resource.ID,
 				Type:       resource.Type,
 				Provider:   resource.Provider,
 				Properties: convertToProto(resource.Properties),
@@ -1956,4 +1957,128 @@ func createSortedAggregations(
 	})
 
 	return aggregations
+}
+
+// convertProtoRecommendation converts a proto recommendation to an engine Recommendation.
+// The plugin is expected to populate ResourceID from the Id field sent in ResourceDescriptor.
+func convertProtoRecommendation(rec *proto.Recommendation) Recommendation {
+	engineRec := Recommendation{
+		ResourceID:  rec.ResourceID,
+		Type:        rec.ActionType,
+		Description: rec.Description,
+	}
+
+	if engineRec.Type == "" {
+		engineRec.Type = rec.Category
+	}
+
+	if rec.Impact != nil {
+		engineRec.EstimatedSavings = rec.Impact.EstimatedSavings
+		engineRec.Currency = rec.Impact.Currency
+	}
+
+	return engineRec
+}
+
+// GetRecommendationsForResources fetches cost optimization recommendations for the given resources.
+func (e *Engine) GetRecommendationsForResources(
+	ctx context.Context,
+	resources []ResourceDescriptor,
+) (*RecommendationsResult, error) {
+	log := logging.FromContext(ctx)
+	result := &RecommendationsResult{
+		Currency: defaultCurrency,
+	}
+
+	if len(resources) == 0 {
+		return result, nil
+	}
+
+	for _, client := range e.clients {
+		log.Info().
+			Ctx(ctx).
+			Str("component", "engine").
+			Str("plugin", client.Name).
+			Int("resource_count", len(resources)).
+			Msg("fetching recommendations from plugin")
+
+		targetResources := make([]*proto.ResourceDescriptor, 0, len(resources))
+		for _, r := range resources {
+			targetResources = append(targetResources, &proto.ResourceDescriptor{
+				ID:         r.ID,
+				Type:       r.Type,
+				Provider:   r.Provider,
+				Properties: convertToProto(r.Properties),
+			})
+		}
+
+		req := &proto.GetRecommendationsRequest{
+			TargetResources:  targetResources,
+			ProjectionPeriod: "monthly",
+		}
+
+		resp, err := client.API.GetRecommendations(ctx, req)
+		if err != nil {
+			log.Warn().
+				Ctx(ctx).
+				Str("component", "engine").
+				Str("plugin", client.Name).
+				Err(err).
+				Msg("failed to fetch recommendations")
+
+			result.Errors = append(result.Errors, RecommendationError{
+				PluginName: client.Name,
+				Error:      err.Error(),
+			})
+			continue
+		}
+
+		log.Info().
+			Ctx(ctx).
+			Str("component", "engine").
+			Str("plugin", client.Name).
+			Int("recommendation_count", len(resp.Recommendations)).
+			Msg("received recommendations from plugin")
+
+		for _, rec := range resp.Recommendations {
+			engineRec := convertProtoRecommendation(rec)
+			if result.Currency == defaultCurrency && engineRec.Currency != "" {
+				result.Currency = engineRec.Currency
+			}
+			result.TotalSavings += engineRec.EstimatedSavings
+			result.Recommendations = append(result.Recommendations, engineRec)
+		}
+	}
+
+	return result, nil
+}
+
+// MergeRecommendations merges recommendations into CostResults by matching ResourceID.
+func MergeRecommendations(
+	costs []CostResult,
+	recommendations []Recommendation,
+) []CostResult {
+	if len(recommendations) == 0 {
+		return costs
+	}
+
+	// Index recommendations by ResourceID
+	recMap := make(map[string][]Recommendation)
+	for _, rec := range recommendations {
+		if rec.ResourceID != "" {
+			recMap[rec.ResourceID] = append(recMap[rec.ResourceID], rec)
+		}
+	}
+
+	merged := make([]CostResult, len(costs))
+	for i, cost := range costs {
+		// Copy cost result
+		res := cost
+		if recs, ok := recMap[cost.ResourceID]; ok {
+			res.Recommendations = recs
+		}
+		merged[i] = res
+	}
+
+	return merged
 }
