@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/rshade/pulumicost-core/compare/v0.1.2...v0.1.3) (2025-12-27)
+
+
+### Added
+
+* add integration tests for --filter flag across cost commands ([#300](https://github.com/rshade/pulumicost-core/issues/300)) ([efcebf6](https://github.com/rshade/pulumicost-core/commit/efcebf60efb48f1f57704a24b738478fa8393518)), closes [#249](https://github.com/rshade/pulumicost-core/issues/249)
+* **analyzer:** add ResourceID passthrough for recommendation correlation ([#347](https://github.com/rshade/pulumicost-core/issues/347)) ([680b80a](https://github.com/rshade/pulumicost-core/commit/680b80af73acc657dac79d6bf012a7bf0b3af35b)), closes [#106](https://github.com/rshade/pulumicost-core/issues/106)
+* **analyzer:** implement Pulumi Analyzer plugin for zero-click cost estimation ([#229](https://github.com/rshade/pulumicost-core/issues/229)) ([2070b05](https://github.com/rshade/pulumicost-core/commit/2070b05513f6e9ae2580930c02abed8fec3fe790))
+* **ci:** add automated nightly failure analysis workflow ([#297](https://github.com/rshade/pulumicost-core/issues/297)) ([ab7c516](https://github.com/rshade/pulumicost-core/commit/ab7c516a8b269f578ba309c68d1dd291ef2d00ef)), closes [#271](https://github.com/rshade/pulumicost-core/issues/271)
+* **conformance:** add plugin conformance testing framework ([#215](https://github.com/rshade/pulumicost-core/issues/215)) ([c37cc22](https://github.com/rshade/pulumicost-core/commit/c37cc2283919b4ba4ff736f15f42db7c18297fc5)), closes [#201](https://github.com/rshade/pulumicost-core/issues/201)
+* **e2e:** implement E2E testing framework with Pulumi Automation API ([#238](https://github.com/rshade/pulumicost-core/issues/238)) ([ee23ff2](https://github.com/rshade/pulumicost-core/commit/ee23ff2b19b348086e83969457c6927a787b96ac)), closes [#177](https://github.com/rshade/pulumicost-core/issues/177)
+* implement CLI filter flag with validation and integration tests ([#332](https://github.com/rshade/pulumicost-core/issues/332)) ([b358566](https://github.com/rshade/pulumicost-core/commit/b3585665e7192b74d6bebfaf3fe5be13c8e8d5e6))
+* implement sustainability metrics and finalize plugin sdk mapping ([#315](https://github.com/rshade/pulumicost-core/issues/315)) ([f207c53](https://github.com/rshade/pulumicost-core/commit/f207c534fcdd4c64b5498a459529da6a19eec1fa))
+* **plugin:** add reference recorder plugin for request capture and mock responses ([#293](https://github.com/rshade/pulumicost-core/issues/293)) ([733c2f9](https://github.com/rshade/pulumicost-core/commit/733c2f969952718ecde99ea9a8b5a64c74b6ac58))
+* **tui:** add shared TUI package with Bubble Tea/Lip Gloss components ([#258](https://github.com/rshade/pulumicost-core/issues/258)) ([e049460](https://github.com/rshade/pulumicost-core/commit/e049460e4ccd5545f456ecf9d2051a6f0bac94f9))
+* **tui:** add Spinner and Table components from bubbles library ([#341](https://github.com/rshade/pulumicost-core/issues/341)) ([992db5a](https://github.com/rshade/pulumicost-core/commit/992db5ab4ef20cdce6e1f5d6c1def7382ff03628))
+
+
+### Fixed
+
+* **deps:** update go dependencies ([#281](https://github.com/rshade/pulumicost-core/issues/281)) ([73364d6](https://github.com/rshade/pulumicost-core/commit/73364d66cf1d53512867cf203689998dcc9b3af6))
+* **deps:** update go dependencies ([#314](https://github.com/rshade/pulumicost-core/issues/314)) ([c09f298](https://github.com/rshade/pulumicost-core/commit/c09f298281c8b7e18d47fe086dd6fb5d921fd571))
+* **deps:** update module github.com/rshade/pulumicost-spec to v0.4.3 ([#211](https://github.com/rshade/pulumicost-core/issues/211)) ([4cb56d9](https://github.com/rshade/pulumicost-core/commit/4cb56d928ab0b5887fd2fc56c182383d9eedfffe))
+* **deps:** update module github.com/spf13/cobra to v1.10.2 ([#240](https://github.com/rshade/pulumicost-core/issues/240)) ([ad3bfd7](https://github.com/rshade/pulumicost-core/commit/ad3bfd7b92d189a912dbae3ae10bbda2067e6bf2))
+* update Go version to 1.25.5 and improve plugin integration tests ([#244](https://github.com/rshade/pulumicost-core/issues/244)) ([4f383df](https://github.com/rshade/pulumicost-core/commit/4f383df0df1e1d4d3d23259adef8eb29d6ea41e9))
+
+
+### Changed
+
+* **pluginhost:** remove PORT env var, use --port flag only ([#295](https://github.com/rshade/pulumicost-core/issues/295)) ([46bcdf2](https://github.com/rshade/pulumicost-core/commit/46bcdf24b718e6f43f0d8f5cf3092d79ac35f8ec))
+* **pluginsdk:** adopt pluginsdk environment variable constants ([#272](https://github.com/rshade/pulumicost-core/issues/272)) ([8c6e616](https://github.com/rshade/pulumicost-core/commit/8c6e616bcc33bcd79a599d9a31b218e4aa67c34c)), closes [#230](https://github.com/rshade/pulumicost-core/issues/230)
+
+
+### Documentation
+
+* **all:** synchronize documentation with codebase features ([#257](https://github.com/rshade/pulumicost-core/issues/257)) ([5881cdc](https://github.com/rshade/pulumicost-core/commit/5881cdcbbd27705d35de3de285411ebcabe4b602)), closes [#256](https://github.com/rshade/pulumicost-core/issues/256)
+
 ## [0.1.2](https://github.com/rshade/pulumicost-core/compare/v0.1.1...v0.1.2) (2025-12-03)
 
 
