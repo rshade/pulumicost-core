@@ -19,6 +19,7 @@ const (
 	ColorHighlight  = lipgloss.Color("229") // #ffffaf - Yellow
 	ColorMuted      = lipgloss.Color("240") // #585858 - Dim gray
 	ColorSelectedBg = lipgloss.Color("237") // #3a3a3a - Selected row background
+	ColorSpinner    = lipgloss.Color("205") // #ff5faf - Pink (loading indicator)
 )
 
 // Priority colors.

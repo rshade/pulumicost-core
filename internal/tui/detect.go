@@ -10,6 +10,8 @@ import (
 const (
 	// DefaultTerminalWidth is the fallback width when terminal size cannot be determined.
 	DefaultTerminalWidth = 80
+	// MinTerminalWidth is the minimum width required for interactive TUI.
+	MinTerminalWidth = 60
 )
 
 // OutputMode represents the rendering mode for CLI output based on
@@ -80,6 +82,11 @@ func DetectOutputMode(forceColor, noColor, plain bool) OutputMode {
 	// CI environments typically support colors but not interactivity.
 	if os.Getenv("CI") != "" {
 		return OutputModeStyled
+	}
+
+	// Fall back to plain text if terminal is too narrow for TUI.
+	if TerminalWidth() < MinTerminalWidth {
+		return OutputModePlain
 	}
 
 	// Default to interactive mode for capable terminals.
