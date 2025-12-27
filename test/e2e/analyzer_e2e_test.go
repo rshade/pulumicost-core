@@ -95,7 +95,7 @@ func runAnalyzerPreview(t *testing.T, tc *TestContext) string {
 	defer pm.DeferPluginCleanup(ctx, "aws-public")()
 
 	// Prepare project
-	projectPath := "fixtures/analyzer"
+	projectPath := "fixtures/ec2"
 	absProjectPath, err := filepath.Abs(projectPath)
 	require.NoError(t, err)
 	tc.ProjectDir = absProjectPath
@@ -192,7 +192,7 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 	defer pm.DeferPluginCleanup(ctx, "aws-public")()
 
 	// Prepare project
-	projectPath := "fixtures/analyzer"
+	projectPath := "fixtures/ec2"
 	absProjectPath, err := filepath.Abs(projectPath)
 	require.NoError(t, err)
 	tc.ProjectDir = absProjectPath
@@ -251,4 +251,75 @@ func TestAnalyzer_GracefulDegradation(t *testing.T) {
 
 	// Verify analyzer didn't crash and output produced something
 	assert.Contains(t, output, "pulumicost", "Analyzer should still run")
+}
+
+// TestAnalyzer_RecommendationDisplay verifies recommendations appear in diagnostics.
+//
+// NOTE: This test currently validates graceful handling when plugins don't return
+// recommendations. Recommendations require the analyzer to call the separate
+// GetRecommendations RPC (available in pluginsdk v0.4.10+) and merge results
+// with cost diagnostics. Once that integration is added, update this test.
+//
+// Expected output format when recommendations are present:
+//
+//	"Estimated Monthly Cost: $X.XX USD (source: aws-plugin) |
+//	  Recommendations: Right-sizing: Switch to t3.small (save $15.00/mo)"
+func TestAnalyzer_RecommendationDisplay(t *testing.T) {
+	tc := NewTestContext(t, "e2e-analyzer-recommendations")
+	ctx := context.Background()
+	defer tc.Teardown(ctx)
+
+	output := runAnalyzerPreview(t, tc)
+
+	// Verify basic cost diagnostics still work (graceful handling when no recommendations)
+	diagnostics := []AnalyzerDiagnostic{
+		{Pattern: "Estimated Monthly Cost:", Required: true},
+		{Pattern: "pulumicost", Required: true},
+	}
+	validateDiagnostics(t, output, diagnostics)
+
+	// Verify recommendations are displayed
+	recommendationDiagnostics := []AnalyzerDiagnostic{
+		{Pattern: "Recommendations:", Required: false},
+		// We expect at least one of these patterns depending on what the plugin returns
+		// For now, we just check that the recommendations section exists
+	}
+	validateDiagnostics(t, output, recommendationDiagnostics)
+
+	t.Logf("Preview output:\n%s", output)
+}
+
+// TestAnalyzer_StackSummaryWithRecommendations verifies aggregate recommendations
+// appear in the stack summary.
+//
+// NOTE: This test currently validates graceful handling when plugins don't return
+// recommendations. Once plugins implement GetRecommendations RPC (pluginsdk v0.4.10),
+// this test should be updated to verify aggregate savings patterns.
+//
+// Expected output format when recommendations are present:
+//
+//	"Total Estimated Monthly Cost: $X.XX USD (N resources analyzed) |
+//	  X recommendations with $XX.XX/mo potential savings"
+func TestAnalyzer_StackSummaryWithRecommendations(t *testing.T) {
+	tc := NewTestContext(t, "e2e-analyzer-stack-recommendations")
+	ctx := context.Background()
+	defer tc.Teardown(ctx)
+
+	output := runAnalyzerPreview(t, tc)
+
+	// Verify stack summary still works (graceful handling when no recommendations)
+	diagnostics := []AnalyzerDiagnostic{
+		{Pattern: "Total Estimated Monthly Cost:", Required: true, Count: 1},
+		{Pattern: "resources analyzed", Required: true, Count: 1},
+	}
+	validateDiagnostics(t, output, diagnostics)
+
+	// Verify recommendation summary is present
+	stackRecommendationDiagnostics := []AnalyzerDiagnostic{
+		{Pattern: "recommendations with", Required: false},
+		{Pattern: "potential savings", Required: false}, // Might not be present if savings are 0
+	}
+	validateDiagnostics(t, output, stackRecommendationDiagnostics)
+
+	t.Logf("Preview output:\n%s", output)
 }

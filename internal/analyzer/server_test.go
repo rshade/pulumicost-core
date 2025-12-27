@@ -15,8 +15,26 @@ import (
 
 // mockCostCalculator implements the CostCalculator interface for testing.
 type mockCostCalculator struct {
-	results []engine.CostResult
-	err     error
+	results    []engine.CostResult
+	recResults *engine.RecommendationsResult
+	err        error
+	recErr     error
+}
+
+func (m *mockCostCalculator) GetRecommendationsForResources(
+	_ context.Context,
+	resources []engine.ResourceDescriptor,
+) (*engine.RecommendationsResult, error) {
+	if m.recErr != nil {
+		return nil, m.recErr
+	}
+	if m.err != nil {
+		return nil, m.err
+	}
+	if m.recResults == nil {
+		return &engine.RecommendationsResult{}, nil
+	}
+	return m.recResults, nil
 }
 
 func (m *mockCostCalculator) GetProjectedCost(
@@ -715,4 +733,119 @@ func TestServer_AnalyzeStack_InternalPulumiTypes(t *testing.T) {
 	// Internal types have $0.00 cost so they don't increment the analyzed count
 	assert.Contains(t, summary.GetMessage(), "$10.00 USD")
 	assert.Contains(t, summary.GetMessage(), "1 resources analyzed")
+}
+
+func TestServer_Analyze_WithRecommendations(t *testing.T) {
+	calc := &mockCostCalculator{
+		results: []engine.CostResult{
+			{
+				ResourceType: "aws:ec2/instance:Instance",
+				ResourceID:   "webserver",
+				Currency:     "USD",
+				Monthly:      100.0,
+			},
+		},
+		recResults: &engine.RecommendationsResult{
+			Recommendations: []engine.Recommendation{
+				{
+					ResourceID:       "webserver",
+					Type:             "Right-sizing",
+					Description:      "Switch to t3.small",
+					EstimatedSavings: 20.0,
+					Currency:         "USD",
+				},
+			},
+		},
+	}
+	server := NewServer(calc, "1.0.0")
+
+	req := &pulumirpc.AnalyzeRequest{
+		Type: "aws:ec2/instance:Instance",
+		Urn:  "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+	}
+
+	resp, err := server.Analyze(context.Background(), req)
+	require.NoError(t, err)
+	require.Len(t, resp.GetDiagnostics(), 1)
+
+	diag := resp.GetDiagnostics()[0]
+	assert.Contains(t, diag.GetMessage(), "Switch to t3.small")
+	assert.Contains(t, diag.GetMessage(), "save $20.00/mo")
+}
+
+func TestServer_Analyze_RecommendationFailure(t *testing.T) {
+	calc := &mockCostCalculator{
+		results: []engine.CostResult{
+			{
+				ResourceType: "aws:ec2/instance:Instance",
+				ResourceID:   "webserver",
+				Currency:     "USD",
+				Monthly:      100.0,
+			},
+		},
+		recErr: assert.AnError, // Recommendation fetch fails
+	}
+	server := NewServer(calc, "1.0.0")
+
+	req := &pulumirpc.AnalyzeRequest{
+		Type: "aws:ec2/instance:Instance",
+		Urn:  "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+	}
+
+	// Should still succeed and return cost diagnostic (without recommendations)
+	resp, err := server.Analyze(context.Background(), req)
+	require.NoError(t, err)
+	require.Len(t, resp.GetDiagnostics(), 1)
+
+	diag := resp.GetDiagnostics()[0]
+	assert.Contains(t, diag.GetMessage(), "$100.00 USD")
+	assert.NotContains(t, diag.GetMessage(), "save")
+}
+
+func TestServer_AnalyzeStack_SummaryWithRecommendations(t *testing.T) {
+	calc := &mockCostCalculator{
+		results: []engine.CostResult{
+			{
+				ResourceType: "aws:ec2/instance:Instance",
+				ResourceID:   "webserver",
+				Currency:     "USD",
+				Monthly:      100.0,
+			},
+		},
+		recResults: &engine.RecommendationsResult{
+			Recommendations: []engine.Recommendation{
+				{
+					ResourceID:       "webserver",
+					Type:             "Right-sizing",
+					EstimatedSavings: 20.0,
+					Currency:         "USD",
+				},
+			},
+		},
+	}
+	server := NewServer(calc, "1.0.0")
+
+	// Call Analyze to populate cache (including recommendations)
+	req := &pulumirpc.AnalyzeRequest{
+		Type: "aws:ec2/instance:Instance",
+		Urn:  "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+	}
+	_, err := server.Analyze(context.Background(), req)
+	require.NoError(t, err)
+
+	// Call AnalyzeStack
+	stackReq := &pulumirpc.AnalyzeStackRequest{
+		Resources: []*pulumirpc.AnalyzerResource{
+			{
+				Type: "aws:ec2/instance:Instance",
+				Urn:  "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
+			},
+		},
+	}
+	resp, err := server.AnalyzeStack(context.Background(), stackReq)
+	require.NoError(t, err)
+	require.Len(t, resp.GetDiagnostics(), 1)
+
+	summary := resp.GetDiagnostics()[0]
+	assert.Contains(t, summary.GetMessage(), "1 recommendations with $20.00/mo potential savings")
 }

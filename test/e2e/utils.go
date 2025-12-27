@@ -3,6 +3,9 @@ package e2e
 import (
 	"crypto/rand"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -50,4 +53,34 @@ func GenerateStackName(prefix string) string {
 	entropy := ulid.Monotonic(rand.Reader, 0)
 	id := ulid.MustNew(ulid.Timestamp(t), entropy)
 	return fmt.Sprintf("%s-%s", prefix, id.String())
+}
+
+// findPulumicostBinary locates the pulumicost binary.
+func findPulumicostBinary() string {
+	// Check common locations
+	locations := []string{
+		os.Getenv("PULUMICOST_BINARY"), // Environment override
+		"../../bin/pulumicost",         // From test/e2e relative to repo root
+		"../../../bin/pulumicost",      // Alternative
+	}
+
+	for _, loc := range locations {
+		if loc == "" {
+			continue
+		}
+		absPath, err := filepath.Abs(loc)
+		if err != nil {
+			continue
+		}
+		if _, err := os.Stat(absPath); err == nil {
+			return absPath
+		}
+	}
+
+	// Try PATH
+	if path, err := exec.LookPath("pulumicost"); err == nil {
+		return path
+	}
+
+	return ""
 }

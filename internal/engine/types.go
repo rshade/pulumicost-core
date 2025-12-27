@@ -117,6 +117,40 @@ type SustainabilityMetric struct {
 	Unit  string  `json:"unit"`
 }
 
+// Recommendation represents a single cost optimization suggestion.
+//
+// Recommendations are provided by plugins to suggest ways to reduce costs,
+// such as right-sizing instances, terminating idle resources, or purchasing
+// reserved capacity.
+//
+// Usage Examples:
+//
+//	rec := Recommendation{
+//		Type:            "Right-sizing",
+//		Description:     "Switch to t3.small to reduce costs",
+//		EstimatedSavings: 15.00,
+//		Currency:        "USD",
+//	}
+type Recommendation struct {
+	// ResourceID identifies the resource this recommendation applies to.
+	ResourceID string `json:"resourceId,omitempty"`
+
+	// Type categorizes the recommendation (e.g., "Right-sizing", "Terminate",
+	// "Purchase Commitment", "Delete Unused", "Adjust Requests")
+	Type string `json:"type"`
+
+	// Description provides actionable text explaining the recommendation
+	Description string `json:"description"`
+
+	// EstimatedSavings is the projected monthly savings if the recommendation
+	// is implemented. Zero indicates savings cannot be estimated.
+	EstimatedSavings float64 `json:"estimatedSavings,omitempty"`
+
+	// Currency is the ISO 4217 code for EstimatedSavings (e.g., "USD").
+	// Empty if EstimatedSavings is zero.
+	Currency string `json:"currency,omitempty"`
+}
+
 // CostResult contains the calculated cost information for a single resource.
 type CostResult struct {
 	ResourceType   string                          `json:"resourceType"`
@@ -128,6 +162,10 @@ type CostResult struct {
 	Notes          string                          `json:"notes"`
 	Breakdown      map[string]float64              `json:"breakdown"`
 	Sustainability map[string]SustainabilityMetric `json:"sustainability,omitempty"`
+	// Recommendations contains cost optimization suggestions from plugins.
+	// This field is populated when plugins provide actionable recommendations
+	// alongside cost estimates (e.g., right-sizing, termination suggestions).
+	Recommendations []Recommendation `json:"recommendations,omitempty"`
 	// Actual cost specific fields
 	TotalCost  float64   `json:"totalCost,omitempty"`
 	DailyCosts []float64 `json:"dailyCosts,omitempty"`
@@ -397,4 +435,35 @@ type CostSummary struct {
 type AggregatedResults struct {
 	Summary   CostSummary  `json:"summary"`
 	Resources []CostResult `json:"resources"`
+}
+
+// RecommendationError captures error information when fetching recommendations from a plugin.
+type RecommendationError struct {
+	PluginName string `json:"pluginName"`
+	Error      string `json:"error"`
+}
+
+// RecommendationsResult contains the results of fetching recommendations from multiple plugins.
+type RecommendationsResult struct {
+	Recommendations []Recommendation      `json:"recommendations"`
+	Errors          []RecommendationError `json:"errors"`
+	TotalSavings    float64               `json:"totalSavings"`
+	Currency        string                `json:"currency"`
+}
+
+// HasErrors returns true if any errors were encountered.
+func (r *RecommendationsResult) HasErrors() bool {
+	return len(r.Errors) > 0
+}
+
+// ErrorSummary returns a string summary of errors.
+func (r *RecommendationsResult) ErrorSummary() string {
+	if !r.HasErrors() {
+		return ""
+	}
+	var summaries []string
+	for _, e := range r.Errors {
+		summaries = append(summaries, fmt.Sprintf("%s: %s", e.PluginName, e.Error))
+	}
+	return strings.Join(summaries, "; ")
 }

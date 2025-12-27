@@ -1,6 +1,7 @@
 name: pulumicost-e2e-ec2
 runtime: yaml
 description: E2E test project for EC2 cost validation
+# Note: The analyzer is loaded via --policy-pack flag, not plugins.analyzers
 
 variables:
   # Look up the latest Amazon Linux 2 AMI
@@ -21,7 +22,7 @@ resources:
   e2e-vpc:
     type: aws:ec2:Vpc
     properties:
-      cidrBlock: "10.0.0.0/16"
+      cidrBlock: '10.0.0.0/16'
       enableDnsHostnames: true
       enableDnsSupport: true
       tags:
@@ -32,7 +33,7 @@ resources:
     type: aws:ec2:Subnet
     properties:
       vpcId: ${e2e-vpc.id}
-      cidrBlock: "10.0.1.0/24"
+      cidrBlock: '10.0.1.0/24'
       availabilityZone: us-east-1a
       mapPublicIpOnLaunch: true
       tags:
@@ -48,21 +49,31 @@ resources:
           fromPort: 80
           toPort: 80
           cidrBlocks:
-            - "0.0.0.0/0"
+            - '0.0.0.0/0'
       egress:
-        - protocol: "-1"
+        - protocol: '-1'
           fromPort: 0
           toPort: 0
           cidrBlocks:
-            - "0.0.0.0/0"
+            - '0.0.0.0/0'
       tags:
         Name: e2e-test-sg
 
-  # Create an EC2 instance (t3.micro for cost testing)
+  # Create an EBS volume
+  e2e-volume:
+    type: aws:ebs:Volume
+    properties:
+      availabilityZone: us-east-1a
+      size: 10
+      type: gp2
+      tags:
+        Name: e2e-test-volume
+
+  # Create an EC2 instance (t2.micro for cost testing)
   web-server-www:
     type: aws:ec2:Instance
     properties:
-      instanceType: t3.micro
+      instanceType: t2.micro
       vpcSecurityGroupIds:
         - ${web-secgrp.id}
       subnetId: ${e2e-subnet.id}
@@ -71,5 +82,19 @@ resources:
       tags:
         Name: e2e-test-instance
 
+  # Attach the volume to the instance
+  e2e-volume-attachment:
+    type: aws:ec2:VolumeAttachment
+    properties:
+      instanceId: ${web-server-www.id}
+      volumeId: ${e2e-volume.id}
+      deviceName: /dev/sdh
+    options:
+      dependsOn:
+        - ${web-server-www}
+        - ${e2e-volume}
+
 outputs:
   instanceId: ${web-server-www.id}
+  volumeId: ${e2e-volume.id}
+  volumeAttachmentId: ${e2e-volume-attachment.id}

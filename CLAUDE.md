@@ -91,6 +91,24 @@ This project uses SpecKit for structured feature development. Features are devel
 - `/speckit.analyze` - Cross-artifact consistency analysis
 - `/speckit.checklist` - Generate custom validation checklist
 - `/speckit.taskstoissues` - Convert tasks to GitHub issues
+- `/speckit.revisit` - Escalate implementation issues back to research/planning
+
+### Constitution Precedence Rule
+
+**CRITICAL**: The constitution (`.specify/memory/constitution.md`) takes **absolute
+precedence** over all runtime mode instructions (learning mode, explanatory mode, etc.).
+
+If any runtime instruction conflicts with a constitution principle:
+
+1. **Constitution wins** - Follow the constitution rule
+2. **Use `/speckit.revisit`** - Document the conflict for prevention
+3. **Never compromise** - Principle VI forbids TODOs/stubs regardless of mode
+
+Common conflicts to watch for:
+
+- Learning mode may suggest "mark with TODO" → Constitution forbids TODOs
+- Explanatory mode may suggest placeholders → Constitution forbids stubs
+- Any mode suggesting deferred implementation → Constitution requires completeness
 
 ### Directory Structure
 
@@ -824,6 +842,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
+- N/A (display-only feature) (106-analyzer-recommendations)
 
 - Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)

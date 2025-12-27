@@ -10,9 +10,10 @@ import (
 
 // Policy pack and policy name constants for diagnostic messages.
 const (
-	policyPackName = "pulumicost"
-	policyNameCost = "cost-estimate"
-	policyNameSum  = "stack-cost-summary"
+	policyPackName  = "pulumicost"
+	policyNameCost  = "cost-estimate"
+	policyNameSum   = "stack-cost-summary"
+	defaultCurrency = "USD"
 )
 
 // CostToDiagnostic converts a CostResult to an AnalyzeDiagnostic.
@@ -73,7 +74,7 @@ func StackSummaryDiagnostic(
 	version string,
 ) *pulumirpc.AnalyzeDiagnostic {
 	var totalMonthly float64
-	currency := "USD"
+	currency := defaultCurrency
 	analyzed := 0
 
 	for _, c := range costs {
@@ -88,6 +89,12 @@ func StackSummaryDiagnostic(
 
 	message := fmt.Sprintf("Total Estimated Monthly Cost: $%.2f %s (%d resources analyzed)",
 		totalMonthly, currency, analyzed)
+
+	// Append recommendation summary if any recommendations exist
+	recAgg := AggregateRecommendations(costs)
+	if recAgg.Count > 0 {
+		message += formatRecommendationSummary(recAgg)
+	}
 
 	return &pulumirpc.AnalyzeDiagnostic{
 		PolicyName:        policyNameSum,
@@ -147,11 +154,212 @@ func formatCostMessage(cost engine.CostResult) string {
 		}
 	}
 
+	// Append recommendations if present (follows sustainability pattern)
+	if recStr := formatRecommendations(cost.Recommendations); recStr != "" {
+		message += " | " + recStr
+	}
+
 	return message
 }
 
 func getJoinedSustainability(parts []string) string {
 	return strings.Join(parts, ", ")
+}
+
+// maxRecommendationsToShow is the maximum number of recommendations to display
+// before truncating with "and N more" indicator.
+const maxRecommendationsToShow = 3
+
+// formatRecommendation formats a single recommendation into a human-readable string.
+//
+// Format examples:
+//   - With savings: "Right-sizing: Switch to t3.small (save $15.00/mo)"
+//   - Without savings: "Review: Consider adjusting storage class"
+func formatRecommendation(rec engine.Recommendation) string {
+	// Base format: "Type: Description"
+	result := fmt.Sprintf("%s: %s", rec.Type, rec.Description)
+
+	// Append savings if present and non-zero
+	if rec.EstimatedSavings > 0 {
+		symbol := getCurrencySymbol(rec.Currency)
+		result += fmt.Sprintf(" (save %s%.2f/mo)", symbol, rec.EstimatedSavings)
+	}
+
+	return result
+}
+
+// getCurrencySymbol returns the appropriate currency symbol for the given code.
+// Returns "$" as default for unknown currencies.
+func getCurrencySymbol(currency string) string {
+	switch currency {
+	case "EUR":
+		return "€"
+	case "GBP":
+		return "£"
+	case "JPY":
+		return "¥"
+	case "USD", "":
+		return "$"
+	default:
+		return "$"
+	}
+}
+
+// RecommendationAggregate holds aggregated recommendation statistics.
+type RecommendationAggregate struct {
+	Count           int
+	TotalSavings    float64
+	Currency        string
+	MixedCurrencies bool
+}
+
+// formatRecommendationSummary formats the aggregate recommendation info for stack summary.
+//
+// Format examples:
+//   - Same currency: " | 3 recommendations with $125.00/mo potential savings"
+//   - Mixed currencies: " | 3 recommendations (mixed currencies)"
+func formatRecommendationSummary(agg RecommendationAggregate) string {
+	if agg.MixedCurrencies {
+		return fmt.Sprintf(" | %d recommendations (mixed currencies)", agg.Count)
+	}
+	symbol := getCurrencySymbol(agg.Currency)
+	return fmt.Sprintf(
+		" | %d recommendations with %s%.2f/mo potential savings",
+		agg.Count, symbol, agg.TotalSavings,
+	)
+}
+
+// AggregateRecommendations calculates total recommendation count and savings.
+//
+// If recommendations have mixed currencies, MixedCurrencies is set to true
+// and TotalSavings should not be displayed as a numeric value.
+//
+// Per the engine.Recommendation contract, Currency should be empty only if
+// EstimatedSavings is zero. If a recommendation has savings without currency,
+// this is treated as a mixed currency scenario since the currency is unknown.
+func AggregateRecommendations(costs []engine.CostResult) RecommendationAggregate {
+	var result RecommendationAggregate
+	currencySet := make(map[string]bool)
+
+	for _, cost := range costs {
+		for _, rec := range cost.Recommendations {
+			result.Count++
+			result.TotalSavings += rec.EstimatedSavings
+
+			// Validate currency/savings consistency per contract:
+			// If savings > 0 but currency is empty, treat as mixed currencies
+			// since the actual currency is unknown.
+			if rec.EstimatedSavings > 0 && rec.Currency == "" {
+				result.MixedCurrencies = true
+				continue
+			}
+
+			if rec.Currency != "" {
+				currencySet[rec.Currency] = true
+			}
+		}
+	}
+
+	// Skip currency detection if already marked as mixed
+	if result.MixedCurrencies {
+		return result
+	}
+
+	// Determine currency status
+	switch len(currencySet) {
+	case 0:
+		result.Currency = defaultCurrency // Default
+	case 1:
+		for curr := range currencySet {
+			result.Currency = curr
+		}
+	default:
+		result.MixedCurrencies = true
+	}
+
+	return result
+}
+
+// formatRecommendations formats a slice of recommendations into a single string.
+//
+// If there are more than maxRecommendationsToShow (3), only the first 3 are shown
+// with an "and N more" indicator.
+//
+// Returns empty string if recommendations is nil or empty.
+//
+// Format example:
+//
+//	"Recommendations: Right-sizing: Switch to t3.small (save $15.00/mo);
+//	 Terminate: Remove idle instance (save $100.00/mo)"
+func formatRecommendations(recommendations []engine.Recommendation) string {
+	if len(recommendations) == 0 {
+		return ""
+	}
+
+	// Filter to valid recommendations only (skip malformed)
+	validRecs := filterValidRecommendations(recommendations)
+	if len(validRecs) == 0 {
+		return ""
+	}
+
+	var parts []string
+	displayCount := len(validRecs)
+	if displayCount > maxRecommendationsToShow {
+		displayCount = maxRecommendationsToShow
+	}
+
+	for i := range displayCount {
+		parts = append(parts, formatRecommendation(validRecs[i]))
+	}
+
+	// Add "and N more" indicator if truncated
+	if len(validRecs) > maxRecommendationsToShow {
+		remaining := len(validRecs) - maxRecommendationsToShow
+		parts = append(parts, fmt.Sprintf("and %d more", remaining))
+	}
+
+	return "Recommendations: " + strings.Join(parts, "; ")
+}
+
+// isValidRecommendation returns true if the recommendation has valid Type, Description,
+// and consistent EstimatedSavings/Currency values per the engine.Recommendation contract.
+//
+// Per contract:
+//   - Type and Description must be non-empty
+//   - Currency should be empty only if EstimatedSavings is zero
+//   - EstimatedSavings should not be negative
+func isValidRecommendation(rec engine.Recommendation) bool {
+	if rec.Type == "" || rec.Description == "" {
+		return false
+	}
+
+	// Per contract: Currency should be empty only if EstimatedSavings is zero
+	if rec.EstimatedSavings > 0 && rec.Currency == "" {
+		return false
+	}
+
+	// EstimatedSavings should not be negative
+	if rec.EstimatedSavings < 0 {
+		return false
+	}
+
+	return true
+}
+
+// filterValidRecommendations returns only valid recommendations per isValidRecommendation.
+// Malformed recommendations (empty Type/Description, invalid currency/savings) are skipped.
+func filterValidRecommendations(recs []engine.Recommendation) []engine.Recommendation {
+	var valid []engine.Recommendation
+	for _, rec := range recs {
+		if isValidRecommendation(rec) {
+			valid = append(valid, rec)
+		}
+		// Silently skip malformed recommendations - logging would require
+		// importing zerolog/logging which adds coupling. If detailed logging
+		// is needed, it should be done at the plugin boundary where the
+		// recommendation data is received.
+	}
+	return valid
 }
 
 // WarningDiagnostic creates a warning-level diagnostic for error conditions.

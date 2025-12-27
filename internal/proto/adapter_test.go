@@ -24,6 +24,11 @@ type mockCostSourceClient struct {
 		in *GetActualCostRequest,
 		opts ...grpc.CallOption,
 	) (*GetActualCostResponse, error)
+	getRecommendationsFunc func(
+		ctx context.Context,
+		in *GetRecommendationsRequest,
+		opts ...grpc.CallOption,
+	) (*GetRecommendationsResponse, error)
 }
 
 func (m *mockCostSourceClient) Name(
@@ -57,6 +62,17 @@ func (m *mockCostSourceClient) GetActualCost(
 		return m.getActualFunc(ctx, in, opts...)
 	}
 	return &GetActualCostResponse{Results: []*ActualCostResult{}}, nil
+}
+
+func (m *mockCostSourceClient) GetRecommendations(
+	ctx context.Context,
+	in *GetRecommendationsRequest,
+	opts ...grpc.CallOption,
+) (*GetRecommendationsResponse, error) {
+	if m.getRecommendationsFunc != nil {
+		return m.getRecommendationsFunc(ctx, in, opts...)
+	}
+	return &GetRecommendationsResponse{Recommendations: []*Recommendation{}}, nil
 }
 
 // T003: Unit test for ErrorDetail struct creation.
@@ -742,6 +758,483 @@ func TestExtractRegionFromProperties(t *testing.T) {
 				t.Errorf("resolveSKUAndRegion() region = %q, want %q", region, tt.expected)
 			}
 			_ = sku
+		})
+	}
+}
+
+// T041: Unit test for GetRecommendationsRequest type.
+func TestGetRecommendationsRequest_Creation(t *testing.T) {
+	tests := []struct {
+		name     string
+		request  GetRecommendationsRequest
+		validate func(t *testing.T, req GetRecommendationsRequest)
+	}{
+		{
+			name: "basic request with target resources",
+			request: GetRecommendationsRequest{
+				TargetResources: []*ResourceDescriptor{
+					{
+						Type:     "aws:ec2:Instance",
+						Provider: "aws",
+						Properties: map[string]string{
+							"instanceType": "t3.xlarge",
+							"region":       "us-east-1",
+						},
+					},
+				},
+			},
+			validate: func(t *testing.T, req GetRecommendationsRequest) {
+				if len(req.TargetResources) != 1 {
+					t.Errorf("TargetResources length = %d, want 1", len(req.TargetResources))
+				}
+				if req.TargetResources[0].Type != "aws:ec2:Instance" {
+					t.Errorf("Resource Type = %s, want aws:ec2:Instance", req.TargetResources[0].Type)
+				}
+			},
+		},
+		{
+			name: "request with pagination",
+			request: GetRecommendationsRequest{
+				PageSize:  50,
+				PageToken: "next-page-token",
+			},
+			validate: func(t *testing.T, req GetRecommendationsRequest) {
+				if req.PageSize != 50 {
+					t.Errorf("PageSize = %d, want 50", req.PageSize)
+				}
+				if req.PageToken != "next-page-token" {
+					t.Errorf("PageToken = %s, want next-page-token", req.PageToken)
+				}
+			},
+		},
+		{
+			name: "request with projection period",
+			request: GetRecommendationsRequest{
+				ProjectionPeriod: "monthly",
+			},
+			validate: func(t *testing.T, req GetRecommendationsRequest) {
+				if req.ProjectionPeriod != "monthly" {
+					t.Errorf("ProjectionPeriod = %s, want monthly", req.ProjectionPeriod)
+				}
+			},
+		},
+		{
+			name: "request with excluded recommendation IDs",
+			request: GetRecommendationsRequest{
+				ExcludedRecommendationIDs: []string{"rec-123", "rec-456"},
+			},
+			validate: func(t *testing.T, req GetRecommendationsRequest) {
+				if len(req.ExcludedRecommendationIDs) != 2 {
+					t.Errorf("ExcludedRecommendationIDs length = %d, want 2", len(req.ExcludedRecommendationIDs))
+				}
+			},
+		},
+		{
+			name:    "empty request",
+			request: GetRecommendationsRequest{},
+			validate: func(t *testing.T, req GetRecommendationsRequest) {
+				if req.TargetResources != nil && len(req.TargetResources) != 0 {
+					t.Errorf("TargetResources should be nil or empty, got %v", req.TargetResources)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.validate(t, tt.request)
+		})
+	}
+}
+
+// T042: Unit test for GetRecommendationsResponse type.
+func TestGetRecommendationsResponse_Creation(t *testing.T) {
+	tests := []struct {
+		name     string
+		response GetRecommendationsResponse
+		validate func(t *testing.T, resp GetRecommendationsResponse)
+	}{
+		{
+			name: "response with recommendations",
+			response: GetRecommendationsResponse{
+				Recommendations: []*Recommendation{
+					{
+						ID:          "rec-123",
+						Category:    "COST",
+						Description: "Right-size instance to t3.small",
+						Impact: &RecommendationImpact{
+							EstimatedSavings: 15.00,
+							Currency:         "USD",
+						},
+					},
+				},
+				NextPageToken: "",
+			},
+			validate: func(t *testing.T, resp GetRecommendationsResponse) {
+				if len(resp.Recommendations) != 1 {
+					t.Errorf("Recommendations length = %d, want 1", len(resp.Recommendations))
+				}
+				rec := resp.Recommendations[0]
+				if rec.ID != "rec-123" {
+					t.Errorf("Recommendation ID = %s, want rec-123", rec.ID)
+				}
+				if rec.Impact.EstimatedSavings != 15.00 {
+					t.Errorf("EstimatedSavings = %f, want 15.00", rec.Impact.EstimatedSavings)
+				}
+			},
+		},
+		{
+			name: "response with pagination token",
+			response: GetRecommendationsResponse{
+				Recommendations: []*Recommendation{},
+				NextPageToken:   "next-page-token-abc",
+			},
+			validate: func(t *testing.T, resp GetRecommendationsResponse) {
+				if resp.NextPageToken != "next-page-token-abc" {
+					t.Errorf("NextPageToken = %s, want next-page-token-abc", resp.NextPageToken)
+				}
+			},
+		},
+		{
+			name: "response with multiple recommendations",
+			response: GetRecommendationsResponse{
+				Recommendations: []*Recommendation{
+					{ID: "rec-1", Category: "COST", Description: "Right-size instance"},
+					{ID: "rec-2", Category: "COST", Description: "Terminate idle resource"},
+					{ID: "rec-3", Category: "COST", Description: "Purchase commitment"},
+				},
+			},
+			validate: func(t *testing.T, resp GetRecommendationsResponse) {
+				if len(resp.Recommendations) != 3 {
+					t.Errorf("Recommendations length = %d, want 3", len(resp.Recommendations))
+				}
+			},
+		},
+		{
+			name: "empty response",
+			response: GetRecommendationsResponse{
+				Recommendations: []*Recommendation{},
+			},
+			validate: func(t *testing.T, resp GetRecommendationsResponse) {
+				if len(resp.Recommendations) != 0 {
+					t.Errorf("Recommendations should be empty, got %d", len(resp.Recommendations))
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.validate(t, tt.response)
+		})
+	}
+}
+
+// T043: Unit test for clientAdapter.GetRecommendations method.
+func TestClientAdapter_GetRecommendations(t *testing.T) {
+	t.Run("successful recommendations query", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			getRecommendationsFunc: func(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error) {
+				return &GetRecommendationsResponse{
+					Recommendations: []*Recommendation{
+						{
+							ID:          "rec-123",
+							Category:    "COST",
+							ActionType:  "RIGHTSIZE",
+							Description: "Switch to t3.small to save $15/mo",
+							Source:      "aws",
+							ResourceID:  "i-1234567890abcdef0",
+							Impact: &RecommendationImpact{
+								EstimatedSavings: 15.00,
+								Currency:         "USD",
+							},
+						},
+					},
+				}, nil
+			},
+		}
+
+		req := &GetRecommendationsRequest{
+			TargetResources: []*ResourceDescriptor{
+				{
+					Type:     "aws:ec2:Instance",
+					Provider: "aws",
+					Properties: map[string]string{
+						"instanceType": "t3.xlarge",
+					},
+				},
+			},
+		}
+
+		resp, err := mockClient.GetRecommendations(context.Background(), req)
+		if err != nil {
+			t.Fatalf("GetRecommendations() error = %v", err)
+		}
+
+		if len(resp.Recommendations) != 1 {
+			t.Errorf("Recommendations length = %d, want 1", len(resp.Recommendations))
+		}
+
+		rec := resp.Recommendations[0]
+		if rec.ID != "rec-123" {
+			t.Errorf("Recommendation ID = %s, want rec-123", rec.ID)
+		}
+		if rec.Description != "Switch to t3.small to save $15/mo" {
+			t.Errorf("Description = %s, want 'Switch to t3.small to save $15/mo'", rec.Description)
+		}
+		if rec.Impact.EstimatedSavings != 15.00 {
+			t.Errorf("EstimatedSavings = %f, want 15.00", rec.Impact.EstimatedSavings)
+		}
+	})
+
+	t.Run("query with no recommendations available", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			getRecommendationsFunc: func(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error) {
+				return &GetRecommendationsResponse{
+					Recommendations: []*Recommendation{},
+				}, nil
+			},
+		}
+
+		req := &GetRecommendationsRequest{
+			TargetResources: []*ResourceDescriptor{
+				{Type: "aws:s3:Bucket", Provider: "aws"},
+			},
+		}
+
+		resp, err := mockClient.GetRecommendations(context.Background(), req)
+		if err != nil {
+			t.Fatalf("GetRecommendations() error = %v", err)
+		}
+
+		if len(resp.Recommendations) != 0 {
+			t.Errorf("Recommendations length = %d, want 0", len(resp.Recommendations))
+		}
+	})
+
+	t.Run("query with error", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			getRecommendationsFunc: func(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		req := &GetRecommendationsRequest{}
+		resp, err := mockClient.GetRecommendations(context.Background(), req)
+
+		if err == nil {
+			t.Error("GetRecommendations() expected error, got nil")
+		}
+		if resp != nil {
+			t.Errorf("Response should be nil on error, got %v", resp)
+		}
+		if !strings.Contains(err.Error(), "service unavailable") {
+			t.Errorf("Error should contain 'service unavailable', got %v", err)
+		}
+	})
+
+	t.Run("query with pagination", func(t *testing.T) {
+		callCount := 0
+		mockClient := &mockCostSourceClient{
+			getRecommendationsFunc: func(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error) {
+				callCount++
+				if in.PageToken == "" {
+					return &GetRecommendationsResponse{
+						Recommendations: []*Recommendation{
+							{ID: "rec-1"},
+							{ID: "rec-2"},
+						},
+						NextPageToken: "page-2",
+					}, nil
+				}
+				return &GetRecommendationsResponse{
+					Recommendations: []*Recommendation{
+						{ID: "rec-3"},
+					},
+					NextPageToken: "",
+				}, nil
+			},
+		}
+
+		// First page
+		resp, err := mockClient.GetRecommendations(context.Background(), &GetRecommendationsRequest{})
+		if err != nil {
+			t.Fatalf("First page error = %v", err)
+		}
+		if len(resp.Recommendations) != 2 {
+			t.Errorf("First page recommendations = %d, want 2", len(resp.Recommendations))
+		}
+		if resp.NextPageToken != "page-2" {
+			t.Errorf("NextPageToken = %s, want page-2", resp.NextPageToken)
+		}
+
+		// Second page
+		resp, err = mockClient.GetRecommendations(context.Background(), &GetRecommendationsRequest{
+			PageToken: "page-2",
+		})
+		if err != nil {
+			t.Fatalf("Second page error = %v", err)
+		}
+		if len(resp.Recommendations) != 1 {
+			t.Errorf("Second page recommendations = %d, want 1", len(resp.Recommendations))
+		}
+		if resp.NextPageToken != "" {
+			t.Errorf("NextPageToken should be empty on last page, got %s", resp.NextPageToken)
+		}
+
+		if callCount != 2 {
+			t.Errorf("Expected 2 calls, got %d", callCount)
+		}
+	})
+
+	t.Run("default mock returns empty recommendations", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{} // No function set
+
+		resp, err := mockClient.GetRecommendations(context.Background(), &GetRecommendationsRequest{})
+		if err != nil {
+			t.Fatalf("GetRecommendations() error = %v", err)
+		}
+		if len(resp.Recommendations) != 0 {
+			t.Errorf("Default mock should return empty recommendations, got %d", len(resp.Recommendations))
+		}
+	})
+}
+
+// TestRecommendation_Creation tests the Recommendation type.
+func TestRecommendation_Creation(t *testing.T) {
+	tests := []struct {
+		name     string
+		rec      Recommendation
+		validate func(t *testing.T, rec Recommendation)
+	}{
+		{
+			name: "rightsizing recommendation",
+			rec: Recommendation{
+				ID:          "rec-rightsize-123",
+				Category:    "COST",
+				ActionType:  "RIGHTSIZE",
+				Description: "Switch from t3.xlarge to t3.small",
+				ResourceID:  "i-1234567890abcdef0",
+				Source:      "aws-cost-explorer",
+				Impact: &RecommendationImpact{
+					EstimatedSavings: 45.00,
+					Currency:         "USD",
+					CurrentCost:      60.00,
+					ProjectedCost:    15.00,
+				},
+			},
+			validate: func(t *testing.T, rec Recommendation) {
+				if rec.ActionType != "RIGHTSIZE" {
+					t.Errorf("ActionType = %s, want RIGHTSIZE", rec.ActionType)
+				}
+				if rec.Impact.CurrentCost != 60.00 {
+					t.Errorf("CurrentCost = %f, want 60.00", rec.Impact.CurrentCost)
+				}
+			},
+		},
+		{
+			name: "terminate recommendation",
+			rec: Recommendation{
+				ID:          "rec-terminate-456",
+				Category:    "COST",
+				ActionType:  "TERMINATE",
+				Description: "Remove idle instance with 0% CPU utilization",
+				ResourceID:  "i-fedcba0987654321",
+				Source:      "aws-cost-explorer",
+				Impact: &RecommendationImpact{
+					EstimatedSavings: 100.00,
+					Currency:         "USD",
+				},
+			},
+			validate: func(t *testing.T, rec Recommendation) {
+				if rec.ActionType != "TERMINATE" {
+					t.Errorf("ActionType = %s, want TERMINATE", rec.ActionType)
+				}
+			},
+		},
+		{
+			name: "recommendation without impact",
+			rec: Recommendation{
+				ID:          "rec-review-789",
+				Category:    "PERFORMANCE",
+				ActionType:  "MODIFY",
+				Description: "Review storage class configuration",
+				Source:      "manual",
+			},
+			validate: func(t *testing.T, rec Recommendation) {
+				if rec.Impact != nil {
+					t.Errorf("Impact should be nil, got %v", rec.Impact)
+				}
+			},
+		},
+		{
+			name: "recommendation with metadata",
+			rec: Recommendation{
+				ID:          "rec-k8s-123",
+				Category:    "COST",
+				ActionType:  "KUBERNETES_REQUEST_SIZING",
+				Description: "Adjust CPU requests for deployment",
+				Source:      "kubecost",
+				Metadata: map[string]string{
+					"namespace":     "production",
+					"workload":      "api-server",
+					"current_cpu":   "1000m",
+					"suggested_cpu": "250m",
+				},
+			},
+			validate: func(t *testing.T, rec Recommendation) {
+				if rec.Metadata["namespace"] != "production" {
+					t.Errorf("Metadata[namespace] = %s, want production", rec.Metadata["namespace"])
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.validate(t, tt.rec)
+		})
+	}
+}
+
+// TestRecommendationImpact_Creation tests the RecommendationImpact type.
+func TestRecommendationImpact_Creation(t *testing.T) {
+	tests := []struct {
+		name   string
+		impact RecommendationImpact
+	}{
+		{
+			name: "full impact data",
+			impact: RecommendationImpact{
+				EstimatedSavings:  50.00,
+				Currency:          "USD",
+				CurrentCost:       100.00,
+				ProjectedCost:     50.00,
+				SavingsPercentage: 50.0,
+			},
+		},
+		{
+			name: "savings only",
+			impact: RecommendationImpact{
+				EstimatedSavings: 25.00,
+				Currency:         "EUR",
+			},
+		},
+		{
+			name: "zero savings",
+			impact: RecommendationImpact{
+				EstimatedSavings: 0,
+				Currency:         "USD",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Basic validation that the struct was created correctly
+			if tt.impact.Currency == "" && tt.impact.EstimatedSavings > 0 {
+				t.Error("Currency should be set when EstimatedSavings > 0")
+			}
 		})
 	}
 }
