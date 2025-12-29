@@ -112,12 +112,28 @@ docs-lint:
 	markdownlint-cli2 --config docs/.markdownlint-cli2.jsonc 'docs/**/*.md' --ignore 'docs/_site/**' || true
 	@echo "Documentation linting complete."
 
-docs-serve:
+docs-sync:
+	@echo "Syncing root documentation..."
+	@echo "---" > docs/support/contributing.md
+	@echo "title: Contributing" >> docs/support/contributing.md
+	@echo "layout: default" >> docs/support/contributing.md
+	@echo "---" >> docs/support/contributing.md
+	@echo "" >> docs/support/contributing.md
+	@cat CONTRIBUTING.md | sed 's|docs/|../|g' >> docs/support/contributing.md
+	@echo "---" > docs/architecture/roadmap.md
+	@echo "title: Roadmap" >> docs/architecture/roadmap.md
+	@echo "layout: default" >> docs/architecture/roadmap.md
+	@echo "---" >> docs/architecture/roadmap.md
+	@echo "" >> docs/architecture/roadmap.md
+	@cat ROADMAP.md >> docs/architecture/roadmap.md
+	@echo "Documentation synced."
+
+docs-serve: docs-sync
 	@echo "Serving documentation locally at http://localhost:4000/pulumicost-core"
 	@cd docs && bundle install > /dev/null 2>&1 || true
 	@cd docs && bundle exec jekyll serve --host 0.0.0.0
 
-docs-build:
+docs-build: docs-sync
 	@echo "Building documentation site..."
 	@cd docs && bundle install > /dev/null 2>&1 || true
 	@cd docs && bundle exec jekyll build

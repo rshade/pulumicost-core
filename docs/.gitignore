@@ -1,31 +1,9 @@
-# Jekyll build output
-_site/
-.jekyll-metadata
+_site
+.sass-cache
 .jekyll-cache
-
-# Ruby/bundler local dependencies
-.bundle/
-vendor/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Node dependencies (if using npm for tools)
-node_modules/
-package-lock.json
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Build artifacts
-*.bak
-*.tmp
-
-# Local test files
-local/
-test-output/
+.jekyll-metadata
+vendor
+Gemfile.lock
+# Generated files
+support/contributing.md
+architecture/roadmap.md
