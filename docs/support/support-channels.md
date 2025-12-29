@@ -3,8 +3,6 @@ title: Support Channels
 layout: default
 ---
 
-# Support Channels
-
 We offer several ways to get help with PulumiCost.
 
 ## Community Support

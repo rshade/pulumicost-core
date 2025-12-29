@@ -3,8 +3,6 @@ title: Security
 layout: default
 ---
 
-# Security Best Practices
-
 PulumiCost is designed with security in mind, especially when handling sensitive cloud credentials and cost data.
 
 ## Credential Handling
@@ -36,4 +34,4 @@ Our Docker images are built using minimal base images (Alpine) and run as non-ro
 
 ## Reporting Vulnerabilities
 
-If you discover a security vulnerability, please do not report it via GitHub Issues. Instead, email `security@pulumicost.com` (placeholder) or follow the instructions in the repository's security policy.
+If you discover a security vulnerability, please do not report it via GitHub Issues. Instead, use the [GitHub Security Advisory](https://github.com/rshade/pulumicost-core/security/advisories) workflow or follow the instructions in the repository's security policy.

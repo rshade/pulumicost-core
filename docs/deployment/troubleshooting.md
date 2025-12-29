@@ -3,8 +3,6 @@ title: Deployment Troubleshooting
 layout: default
 ---
 
-# Troubleshooting Deployments
-
 If you encounter issues deploying PulumiCost, please refer to our comprehensive troubleshooting guide.
 
 - [Troubleshooting Guide](../support/troubleshooting.md)

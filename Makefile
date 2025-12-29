@@ -12,7 +12,7 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build build-recorder install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-serve docs-build docs-validate
+.PHONY: all build build-recorder install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
 
 all: build
 
@@ -114,6 +114,8 @@ docs-lint:
 
 docs-sync:
 	@echo "Syncing root documentation..."
+	@test -f CONTRIBUTING.md || (echo "Error: CONTRIBUTING.md not found"; exit 1)
+	@test -f ROADMAP.md || (echo "Error: ROADMAP.md not found"; exit 1)
 	@echo "---" > docs/support/contributing.md
 	@echo "title: Contributing" >> docs/support/contributing.md
 	@echo "layout: default" >> docs/support/contributing.md
@@ -170,6 +172,7 @@ help:
 	@echo ""
 	@echo "Documentation targets:"
 	@echo "  docs-lint        - Lint documentation markdown"
+	@echo "  docs-sync        - Sync root docs (CONTRIBUTING.md, ROADMAP.md) to docs site"
 	@echo "  docs-build       - Build documentation site"
 	@echo "  docs-serve       - Serve documentation locally (http://localhost:4000)"
 	@echo "  docs-validate    - Validate documentation structure"

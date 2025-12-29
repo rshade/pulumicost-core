@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+# Ruby 4.0.0+ compatibility - gems removed from stdlib
+gem 'logger', '~> 1.6'
+
 # Jekyll and theme
 gem 'jekyll', '~> 4.3'
 gem 'jekyll-theme-minimal', '~> 0.2'

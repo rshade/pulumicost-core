@@ -150,11 +150,9 @@ func executeCostProjected(cmd *cobra.Command, params costProjectedParams) error 
 		return fmt.Errorf("calculating projected costs: %w", err)
 	}
 
-	outputFormat := engine.OutputFormat(config.GetOutputFormat(params.output))
-	if renderErr := engine.RenderResults(cmd.OutOrStdout(), outputFormat, resultWithErrors.Results); renderErr != nil {
+	if renderErr := RenderCostOutput(ctx, cmd, params.output, resultWithErrors); renderErr != nil {
 		return renderErr
 	}
-	displayErrorSummary(cmd, resultWithErrors, outputFormat)
 
 	log.Info().Ctx(ctx).Str("operation", "cost_projected").Int("result_count", len(resultWithErrors.Results)).
 		Dur("duration_ms", time.Since(audit.start)).Msg("projected cost calculation complete")

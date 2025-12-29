@@ -3,8 +3,6 @@ title: Deployment Configuration
 layout: default
 ---
 
-# Deployment Configuration
-
 For details on configuring PulumiCost for different environments, please refer to the main configuration reference.
 
 - [Configuration Reference](../reference/config-reference.md)
