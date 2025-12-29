@@ -39,6 +39,18 @@ This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the evolut
     - [ ] Recommendations command for FinOps optimization ([#216](https://github.com/rshade/pulumicost-core/issues/216))
     - [ ] Support extended RecommendationActionType enum ([#298](https://github.com/rshade/pulumicost-core/issues/298))
     - [ ] Add --estimate-confidence flag for actual cost transparency ([#333](https://github.com/rshade/pulumicost-core/issues/333))
+- [ ] **Forecasting & Projections ("Cost Time Machine")** ([#364](https://github.com/rshade/pulumicost-core/issues/364))
+    - [ ] Projection Math Engine (Linear/Exponential extrapolation)
+    - [ ] TUI: ASCII Line Chart visualization for 6-12 month forecasts
+    - *Cross-Repo:* Requires `GrowthType`/`GrowthRate` in [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+- [ ] **Governance Overrides ("YOLO Mode")** ([#365](https://github.com/rshade/pulumicost-core/issues/365))
+    - [ ] CLI: Implement `--yolo` / `--force` flag to bypass budget gates
+    - [ ] UX: "Warning Mode" UI styles for bypassed runs
+    - *Cross-Repo:* Requires `BypassReason` in [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+- [ ] **Contextual Profiles ("Dev Mode")** ([#368](https://github.com/rshade/pulumicost-core/issues/368))
+    - [ ] CLI: Implement `--profile` flag (e.g., `dev`, `prod`) to pass hints to plugins
+    - [ ] Configuration: Allow default profile definition in `pulumicost.yaml`
+    - *Cross-Repo:* Requires `UsageProfile` enum in [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
 
 ## Stability & Maintenance
 - [ ] **Quality Gates**
@@ -55,11 +67,29 @@ This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the evolut
 - [ ] Plugin integrity verification strategy (#164)
 - [ ] Webhook and email notifications for budget alerts (#220) - *Likely requires external service integration to maintain core statelessness*
 - [ ] Vantage Plugin Integration (#103) - *Deprioritized*
+- [ ] **Dependency Visualization ("Blast Radius")** ([#366](https://github.com/rshade/pulumicost-core/issues/366))
+    - [ ] TUI: Interactive Dependency Tree view (consuming Lineage Metadata)
+    - *Cross-Repo:* Consumes `CostAllocationLineage`/`ParentResourceID` from [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+- [ ] **Spot Market Advisor** ([#367](https://github.com/rshade/pulumicost-core/issues/367))
+    - [ ] TUI: Highlight Spot savings in Cyan; show Risk Icon
+    - [ ] Display "Savings vs On-Demand" percentage
+    - *Cross-Repo:* Requires `PricingTier`/`SpotRisk` enums in [pulumicost-spec](https://github.com/rshade/pulumicost-spec); CE plugin implements `DescribeSpotPriceHistory`
 
 - [ ] **Mixed-Currency Aggregation Strategy (MCP Alignment)**
     - *Objective*: Implement core-level grouping for multi-currency stacks to support the [pulumicost-mcp Mixed-Currency Research](https://github.com/rshade/pulumicost-mcp/blob/main/ROADMAP.md#1-mixed-currency-aggregation-strategy).
     - *Technical Approach*: Enhance `CostResult` aggregation logic to preserve currency codes and provide structured groupings for downstream consumers (CLI, TUI, MCP).
     - *Success Criteria*: Orchestrator returns grouped results by currency when multi-region/multi-currency resources are encountered.
+
+### Cross-Repository Feature Matrix
+
+| Feature | `pulumicost-spec` | `pulumicost-core` | `aws-public` Plugin | `aws-ce` Plugin |
+|---------|-------------------|-------------------|---------------------|-----------------|
+| **Cost Time Machine** | `GrowthType`/`GrowthRate` | Projection Engine & Charts | `GrowthHint: Linear` | Historical trends |
+| **YOLO Mode** | `BypassReason` | `--yolo` flag & UI | N/A | N/A |
+| **Blast Radius** | `CostAllocationLineage` | Impact Tree TUI | Parent/child links | N/A |
+| **GreenOps Receipt** | `CarbonFootprint` | Equivalency Converter | CCF Math | N/A |
+| **Spot Market Advisor** | `PricingTier`/`SpotRisk` | Cyan highlights + Risk | N/A | `DescribeSpotPriceHistory` |
+| **Dev Mode** | `UsageProfile` enum | `--profile` flag | Burstable defaults | IOPS warnings |
 
 ### Strategic Research Items (The "Detailed Horizon")
 
