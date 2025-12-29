@@ -3,6 +3,7 @@ package spec
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -180,6 +181,9 @@ func TestLoadSpec_NonexistentDirectory(t *testing.T) {
 
 // TestLoadSpec_PermissionError tests loading a spec file with restricted permissions.
 func TestLoadSpec_PermissionError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping permission test on Windows - POSIX permissions not enforced")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("Skipping permission test when running as root")
 	}
@@ -370,6 +374,9 @@ func TestListSpecs_NonexistentDirectory(t *testing.T) {
 
 // TestListSpecs_PermissionError tests listing specs with permission error.
 func TestListSpecs_PermissionError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping permission test on Windows - POSIX permissions not enforced")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("Skipping permission test when running as root")
 	}

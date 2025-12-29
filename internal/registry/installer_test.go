@@ -3,6 +3,7 @@ package registry
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -175,7 +176,12 @@ func TestFindPluginBinary(t *testing.T) {
 			name: "finds any executable",
 			setupDir: func(t *testing.T) string {
 				dir := t.TempDir()
-				binPath := filepath.Join(dir, "some-binary")
+				// Use .exe on Windows since that's what determines executability
+				binName := "some-binary"
+				if runtime.GOOS == "windows" {
+					binName = "some-binary.exe"
+				}
+				binPath := filepath.Join(dir, binName)
 				if err := os.WriteFile(binPath, []byte("binary"), 0755); err != nil {
 					t.Fatal(err)
 				}

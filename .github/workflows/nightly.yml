@@ -32,6 +32,7 @@ permissions:
   contents: read
   issues: write
   checks: write
+  id-token: write  # Required for AWS OIDC authentication
 
 env:
   GOPRIVATE: github.com/rshade/*
@@ -124,8 +125,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_E2E_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Build pulumicost binary
@@ -178,8 +178,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_E2E_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Build pulumicost binary
