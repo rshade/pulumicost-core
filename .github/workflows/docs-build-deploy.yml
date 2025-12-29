@@ -50,6 +50,9 @@ jobs:
         run: |
           cd docs
 
+      - name: Sync documentation
+        run: make docs-sync
+
       - name: Build Jekyll site
         run: |
           cd docs

@@ -17,6 +17,7 @@ This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the evolut
     - [x] E2E testing with Pulumi Automation API (#177, #238)
     - [ ] Comprehensive E2E tests for Analyzer integration ([#228](https://github.com/rshade/pulumicost-core/issues/228))
     - [ ] Cross-Repository Integration Test Workflow ([#236](https://github.com/rshade/pulumicost-core/issues/236))
+    - [ ] Add recommendations to analyzer diagnostics ([#321](https://github.com/rshade/pulumicost-core/issues/321))
 - [ ] **Developer Experience & Tooling**
     - [ ] Update templates for gRPC reflection support ([#307](https://github.com/rshade/pulumicost-core/issues/307))
     - [ ] Update Plugin Generator Templates ([#248](https://github.com/rshade/pulumicost-core/issues/248))
@@ -32,11 +33,12 @@ This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the evolut
     - [ ] Flexible budget scoping (per-provider, per-resource) ([#221](https://github.com/rshade/pulumicost-core/issues/221))
     - [ ] Budget status display in CLI ([#217](https://github.com/rshade/pulumicost-core/issues/217))
 - [ ] **Sustainability (GreenOps)**
-    - [ ] Integrate Sustainability Metrics into Engine & TUI ([#302](https://github.com/rshade/pulumicost-core/issues/302))
+    - [x] Integrate Sustainability Metrics into Engine & TUI ([#302](https://github.com/rshade/pulumicost-core/issues/302))
     - [ ] GreenOps Impact Equivalencies ([#303](https://github.com/rshade/pulumicost-core/issues/303))
 - [ ] **Actionable Insights**
     - [ ] Recommendations command for FinOps optimization ([#216](https://github.com/rshade/pulumicost-core/issues/216))
     - [ ] Support extended RecommendationActionType enum ([#298](https://github.com/rshade/pulumicost-core/issues/298))
+    - [ ] Add --estimate-confidence flag for actual cost transparency ([#333](https://github.com/rshade/pulumicost-core/issues/333))
 
 ## Stability & Maintenance
 - [ ] **Quality Gates**
@@ -45,6 +47,9 @@ This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the evolut
 - [ ] **Performance & Scale**
     - [ ] Pagination for large datasets ([#225](https://github.com/rshade/pulumicost-core/issues/225))
     - [ ] Plugin installer: remove old versions during install ([#237](https://github.com/rshade/pulumicost-core/issues/237))
+- [ ] **CI/CD & Automation**
+    - [ ] Harden Nightly Analysis Workflow ([#325](https://github.com/rshade/pulumicost-core/issues/325))
+    - [ ] Automated nightly failure analysis with OpenCode ([#271](https://github.com/rshade/pulumicost-core/issues/271))
 
 ## Icebox / Backlog
 - [ ] Plugin integrity verification strategy (#164)
