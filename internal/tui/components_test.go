@@ -106,6 +106,68 @@ func TestRenderPriority(t *testing.T) {
 	}
 }
 
+// T027: Test FormatActionType for TUI action type label rendering.
+func TestFormatActionType(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		// Valid action types
+		{"RIGHTSIZE", "RIGHTSIZE", "Rightsize"},
+		{"TERMINATE", "TERMINATE", "Terminate"},
+		{"PURCHASE_COMMITMENT", "PURCHASE_COMMITMENT", "Purchase Commitment"},
+		{"ADJUST_REQUESTS", "ADJUST_REQUESTS", "Adjust Requests"},
+		{"MODIFY", "MODIFY", "Modify"},
+		{"DELETE_UNUSED", "DELETE_UNUSED", "Delete Unused"},
+		{"MIGRATE", "MIGRATE", "Migrate"},
+		{"CONSOLIDATE", "CONSOLIDATE", "Consolidate"},
+		{"SCHEDULE", "SCHEDULE", "Schedule"},
+		{"REFACTOR", "REFACTOR", "Refactor"},
+		{"OTHER", "OTHER", "Other"},
+		// Case insensitivity
+		{"lowercase migrate", "migrate", "Migrate"},
+		{"mixed case Consolidate", "Consolidate", "Consolidate"},
+		{"lowercase other", "other", "Other"},
+		// Unknown types (returned as-is for forward compatibility)
+		{"unknown type", "UNKNOWN", "UNKNOWN"},
+		{"custom type", "CUSTOM_TYPE", "CUSTOM_TYPE"},
+		// Edge cases
+		{"empty string", "", ""},
+		{"with spaces", "  MIGRATE  ", "Migrate"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := FormatActionType(tt.input)
+			if result != tt.expected {
+				t.Errorf("FormatActionType(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+// T030: Test FormatActionType for unknown action types.
+func TestFormatActionType_UnknownTypes(t *testing.T) {
+	// Unknown types should be returned as-is for forward compatibility
+	unknownTypes := []string{
+		"UNKNOWN",
+		"FUTURE_TYPE",
+		"NOT_A_TYPE",
+		"NEW_ACTION",
+	}
+
+	for _, unknown := range unknownTypes {
+		t.Run(unknown, func(t *testing.T) {
+			result := FormatActionType(unknown)
+			// Unknown types are returned as-is (not transformed)
+			if result != unknown {
+				t.Errorf("FormatActionType(%q) = %q, expected %q (unchanged)", unknown, result, unknown)
+			}
+		})
+	}
+}
+
 func TestRenderFunctions_BasicOutput(t *testing.T) {
 	// Test that the functions produce expected output (styling may be disabled in test env)
 	tests := []struct {
