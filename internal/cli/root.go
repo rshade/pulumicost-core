@@ -60,10 +60,10 @@ const rootCmdExample = `  # Calculate projected costs from a Pulumi plan
   # Set configuration values
   pulumicost config set output.default_format json`
 
-// newCostCmd creates the cost command group with projected and actual subcommands.
+// newCostCmd creates the cost command group with projected, actual, and recommendations subcommands.
 func newCostCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "cost", Short: "Cost calculation commands"}
-	cmd.AddCommand(NewCostProjectedCmd(), NewCostActualCmd())
+	cmd.AddCommand(NewCostProjectedCmd(), NewCostActualCmd(), NewCostRecommendationsCmd())
 	return cmd
 }
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/rshade/pulumicost-core/internal/proto"
 )
 
 // Status text constants.
@@ -143,4 +144,14 @@ func RenderPriority(priority string) string {
 
 	style := lipgloss.NewStyle().Foreground(color).Bold(true)
 	return style.Render(fmt.Sprintf("%s %s", icon, text))
+}
+
+// FormatActionType returns a human-readable label for a recommendation action type.
+// This function is used in TUI displays to show friendly labels like "Purchase Commitment"
+// instead of "PURCHASE_COMMITMENT".
+//
+// Known action types are converted to their human-readable labels. Unknown types
+// are returned as-is for forward compatibility with future action types.
+func FormatActionType(actionType string) string {
+	return proto.ActionTypeLabelFromString(actionType)
 }

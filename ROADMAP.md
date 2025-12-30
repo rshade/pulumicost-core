@@ -135,6 +135,19 @@ guardrails in `CONTEXT.md`.
 | Spot Market Advisor | PricingTier | Cyan style | N/A | SpotHistory |
 | Dev Mode | UsageProfile | --profile | Burstable | IOPS warn |
 
+## Naming & Branding
+
+- [ ] **Project Rename**
+  - *Objective*: Replace the dry `pulumicost` name with a stronger brand identity.
+  - *Current Leader*: **Tailly** (CLI: `tally`)
+    - *Vibe*: Developer-friendly, ecosystem-native (the "Tail" of the Pulumi Platypus).
+    - *Command*: `tally cost projected` (avoiding `tail` conflict, preserving clear verb structure).
+    - *Mascot Potential*: High (Platypus).
+  - *Alternative*: **FinFocus** (CLI: `fin`)
+    - *Vibe*: Enterprise, compliance-focused (FinOps FOCUS spec).
+    - *Command*: `fin cost projected`.
+  - *Decision*: Leaning towards **Tailly** for better DX, while acknowledging **FinFocus** has stronger enterprise signaling.
+
 ### Strategic Research Items (The "Detailed Horizon")
 
 - [ ] **Markdown "Cost-Change" Report & CI/CD Bridge**

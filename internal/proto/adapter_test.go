@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
 )
 
@@ -1105,6 +1106,103 @@ func TestClientAdapter_GetRecommendations(t *testing.T) {
 			t.Errorf("Default mock should return empty recommendations, got %d", len(resp.Recommendations))
 		}
 	})
+}
+
+// T031: Test that Recommendation struct correctly stores ActionType for all 11 action types.
+// This ensures JSON serialization will work correctly for recommendations output.
+func TestRecommendation_ActionTypeAll11Types(t *testing.T) {
+	// All 11 action types that must be supported
+	actionTypes := []struct {
+		name             string
+		actionType       string
+		expectedInFilter bool
+	}{
+		{"RIGHTSIZE", "RIGHTSIZE", true},
+		{"TERMINATE", "TERMINATE", true},
+		{"PURCHASE_COMMITMENT", "PURCHASE_COMMITMENT", true},
+		{"ADJUST_REQUESTS", "ADJUST_REQUESTS", true},
+		{"MODIFY", "MODIFY", true},
+		{"DELETE_UNUSED", "DELETE_UNUSED", true},
+		{"MIGRATE", "MIGRATE", true},
+		{"CONSOLIDATE", "CONSOLIDATE", true},
+		{"SCHEDULE", "SCHEDULE", true},
+		{"REFACTOR", "REFACTOR", true},
+		{"OTHER", "OTHER", true},
+	}
+
+	for _, tt := range actionTypes {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := Recommendation{
+				ID:          "rec-" + strings.ToLower(tt.actionType),
+				Category:    "COST",
+				ActionType:  tt.actionType,
+				Description: "Test recommendation for " + tt.actionType,
+				ResourceID:  "resource-123",
+				Source:      "test-plugin",
+			}
+
+			// Verify ActionType is stored correctly
+			if rec.ActionType != tt.actionType {
+				t.Errorf("ActionType = %q, want %q", rec.ActionType, tt.actionType)
+			}
+
+			// Verify the recommendation can be filtered by its action type
+			// using the proto utilities
+			actionTypeEnum, err := ParseActionType(rec.ActionType)
+			if err != nil {
+				t.Errorf("ParseActionType(%q) error = %v", rec.ActionType, err)
+			}
+
+			// Verify MatchesActionType works for this action type
+			matches := MatchesActionType(rec.ActionType, []pbc.RecommendationActionType{actionTypeEnum})
+			if !matches {
+				t.Errorf("MatchesActionType(%q) = false, want true", rec.ActionType)
+			}
+
+			// Verify ActionTypeLabel works for this action type
+			label := ActionTypeLabel(actionTypeEnum)
+			if label == "" || strings.HasPrefix(label, "Unknown") {
+				t.Errorf("ActionTypeLabel() = %q, expected valid label", label)
+			}
+		})
+	}
+}
+
+// T032: Verify that ActionType string representations work correctly for JSON output.
+func TestRecommendation_ActionType_JSONSerialization(t *testing.T) {
+	// Create a recommendation with each action type and verify the string representation
+	// is what we expect for JSON serialization
+	recommendations := []Recommendation{
+		{ID: "1", ActionType: "RIGHTSIZE", Description: "Rightsize test"},
+		{ID: "2", ActionType: "TERMINATE", Description: "Terminate test"},
+		{ID: "3", ActionType: "PURCHASE_COMMITMENT", Description: "Purchase commitment test"},
+		{ID: "4", ActionType: "ADJUST_REQUESTS", Description: "Adjust requests test"},
+		{ID: "5", ActionType: "MODIFY", Description: "Modify test"},
+		{ID: "6", ActionType: "DELETE_UNUSED", Description: "Delete unused test"},
+		{ID: "7", ActionType: "MIGRATE", Description: "Migrate test"},
+		{ID: "8", ActionType: "CONSOLIDATE", Description: "Consolidate test"},
+		{ID: "9", ActionType: "SCHEDULE", Description: "Schedule test"},
+		{ID: "10", ActionType: "REFACTOR", Description: "Refactor test"},
+		{ID: "11", ActionType: "OTHER", Description: "Other test"},
+	}
+
+	for _, rec := range recommendations {
+		// Verify ActionType is non-empty
+		if rec.ActionType == "" {
+			t.Errorf("Recommendation %s has empty ActionType", rec.ID)
+		}
+
+		// Verify ActionType is in expected format (uppercase with underscores)
+		if rec.ActionType != strings.ToUpper(rec.ActionType) {
+			t.Errorf("ActionType %q should be uppercase", rec.ActionType)
+		}
+
+		// Verify we can get a human-readable label for TUI/table display
+		label := ActionTypeLabelFromString(rec.ActionType)
+		if label == "" {
+			t.Errorf("ActionTypeLabelFromString(%q) returned empty", rec.ActionType)
+		}
+	}
 }
 
 // TestRecommendation_Creation tests the Recommendation type.

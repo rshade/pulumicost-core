@@ -138,6 +138,7 @@ See `.specify/memory/constitution.md` for non-negotiable principles:
 1. **CLI Layer** (`internal/cli/`) - Cobra-based commands:
    - `cost projected` - Estimate costs from Pulumi preview JSON
    - `cost actual` - Fetch historical costs with time ranges/grouping
+   - `cost recommendations` - Get cost optimization recommendations with action type filtering
    - `plugin list/validate/install/remove/update/certify` - Plugin management
    - `analyzer serve` - Pulumi Analyzer gRPC server for zero-click cost estimation
 
@@ -187,6 +188,21 @@ Plugins communicate via gRPC using protocol buffers from `pulumicost-spec`:
 - `Name()` - Plugin identification
 - `GetProjectedCost()` - Estimated costs for resources
 - `GetActualCost()` - Historical costs from cloud APIs
+- `GetRecommendations()` - Cost optimization recommendations
+
+### Action Type Utilities (`internal/proto/action_types.go`)
+
+Shared utilities for recommendation action type handling:
+
+- `ActionTypeLabel(at pbc.RecommendationActionType) string` - Human-readable label for display
+- `ActionTypeLabelFromString(actionType string) string` - Label from string (for stored values)
+- `ParseActionType(s string) (pbc.RecommendationActionType, error)` - Parse single action type
+- `ParseActionTypeFilter(filter string) ([]pbc.RecommendationActionType, error)` - Parse comma-separated filter
+- `ValidActionTypes() []string` - List of valid action type names (excludes UNSPECIFIED)
+- `MatchesActionType(recType string, types []pbc.RecommendationActionType) bool` - Filter matching
+
+Valid action types: RIGHTSIZE, TERMINATE, PURCHASE_COMMITMENT, ADJUST_REQUESTS, MODIFY,
+DELETE_UNUSED, MIGRATE, CONSOLIDATE, SCHEDULE, REFACTOR, OTHER
 
 ## Documentation
 
@@ -935,6 +951,8 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
+- Go 1.25.5 + pulumicost-spec v0.4.11 (pluginsdk), cobra v1.10.1, (108-action-type-enum)
+- N/A (stateless enum mapping) (108-action-type-enum)
 
 - Go 1.25.5 + pluginsdk v0.4.11+, zerolog v1.34.0; N/A storage (validation is stateless) (107-preflight-validation)
 - Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
