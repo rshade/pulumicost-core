@@ -194,17 +194,17 @@ pulumicost config validate
 pulumicost plugin list
 ```
 
-### Install Plugin (FUTURE)
+### Install Plugin
 ```bash
 pulumicost plugin install <plugin>
 ```
 
-### Update Plugin (FUTURE)
+### Update Plugin
 ```bash
 pulumicost plugin update <plugin>
 ```
 
-### Remove Plugin (FUTURE)
+### Remove Plugin
 ```bash
 pulumicost plugin remove <plugin>
 ```

@@ -531,6 +531,55 @@ If CI shows these errors in logs but tests are marked PASS, the behavior is corr
 Tests log these messages with `t.Logf()` for debugging visibility while passing.
 Only investigate if tests actually FAIL (exit code 1) with these messages.
 
+### Error Path Testing Guidelines
+
+**When writing new code, always include tests for error conditions:**
+
+1. **Test every error return**: If a function can return an error, write a test that
+   triggers that error path
+2. **Validate error messages**: Use `assert.Contains(t, err.Error(), "expected text")`
+   to ensure errors are descriptive and actionable
+3. **Test boundary conditions**: Empty inputs, nil pointers, invalid ranges, malformed data
+4. **Test partial failures**: What happens when one item in a batch fails?
+5. **Test resource cleanup**: Verify cleanup runs even when errors occur (defer patterns)
+
+**Table-driven error tests pattern**:
+
+```go
+func TestFunction_Errors(t *testing.T) {
+    tests := []struct {
+        name        string
+        input       string
+        wantErr     bool
+        errContains string
+    }{
+        {"empty input", "", true, "input required"},
+        {"invalid format", "bad", true, "invalid format"},
+        {"valid input", "good", false, ""},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            err := Function(tt.input)
+            if tt.wantErr {
+                require.Error(t, err)
+                assert.Contains(t, err.Error(), tt.errContains)
+            } else {
+                require.NoError(t, err)
+            }
+        })
+    }
+}
+```
+
+**Priority error paths to test**:
+
+- File I/O errors (missing files, permission denied, disk full)
+- Network errors (connection refused, timeout, DNS failure)
+- Validation errors (invalid input, out of range, type mismatch)
+- Resource exhaustion (memory, file handles, goroutines)
+- Concurrent access errors (race conditions, deadlocks)
+
 ### Local Plugin Development
 
 To debug plugin issues during Core development:

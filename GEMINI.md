@@ -114,6 +114,20 @@ Configuration validation with >85% coverage:
 
 - `internal/config/validation_test.go` - Table-driven validation tests
 
+### Error Path Testing
+
+**Always test error conditions when writing new code:**
+
+1. Test every error return path
+2. Validate error messages are descriptive
+3. Test boundary conditions (empty, nil, invalid ranges)
+4. Test partial failures in batch operations
+5. Test resource cleanup on errors
+
+**Pattern**: Use table-driven tests with `wantErr` and `errContains` fields.
+
+**Priority paths**: File I/O, network, validation, resource exhaustion, concurrency.
+
 ### CI Integration
 
 - PRs: 30-second fuzz smoke tests, benchmark smoke tests

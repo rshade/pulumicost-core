@@ -13,6 +13,7 @@ feedback.
 - [Minor Bug Fixes](#minor-bug-fixes)
 - [Quality Requirements](#quality-requirements)
 - [Submitting Changes](#submitting-changes)
+- [Issue Labels and Decision Tracking](#issue-labels-and-decision-tracking)
 - [Getting Help](#getting-help)
 
 ## License
@@ -448,6 +449,46 @@ PulumiCost operates as a three-repository ecosystem:
 Cross-repository changes require coordination. See the
 [constitution](.specify/memory/constitution.md) for the cross-repo change
 protocol.
+
+## Issue Labels and Decision Tracking
+
+### The `decision` Label
+
+Issues labeled with `decision` represent **deliberate architectural or product
+decisions** with documented reasoning. These serve as lightweight Architecture
+Decision Records (ADRs) without the overhead of separate markdown files.
+
+**When to use `decision`:**
+
+- Thorough analysis was performed
+- Reasoning is documented in the issue body
+- A deliberate choice was made (implement, defer, or reject)
+
+**Finding past decisions:**
+
+```bash
+# Search all documented decisions
+gh issue list --repo rshade/pulumicost-core --state closed --label decision
+
+# Or via GitHub UI
+# Issues → Closed → Filter by "decision" label
+```
+
+**Why this matters:**
+
+- Prevents re-litigating the same issues
+- New contributors can understand *why* things are the way they are
+- Creates searchable institutional knowledge
+
+### Standard Labels
+
+| Label              | Purpose                                   |
+| ------------------ | ----------------------------------------- |
+| `decision`         | Deliberate architectural/product decision |
+| `enhancement`      | New feature or request                    |
+| `bug`              | Something isn't working                   |
+| `documentation`    | Documentation improvements                |
+| `good first issue` | Good for newcomers                        |
 
 ## Getting Help
 

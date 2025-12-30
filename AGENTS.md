@@ -59,6 +59,9 @@
 - When adding plugins or adapters, include conformance coverage in
   `internal/conformance` and targeted cases in `internal/engine` or
   `internal/registry`.
+- **Error path testing**: Always test error conditions—every error return should
+  have a corresponding test. Use table-driven tests with `wantErr`/`errContains`
+  fields. Priority: file I/O, network, validation, and resource cleanup errors.
 
 ## Commit & Pull Request Guidelines
 
