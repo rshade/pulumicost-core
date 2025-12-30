@@ -19,16 +19,14 @@ guardrails in `CONTEXT.md`.
 - [ ] **Pulumi Analyzer Integration & E2E**
   - [x] Core Analyzer implementation (#245, #229)
   - [x] E2E testing with Pulumi Automation API (#177, #238)
-  - [ ] Comprehensive E2E tests for Analyzer integration
+  - [x] Comprehensive E2E tests for Analyzer integration
         ([#228](https://github.com/rshade/pulumicost-core/issues/228))
   - [ ] Cross-Repository Integration Test Workflow
         ([#236](https://github.com/rshade/pulumicost-core/issues/236))
-  - [ ] Add recommendations to analyzer diagnostics
+  - [x] Add recommendations to analyzer diagnostics
         ([#321](https://github.com/rshade/pulumicost-core/issues/321))
 - [ ] **Developer Experience & Tooling**
-  - [ ] Update templates for gRPC reflection support
-        ([#307](https://github.com/rshade/pulumicost-core/issues/307))
-  - [ ] Update Plugin Generator Templates
+  - [ ] Update Plugin Generator Templates (includes gRPC reflection)
         ([#248](https://github.com/rshade/pulumicost-core/issues/248))
   - [ ] Dynamic Data Recording via Integration Plans
         ([#275](https://github.com/rshade/pulumicost-core/issues/275))
@@ -82,10 +80,10 @@ guardrails in `CONTEXT.md`.
 
 ## Stability & Maintenance
 
-- [ ] **Quality Gates**
-  - [ ] Improve CLI package coverage to 75%
+- [x] **Quality Gates**
+  - [x] Improve CLI package coverage to 75% (achieved 74.5%)
         ([#269](https://github.com/rshade/pulumicost-core/issues/269))
-  - [ ] Integration Test Suite for Plugin Communication
+  - [x] Integration Test Suite for Plugin Communication
         ([#235](https://github.com/rshade/pulumicost-core/issues/235))
 - [ ] **Performance & Scale**
   - [ ] Pagination for large datasets

@@ -187,6 +187,247 @@ The plugin supports the following configuration options:
 [Add support contact information here]
 `
 
+//nolint:lll // Template content requires long lines for readability
+const pluginIssuesTemplate = `# Plugin Development Issues
+
+This file contains recommended issues to create for your plugin development.
+Use these as templates when creating GitHub issues for your plugin repository.
+
+---
+
+## Issue 1: E2E Testing with Real Cloud APIs
+
+**Title:** Implement E2E tests with real {{PROVIDERS}} billing APIs
+
+**Labels:** testing, e2e, priority:high
+
+**Description:**
+
+Implement end-to-end tests that validate the plugin against real cloud billing APIs.
+
+### Acceptance Criteria
+
+- [ ] E2E test for {{BACKTICK}}GetProjectedCost(){{BACKTICK}} with real {{PROVIDERS}} resources
+- [ ] E2E test for {{BACKTICK}}GetActualCost(){{BACKTICK}} calling real billing APIs ({{PROVIDERS}} Cost Explorer/Billing API)
+- [ ] Test account setup documented in README
+- [ ] CI workflow for periodic E2E runs (weekly/monthly)
+- [ ] Cost validation within ±5% of official pricing
+
+### Technical Notes
+
+- Use isolated test accounts with budget alerts
+- Store credentials as CI secrets, never in code
+- Consider using tagged resources for easy cleanup
+- Billing API data may have 24-72 hour delay
+
+### Test Account Requirements
+
+- Dedicated test account with billing access
+- Budget alerts set (e.g., $50/month limit)
+- IAM role/service principal with minimal permissions
+- Resource tagging for cost tracking
+
+---
+
+## Issue 2: Pricing Data Validation
+
+**Title:** Validate pricing accuracy against official {{PROVIDERS}} pricing
+
+**Labels:** testing, accuracy, priority:high
+
+**Description:**
+
+Create a validation suite that compares plugin pricing against official cloud provider pricing pages.
+
+### Acceptance Criteria
+
+- [ ] Automated comparison against official pricing API/pages
+- [ ] Coverage for all supported resource types
+- [ ] Regional pricing variations tested
+- [ ] Currency handling validated
+- [ ] Pricing update detection (alert when official prices change)
+
+### Resources
+
+- Official pricing APIs (if available)
+- Pricing calculator URLs for manual verification
+- Historical pricing data for trend analysis
+
+---
+
+## Issue 3: Regional Coverage
+
+**Title:** Ensure complete regional coverage for {{PROVIDERS}}
+
+**Labels:** feature, coverage, priority:medium
+
+**Description:**
+
+Verify the plugin supports all target regions with accurate pricing.
+
+### Acceptance Criteria
+
+- [ ] List of supported regions documented
+- [ ] Pricing data for each region
+- [ ] Region-specific resource variations handled
+- [ ] Tests for region edge cases (new regions, deprecated regions)
+
+### Regions to Support
+
+Document the regions you plan to support:
+- [ ] Primary regions (e.g., us-east-1, westeurope, us-central1)
+- [ ] Secondary regions
+- [ ] Edge/specialized regions (govcloud, china, etc.)
+
+---
+
+## Issue 4: CI/CD Pipeline Setup
+
+**Title:** Set up CI/CD pipeline for automated testing and releases
+
+**Labels:** infrastructure, ci-cd, priority:high
+
+**Description:**
+
+Configure continuous integration and deployment for the plugin.
+
+### Acceptance Criteria
+
+- [ ] GitHub Actions workflow for PRs (lint, test, build)
+- [ ] Conformance tests run on every PR
+- [ ] E2E tests run on schedule (not every PR - too slow/expensive)
+- [ ] Automated releases on version tags
+- [ ] Binary builds for multiple platforms
+
+### Workflow Structure
+
+{{CODE_BLOCK_START}}yaml
+# .github/workflows/ci.yml
+- Lint (golangci-lint)
+- Unit tests with coverage
+- Conformance tests (pulumicost plugin conformance)
+- Build verification
+
+# .github/workflows/e2e.yml (scheduled)
+- E2E tests with real cloud resources
+- Pricing accuracy validation
+- Run weekly or monthly
+{{CODE_BLOCK_END}}
+
+---
+
+## Issue 5: Documentation
+
+**Title:** Complete plugin documentation
+
+**Labels:** documentation, priority:medium
+
+**Description:**
+
+Create comprehensive documentation for plugin users and contributors.
+
+### Acceptance Criteria
+
+- [ ] README with installation and usage instructions
+- [ ] Supported resources list with pricing details
+- [ ] Configuration guide (credentials, regions, options)
+- [ ] Troubleshooting guide
+- [ ] Contributing guide
+- [ ] Changelog maintenance
+
+---
+
+## Issue 6: API Response Caching
+
+**Title:** Implement caching for external API calls
+
+**Labels:** performance, enhancement, priority:low
+
+**Description:**
+
+If your plugin makes external API calls (pricing APIs, billing APIs), implement caching to reduce latency and API costs.
+
+### Acceptance Criteria
+
+- [ ] LRU cache for pricing API responses (if applicable)
+- [ ] Configurable TTL (e.g., 1 hour for pricing data)
+- [ ] Cache key includes all pricing factors (SKU, region, etc.)
+- [ ] Cache bypass option for testing
+- [ ] Memory-bounded cache size
+
+### When to Implement
+
+This is only needed if your plugin:
+- Calls external pricing APIs (AWS Pricing API, Azure Retail Prices, etc.)
+- Has expensive computation per resource type
+- Experiences latency issues with large Pulumi previews
+
+**Skip this if:** Your plugin uses embedded pricing data (no external API calls).
+
+### Implementation Notes
+
+{{CODE_BLOCK_START}}go
+// Example using hashicorp/golang-lru
+import lru "github.com/hashicorp/golang-lru/v2"
+
+type PriceCache struct {
+    cache *lru.Cache[string, *PriceResult]
+    ttl   time.Duration
+}
+
+func (c *PriceCache) Get(key string) (*PriceResult, bool) {
+    // Check cache, validate TTL
+}
+{{CODE_BLOCK_END}}
+
+### Cache Key Strategy
+
+For projected costs, cache key should include:
+- Provider (aws, azure, gcp)
+- Resource type (ec2:instance, compute:vm)
+- SKU/instance type (t3.micro, Standard_B1s)
+- Region (us-east-1, westeurope)
+
+**Note:** Actual costs (Cost Explorer data) should NOT be cached - each resource has unique historical costs.
+
+---
+
+## How to Use This File
+
+1. Create a GitHub repository for your plugin
+2. Copy each issue section above into a new GitHub issue
+3. Customize the details for your specific provider
+4. Prioritize and assign issues
+5. Delete this file once issues are created (or keep for reference)
+
+### Creating Issues via GitHub CLI
+
+{{CODE_BLOCK_START}}bash
+# Example: Create the E2E testing issue
+gh issue create \
+  --title "Implement E2E tests with real {{PROVIDERS}} billing APIs" \
+  --label "testing,e2e,priority:high" \
+  --body "$(cat << 'EOF'
+[Paste issue description here]
+EOF
+)"
+{{CODE_BLOCK_END}}
+`
+
+func renderIssues(providers []string) string {
+	replacements := map[string]string{
+		"{{PROVIDERS}}":        strings.Join(providers, ", "),
+		"{{BACKTICK}}":         "`",
+		"{{CODE_BLOCK_START}}": "```",
+		"{{CODE_BLOCK_END}}":   "```",
+	}
+	content := pluginIssuesTemplate
+	for token, value := range replacements {
+		content = strings.ReplaceAll(content, token, value)
+	}
+	return content
+}
+
 func renderReadme(name string, providers []string) string {
 	quotedName := fmt.Sprintf("%q", name)
 	replacements := map[string]string{
@@ -333,6 +574,7 @@ func (g *projectGenerator) generateAll() error {
 		{"Generating Makefile", g.generateMakefile},
 		{"Generating README.md", g.generateReadme},
 		{"Generating example tests", g.generateTests},
+		{"Generating issues.md", g.generateIssues},
 	}
 
 	for _, step := range steps {
@@ -890,6 +1132,11 @@ func TestEC2InstancePricing(t *testing.T) {
 `, g.name)
 
 	return g.writeFile("internal/pricing/calculator_test.go", content)
+}
+
+func (g *projectGenerator) generateIssues() error {
+	content := renderIssues(g.providers)
+	return g.writeFile("issues.md", content)
 }
 
 func (g *projectGenerator) writeFile(relativePath, content string) error {
