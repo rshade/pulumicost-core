@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
@@ -77,6 +79,47 @@ func GetProjectedCostWithErrors(
 	}
 
 	for _, resource := range resources {
+		// Pre-flight validation: construct proto request and validate before gRPC call
+		sku, region := resolveSKUAndRegion(resource.Provider, resource.Properties)
+		protoReq := &pbc.GetProjectedCostRequest{
+			Resource: &pbc.ResourceDescriptor{
+				Id:           resource.ID,
+				Provider:     resource.Provider,
+				ResourceType: resource.Type,
+				Sku:          sku,
+				Region:       region,
+				Tags:         resource.Properties,
+			},
+		}
+
+		// Validate request using pluginsdk validation functions
+		if err := pluginsdk.ValidateProjectedCostRequest(protoReq); err != nil {
+			// Log validation failure at WARN level with context
+			log := logging.FromContext(ctx)
+			log.Warn().
+				Str("resource_type", resource.Type).
+				Err(err).
+				Msg("pre-flight validation failed")
+
+			// Track error
+			result.Errors = append(result.Errors, ErrorDetail{
+				ResourceType: resource.Type,
+				ResourceID:   resource.ID,
+				PluginName:   pluginName,
+				Error:        fmt.Errorf("pre-flight validation failed: %w", err),
+				Timestamp:    time.Now(),
+			})
+
+			// Add placeholder result with VALIDATION note
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+				Notes:       fmt.Sprintf("VALIDATION: %v", err),
+			})
+			continue
+		}
+
 		req := &GetProjectedCostRequest{
 			Resources: []*ResourceDescriptor{resource},
 		}
@@ -86,7 +129,7 @@ func GetProjectedCostWithErrors(
 			// Track error instead of silent failure
 			result.Errors = append(result.Errors, ErrorDetail{
 				ResourceType: resource.Type,
-				ResourceID:   resource.Type, // Use type as ID for now
+				ResourceID:   resource.ID,
 				PluginName:   pluginName,
 				Error:        fmt.Errorf("plugin call failed: %w", err),
 				Timestamp:    time.Now(),
@@ -132,6 +175,41 @@ func GetActualCostWithErrors(
 	}
 
 	for _, resourceID := range req.ResourceIDs {
+		// Pre-flight validation: construct proto request and validate before gRPC call
+		protoReq := &pbc.GetActualCostRequest{
+			ResourceId: resourceID,
+			Start:      timestamppb.New(time.Unix(req.StartTime, 0)),
+			End:        timestamppb.New(time.Unix(req.EndTime, 0)),
+			Tags:       make(map[string]string),
+		}
+
+		// Validate request using pluginsdk validation functions
+		if err := pluginsdk.ValidateActualCostRequest(protoReq); err != nil {
+			// Log validation failure at WARN level with context
+			log := logging.FromContext(ctx)
+			log.Warn().
+				Str("resource_id", resourceID).
+				Err(err).
+				Msg("pre-flight validation failed for actual cost")
+
+			// Track error
+			result.Errors = append(result.Errors, ErrorDetail{
+				ResourceID: resourceID,
+				PluginName: pluginName,
+				Error:      fmt.Errorf("pre-flight validation failed: %w", err),
+				Timestamp:  time.Now(),
+			})
+
+			// Add placeholder result with VALIDATION note
+			result.Results = append(result.Results, &CostResult{
+				Currency:    "USD",
+				MonthlyCost: 0,
+				HourlyCost:  0,
+				Notes:       fmt.Sprintf("VALIDATION: %v", err),
+			})
+			continue
+		}
+
 		singleReq := &GetActualCostRequest{
 			ResourceIDs: []string{resourceID},
 			StartTime:   req.StartTime,

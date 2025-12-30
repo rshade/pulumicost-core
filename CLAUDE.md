@@ -229,6 +229,50 @@ docs/
 - Defer cleanup functions immediately after obtaining resources
 - Support multiple date formats: "2006-01-02", RFC3339
 
+### Pre-Flight Request Validation (`internal/proto/`)
+
+The adapter layer validates requests using `pluginsdk` validation functions
+before making gRPC calls to plugins. This catches malformed requests early
+with actionable error messages.
+
+**Validation Pattern**:
+
+```go
+// Pre-flight validation: construct proto request and validate before gRPC call
+protoReq := &pbc.GetProjectedCostRequest{
+    Resource: &pbc.ResourceDescriptor{
+        Provider:     resource.Provider,
+        ResourceType: resource.Type,
+        Sku:          sku,
+        Region:       region,
+    },
+}
+
+if err := pluginsdk.ValidateProjectedCostRequest(protoReq); err != nil {
+    log := logging.FromContext(ctx)
+    log.Warn().
+        Str("resource_type", resource.Type).
+        Err(err).
+        Msg("pre-flight validation failed")
+
+    // Return placeholder result with VALIDATION: prefix
+    result.Results = append(result.Results, &CostResult{
+        Currency:    "USD",
+        MonthlyCost: 0,
+        Notes:       fmt.Sprintf("VALIDATION: %v", err),
+    })
+    continue  // Skip plugin call for this resource
+}
+```
+
+**Key Points**:
+
+- Validation happens in `GetProjectedCostWithErrors()` and `GetActualCostWithErrors()`
+- Uses "VALIDATION:" prefix to distinguish from plugin errors ("ERROR:")
+- Logs at WARN level with resource context for debugging
+- Returns placeholder CostResult with $0 cost and descriptive Notes
+- Invalid resources are skipped; valid resources still call the plugin
+
 ### Logging (Zerolog)
 
 PulumiCost uses zerolog for structured logging with distributed tracing support.
@@ -843,6 +887,7 @@ CodeRabbit now:
 
 ## Active Technologies
 
+- Go 1.25.5 + pluginsdk v0.4.11+, zerolog v1.34.0; N/A storage (validation is stateless) (107-preflight-validation)
 - Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
 - N/A (display-only feature) (106-analyzer-recommendations)
 - N/A (no persistent storage for TUI state) (106-cost-tui-upgrade)

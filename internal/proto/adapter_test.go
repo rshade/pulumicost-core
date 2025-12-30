@@ -293,7 +293,7 @@ func TestCostResultWithErrors_ErrorSummary(t *testing.T) {
 	})
 }
 
-// T011: Unit test for GetProjectedCost error tracking.
+// T011: Unit test for GetProjectedCost error tracking (plugin errors, not validation errors).
 func TestGetProjectedCostWithErrors(t *testing.T) {
 	t.Run("tracks errors for failed resources", func(t *testing.T) {
 		callCount := 0
@@ -312,10 +312,17 @@ func TestGetProjectedCostWithErrors(t *testing.T) {
 			},
 		}
 
+		// Resources must have SKU and region to pass pre-flight validation
 		resources := []*ResourceDescriptor{
-			{Type: "aws:ec2:Instance", Provider: "aws", Properties: map[string]string{}},
-			{Type: "aws:rds:Instance", Provider: "aws", Properties: map[string]string{}},
-			{Type: "aws:s3:Bucket", Provider: "aws", Properties: map[string]string{}},
+			{Type: "aws:ec2:Instance", Provider: "aws", Properties: map[string]string{
+				"instanceType": "t3.micro", "region": "us-east-1",
+			}},
+			{Type: "aws:rds:Instance", Provider: "aws", Properties: map[string]string{
+				"instanceClass": "db.t3.micro", "region": "us-east-1",
+			}},
+			{Type: "aws:s3:Bucket", Provider: "aws", Properties: map[string]string{
+				"sku": "standard", "region": "us-east-1",
+			}},
 		}
 
 		result := GetProjectedCostWithErrors(
@@ -1236,5 +1243,390 @@ func TestRecommendationImpact_Creation(t *testing.T) {
 				t.Error("Currency should be set when EstimatedSavings > 0")
 			}
 		})
+	}
+}
+
+// =============================================================================
+// Pre-Flight Validation Tests (Feature 107)
+// =============================================================================
+
+// T002: TestGetProjectedCost_ValidationFailure_EmptyProvider verifies that
+// resources with empty provider trigger pre-flight validation failure.
+func TestGetProjectedCost_ValidationFailure_EmptyProvider(t *testing.T) {
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getProjectedFunc: func(
+			ctx context.Context,
+			in *GetProjectedCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetProjectedCostResponse, error) {
+			callCount++
+			return &GetProjectedCostResponse{
+				Results: []*CostResult{{Currency: "USD", MonthlyCost: 100.0}},
+			}, nil
+		},
+	}
+
+	resources := []*ResourceDescriptor{
+		{
+			Type:     "aws:ec2:Instance",
+			Provider: "", // Empty provider should fail validation
+			Properties: map[string]string{
+				"instanceType": "t3.micro",
+				"region":       "us-east-1",
+			},
+		},
+	}
+
+	result := GetProjectedCostWithErrors(
+		context.Background(),
+		mockClient,
+		"test-plugin",
+		resources,
+	)
+
+	// Should have 1 result (placeholder for validation failure)
+	if len(result.Results) != 1 {
+		t.Errorf("Results length = %d, want 1", len(result.Results))
+	}
+
+	// Plugin should NOT be called for invalid resources
+	if callCount != 0 {
+		t.Errorf("Plugin was called %d times, want 0 (validation should skip plugin)", callCount)
+	}
+
+	// Result should have VALIDATION prefix in Notes
+	if len(result.Results) > 0 {
+		notes := result.Results[0].Notes
+		if !strings.Contains(notes, "VALIDATION:") {
+			t.Errorf("Notes should contain 'VALIDATION:', got %q", notes)
+		}
+		if !strings.Contains(strings.ToLower(notes), "provider") {
+			t.Errorf("Notes should mention 'provider', got %q", notes)
+		}
+	}
+
+	// Cost should be 0 for validation failures
+	if len(result.Results) > 0 && result.Results[0].MonthlyCost != 0 {
+		t.Errorf("MonthlyCost should be 0 for validation failure, got %f", result.Results[0].MonthlyCost)
+	}
+}
+
+// T003: TestGetProjectedCost_ValidationFailure_EmptySKU verifies that
+// resources with empty SKU trigger pre-flight validation failure.
+func TestGetProjectedCost_ValidationFailure_EmptySKU(t *testing.T) {
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getProjectedFunc: func(
+			ctx context.Context,
+			in *GetProjectedCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetProjectedCostResponse, error) {
+			callCount++
+			return &GetProjectedCostResponse{
+				Results: []*CostResult{{Currency: "USD", MonthlyCost: 100.0}},
+			}, nil
+		},
+	}
+
+	resources := []*ResourceDescriptor{
+		{
+			Type:     "aws:ec2:Instance",
+			Provider: "aws",
+			Properties: map[string]string{
+				// Missing instanceType - SKU will be empty
+				"region": "us-east-1",
+			},
+		},
+	}
+
+	result := GetProjectedCostWithErrors(
+		context.Background(),
+		mockClient,
+		"test-plugin",
+		resources,
+	)
+
+	// Should have 1 result
+	if len(result.Results) != 1 {
+		t.Errorf("Results length = %d, want 1", len(result.Results))
+	}
+
+	// Plugin should NOT be called for invalid resources
+	if callCount != 0 {
+		t.Errorf("Plugin was called %d times, want 0 (validation should skip plugin)", callCount)
+	}
+
+	// Result should have VALIDATION prefix in Notes
+	if len(result.Results) > 0 {
+		notes := result.Results[0].Notes
+		if !strings.Contains(notes, "VALIDATION:") {
+			t.Errorf("Notes should contain 'VALIDATION:', got %q", notes)
+		}
+		if !strings.Contains(strings.ToLower(notes), "sku") {
+			t.Errorf("Notes should mention 'sku', got %q", notes)
+		}
+	}
+}
+
+// T004: TestGetProjectedCost_ValidationFailure_EmptyRegion verifies that
+// resources with empty region trigger pre-flight validation failure.
+func TestGetProjectedCost_ValidationFailure_EmptyRegion(t *testing.T) {
+	// Clear environment variables that might provide region fallback
+	t.Setenv("AWS_REGION", "")
+	t.Setenv("AWS_DEFAULT_REGION", "")
+
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getProjectedFunc: func(
+			ctx context.Context,
+			in *GetProjectedCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetProjectedCostResponse, error) {
+			callCount++
+			return &GetProjectedCostResponse{
+				Results: []*CostResult{{Currency: "USD", MonthlyCost: 100.0}},
+			}, nil
+		},
+	}
+
+	resources := []*ResourceDescriptor{
+		{
+			Type:     "aws:ec2:Instance",
+			Provider: "aws",
+			Properties: map[string]string{
+				"instanceType": "t3.micro",
+				// Missing region - will be empty after extraction
+			},
+		},
+	}
+
+	result := GetProjectedCostWithErrors(
+		context.Background(),
+		mockClient,
+		"test-plugin",
+		resources,
+	)
+
+	// Should have 1 result
+	if len(result.Results) != 1 {
+		t.Errorf("Results length = %d, want 1", len(result.Results))
+	}
+
+	// Plugin should NOT be called for invalid resources
+	if callCount != 0 {
+		t.Errorf("Plugin was called %d times, want 0 (validation should skip plugin)", callCount)
+	}
+
+	// Result should have VALIDATION prefix in Notes
+	if len(result.Results) > 0 {
+		notes := result.Results[0].Notes
+		if !strings.Contains(notes, "VALIDATION:") {
+			t.Errorf("Notes should contain 'VALIDATION:', got %q", notes)
+		}
+		if !strings.Contains(strings.ToLower(notes), "region") {
+			t.Errorf("Notes should mention 'region', got %q", notes)
+		}
+	}
+}
+
+// T005: TestGetProjectedCost_ValidationFailure_MixedValidInvalid verifies that
+// valid resources are processed while invalid ones get validation errors.
+func TestGetProjectedCost_ValidationFailure_MixedValidInvalid(t *testing.T) {
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getProjectedFunc: func(
+			ctx context.Context,
+			in *GetProjectedCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetProjectedCostResponse, error) {
+			callCount++
+			return &GetProjectedCostResponse{
+				Results: []*CostResult{{Currency: "USD", MonthlyCost: 50.0}},
+			}, nil
+		},
+	}
+
+	resources := []*ResourceDescriptor{
+		// Valid resource
+		{
+			Type:     "aws:ec2:Instance",
+			Provider: "aws",
+			Properties: map[string]string{
+				"instanceType": "t3.micro",
+				"region":       "us-east-1",
+			},
+		},
+		// Invalid resource (empty provider)
+		{
+			Type:     "aws:rds:Instance",
+			Provider: "", // Invalid
+			Properties: map[string]string{
+				"instanceClass": "db.t3.micro",
+				"region":        "us-east-1",
+			},
+		},
+		// Another valid resource
+		{
+			Type:     "aws:s3:Bucket",
+			Provider: "aws",
+			Properties: map[string]string{
+				"region": "us-west-2",
+				"sku":    "standard",
+			},
+		},
+	}
+
+	result := GetProjectedCostWithErrors(
+		context.Background(),
+		mockClient,
+		"test-plugin",
+		resources,
+	)
+
+	// Should have 3 results (2 successful + 1 validation failure)
+	if len(result.Results) != 3 {
+		t.Errorf("Results length = %d, want 3", len(result.Results))
+	}
+
+	// Plugin should only be called twice (for valid resources)
+	if callCount != 2 {
+		t.Errorf("Plugin was called %d times, want 2 (only for valid resources)", callCount)
+	}
+
+	// Check that one result has VALIDATION prefix
+	validationCount := 0
+	for _, r := range result.Results {
+		if strings.Contains(r.Notes, "VALIDATION:") {
+			validationCount++
+		}
+	}
+	if validationCount != 1 {
+		t.Errorf("Expected 1 validation error, got %d", validationCount)
+	}
+}
+
+// =============================================================================
+// Pre-Flight Validation Tests for Actual Cost (Feature 107 - US2)
+// =============================================================================
+
+// T010: TestGetActualCost_ValidationFailure_EmptyResourceID verifies that
+// requests with empty resource ID trigger pre-flight validation failure.
+func TestGetActualCost_ValidationFailure_EmptyResourceID(t *testing.T) {
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getActualFunc: func(
+			ctx context.Context,
+			in *GetActualCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetActualCostResponse, error) {
+			callCount++
+			return &GetActualCostResponse{
+				Results: []*ActualCostResult{{Currency: "USD", TotalCost: 100.0}},
+			}, nil
+		},
+	}
+
+	startTime := time.Now().Add(-24 * time.Hour).Unix()
+	endTime := time.Now().Unix()
+
+	req := &GetActualCostRequest{
+		ResourceIDs: []string{""}, // Empty resource ID should fail validation
+		StartTime:   startTime,
+		EndTime:     endTime,
+	}
+
+	result := GetActualCostWithErrors(context.Background(), mockClient, "test-plugin", req)
+
+	// Should have 1 result (placeholder for validation failure)
+	if len(result.Results) != 1 {
+		t.Errorf("Results length = %d, want 1", len(result.Results))
+	}
+
+	// Plugin should NOT be called for invalid resources
+	if callCount != 0 {
+		t.Errorf("Plugin was called %d times, want 0 (validation should skip plugin)", callCount)
+	}
+
+	// Should have 1 error with VALIDATION in Notes
+	if len(result.Errors) != 1 {
+		t.Errorf("Errors length = %d, want 1", len(result.Errors))
+	}
+
+	// Error should mention validation
+	if len(result.Errors) > 0 {
+		errStr := result.Errors[0].Error.Error()
+		if !strings.Contains(errStr, "pre-flight validation failed") {
+			t.Errorf("Error should contain 'pre-flight validation failed', got %q", errStr)
+		}
+	}
+
+	// Result Notes should have VALIDATION prefix
+	if len(result.Results) > 0 {
+		notes := result.Results[0].Notes
+		if !strings.Contains(notes, "VALIDATION:") {
+			t.Errorf("Notes should contain 'VALIDATION:', got %q", notes)
+		}
+		// Accept any message format that mentions "resource" (covers resourceid, resource_id, etc.)
+		if !strings.Contains(strings.ToLower(notes), "resource") {
+			t.Errorf("Notes should mention 'resource', got %q", notes)
+		}
+	}
+}
+
+// T011: TestGetActualCost_ValidationFailure_InvalidTimeRange verifies that
+// requests with end time before start time trigger pre-flight validation failure.
+func TestGetActualCost_ValidationFailure_InvalidTimeRange(t *testing.T) {
+	callCount := 0
+	mockClient := &mockCostSourceClient{
+		getActualFunc: func(
+			ctx context.Context,
+			in *GetActualCostRequest,
+			opts ...grpc.CallOption,
+		) (*GetActualCostResponse, error) {
+			callCount++
+			return &GetActualCostResponse{
+				Results: []*ActualCostResult{{Currency: "USD", TotalCost: 100.0}},
+			}, nil
+		},
+	}
+
+	startTime := time.Now().Unix()
+	endTime := time.Now().Add(-24 * time.Hour).Unix() // End before start - invalid
+
+	req := &GetActualCostRequest{
+		ResourceIDs: []string{"i-1234567890abcdef0"},
+		StartTime:   startTime,
+		EndTime:     endTime,
+	}
+
+	result := GetActualCostWithErrors(context.Background(), mockClient, "test-plugin", req)
+
+	// Should have 1 result
+	if len(result.Results) != 1 {
+		t.Errorf("Results length = %d, want 1", len(result.Results))
+	}
+
+	// Plugin should NOT be called for invalid time range
+	if callCount != 0 {
+		t.Errorf("Plugin was called %d times, want 0 (validation should skip plugin)", callCount)
+	}
+
+	// Should have validation error
+	if len(result.Errors) != 1 {
+		t.Errorf("Errors length = %d, want 1", len(result.Errors))
+	}
+
+	// Result Notes should have VALIDATION prefix
+	if len(result.Results) > 0 {
+		notes := result.Results[0].Notes
+		if !strings.Contains(notes, "VALIDATION:") {
+			t.Errorf("Notes should contain 'VALIDATION:', got %q", notes)
+		}
+		// Should mention time-related issue
+		lowerNotes := strings.ToLower(notes)
+		if !strings.Contains(lowerNotes, "time") && !strings.Contains(lowerNotes, "end") {
+			t.Errorf("Notes should mention time-related issue, got %q", notes)
+		}
 	}
 }
