@@ -45,4 +45,3 @@ estimate_cost:
     - pulumi preview --json > plan.json
     - ./pulumicost cost projected --pulumi-json plan.json
 ```
-

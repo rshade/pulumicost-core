@@ -32,7 +32,8 @@ PulumiCost documentation serves four distinct audiences:
 - **Software Architects**: Design integrations, understand system design, operational concerns
 - **Business Stakeholders (CEO/Product)**: Cost visibility, ROI, competitive advantage, roadmap
 
-Each audience requires tailored content that speaks their language and addresses their specific concerns. The documentation system is designed to be:
+Each audience requires tailored content that speaks their language and addresses their specific
+concerns. The documentation system is designed to be:
 
 - **Modular**: Plugin-agnostic structure supports Vantage now, Kubecost/Flexera/Cloudability in future
 - **Progressive**: Start simple, deepen understanding with detailed guides
@@ -63,7 +64,7 @@ Each audience requires tailored content that speaks their language and addresses
 
 ## Directory Structure
 
-```
+```text
 docs/
 ├── _config.yml                      # Jekyll configuration for GitHub Pages
 ├── .gitignore                       # Ignore generated files
@@ -191,12 +192,14 @@ docs/
 **Entry Point:** `getting-started/quickstart.md`
 
 **Key Workflows:**
+
 1. Install PulumiCost CLI
 2. Choose cost provider (Vantage, local pricing, or future Kubecost)
 3. Run command to get costs
 4. Understand output and troubleshoot issues
 
 **Content Characteristics:**
+
 - **Short and practical**: Every page answers one question
 - **Copy-paste ready**: Include complete commands and configuration examples
 - **Screenshots**: Visual guides for configuration steps
@@ -204,6 +207,7 @@ docs/
 - **Less theory**: Focus on "how" not "why"
 
 **Key Pages:**
+
 - Installation.md → Quick start.md → Examples (Vantage setup)
 - Reference/CLI commands → Support/FAQ
 - Support/Troubleshooting
@@ -217,6 +221,7 @@ docs/
 **Entry Point:** `plugins/plugin-development.md`
 
 **Key Workflows:**
+
 1. Understand plugin protocol and gRPC
 2. Set up development environment
 3. Implement plugin interface
@@ -224,6 +229,7 @@ docs/
 5. Deploy and monitor
 
 **Content Characteristics:**
+
 - **Code-heavy**: Reference real example implementations
 - **API-first**: Focus on gRPC protocol and data structures
 - **Testing emphasis**: How to test plugins
@@ -231,6 +237,7 @@ docs/
 - **Modular and reusable**: Clear patterns for common tasks
 
 **Key Pages:**
+
 - Architecture/plugin-protocol.md → Plugins/plugin-development.md
 - Plugins/plugin-sdk.md (reference)
 - Plugins/plugin-examples.md (patterns)
@@ -245,12 +252,14 @@ docs/
 **Entry Point:** `guides/architect-guide.md`
 
 **Key Workflows:**
+
 1. Understand system architecture and design patterns
 2. Plan integration with existing infrastructure
 3. Design for scale, reliability, and security
 4. Plan upgrade and migration strategies
 
 **Content Characteristics:**
+
 - **Design-focused**: Why architectural decisions were made
 - **Integration patterns**: How to integrate with other systems
 - **Operational concerns**: Deployment, monitoring, scaling
@@ -258,6 +267,7 @@ docs/
 - **Security & compliance**: Data handling, authentication, audit trails
 
 **Key Pages:**
+
 - Architecture/ (all files) - system design deep dive
 - Deployment/ (all files) - operational guidance
 - Architecture/diagrams/ (visual design)
@@ -272,12 +282,14 @@ docs/
 **Entry Point:** `guides/business-value.md`
 
 **Key Workflows:**
+
 1. Understand cost visibility benefits
 2. See ROI and time-to-value
 3. Understand roadmap and competitive positioning
 4. Make go/no-go decisions
 
 **Content Characteristics:**
+
 - **Problem-focused**: Real customer problems solved
 - **ROI emphasis**: Cost savings, time savings, risk reduction
 - **Competitive positioning**: How we differ from existing solutions
@@ -286,6 +298,7 @@ docs/
 - **Less technical**: Focus on business outcomes
 
 **Key Pages:**
+
 - guides/business-value.md (primary)
 - guides/comparison.md (competitive analysis)
 - architecture/roadmap.md (future direction)
@@ -300,7 +313,8 @@ docs/
 **Homepage/Entry Point:** `getting-started/quickstart.md`
 
 **User Journey:**
-```
+
+```text
 README.md
   ↓
 getting-started/quickstart.md (5-minute example)
@@ -314,6 +328,7 @@ support/faq.md or support/troubleshooting.md
 ```
 
 **Key Sections:**
+
 - Installation and prerequisites
 - Quick start example
 - Configuration options
@@ -330,7 +345,8 @@ support/faq.md or support/troubleshooting.md
 **Homepage/Entry Point:** `plugins/plugin-development.md`
 
 **Developer Journey:**
-```
+
+```text
 README.md
   ↓
 guides/developer-guide.md (overview)
@@ -348,6 +364,7 @@ support/contributing.md (contribute back)
 ```
 
 **Key Sections:**
+
 - Plugin protocol specification
 - SDK reference with examples
 - Real plugin implementation walkthrough
@@ -364,7 +381,8 @@ support/contributing.md (contribute back)
 **Homepage/Entry Point:** `guides/architect-guide.md`
 
 **Architect Journey:**
-```
+
+```text
 guides/architect-guide.md (overview)
   ↓
 architecture/system-overview.md (with diagrams)
@@ -380,6 +398,7 @@ architecture/roadmap.md (future planning)
 ```
 
 **Key Sections:**
+
 - System architecture and design patterns
 - Integration points and APIs
 - Security and compliance considerations
@@ -397,7 +416,8 @@ architecture/roadmap.md (future planning)
 **Homepage/Entry Point:** `guides/business-value.md`
 
 **Executive Journey:**
-```
+
+```text
 guides/business-value.md (value proposition)
   ├─→ getting-started/quickstart.md (see it in action)
   ├─→ guides/comparison.md (competitive analysis)
@@ -405,6 +425,7 @@ guides/business-value.md (value proposition)
 ```
 
 **Key Sections:**
+
 - Problem statement (cost visibility challenges)
 - Value proposition (time to insight, cost reduction)
 - Competitive analysis
@@ -423,12 +444,14 @@ guides/business-value.md (value proposition)
 All plugins follow a clear status progression:
 
 #### 1. **IN PROGRESS** (Vantage)
+
 - Feature complete and tested
 - Production use cases in development
 - Full documentation
 - Support provided
 
 **Documentation:**
+
 - `plugins/vantage/README.md` - Overview and status
 - `plugins/vantage/setup.md` - Setup guide
 - `plugins/vantage/authentication.md` - API key management
@@ -437,22 +460,26 @@ All plugins follow a clear status progression:
 - `plugins/vantage/troubleshooting.md` - Common issues and fixes
 
 #### 2. **PLANNED** (Kubecost, OpenCost)
+
 - Committed roadmap with timeline
 - Architecture design complete
 - Development starting
 - Partial documentation available
 
 **Documentation:**
+
 - `plugins/kubecost/README.md` - Overview
 - `plugins/kubecost/coming-soon.md` - Timeline and features
 - `plugins/kubecost/differences.md` - How it differs from Vantage
 
 #### 3. **FUTURE** (Flexera, Cloudability, others)
+
 - Conceptual planning phase
 - Waiting for customer demand and partnership
 - Architectural patterns established for similar services
 
 **Documentation:**
+
 - `plugins/flexera/coming-soon.md` - Timeline and requirements
 - `plugins/cloudability/coming-soon.md` - Timeline and requirements
 
@@ -460,7 +487,7 @@ All plugins follow a clear status progression:
 
 Each production plugin gets:
 
-```
+```text
 plugins/{plugin-name}/
 ├── README.md                    # Plugin overview, features, status
 ├── setup.md                     # Installation and initial configuration
@@ -527,7 +554,7 @@ google_analytics_id: UA-XXXXXXXXX-X
 
 ### Directory Requirements
 
-```
+```text
 docs/
 ├── _config.yml                  # Jekyll configuration
 ├── _includes/                   # Reusable template components
@@ -544,7 +571,7 @@ docs/
 
 Create `docs/CNAME` if using custom domain:
 
-```
+```text
 docs.pulumicost.com
 ```
 
@@ -566,10 +593,12 @@ Then configure domain in GitHub repository settings.
 #### 1. **docs-build.yml** - Build and Deploy Docs
 
 Triggered on:
+
 - Push to main branch (when docs/ changed)
 - Pull request to main (preview check)
 
 Actions:
+
 1. Checkout code
 2. Setup Ruby + Jekyll
 3. Build docs site
@@ -580,10 +609,12 @@ Actions:
 #### 2. **docs-validate.yml** - Validate Doc Quality
 
 Triggered on:
+
 - Any push to main
 - Pull request to any branch
 
 Actions:
+
 1. Markdown linting (markdownlint)
 2. Frontmatter validation
 3. Link checking (markdown-link-check)
@@ -593,9 +624,11 @@ Actions:
 #### 3. **llms-txt-update.yml** - Auto-update llms.txt
 
 Triggered on:
+
 - Any push to docs/ folder
 
 Actions:
+
 1. Generate llms.txt from all markdown files
 2. Commit update to main branch
 
@@ -683,26 +716,26 @@ BasedOnStyles = Microsoft
 ```makefile
 .PHONY: docs-lint
 docs-lint:
-	markdownlint docs/**/*.md
-	markdown-link-check docs/**/*.md
-	vale docs/**/*.md
+    markdownlint docs/**/*.md
+    markdown-link-check docs/**/*.md
+    vale docs/**/*.md
 
 .PHONY: docs-format
 docs-format:
-	prettier --write "docs/**/*.md"
+    prettier --write "docs/**/*.md"
 
 .PHONY: docs-build
 docs-build:
-	bundle exec jekyll build --source docs --destination docs/_site
+    bundle exec jekyll build --source docs --destination docs/_site
 
 .PHONY: docs-serve
 docs-serve:
-	bundle exec jekyll serve --source docs
+    bundle exec jekyll serve --source docs
 
 .PHONY: docs-validate
 docs-validate: docs-lint
-	./scripts/validate-frontmatter.sh
-	./scripts/update-llms-txt.sh
+    ./scripts/validate-frontmatter.sh
+    ./scripts/update-llms-txt.sh
 ```
 
 ---
@@ -711,9 +744,11 @@ docs-validate: docs-lint
 
 ### Purpose
 
-`docs/llms.txt` is a machine-readable index of all documentation, designed to help LLMs understand the documentation structure and content quickly.
+`docs/llms.txt` is a machine-readable index of all documentation, designed to
+help LLMs understand the documentation structure and content quickly.
 
 **Use Cases:**
+
 - AI-powered search within documentation
 - Context injection for AI assistants helping with PulumiCost
 - Documentation completeness verification
@@ -721,7 +756,7 @@ docs-validate: docs-lint
 
 ### Structure
 
-```
+```text
 # PulumiCost Documentation Index
 
 ## Quick Navigation
@@ -926,24 +961,28 @@ done > docs/llms.txt
 ### Documentation Review Cycle
 
 **Monthly (First Monday):**
+
 - Review plugin status and update accordingly
 - Check for broken links (automated but manual review)
 - Update roadmap with progress
 - Verify all code examples still work
 
 **Quarterly (First day of quarter):**
+
 - Update llms.txt if structure changed
 - Review and update architecture diagrams
 - Ensure guides match current feature set
 - Add/update case studies or examples
 
 **On Release:**
+
 - Update version in all relevant docs
 - Add new features to appropriate guides
 - Update CLI reference
 - Update roadmap
 
 **When Plugin Status Changes:**
+
 - Update plugin status (in progress → planned → released)
 - Add/update plugin documentation
 - Update roadmap
@@ -952,17 +991,20 @@ done > docs/llms.txt
 ### Roles & Responsibilities
 
 **Documentation Owner:** Technical Content Architect
+
 - Maintain documentation strategy and structure
 - Ensure consistency across all guides
 - Update llms.txt and plan.md
 - Review major documentation changes
 
 **Content Contributors:** Engineers, Product Managers, Plugin Developers
+
 - Write content for their areas
 - Keep examples current
 - Report broken links or issues
 
 **Content Reviewer:** Designated team member
+
 - Review new/updated documentation
 - Verify accuracy and clarity
 - Check tone matches audience
@@ -975,12 +1017,14 @@ done > docs/llms.txt
 ### Phase 1: Foundation (Week 1-2)
 
 **Goals:**
+
 - Create directory structure
 - Setup GitHub Pages
 - Create plan.md (this file)
 - Setup linting tools
 
 **Deliverables:**
+
 - [ ] Complete docs/ directory structure
 - [ ] Jekyll _config.yml and theme selection
 - [ ] .markdownlintrc.json, .prettierrc.yaml configured
@@ -993,11 +1037,13 @@ done > docs/llms.txt
 ### Phase 2: Core Guides (Week 3-4)
 
 **Goals:**
+
 - Create main audience guides
 - Establish tone and style for each audience
 - Create getting-started section
 
 **Deliverables:**
+
 - [ ] guides/user-guide.md
 - [ ] guides/developer-guide.md
 - [ ] guides/architect-guide.md
@@ -1010,11 +1056,13 @@ done > docs/llms.txt
 ### Phase 3: Architecture & Reference (Week 5-6)
 
 **Goals:**
+
 - Deep dive architecture documentation
 - Complete CLI and API reference
 - Create diagrams
 
 **Deliverables:**
+
 - [ ] architecture/system-overview.md
 - [ ] architecture/plugin-protocol.md
 - [ ] architecture/cost-calculation.md
@@ -1027,11 +1075,13 @@ done > docs/llms.txt
 ### Phase 4: Plugin Documentation (Week 7-8)
 
 **Goals:**
+
 - Complete Vantage plugin documentation
 - Create Kubecost "coming soon" documentation
 - Establish plugin documentation patterns
 
 **Deliverables:**
+
 - [ ] plugins/plugin-development.md
 - [ ] plugins/plugin-sdk.md
 - [ ] plugins/vantage/ (all files)
@@ -1044,11 +1094,13 @@ done > docs/llms.txt
 ### Phase 5: GitHub Actions & Automation (Week 9)
 
 **Goals:**
+
 - Setup documentation build pipeline
 - Create validation workflow
 - Implement llms.txt auto-generation
 
 **Deliverables:**
+
 - [ ] .github/workflows/docs-build.yml
 - [ ] .github/workflows/docs-validate.yml
 - [ ] .github/workflows/llms-txt-update.yml
@@ -1060,11 +1112,13 @@ done > docs/llms.txt
 ### Phase 6: Integration & Polish (Week 10)
 
 **Goals:**
+
 - Update root documentation files
 - Test full documentation site
 - Create support and contribution content
 
 **Deliverables:**
+
 - [ ] Update README.md (add docs link)
 - [ ] Update CLAUDE.md (add documentation strategy)
 - [ ] Update CONTRIBUTING.md (add docs section)

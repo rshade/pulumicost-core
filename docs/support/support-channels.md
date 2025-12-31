@@ -26,4 +26,5 @@ For general questions, ideas, and show-and-tell, use GitHub Discussions.
 
 ## Consulting
 
-If you need help with custom plugin development or enterprise integration, please reach out to the maintainers directly or via the community channels.
+If you need help with custom plugin development or enterprise integration,
+please reach out to the maintainers directly or via the community channels.

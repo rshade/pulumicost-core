@@ -175,6 +175,7 @@ mcp__playwright__browser_network_requests()
 - Cause: `jekyll-seo-tag` plugin not installed or not in `_config.yml` plugins list
 - Fix: Either add plugin to Gemfile and \_config.yml, or replace `{% seo %}` with manual tags
 - Manual alternative:
+
   ```html
   <title>{{ page.title | default: site.title }}</title>
   <meta name="description" content="{{ page.description | default: site.description }}" />
@@ -184,6 +185,7 @@ mcp__playwright__browser_network_requests()
 
 - Cause: Missing `index.md` or `index.html` in docs directory
 - Fix: Create `index.md` with proper frontmatter:
+
   ```yaml
   ---
   layout: default
@@ -196,6 +198,7 @@ mcp__playwright__browser_network_requests()
 
 - Cause: Missing stylesheet link in `_layouts/default.html`
 - Fix: Add link tag in `<head>` section:
+
   ```html
-  <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   ```

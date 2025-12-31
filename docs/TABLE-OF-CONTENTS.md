@@ -4,13 +4,12 @@ title: Table of Contents
 description: Complete navigation guide for PulumiCost documentation
 ---
 
-# Complete Documentation Table of Contents
-
 Welcome to PulumiCost documentation. Use this page to navigate all available resources.
 
 ## Quick Navigation by Audience
 
 ### 👤 For End Users
+
 1. Start: [5-Minute Quickstart](getting-started/quickstart.md)
 2. Install: [Installation Guide](getting-started/installation.md)
 3. Learn: [User Guide](guides/user-guide.md)
@@ -18,6 +17,7 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 5. Get Help: [FAQ](support/faq.md) | [Troubleshooting](support/troubleshooting.md)
 
 ### 🛠️ For Engineers/Plugin Developers
+
 1. Start: [Developer Guide](guides/developer-guide.md)
 2. Build: [Plugin Development](plugins/plugin-development.md)
 3. Reference: [Plugin SDK](plugins/plugin-sdk.md)
@@ -25,6 +25,7 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 5. Contribute: [Contributing Guide](support/contributing.md)
 
 ### 🏗️ For Software Architects
+
 1. Overview: [Architecture Guide](guides/architect-guide.md)
 2. Design: [System Architecture](architecture/system-overview.md)
 3. Patterns: [Plugin Protocol](architecture/plugin-protocol.md)
@@ -32,6 +33,7 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 5. Secure: [Security Guide](deployment/security.md)
 
 ### 💼 For Executives/Product
+
 1. Value: [Business Value & ROI](guides/business-value.md)
 2. See Demo: [Quickstart](getting-started/quickstart.md)
 3. Timeline: [Roadmap](architecture/roadmap.md)
@@ -171,24 +173,28 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 ## Documentation by Topic
 
 ### Getting Started (New Users)
+
 1. [README](README.md) - Start here
 2. [Quickstart](getting-started/quickstart.md) - 5 minutes
 3. [Installation](getting-started/installation.md) - Install
 4. [User Guide](guides/user-guide.md) - Learn
 
 ### Installation & Setup
+
 - [Prerequisites](getting-started/prerequisites.md)
 - [Installation Guide](getting-started/installation.md)
 - [GitHub Pages Setup](GITHUB-PAGES-SETUP.md)
 - [Developer Setup](GETTING-STARTED-DEV.md)
 
 ### Using PulumiCost
+
 - [Quickstart](getting-started/quickstart.md)
 - [User Guide](guides/user-guide.md)
 - [CLI Commands](reference/cli-commands.md)
 - [Examples](getting-started/examples/)
 
 ### Building Plugins
+
 - [Developer Guide](guides/developer-guide.md)
 - [Plugin Development](plugins/plugin-development.md)
 - [Plugin SDK](plugins/plugin-sdk.md)
@@ -196,6 +202,7 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 - [Plugin Examples](plugins/plugin-examples.md)
 
 ### System Design
+
 - [Architecture Guide](guides/architect-guide.md)
 - [System Overview](architecture/system-overview.md)
 - [Plugin Protocol](architecture/plugin-protocol.md)
@@ -203,6 +210,7 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 - [Architecture Diagrams](architecture/diagrams/)
 
 ### Operations & Deployment
+
 - [Deployment Guide](deployment/deployment.md)
 - [Configuration](deployment/configuration.md)
 - [Docker](deployment/docker.md)
@@ -210,17 +218,20 @@ Welcome to PulumiCost documentation. Use this page to navigate all available res
 - [CI/CD Integration](deployment/cicd-integration.md)
 
 ### Troubleshooting & Support
+
 - [FAQ](support/faq.md)
 - [Troubleshooting](support/troubleshooting.md)
 - [Error Codes](reference/error-codes.md)
 - [Support Channels](support/support-channels.md)
 
 ### Contributing
+
 - [Contributing Guide](support/contributing.md)
 - [Code of Conduct](support/code-of-conduct.md)
 - [Developer Setup](GETTING-STARTED-DEV.md)
 
 ### Business/Strategy
+
 - [Business Value](guides/business-value.md)
 - [Roadmap](architecture/roadmap.md)
 - [Comparison](guides/comparison.md)

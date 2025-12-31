@@ -192,7 +192,8 @@ aws:ec2/instance:Instance     aws:ec2:Instance  $7.50     USD       12.5 kg
 
 ### Utilization Rate
 
-You can adjust the assumed utilization rate for sustainability calculations using the `--utilization` flag. The default is 1.0 (100%).
+You can adjust the assumed utilization rate for sustainability calculations using the
+`--utilization` flag. The default is 1.0 (100%).
 
 ```bash
 pulumicost cost projected --pulumi-json plan.json --utilization 0.8

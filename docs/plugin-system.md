@@ -14,7 +14,10 @@ Comprehensive guide to the PulumiCost plugin architecture, management, and devel
 
 ## Overview
 
-PulumiCost Core uses a plugin-based architecture to fetch cost data from various sources. Plugins are standalone binaries that implement the CostSource gRPC service, allowing extensible integration with cloud providers and cost management platforms.
+PulumiCost Core uses a plugin-based architecture to fetch cost data from various
+sources. Plugins are standalone binaries that implement the CostSource gRPC
+service, allowing extensible integration with cloud providers and cost
+management platforms.
 
 ### Key Benefits
 
@@ -27,7 +30,9 @@ PulumiCost Core uses a plugin-based architecture to fetch cost data from various
 
 ### Communication Protocol
 
-Plugins communicate with PulumiCost Core via gRPC using the [pulumicost-spec](https://github.com/rshade/pulumicost-spec) protocol definitions.
+Plugins communicate with PulumiCost Core via gRPC using the
+[pulumicost-spec](https://github.com/rshade/pulumicost-spec) protocol
+definitions.
 
 ```mermaid
 graph TD
@@ -51,7 +56,7 @@ graph TD
 
 ### Directory Structure
 
-```
+```text
 ~/.pulumicost/plugins/
 ├── kubecost/
 │   └── 1.0.0/
@@ -77,7 +82,7 @@ pulumicost plugin list
 
 **Sample Output:**
 
-```
+```text
 NAME        VERSION  STATUS    SUPPORTS                    BINARY
 kubecost    1.0.0    ready     projected,actual           pulumicost-kubecost
 aws-plugin  0.1.0    ready     projected                  pulumicost-aws
