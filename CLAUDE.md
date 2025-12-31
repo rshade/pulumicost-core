@@ -953,6 +953,8 @@ CodeRabbit now:
 ## Active Technologies
 - Go 1.25.5 + pulumicost-spec v0.4.11 (pluginsdk), cobra v1.10.1, (108-action-type-enum)
 - N/A (stateless enum mapping) (108-action-type-enum)
+- Go 1.25.5 + Cobra v1.10.1, Bubble Tea, Lip Gloss, zerolog v1.34.0 (109-cost-recommendations)
+- N/A (stateless command, data from plugins via gRPC) (109-cost-recommendations)
 
 - Go 1.25.5 + pluginsdk v0.4.11+, zerolog v1.34.0; N/A storage (validation is stateless) (107-preflight-validation)
 - Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)

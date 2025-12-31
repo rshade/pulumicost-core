@@ -1,0 +1,56 @@
+{
+  "recommendations": [
+    {
+      "resourceId": "aws:ec2:Instance/i-0abc123def456789",
+      "type": "RIGHTSIZE",
+      "description": "Downsize from m5.xlarge to m5.large - instance is underutilized (avg CPU 15%)",
+      "estimatedSavings": 87.60,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Instance/i-0xyz987wvu654321",
+      "type": "TERMINATE",
+      "description": "Terminate idle instance - no traffic for 30+ days",
+      "estimatedSavings": 175.20,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:rds:Instance/db-prod-mysql",
+      "type": "PURCHASE_COMMITMENT",
+      "description": "Switch to Reserved Instance (1-year) for 32% savings",
+      "estimatedSavings": 156.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:s3:Bucket/logs-archive",
+      "type": "DELETE_UNUSED",
+      "description": "Delete old log files older than 90 days - 500GB unused storage",
+      "estimatedSavings": 11.50,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Volume/vol-0abc123def456789",
+      "type": "MODIFY",
+      "description": "Convert gp2 to gp3 for better price-performance",
+      "estimatedSavings": 8.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "kubernetes:deployment/api-server",
+      "type": "ADJUST_REQUESTS",
+      "description": "Reduce CPU requests from 2 to 0.5 cores - actual usage is 0.3 cores",
+      "estimatedSavings": 45.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:lambda:Function/data-processor",
+      "type": "RIGHTSIZE",
+      "description": "Reduce memory from 1024MB to 512MB - peak usage 280MB",
+      "estimatedSavings": 12.30,
+      "currency": "USD"
+    }
+  ],
+  "errors": [],
+  "totalSavings": 495.60,
+  "currency": "USD"
+}

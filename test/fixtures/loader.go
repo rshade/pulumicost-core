@@ -179,3 +179,13 @@ func MustLoadYAML(filename string, target interface{}) {
 		panic(fmt.Sprintf("failed to load required YAML fixture %s: %v", filename, err))
 	}
 }
+
+// LoadRecommendations loads a recommendations JSON file from test/fixtures/recommendations/.
+// This is a convenience wrapper around LoadJSON for recommendation test fixtures.
+func LoadRecommendations(filename string) (map[string]interface{}, error) {
+	var recommendations map[string]interface{}
+	if err := LoadJSON(filepath.Join("recommendations", filename), &recommendations); err != nil {
+		return nil, err
+	}
+	return recommendations, nil
+}

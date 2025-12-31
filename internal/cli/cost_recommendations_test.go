@@ -375,3 +375,444 @@ func TestCostRecommendationsCmd_EmptyActionTypeFilter(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid action type filter")
 }
+
+// ============================================================================
+// User Story 1: Quick Overview of Recommendations (T011-T019)
+// ============================================================================
+
+// T011: Test renderRecommendationsSummary renders summary section correctly.
+func TestRenderRecommendationsSummary(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{Type: "RIGHTSIZE", EstimatedSavings: 87.60, Currency: "USD"},
+		{Type: "TERMINATE", EstimatedSavings: 175.20, Currency: "USD"},
+		{Type: "RIGHTSIZE", EstimatedSavings: 50.00, Currency: "USD"},
+	}
+
+	var buf bytes.Buffer
+	cli.RenderRecommendationsSummaryForTest(&buf, recs)
+	output := buf.String()
+
+	// Verify summary section exists
+	assert.Contains(t, output, "RECOMMENDATIONS SUMMARY")
+
+	// Verify total count
+	assert.Contains(t, output, "3") // total recommendations
+
+	// Verify total savings
+	assert.Contains(t, output, "312.80") // 87.60 + 175.20 + 50.00
+
+	// Verify action type breakdown (labels are human-readable)
+	assert.Contains(t, output, "Rightsize")
+	assert.Contains(t, output, "Terminate")
+}
+
+// T011: Test renderRecommendationsSummary with empty recommendations.
+func TestRenderRecommendationsSummary_Empty(t *testing.T) {
+	var buf bytes.Buffer
+	cli.RenderRecommendationsSummaryForTest(&buf, nil)
+	output := buf.String()
+
+	// Should show "No recommendations" or empty state
+	assert.Contains(t, output, "0")
+}
+
+// T012: Test sortRecommendationsBySavings sorts correctly.
+func TestSortRecommendationsBySavings(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", EstimatedSavings: 10.00},
+		{ResourceID: "r2", EstimatedSavings: 100.00},
+		{ResourceID: "r3", EstimatedSavings: 50.00},
+		{ResourceID: "r4", EstimatedSavings: 25.00},
+	}
+
+	sorted := cli.SortRecommendationsBySavingsForTest(recs)
+
+	require.Len(t, sorted, 4)
+	assert.Equal(t, "r2", sorted[0].ResourceID) // 100.00
+	assert.Equal(t, "r3", sorted[1].ResourceID) // 50.00
+	assert.Equal(t, "r4", sorted[2].ResourceID) // 25.00
+	assert.Equal(t, "r1", sorted[3].ResourceID) // 10.00
+}
+
+// T012: Test sortRecommendationsBySavings with empty input.
+func TestSortRecommendationsBySavings_Empty(t *testing.T) {
+	sorted := cli.SortRecommendationsBySavingsForTest(nil)
+	assert.Empty(t, sorted)
+}
+
+// T012: Test sortRecommendationsBySavings with equal savings (stable sort).
+func TestSortRecommendationsBySavings_EqualValues(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", EstimatedSavings: 50.00},
+		{ResourceID: "r2", EstimatedSavings: 50.00},
+		{ResourceID: "r3", EstimatedSavings: 50.00},
+	}
+
+	sorted := cli.SortRecommendationsBySavingsForTest(recs)
+
+	require.Len(t, sorted, 3)
+	// All should have same savings
+	assert.Equal(t, 50.00, sorted[0].EstimatedSavings)
+	assert.Equal(t, 50.00, sorted[1].EstimatedSavings)
+	assert.Equal(t, 50.00, sorted[2].EstimatedSavings)
+}
+
+// ============================================================================
+// User Story 2: Verbose Mode (T020-T025)
+// ============================================================================
+
+// T020: Test --verbose flag is recognized by the command.
+func TestNewCostRecommendationsCmd_VerboseFlag(t *testing.T) {
+	cmd := cli.NewCostRecommendationsCmd()
+
+	// Check verbose flag exists
+	verboseFlag := cmd.Flags().Lookup("verbose")
+	require.NotNil(t, verboseFlag, "verbose flag should exist")
+
+	// Default should be false
+	assert.Equal(t, "false", verboseFlag.DefValue)
+}
+
+// T021: Test verbose mode shows all recommendations.
+func TestRenderRecommendationsVerbose(t *testing.T) {
+	// Create 7 recommendations (more than default 5)
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "r3", Type: "RIGHTSIZE", EstimatedSavings: 80.00, Currency: "USD"},
+		{ResourceID: "r4", Type: "DELETE_UNUSED", EstimatedSavings: 70.00, Currency: "USD"},
+		{ResourceID: "r5", Type: "MODIFY", EstimatedSavings: 60.00, Currency: "USD"},
+		{ResourceID: "r6", Type: "RIGHTSIZE", EstimatedSavings: 50.00, Currency: "USD"},
+		{ResourceID: "r7", Type: "TERMINATE", EstimatedSavings: 40.00, Currency: "USD"},
+	}
+
+	var buf bytes.Buffer
+	cli.RenderRecommendationsTableVerboseForTest(&buf, recs, true)
+	output := buf.String()
+
+	// All 7 resources should be shown in verbose mode
+	assert.Contains(t, output, "r1")
+	assert.Contains(t, output, "r2")
+	assert.Contains(t, output, "r3")
+	assert.Contains(t, output, "r4")
+	assert.Contains(t, output, "r5")
+	assert.Contains(t, output, "r6")
+	assert.Contains(t, output, "r7")
+
+	// Should NOT show "Use --verbose" hint
+	assert.NotContains(t, output, "Use --verbose")
+}
+
+// T021: Test non-verbose mode shows only top 5.
+func TestRenderRecommendationsNonVerbose(t *testing.T) {
+	// Create 7 recommendations (more than default 5)
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "r3", Type: "RIGHTSIZE", EstimatedSavings: 80.00, Currency: "USD"},
+		{ResourceID: "r4", Type: "DELETE_UNUSED", EstimatedSavings: 70.00, Currency: "USD"},
+		{ResourceID: "r5", Type: "MODIFY", EstimatedSavings: 60.00, Currency: "USD"},
+		{ResourceID: "r6", Type: "RIGHTSIZE", EstimatedSavings: 50.00, Currency: "USD"},
+		{ResourceID: "r7", Type: "TERMINATE", EstimatedSavings: 40.00, Currency: "USD"},
+	}
+
+	var buf bytes.Buffer
+	cli.RenderRecommendationsTableVerboseForTest(&buf, recs, false)
+	output := buf.String()
+
+	// Top 5 (by savings) should be shown: r1, r2, r3, r4, r5
+	assert.Contains(t, output, "r1")
+	assert.Contains(t, output, "r2")
+	assert.Contains(t, output, "r3")
+	assert.Contains(t, output, "r4")
+	assert.Contains(t, output, "r5")
+
+	// r6 and r7 should NOT be shown
+	assert.NotContains(t, output, "r6")
+	assert.NotContains(t, output, "r7")
+
+	// Should show "Use --verbose" hint
+	assert.Contains(t, output, "--verbose")
+}
+
+// ============================================================================
+// Phase 5: US3 - Filter Interaction Tests (T026-T030)
+// ============================================================================
+
+// T026: Test filter + summary mode interaction.
+// Verifies that filtering applies BEFORE summary calculation.
+func TestFilterWithSummaryMode(t *testing.T) {
+	// Create 7 recommendations with different action types
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "r3", Type: "RIGHTSIZE", EstimatedSavings: 80.00, Currency: "USD"},
+		{ResourceID: "r4", Type: "DELETE_UNUSED", EstimatedSavings: 70.00, Currency: "USD"},
+		{ResourceID: "r5", Type: "MODIFY", EstimatedSavings: 60.00, Currency: "USD"},
+		{ResourceID: "r6", Type: "RIGHTSIZE", EstimatedSavings: 50.00, Currency: "USD"},
+		{ResourceID: "r7", Type: "TERMINATE", EstimatedSavings: 40.00, Currency: "USD"},
+	}
+
+	// Apply filter for RIGHTSIZE only
+	filtered, err := cli.ApplyActionTypeFilterForTest(recs, "action=RIGHTSIZE")
+	require.NoError(t, err)
+
+	// Should only have 3 RIGHTSIZE recommendations
+	assert.Len(t, filtered, 3)
+
+	// Render in non-verbose mode (summary mode)
+	var buf bytes.Buffer
+	err = cli.RenderRecommendationsTableVerboseForTest(&buf, filtered, false)
+	require.NoError(t, err)
+	output := buf.String()
+
+	// Summary should show Total Recommendations: 3 (not 7)
+	assert.Contains(t, output, "Total Recommendations: 3")
+
+	// Summary should only show RIGHTSIZE savings (100 + 80 + 50 = 230)
+	assert.Contains(t, output, "230.00 USD")
+
+	// Only RIGHTSIZE resources should appear
+	assert.Contains(t, output, "r1")
+	assert.Contains(t, output, "r3")
+	assert.Contains(t, output, "r6")
+
+	// Other types should NOT appear
+	assert.NotContains(t, output, "r2") // TERMINATE
+	assert.NotContains(t, output, "r4") // DELETE_UNUSED
+	assert.NotContains(t, output, "r5") // MODIFY
+	assert.NotContains(t, output, "r7") // TERMINATE
+}
+
+// T027: Test filter + verbose mode interaction.
+// Verifies that filtering + verbose shows ALL filtered recommendations.
+func TestFilterWithVerboseMode(t *testing.T) {
+	// Create 10 recommendations - 6 RIGHTSIZE, 4 TERMINATE
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "right1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "term1", Type: "TERMINATE", EstimatedSavings: 95.00, Currency: "USD"},
+		{ResourceID: "right2", Type: "RIGHTSIZE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "term2", Type: "TERMINATE", EstimatedSavings: 85.00, Currency: "USD"},
+		{ResourceID: "right3", Type: "RIGHTSIZE", EstimatedSavings: 80.00, Currency: "USD"},
+		{ResourceID: "term3", Type: "TERMINATE", EstimatedSavings: 75.00, Currency: "USD"},
+		{ResourceID: "right4", Type: "RIGHTSIZE", EstimatedSavings: 70.00, Currency: "USD"},
+		{ResourceID: "term4", Type: "TERMINATE", EstimatedSavings: 65.00, Currency: "USD"},
+		{ResourceID: "right5", Type: "RIGHTSIZE", EstimatedSavings: 60.00, Currency: "USD"},
+		{ResourceID: "right6", Type: "RIGHTSIZE", EstimatedSavings: 55.00, Currency: "USD"},
+	}
+
+	// Apply filter for RIGHTSIZE only (6 items)
+	filtered, err := cli.ApplyActionTypeFilterForTest(recs, "action=RIGHTSIZE")
+	require.NoError(t, err)
+	assert.Len(t, filtered, 6)
+
+	// Render in verbose mode - should show ALL 6 filtered items
+	var buf bytes.Buffer
+	err = cli.RenderRecommendationsTableVerboseForTest(&buf, filtered, true)
+	require.NoError(t, err)
+	output := buf.String()
+
+	// All 6 RIGHTSIZE resources should appear
+	assert.Contains(t, output, "right1")
+	assert.Contains(t, output, "right2")
+	assert.Contains(t, output, "right3")
+	assert.Contains(t, output, "right4")
+	assert.Contains(t, output, "right5")
+	assert.Contains(t, output, "right6")
+
+	// No TERMINATE resources should appear
+	assert.NotContains(t, output, "term1")
+	assert.NotContains(t, output, "term2")
+	assert.NotContains(t, output, "term3")
+	assert.NotContains(t, output, "term4")
+
+	// Should NOT show "Use --verbose" since we're already in verbose mode
+	assert.NotContains(t, output, "Use --verbose")
+
+	// Summary should show Total Recommendations: 6
+	assert.Contains(t, output, "Total Recommendations: 6")
+}
+
+// T028: Test applyActionTypeFilter applies correctly.
+func TestApplyActionTypeFilter(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "r3", Type: "MIGRATE", EstimatedSavings: 80.00, Currency: "USD"},
+	}
+
+	tests := []struct {
+		name        string
+		filter      string
+		wantCount   int
+		wantTypes   []string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name:      "filter single action type",
+			filter:    "action=RIGHTSIZE",
+			wantCount: 1,
+			wantTypes: []string{"RIGHTSIZE"},
+		},
+		{
+			name:      "filter multiple action types",
+			filter:    "action=RIGHTSIZE,TERMINATE",
+			wantCount: 2,
+			wantTypes: []string{"RIGHTSIZE", "TERMINATE"},
+		},
+		{
+			name:      "filter no matches",
+			filter:    "action=DELETE_UNUSED",
+			wantCount: 0,
+			wantTypes: []string{},
+		},
+		{
+			name:      "not an action filter - unchanged",
+			filter:    "something=else",
+			wantCount: 3, // unchanged
+			wantTypes: []string{"RIGHTSIZE", "TERMINATE", "MIGRATE"},
+		},
+		{
+			name:        "invalid action type",
+			filter:      "action=INVALID_TYPE",
+			wantErr:     true,
+			errContains: "invalid action type",
+		},
+		{
+			name:      "case insensitive filter",
+			filter:    "action=rightsize",
+			wantCount: 1,
+			wantTypes: []string{"RIGHTSIZE"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filtered, err := cli.ApplyActionTypeFilterForTest(recs, tt.filter)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errContains)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Len(t, filtered, tt.wantCount)
+
+			// Verify all returned recommendations have expected types
+			for _, rec := range filtered {
+				found := false
+				for _, wantType := range tt.wantTypes {
+					if rec.Type == wantType {
+						found = true
+						break
+					}
+				}
+				assert.True(t, found, "unexpected type %s in filtered results", rec.Type)
+			}
+		})
+	}
+}
+
+// T030: Test invalid action type error message is clear.
+func TestInvalidActionTypeErrorMessage(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+	}
+
+	_, err := cli.ApplyActionTypeFilterForTest(recs, "action=NOT_A_REAL_TYPE")
+	require.Error(t, err)
+
+	// Error message should be descriptive
+	errMsg := err.Error()
+	assert.Contains(t, errMsg, "invalid action type")
+}
+
+// ============================================================================
+// Phase 6: US5 - JSON Enhancement Tests (T031-T038)
+// ============================================================================
+
+// T031: Test JSON output includes summary structure.
+func TestRenderRecommendationsJSON_WithSummary(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+		{ResourceID: "r3", Type: "RIGHTSIZE", EstimatedSavings: 80.00, Currency: "USD"},
+	}
+
+	var buf bytes.Buffer
+	err := cli.RenderRecommendationsJSONForTest(&buf, recs)
+	require.NoError(t, err)
+
+	// Parse JSON output
+	var output map[string]interface{}
+	err = json.Unmarshal(buf.Bytes(), &output)
+	require.NoError(t, err)
+
+	// Check summary exists
+	summary, ok := output["summary"].(map[string]interface{})
+	require.True(t, ok, "summary field should exist and be an object")
+
+	// Verify summary fields
+	assert.Equal(t, float64(3), summary["total_count"])
+	assert.Equal(t, float64(270), summary["total_savings"])
+	assert.Equal(t, "USD", summary["currency"])
+
+	// Verify count_by_action_type breakdown
+	countByAction, ok := summary["count_by_action_type"].(map[string]interface{})
+	require.True(t, ok, "count_by_action_type should exist")
+	assert.Equal(t, float64(2), countByAction["RIGHTSIZE"])
+	assert.Equal(t, float64(1), countByAction["TERMINATE"])
+
+	// Verify savings_by_action_type breakdown
+	savingsByAction, ok := summary["savings_by_action_type"].(map[string]interface{})
+	require.True(t, ok, "savings_by_action_type should exist")
+	assert.Equal(t, float64(180), savingsByAction["RIGHTSIZE"]) // 100 + 80
+	assert.Equal(t, float64(90), savingsByAction["TERMINATE"])
+
+	// Verify recommendations array still exists
+	recommendations, ok := output["recommendations"].([]interface{})
+	require.True(t, ok, "recommendations array should exist")
+	assert.Len(t, recommendations, 3)
+}
+
+// T032: Test NDJSON output includes summary as first line.
+func TestRenderRecommendationsNDJSON_WithSummary(t *testing.T) {
+	recs := []cli.TestableRecommendation{
+		{ResourceID: "r1", Type: "RIGHTSIZE", EstimatedSavings: 100.00, Currency: "USD"},
+		{ResourceID: "r2", Type: "TERMINATE", EstimatedSavings: 90.00, Currency: "USD"},
+	}
+
+	var buf bytes.Buffer
+	err := cli.RenderRecommendationsNDJSONForTest(&buf, recs)
+	require.NoError(t, err)
+
+	// Split by newlines
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	require.GreaterOrEqual(t, len(lines), 3, "should have at least 3 lines (1 summary + 2 recs)")
+
+	// First line should be summary
+	var summary map[string]interface{}
+	err = json.Unmarshal([]byte(lines[0]), &summary)
+	require.NoError(t, err)
+
+	// Verify it's a summary line (has type: "summary")
+	assert.Equal(t, "summary", summary["type"])
+	assert.Equal(t, float64(2), summary["total_count"])
+	assert.Equal(t, float64(190), summary["total_savings"])
+
+	// Verify count_by_action_type exists
+	countByAction, ok := summary["count_by_action_type"].(map[string]interface{})
+	require.True(t, ok, "count_by_action_type should exist")
+	assert.Equal(t, float64(1), countByAction["RIGHTSIZE"])
+	assert.Equal(t, float64(1), countByAction["TERMINATE"])
+
+	// Remaining lines should be recommendations
+	for i := 1; i < len(lines); i++ {
+		var rec map[string]interface{}
+		err = json.Unmarshal([]byte(lines[i]), &rec)
+		require.NoError(t, err)
+		assert.Contains(t, rec, "resource_id", "line %d should be a recommendation", i)
+	}
+}

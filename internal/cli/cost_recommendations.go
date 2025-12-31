@@ -3,16 +3,19 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 	"text/tabwriter"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/engine"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/pulumicost-core/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -29,6 +32,7 @@ type costRecommendationsParams struct {
 	adapter  string
 	output   string
 	filter   []string
+	verbose  bool
 }
 
 // NewCostRecommendationsCmd creates the "recommendations" subcommand that fetches cost optimization
@@ -49,14 +53,30 @@ func NewCostRecommendationsCmd() *cobra.Command {
 		Short: "Get cost optimization recommendations",
 		Long: `Fetch cost optimization recommendations for resources from cloud provider APIs and plugins.
 
+By default, shows a summary with the top 5 recommendations sorted by savings.
+Use --verbose to see all recommendations with full details.
+
+In interactive terminals, launches a TUI with:
+  - Keyboard navigation (up/down arrows)
+  - Filter by typing '/' and entering search text
+  - Sort cycling by pressing 's'
+  - Detail view by pressing Enter
+  - Quit by pressing 'q' or Ctrl+C
+
 Valid action types for filtering:
   RIGHTSIZE, TERMINATE, PURCHASE_COMMITMENT, ADJUST_REQUESTS, MODIFY,
   DELETE_UNUSED, MIGRATE, CONSOLIDATE, SCHEDULE, REFACTOR, OTHER`,
-		Example: `  # Get all cost optimization recommendations
+		Example: `  # Get all cost optimization recommendations (shows top 5 by savings)
   pulumicost cost recommendations --pulumi-json plan.json
 
-  # Output recommendations as JSON
+  # Show all recommendations with full details
+  pulumicost cost recommendations --pulumi-json plan.json --verbose
+
+  # Output recommendations as JSON (includes summary section)
   pulumicost cost recommendations --pulumi-json plan.json --output json
+
+  # Output as newline-delimited JSON (first line is summary)
+  pulumicost cost recommendations --pulumi-json plan.json --output ndjson
 
   # Filter recommendations by action type
   pulumicost cost recommendations --pulumi-json plan.json --filter "action=MIGRATE"
@@ -80,6 +100,8 @@ Valid action types for filtering:
 	cmd.Flags().StringVar(&params.output, "output", defaultFormat, "Output format: table, json, or ndjson")
 	cmd.Flags().StringArrayVar(&params.filter, "filter", []string{},
 		"Filter expressions (e.g., 'action=MIGRATE,RIGHTSIZE')")
+	cmd.Flags().BoolVar(&params.verbose, "verbose", false,
+		"Show all recommendations with full details (default shows top 5 by savings)")
 
 	_ = cmd.MarkFlagRequired("pulumi-json")
 
@@ -154,7 +176,7 @@ func executeCostRecommendations(cmd *cobra.Command, params costRecommendationsPa
 	}
 
 	// Render output
-	if renderErr := RenderRecommendationsOutput(ctx, cmd, params.output, filteredResult); renderErr != nil {
+	if renderErr := RenderRecommendationsOutput(ctx, cmd, params.output, filteredResult, params.verbose); renderErr != nil {
 		return renderErr
 	}
 
@@ -222,13 +244,20 @@ func calculateTotalSavings(recommendations []engine.Recommendation) float64 {
 }
 
 // RenderRecommendationsOutput routes the recommendations results to the appropriate
-// rendering function based on the output format.
+// rendering function based on the output format and terminal mode.
+// In interactive terminals, it launches the TUI; otherwise, it renders table output.
+// Returns an error if result is nil.
 func RenderRecommendationsOutput(
 	_ context.Context,
 	cmd *cobra.Command,
 	outputFormat string,
 	result *engine.RecommendationsResult,
+	verbose bool,
 ) error {
+	if result == nil {
+		return errors.New("render recommendations: result cannot be nil")
+	}
+
 	fmtType := engine.OutputFormat(config.GetOutputFormat(outputFormat))
 
 	// Validate format is supported
@@ -236,31 +265,162 @@ func RenderRecommendationsOutput(
 		return fmt.Errorf("unsupported output format: %s", fmtType)
 	}
 
+	// JSON/NDJSON bypass TUI entirely
 	switch fmtType {
 	case engine.OutputJSON:
 		return renderRecommendationsJSON(cmd.OutOrStdout(), result)
 	case engine.OutputNDJSON:
 		return renderRecommendationsNDJSON(cmd.OutOrStdout(), result)
 	case engine.OutputTable:
-		return renderRecommendationsTable(cmd.OutOrStdout(), result)
-	default:
-		return renderRecommendationsTable(cmd.OutOrStdout(), result)
+		// Fall through to terminal mode detection below
 	}
+
+	// For table output, detect terminal mode
+	mode := tui.DetectOutputMode(false, false, false)
+
+	switch mode {
+	case tui.OutputModeInteractive:
+		return runInteractiveRecommendations(result.Recommendations)
+
+	case tui.OutputModeStyled:
+		// Styled mode renders the summary with lipgloss styling
+		return renderStyledRecommendationsOutput(cmd.OutOrStdout(), result, verbose)
+
+	case tui.OutputModePlain:
+		fallthrough
+	default:
+		return renderRecommendationsTableWithVerbose(cmd.OutOrStdout(), result, verbose)
+	}
+}
+
+// runInteractiveRecommendations launches the interactive TUI for recommendations.
+// Uses NewRecommendationsViewModel which starts with data already loaded.
+func runInteractiveRecommendations(recommendations []engine.Recommendation) error {
+	model := tui.NewRecommendationsViewModel(recommendations)
+	p := tea.NewProgram(model)
+	if _, err := p.Run(); err != nil {
+		return fmt.Errorf("failed to run interactive recommendations TUI: %w", err)
+	}
+	return nil
+}
+
+// renderStyledRecommendationsOutput renders styled output using TUI summary renderer.
+func renderStyledRecommendationsOutput(
+	w io.Writer,
+	result *engine.RecommendationsResult,
+	verbose bool,
+) error {
+	// Use TUI summary renderer for styled output
+	summary := tui.NewRecommendationsSummary(result.Recommendations)
+	fmt.Fprint(w, tui.RenderRecommendationsSummaryTUI(summary, tui.TerminalWidth()))
+
+	// Then render the table
+	return renderRecommendationsTableWithVerbose(w, result, verbose)
 }
 
 // tabPadding is the minimum column padding for tabwriter output.
 const tabPadding = 2
 
-// renderRecommendationsTable renders recommendations in table format.
-func renderRecommendationsTable(w io.Writer, result *engine.RecommendationsResult) error {
+// defaultTopRecommendations is the number of recommendations to show by default.
+const defaultTopRecommendations = 5
+
+// headerSeparatorLen is the length of the separator line below section headers.
+const headerSeparatorLen = 40
+
+// renderRecommendationsSummary renders a summary section showing aggregate statistics.
+// This includes total count, total savings, and breakdown by action type.
+func renderRecommendationsSummary(w io.Writer, recommendations []engine.Recommendation) {
+	totalSavings := 0.0
+	countByAction := make(map[string]int)
+	savingsByAction := make(map[string]float64)
+	currency := "USD"
+
+	for _, rec := range recommendations {
+		totalSavings += rec.EstimatedSavings
+		countByAction[rec.Type]++
+		savingsByAction[rec.Type] += rec.EstimatedSavings
+		if rec.Currency != "" {
+			currency = rec.Currency
+		}
+	}
+
+	fmt.Fprintln(w, "RECOMMENDATIONS SUMMARY")
+	fmt.Fprintln(w, "=======================")
+	fmt.Fprintf(w, "Total Recommendations: %d\n", len(recommendations))
+	fmt.Fprintf(w, "Total Potential Savings: %.2f %s\n", totalSavings, currency)
+
+	if len(countByAction) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "By Action Type:")
+
+		// Sort action types for consistent output
+		actionTypes := make([]string, 0, len(countByAction))
+		for at := range countByAction {
+			actionTypes = append(actionTypes, at)
+		}
+		sortActionTypes(actionTypes)
+
+		for _, at := range actionTypes {
+			count := countByAction[at]
+			savings := savingsByAction[at]
+			fmt.Fprintf(w, "  %s: %d (%.2f %s)\n", formatActionTypeLabel(at), count, savings, currency)
+		}
+	}
+
+	fmt.Fprintln(w)
+}
+
+// sortActionTypes sorts action type strings alphabetically.
+func sortActionTypes(actionTypes []string) {
+	for i := range len(actionTypes) - 1 {
+		for j := i + 1; j < len(actionTypes); j++ {
+			if actionTypes[i] > actionTypes[j] {
+				actionTypes[i], actionTypes[j] = actionTypes[j], actionTypes[i]
+			}
+		}
+	}
+}
+
+// renderRecommendationsTableWithVerbose renders recommendations in table format.
+// When verbose is false: shows summary section and top 5 recommendations sorted by savings.
+// When verbose is true: shows summary section and ALL recommendations sorted by savings.
+func renderRecommendationsTableWithVerbose(w io.Writer, result *engine.RecommendationsResult, verbose bool) error {
+	// Render summary section first
+	renderRecommendationsSummary(w, result.Recommendations)
+
+	// Handle empty case
+	if len(result.Recommendations) == 0 {
+		fmt.Fprintln(w, "No recommendations available.")
+		return nil
+	}
+
+	// Sort by savings
+	sorted := sortRecommendationsBySavings(result.Recommendations)
+	displayRecs := sorted
+	showMoreHint := false
+
+	// In non-verbose mode, limit to top 5
+	if !verbose && len(sorted) > defaultTopRecommendations {
+		displayRecs = sorted[:defaultTopRecommendations]
+		showMoreHint = true
+	}
+
+	// Header for recommendations
+	if verbose {
+		fmt.Fprintf(w, "ALL %d RECOMMENDATIONS (SORTED BY SAVINGS)\n", len(displayRecs))
+	} else {
+		fmt.Fprintf(w, "TOP %d RECOMMENDATIONS BY SAVINGS\n", len(displayRecs))
+	}
+	fmt.Fprintln(w, strings.Repeat("-", headerSeparatorLen))
+
 	tw := tabwriter.NewWriter(w, 0, 0, tabPadding, ' ', 0)
 
 	// Header
 	fmt.Fprintln(tw, "RESOURCE\tACTION TYPE\tDESCRIPTION\tSAVINGS")
 	fmt.Fprintln(tw, "--------\t-----------\t-----------\t-------")
 
-	// Recommendations
-	for _, rec := range result.Recommendations {
+	// Recommendations (top 5 by savings)
+	for _, rec := range displayRecs {
 		savings := ""
 		if rec.EstimatedSavings > 0 {
 			savings = fmt.Sprintf("%.2f %s", rec.EstimatedSavings, rec.Currency)
@@ -285,11 +445,10 @@ func renderRecommendationsTable(w io.Writer, result *engine.RecommendationsResul
 		return fmt.Errorf("flushing table writer: %w", err)
 	}
 
-	// Summary
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "Total Recommendations: %d\n", len(result.Recommendations))
-	if result.TotalSavings > 0 {
-		fmt.Fprintf(w, "Total Estimated Savings: %.2f %s\n", result.TotalSavings, result.Currency)
+	// Show hint if more recommendations exist
+	if showMoreHint {
+		remaining := len(sorted) - defaultTopRecommendations
+		fmt.Fprintf(w, "\n... and %d more recommendation(s). Use --verbose to see all.\n", remaining)
 	}
 
 	// Errors
@@ -305,7 +464,11 @@ func renderRecommendationsTable(w io.Writer, result *engine.RecommendationsResul
 
 // renderRecommendationsJSON renders recommendations in JSON format.
 func renderRecommendationsJSON(w io.Writer, result *engine.RecommendationsResult) error {
+	// Build summary from recommendations
+	summary := buildJSONSummary(result.Recommendations)
+
 	output := recommendationsJSONOutput{
+		Summary:         summary,
 		Recommendations: make([]recommendationJSON, 0, len(result.Recommendations)),
 		TotalSavings:    result.TotalSavings,
 		Currency:        result.Currency,
@@ -332,9 +495,26 @@ func renderRecommendationsJSON(w io.Writer, result *engine.RecommendationsResult
 }
 
 // renderRecommendationsNDJSON renders recommendations in NDJSON format.
+// The first line is a summary object with type: "summary", followed by
+// individual recommendation objects.
 func renderRecommendationsNDJSON(w io.Writer, result *engine.RecommendationsResult) error {
 	encoder := json.NewEncoder(w)
 
+	// Build and emit summary as first line
+	jsonSum := buildJSONSummary(result.Recommendations)
+	summary := ndjsonSummary{
+		Type:              "summary",
+		TotalCount:        jsonSum.TotalCount,
+		TotalSavings:      jsonSum.TotalSavings,
+		Currency:          jsonSum.Currency,
+		CountByActionType: jsonSum.CountByActionType,
+		SavingsByAction:   jsonSum.SavingsByAction,
+	}
+	if err := encoder.Encode(summary); err != nil {
+		return fmt.Errorf("encoding NDJSON summary: %w", err)
+	}
+
+	// Emit individual recommendations
 	for _, rec := range result.Recommendations {
 		jsonRec := recommendationJSON{
 			ResourceID:       rec.ResourceID,
@@ -358,10 +538,30 @@ func formatActionTypeLabel(actionType string) string {
 
 // JSON output structures for recommendations.
 type recommendationsJSONOutput struct {
+	Summary         jsonSummary                  `json:"summary"`
 	Recommendations []recommendationJSON         `json:"recommendations"`
 	TotalSavings    float64                      `json:"total_savings"`
 	Currency        string                       `json:"currency"`
 	Errors          []engine.RecommendationError `json:"errors,omitempty"`
+}
+
+// jsonSummary represents the summary section in JSON output.
+type jsonSummary struct {
+	TotalCount        int                `json:"total_count"`
+	TotalSavings      float64            `json:"total_savings"`
+	Currency          string             `json:"currency"`
+	CountByActionType map[string]int     `json:"count_by_action_type"`
+	SavingsByAction   map[string]float64 `json:"savings_by_action_type"`
+}
+
+// ndjsonSummary represents the summary line in NDJSON output.
+type ndjsonSummary struct {
+	Type              string             `json:"type"`
+	TotalCount        int                `json:"total_count"`
+	TotalSavings      float64            `json:"total_savings"`
+	Currency          string             `json:"currency"`
+	CountByActionType map[string]int     `json:"count_by_action_type"`
+	SavingsByAction   map[string]float64 `json:"savings_by_action_type"`
 }
 
 type recommendationJSON struct {
@@ -370,4 +570,29 @@ type recommendationJSON struct {
 	Description      string  `json:"description"`
 	EstimatedSavings float64 `json:"estimated_savings,omitempty"`
 	Currency         string  `json:"currency,omitempty"`
+}
+
+// buildJSONSummary constructs the summary structure for JSON/NDJSON output.
+func buildJSONSummary(recommendations []engine.Recommendation) jsonSummary {
+	countByAction := make(map[string]int)
+	savingsByAction := make(map[string]float64)
+	totalSavings := 0.0
+	currency := "USD"
+
+	for _, rec := range recommendations {
+		countByAction[rec.Type]++
+		savingsByAction[rec.Type] += rec.EstimatedSavings
+		totalSavings += rec.EstimatedSavings
+		if rec.Currency != "" {
+			currency = rec.Currency
+		}
+	}
+
+	return jsonSummary{
+		TotalCount:        len(recommendations),
+		TotalSavings:      totalSavings,
+		Currency:          currency,
+		CountByActionType: countByAction,
+		SavingsByAction:   savingsByAction,
+	}
 }
