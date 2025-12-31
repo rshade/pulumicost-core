@@ -163,3 +163,171 @@ func TestRootCmdFlags(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "test-version")
 }
+
+// TestRootCmdPluginMode tests that the root command correctly detects plugin mode
+// and adjusts its Use and Example strings accordingly.
+func TestRootCmdPluginMode(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	tests := []struct {
+		name           string
+		args           []string
+		env            map[string]string
+		expectedUse    string
+		exampleContain string
+		exampleNotHave string
+	}{
+		{
+			name:           "standard mode - regular binary name",
+			args:           []string{"/usr/bin/pulumicost"},
+			env:            map[string]string{},
+			expectedUse:    "pulumicost",
+			exampleContain: "pulumicost cost projected",
+			exampleNotHave: "pulumi plugin run tool cost",
+		},
+		{
+			name:           "plugin mode - plugin binary name",
+			args:           []string{"/usr/bin/pulumi-tool-cost"},
+			env:            map[string]string{},
+			expectedUse:    "pulumi plugin run tool cost",
+			exampleContain: "pulumi plugin run tool cost",
+			exampleNotHave: "",
+		},
+		{
+			name:           "plugin mode - Windows binary name with .exe",
+			args:           []string{"C:\\pulumi\\plugins\\pulumi-tool-cost.exe"},
+			env:            map[string]string{},
+			expectedUse:    "pulumi plugin run tool cost",
+			exampleContain: "pulumi plugin run tool cost",
+			exampleNotHave: "",
+		},
+		{
+			name:           "plugin mode - env var override true",
+			args:           []string{"/usr/bin/pulumicost"},
+			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "true"},
+			expectedUse:    "pulumi plugin run tool cost",
+			exampleContain: "pulumi plugin run tool cost",
+			exampleNotHave: "",
+		},
+		{
+			name:           "plugin mode - env var override 1",
+			args:           []string{"/usr/bin/pulumicost"},
+			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "1"},
+			expectedUse:    "pulumi plugin run tool cost",
+			exampleContain: "pulumi plugin run tool cost",
+			exampleNotHave: "",
+		},
+		{
+			name:           "standard mode - env var set to false",
+			args:           []string{"/usr/bin/pulumicost"},
+			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
+			expectedUse:    "pulumicost",
+			exampleContain: "pulumicost cost projected",
+			exampleNotHave: "pulumi plugin run tool cost",
+		},
+		{
+			name:           "plugin mode - binary name takes precedence over false env",
+			args:           []string{"/usr/bin/pulumi-tool-cost"},
+			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
+			expectedUse:    "pulumi plugin run tool cost",
+			exampleContain: "pulumi plugin run tool cost",
+			exampleNotHave: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lookupEnv := func(key string) (string, bool) {
+				val, ok := tt.env[key]
+				return val, ok
+			}
+
+			cmd := cli.NewRootCmdWithArgs("test-version", tt.args, lookupEnv)
+
+			assert.Equal(t, tt.expectedUse, cmd.Use, "Use string mismatch")
+			assert.Contains(t, cmd.Example, tt.exampleContain, "Example should contain expected string")
+			if tt.exampleNotHave != "" {
+				assert.NotContains(t, cmd.Example, tt.exampleNotHave, "Example should not contain unexpected string")
+			}
+		})
+	}
+}
+
+// TestRootCmdPluginModeHelpOutput verifies the help output in plugin mode.
+func TestRootCmdPluginModeHelpOutput(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	lookupEnv := func(key string) (string, bool) {
+		if key == "PULUMICOST_PLUGIN_MODE" {
+			return "true", true
+		}
+		return "", false
+	}
+
+	var buf bytes.Buffer
+	cmd := cli.NewRootCmdWithArgs("test-version", []string{"/usr/bin/pulumicost"}, lookupEnv)
+	cmd.SetOut(&buf)
+	cmd.SetErr(&buf)
+	cmd.SetArgs([]string{"--help"})
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "pulumi plugin run tool cost", "Help should show plugin usage")
+	assert.Contains(t, output, "pulumi plugin run tool cost -- cost projected", "Examples should use plugin syntax")
+}
+
+// TestExitCodeBehavior verifies that the CLI returns proper exit codes:
+// - nil (exit 0) for successful commands
+// - error (exit 1) for failed commands
+// Note: This tests the Execute() error return, not os.Exit() directly.
+// The main() function converts non-nil errors to os.Exit(1).
+func TestExitCodeBehavior(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+	}{
+		{
+			name:        "success - help command",
+			args:        []string{"--help"},
+			expectError: false,
+		},
+		{
+			name:        "success - version command",
+			args:        []string{"--version"},
+			expectError: false,
+		},
+		{
+			name:        "failure - unknown command",
+			args:        []string{"unknown-command"},
+			expectError: true,
+		},
+		{
+			name:        "failure - unknown flag",
+			args:        []string{"--unknown-flag"},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			cmd := cli.NewRootCmd("test-version")
+			cmd.SetOut(&buf)
+			cmd.SetErr(&buf)
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+
+			if tt.expectError {
+				require.Error(t, err, "Command should return error for exit code 1")
+			} else {
+				require.NoError(t, err, "Command should return nil for exit code 0")
+			}
+		})
+	}
+}

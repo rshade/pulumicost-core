@@ -11,6 +11,7 @@ Complete guide to using PulumiCost Core for cloud infrastructure cost analysis.
 - [Advanced Features](#advanced-features)
 - [Output Formats](#output-formats)
 - [Configuration](#configuration)
+- [Running as Pulumi Plugin](#running-as-pulumi-plugin)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
 
@@ -92,7 +93,7 @@ pulumicost cost projected --pulumi-json plan.json --adapter aws-pricing-plugin
 
 ### Sample Output
 
-```
+```text
 RESOURCE                          ADAPTER     MONTHLY   CURRENCY  NOTES
 aws:ec2/instance:Instance         aws-spec    $7.50     USD       t3.micro Linux on-demand
 aws:s3/bucket:Bucket             aws-spec    $2.30     USD       Standard storage 100GB
@@ -275,7 +276,7 @@ Best for: Pipeline processing, log analysis, time series data
 
 PulumiCost uses the following directory structure:
 
-```
+```text
 ~/.pulumicost/
 ├── plugins/                     # Plugin binaries
 │   ├── kubecost/
@@ -324,6 +325,90 @@ export AWS_PRICING_API_KEY="your-api-key"
 # Run with plugin configuration
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
 ```
+
+## Running as Pulumi Plugin
+
+PulumiCost can be installed as a Pulumi Tool Plugin, integrating directly into the Pulumi CLI workflow.
+
+### Overview
+
+When running as a Pulumi tool plugin, PulumiCost:
+
+- Automatically detects plugin mode via binary name or environment variable
+- Adjusts help text and usage examples to show `pulumi plugin run tool cost` syntax
+- Respects `$PULUMI_HOME` for configuration storage
+
+### Installation as Plugin
+
+Install PulumiCost as a Pulumi tool plugin:
+
+```bash
+# Build the plugin binary with the correct name
+go build -o pulumi-tool-cost ./cmd/pulumicost
+
+# Install into Pulumi plugins directory
+mkdir -p ~/.pulumi/plugins/tool-cost-v0.1.0/
+cp pulumi-tool-cost ~/.pulumi/plugins/tool-cost-v0.1.0/
+
+# Verify installation
+pulumi plugin ls
+```
+
+### Plugin Mode Detection
+
+PulumiCost detects plugin mode via two mechanisms:
+
+1. **Binary Name**: If the executable name matches `pulumi-tool-cost` (case-insensitive)
+2. **Environment Variable**: If `PULUMICOST_PLUGIN_MODE=true` or `PULUMICOST_PLUGIN_MODE=1`
+
+### Using the Plugin
+
+Run PulumiCost commands through the Pulumi CLI:
+
+```bash
+# Show help
+pulumi plugin run tool cost -- --help
+
+# Calculate projected costs
+pulumi plugin run tool cost -- cost projected --pulumi-json plan.json
+
+# Get actual costs
+pulumi plugin run tool cost -- cost actual --pulumi-json plan.json --from 2025-01-01
+
+# List installed plugins
+pulumi plugin run tool cost -- plugin list
+
+# Configure settings
+pulumi plugin run tool cost -- config set output.default_format json
+```
+
+### Configuration Location
+
+When running as a Pulumi plugin, configuration is stored under `$PULUMI_HOME`:
+
+```text
+$PULUMI_HOME/pulumicost/
+├── config.yaml           # Main configuration
+├── plugins/              # Cost plugins
+└── logs/                 # Log files
+```
+
+If `PULUMI_HOME` is not set, PulumiCost falls back to `~/.pulumicost/`.
+
+### Environment Variables
+
+| Variable                  | Description                                           |
+| ------------------------- | ----------------------------------------------------- |
+| `PULUMICOST_PLUGIN_MODE`  | Force plugin mode (`true` or `1`)                     |
+| `PULUMI_HOME`             | Pulumi configuration directory (plugin respects this) |
+| `PULUMICOST_LOG_LEVEL`    | Logging verbosity (debug, info, warn, error)          |
+
+### Exit Codes
+
+PulumiCost follows standard exit code conventions:
+
+- `0`: Success
+- `1`: General error (configuration, API, logic errors)
 
 ## Best Practices
 

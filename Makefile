@@ -12,14 +12,19 @@ LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VE
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build build-recorder install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
+.PHONY: all build build-recorder build-plugin install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
 
-all: build
+all: build build-plugin
 
 build-recorder:
 	@echo "Building recorder plugin..."
 	@mkdir -p bin
 	go build $(LDFLAGS) -o bin/pulumicost-plugin-recorder ./plugins/recorder/cmd
+
+build-plugin:
+	@echo "Building Pulumi tool plugin..."
+	@mkdir -p bin
+	go build $(LDFLAGS) -o bin/pulumi-tool-cost ./cmd/pulumicost
 
 RECORDER_VERSION=0.1.0
 RECORDER_INSTALL_DIR=$(HOME)/.pulumicost/plugins/recorder/$(RECORDER_VERSION)
@@ -33,7 +38,7 @@ install-recorder: build-recorder
 	@echo "Recorder plugin installed successfully."
 	@echo "Verify with: pulumicost plugin list"
 
-build-all: build build-recorder
+build-all: build build-recorder build-plugin
 
 build:
 	@echo "Building $(BINARY)..."
@@ -155,6 +160,7 @@ help:
 	@echo "Available targets:"
 	@echo "  build            - Build the binary"
 	@echo "  build-recorder   - Build the recorder plugin"
+	@echo "  build-plugin     - Build Pulumi tool plugin (pulumi-tool-cost)"
 	@echo "  install-recorder - Build and install recorder plugin to ~/.pulumicost/plugins/"
 	@echo "  build-all        - Build binary and all plugins"
 	@echo "  test             - Run unit tests (fast, default)"

@@ -151,7 +151,6 @@ Configuration validation with >85% coverage:
 - 023-add-cli-filter-flag: Added Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/pflag`
 - 021-plugin-integration-tests: Added Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking)
 
-- 019-nightly-failure-analysis: Added GitHub Actions, `gh` CLI, OpenCode CLI/API
   plus Jekyll (for docs site), GitHub Pages
   plan JSON.
 

@@ -128,17 +128,44 @@ type AnalyzerPlugin struct {
 	Env     map[string]string `yaml:"env"     json:"env"`     // Environment variables for plugin
 }
 
+// ResolveConfigDir determines the configuration directory based on environment variables.
+// It follows this precedence order:
+// 1. $PULUMI_HOME/pulumicost/ - if PULUMI_HOME is set (Pulumi ecosystem integration)
+// 2. $HOME/.pulumicost/ - default fallback (legacy/standard behavior)
+// 3. ./.pulumicost - fallback of last resort if home directory cannot be determined
+//
+// This enables pulumicost to act as a "good citizen" in the Pulumi ecosystem when running
+// as a tool plugin, while maintaining backward compatibility for standalone usage.
+func ResolveConfigDir() string {
+	// Check PULUMI_HOME first (Pulumi ecosystem integration)
+	if pulumiHome := os.Getenv("PULUMI_HOME"); pulumiHome != "" {
+		return filepath.Join(pulumiHome, "pulumicost")
+	}
+
+	// Fall back to HOME/.pulumicost
+	homeDir, err := os.UserHomeDir()
+	if err != nil || homeDir == "" {
+		// Last resort fallback - use current working directory
+		// This can happen in containerized environments or when HOME is not set
+		cwd, cwdErr := os.Getwd()
+		if cwdErr != nil {
+			// Final fallback - use relative path from current directory
+			return ".pulumicost"
+		}
+		return filepath.Join(cwd, ".pulumicost")
+	}
+	return filepath.Join(homeDir, ".pulumicost")
+}
+
 // New creates a new configuration with defaults.
 // In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
 // New creates a Config populated with sensible defaults and attempts to load overrides from the user's config file.
-// It sets legacy plugin/spec paths under the user's home directory (defaulting to ~/.pulumicost), default output and logging settings,
-// analyzer timeouts, and an internal configPath of ~/.pulumicost/config.yaml.
+// It resolves the config directory using ResolveConfigDir() which respects PULUMI_HOME when set.
 // If a config file exists it is loaded; on load errors the function logs warnings and continues using defaults.
 // When the environment variable PULUMICOST_CONFIG_STRICT is set to "true" or "1", permission errors or corrupted config content cause a panic instead of falling back to defaults.
 // Environment variable overrides are applied after loading the file.
 func New() *Config {
-	homeDir, _ := os.UserHomeDir()
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	pulumicostDir := ResolveConfigDir()
 
 	cfg := &Config{
 		// Legacy fields
@@ -211,12 +238,9 @@ func New() *Config {
 
 // NewStrict creates a new configuration with strict error handling.
 // It returns an error instead of using defaults if the config file exists but cannot be parsed.
+// It uses ResolveConfigDir() to respect PULUMI_HOME when set.
 func NewStrict() (*Config, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user home directory: %w", err)
-	}
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	pulumicostDir := ResolveConfigDir()
 
 	cfg := &Config{
 		// Legacy fields

@@ -470,3 +470,152 @@ func TestConfig_Defaults_NoEnvVars(t *testing.T) {
 	assert.Equal(t, "table", cfg.Output.DefaultFormat)
 	assert.Equal(t, 2, cfg.Output.Precision)
 }
+
+// T011: Test PULUMI_HOME precedence for config path resolution.
+// When PULUMI_HOME is set, config should be loaded from $PULUMI_HOME/pulumicost/.
+func TestConfig_PULUMI_HOME_Precedence(t *testing.T) {
+	t.Run("PULUMI_HOME set - uses pulumicost subdir", func(t *testing.T) {
+		// Create a fake PULUMI_HOME with a config file
+		pulumiHome := t.TempDir()
+		pulumicostDir := filepath.Join(pulumiHome, "pulumicost")
+		err := os.MkdirAll(pulumicostDir, 0700)
+		require.NoError(t, err)
+
+		// Create a config file with a distinctive value
+		configContent := `
+output:
+  default_format: ndjson
+  precision: 7
+`
+		configPath := filepath.Join(pulumicostDir, "config.yaml")
+		err = os.WriteFile(configPath, []byte(configContent), 0600)
+		require.NoError(t, err)
+
+		// Set up environment
+		t.Setenv("PULUMI_HOME", pulumiHome)
+		stubHome(t) // Set HOME to something else to ensure PULUMI_HOME takes precedence
+
+		cfg := New()
+
+		// Config should come from PULUMI_HOME/pulumicost/
+		assert.Equal(t, "ndjson", cfg.Output.DefaultFormat, "should use config from PULUMI_HOME")
+		assert.Equal(t, 7, cfg.Output.Precision, "should use precision from PULUMI_HOME config")
+	})
+
+	t.Run("PULUMI_HOME not set - uses default HOME path", func(t *testing.T) {
+		// Create a fake HOME with a config file
+		homeDir := t.TempDir()
+		pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+		err := os.MkdirAll(pulumicostDir, 0700)
+		require.NoError(t, err)
+
+		// Create a config file with a distinctive value
+		configContent := `
+output:
+  default_format: json
+  precision: 3
+`
+		configPath := filepath.Join(pulumicostDir, "config.yaml")
+		err = os.WriteFile(configPath, []byte(configContent), 0600)
+		require.NoError(t, err)
+
+		// Ensure PULUMI_HOME is NOT set
+		t.Setenv("PULUMI_HOME", "")
+		t.Setenv("HOME", homeDir)
+		t.Setenv("USERPROFILE", homeDir) // Windows
+
+		cfg := New()
+
+		// Config should come from HOME/.pulumicost/
+		assert.Equal(t, "json", cfg.Output.DefaultFormat, "should use config from HOME/.pulumicost")
+		assert.Equal(t, 3, cfg.Output.Precision, "should use precision from HOME config")
+	})
+
+	t.Run("PULUMI_HOME set but no config file - uses defaults", func(t *testing.T) {
+		// Create a fake PULUMI_HOME without config file
+		pulumiHome := t.TempDir()
+
+		t.Setenv("PULUMI_HOME", pulumiHome)
+		stubHome(t)
+
+		cfg := New()
+
+		// Should use defaults
+		assert.Equal(t, "table", cfg.Output.DefaultFormat, "should use default format")
+		assert.Equal(t, 2, cfg.Output.Precision, "should use default precision")
+	})
+
+	t.Run("PULUMI_HOME takes precedence over HOME", func(t *testing.T) {
+		// Create both PULUMI_HOME and HOME with different config files
+		pulumiHome := t.TempDir()
+		homeDir := t.TempDir()
+
+		// Create PULUMI_HOME config
+		pulumicostDirPulumi := filepath.Join(pulumiHome, "pulumicost")
+		err := os.MkdirAll(pulumicostDirPulumi, 0700)
+		require.NoError(t, err)
+		pulumiConfig := `
+output:
+  default_format: ndjson
+`
+		err = os.WriteFile(filepath.Join(pulumicostDirPulumi, "config.yaml"), []byte(pulumiConfig), 0600)
+		require.NoError(t, err)
+
+		// Create HOME config with different value
+		pulumicostDirHome := filepath.Join(homeDir, ".pulumicost")
+		err = os.MkdirAll(pulumicostDirHome, 0700)
+		require.NoError(t, err)
+		homeConfig := `
+output:
+  default_format: json
+`
+		err = os.WriteFile(filepath.Join(pulumicostDirHome, "config.yaml"), []byte(homeConfig), 0600)
+		require.NoError(t, err)
+
+		// Set both
+		t.Setenv("PULUMI_HOME", pulumiHome)
+		t.Setenv("HOME", homeDir)
+		t.Setenv("USERPROFILE", homeDir)
+
+		cfg := New()
+
+		// PULUMI_HOME should win
+		assert.Equal(t, "ndjson", cfg.Output.DefaultFormat, "PULUMI_HOME should take precedence over HOME")
+	})
+}
+
+// TestResolveConfigDir tests the config directory resolution logic.
+func TestResolveConfigDir(t *testing.T) {
+	t.Run("with PULUMI_HOME", func(t *testing.T) {
+		pulumiHome := "/fake/pulumi/home"
+		t.Setenv("PULUMI_HOME", pulumiHome)
+		stubHome(t)
+
+		dir := ResolveConfigDir()
+		assert.Equal(t, filepath.Join(pulumiHome, "pulumicost"), dir)
+	})
+
+	t.Run("without PULUMI_HOME", func(t *testing.T) {
+		t.Setenv("PULUMI_HOME", "")
+		homeDir := t.TempDir()
+		t.Setenv("HOME", homeDir)
+		t.Setenv("USERPROFILE", homeDir)
+
+		dir := ResolveConfigDir()
+		assert.Equal(t, filepath.Join(homeDir, ".pulumicost"), dir)
+	})
+
+	t.Run("fallback when HOME is unset", func(t *testing.T) {
+		// This tests the fallback when os.UserHomeDir() fails
+		t.Setenv("PULUMI_HOME", "")
+		t.Setenv("HOME", "")
+		t.Setenv("USERPROFILE", "")
+
+		dir := ResolveConfigDir()
+		// Should not return empty string or root directory - should use CWD fallback
+		assert.NotEqual(t, "", dir)
+		assert.NotEqual(t, "/", dir)
+		assert.NotEqual(t, "\\", dir)
+		assert.Contains(t, dir, ".pulumicost")
+	})
+}
