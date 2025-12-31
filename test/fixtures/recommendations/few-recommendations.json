@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    {
+      "resourceId": "aws:ec2:Instance/i-single",
+      "type": "RIGHTSIZE",
+      "description": "Downsize instance - avg CPU below 20%",
+      "estimatedSavings": 50.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:rds:Instance/db-test",
+      "type": "TERMINATE",
+      "description": "Terminate unused test database",
+      "estimatedSavings": 25.00,
+      "currency": "USD"
+    }
+  ],
+  "errors": [],
+  "totalSavings": 75.00,
+  "currency": "USD"
+}

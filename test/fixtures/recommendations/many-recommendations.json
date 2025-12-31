@@ -1,0 +1,91 @@
+{
+  "recommendations": [
+    {
+      "resourceId": "aws:ec2:Instance/i-001",
+      "type": "RIGHTSIZE",
+      "description": "Downsize from c5.2xlarge to c5.xlarge",
+      "estimatedSavings": 156.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Instance/i-002",
+      "type": "TERMINATE",
+      "description": "Terminate idle instance - no traffic 60+ days",
+      "estimatedSavings": 312.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:rds:Instance/db-analytics",
+      "type": "PURCHASE_COMMITMENT",
+      "description": "Purchase 1-year reserved instance",
+      "estimatedSavings": 450.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Instance/i-003",
+      "type": "RIGHTSIZE",
+      "description": "Downsize from m5.4xlarge to m5.2xlarge",
+      "estimatedSavings": 280.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:s3:Bucket/old-backups",
+      "type": "DELETE_UNUSED",
+      "description": "Delete 2TB of old backups",
+      "estimatedSavings": 46.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ebs:Volume/vol-001",
+      "type": "MODIFY",
+      "description": "Convert io1 to gp3",
+      "estimatedSavings": 125.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Instance/i-004",
+      "type": "MIGRATE",
+      "description": "Migrate to Graviton for 40% cost reduction",
+      "estimatedSavings": 200.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "kubernetes:deployment/worker-pool",
+      "type": "CONSOLIDATE",
+      "description": "Consolidate 5 small deployments into 2 larger ones",
+      "estimatedSavings": 180.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:ec2:Instance/i-005",
+      "type": "SCHEDULE",
+      "description": "Schedule non-prod instances to stop overnight",
+      "estimatedSavings": 95.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "kubernetes:deployment/legacy-api",
+      "type": "REFACTOR",
+      "description": "Refactor monolith to serverless for better cost efficiency",
+      "estimatedSavings": 350.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:elasticache:Cluster/cache-001",
+      "type": "RIGHTSIZE",
+      "description": "Reduce cache node count from 3 to 2",
+      "estimatedSavings": 78.00,
+      "currency": "USD"
+    },
+    {
+      "resourceId": "aws:nat-gateway/nat-001",
+      "type": "OTHER",
+      "description": "Consider VPC endpoints to reduce NAT gateway costs",
+      "estimatedSavings": 120.00,
+      "currency": "USD"
+    }
+  ],
+  "errors": [],
+  "totalSavings": 2392.00,
+  "currency": "USD"
+}
