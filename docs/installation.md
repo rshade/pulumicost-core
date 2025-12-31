@@ -9,6 +9,7 @@ Complete installation instructions for PulumiCost Core across different platform
 - [Platform-Specific Instructions](#platform-specific-instructions)
 - [Docker Installation](#docker-installation)
 - [Build from Source](#build-from-source)
+- [Installing as a Pulumi Tool Plugin](#installing-as-a-pulumi-tool-plugin)
 - [Plugin Installation](#plugin-installation)
 - [Verification](#verification)
 - [Troubleshooting](#troubleshooting)
@@ -312,6 +313,68 @@ GOOS=darwin GOARCH=arm64 go build -o pulumicost-darwin-arm64 ./cmd/pulumicost
 GOOS=windows GOARCH=amd64 go build -o pulumicost-windows-amd64.exe ./cmd/pulumicost
 ```
 
+## Installing as a Pulumi Tool Plugin
+
+PulumiCost can be installed as a Pulumi Tool Plugin, allowing you to run it through the Pulumi CLI.
+
+### Build and Install
+
+```bash
+# Clone the repository
+git clone https://github.com/rshade/pulumicost-core
+cd pulumicost-core
+
+# Build with the plugin binary name
+make build-plugin
+# Or manually: go build -o pulumi-tool-cost ./cmd/pulumicost
+
+# Install into Pulumi plugins directory
+mkdir -p ~/.pulumi/plugins/tool-cost-v0.1.0/
+cp pulumi-tool-cost ~/.pulumi/plugins/tool-cost-v0.1.0/
+
+# Verify installation
+pulumi plugin ls
+```
+
+### Usage as Plugin
+
+Once installed, run PulumiCost through the Pulumi CLI:
+
+```bash
+# Show help
+pulumi plugin run tool cost -- --help
+
+# Calculate projected costs
+pulumi plugin run tool cost -- cost projected --pulumi-json plan.json
+
+# Get actual costs
+pulumi plugin run tool cost -- cost actual --pulumi-json plan.json --from 2025-01-01
+```
+
+### Configuration Behavior
+
+When running as a Pulumi plugin:
+
+- Configuration is stored in `$PULUMI_HOME/pulumicost/` instead of `~/.pulumicost/`
+- Help text automatically shows `pulumi plugin run tool cost` syntax
+- The `PULUMICOST_PLUGIN_MODE=true` environment variable can force plugin mode
+
+### Testing Plugin Installation
+
+```bash
+# Verify plugin is recognized
+pulumi plugin ls
+
+# Expected output:
+# NAME  TYPE  VERSION    SIZE   INSTALLED   LAST USED
+# cost  tool  v0.1.0-dev 15 MB  just now    just now
+
+# Test with a Pulumi plan
+cd your-pulumi-project
+pulumi preview --json > plan.json
+pulumi plugin run tool cost -- cost projected --pulumi-json plan.json
+```
+
 ## Plugin Installation
 
 ### Plugin Directory Setup
@@ -351,7 +414,7 @@ EOF
 
 #### Plugin Directory Structure
 
-```
+```text
 ~/.pulumicost/plugins/
 ├── kubecost/
 │   └── 1.0.0/

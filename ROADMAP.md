@@ -13,6 +13,8 @@ guardrails in `CONTEXT.md`.
   - [x] Engine Test Coverage Completion (#202, #207)
   - [x] Plugin Ecosystem Maturity (#201, #215)
   - [x] Support for `Supports()` gRPC handler (#160, #165)
+  - [x] CLI Filter Flag (#203)
+  - [x] Test Infrastructure Hardening (#200)
 
 ## Current Focus (v0.2.0 - Automation & Stability)
 
@@ -86,9 +88,9 @@ guardrails in `CONTEXT.md`.
   - [x] Integration Test Suite for Plugin Communication
         ([#235](https://github.com/rshade/pulumicost-core/issues/235))
 - [ ] **Performance & Scale**
-  - [ ] Pagination for large datasets
+  - [x] Pagination for large datasets
         ([#225](https://github.com/rshade/pulumicost-core/issues/225))
-  - [ ] Plugin installer: remove old versions during install
+  - [x] Plugin installer: remove old versions during install
         ([#237](https://github.com/rshade/pulumicost-core/issues/237))
 - [ ] **CI/CD & Automation**
   - [ ] Harden Nightly Analysis Workflow

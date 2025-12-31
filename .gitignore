@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+pulumi-tool-cost
 
 # Test binary, built with `go test -c`
 *.test
