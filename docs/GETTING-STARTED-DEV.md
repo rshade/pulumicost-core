@@ -150,11 +150,13 @@ git push origin docs/my-feature
 ### Add a New Guide
 
 1. Create file in appropriate directory:
+
    ```bash
    touch docs/guides/my-guide.md
    ```
 
 2. Add frontmatter:
+
    ```yaml
    ---
    layout: default
@@ -166,11 +168,13 @@ git push origin docs/my-feature
 3. Write content using [Google style guide](https://developers.google.com/style)
 
 4. Test locally:
+
    ```bash
    make docs-serve
    ```
 
 5. Lint and validate:
+
    ```bash
    make docs-lint
    make docs-validate
@@ -179,11 +183,13 @@ git push origin docs/my-feature
 ### Add Documentation to New Directory
 
 1. Create directory:
+
    ```bash
    mkdir -p docs/my-section/
    ```
 
 2. Create README.md:
+
    ```bash
    cat > docs/my-section/README.md << 'EOF'
    # My Section
@@ -199,6 +205,7 @@ git push origin docs/my-feature
 3. Update `docs/plan.md` to reference new section
 
 4. Update `docs/llms.txt`:
+
    ```bash
    ./scripts/update-llms-txt.sh
    ```
@@ -223,7 +230,7 @@ npm run docs:format
 
 ## File Structure
 
-```
+```text
 docs/
 ├── README.md                    # Documentation home
 ├── _config.yml                 # Jekyll configuration
@@ -249,6 +256,7 @@ scripts/
 **Issue:** Ruby version mismatch or gem conflicts
 
 **Solution:**
+
 ```bash
 # Update gems
 bundle update
@@ -263,6 +271,7 @@ bundle install
 **Issue:** Port already in use or Jekyll won't start
 
 **Solution:**
+
 ```bash
 # Kill existing process
 pkill -f jekyll
@@ -276,6 +285,7 @@ cd docs && bundle exec jekyll serve --port 5000 --host 0.0.0.0
 **Issue:** Node version too old or permission issues
 
 **Solution:**
+
 ```bash
 # Update Node
 nvm install 18
@@ -291,6 +301,7 @@ npm install
 **Issue:** Markdownlint or prettier finding errors
 
 **Solution:**
+
 ```bash
 # Show what needs fixing
 npm run docs:check-format

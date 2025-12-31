@@ -11,7 +11,8 @@ If you encounter issues deploying PulumiCost, please refer to our comprehensive 
 
 ### Docker Permission Denied
 
-If you see permission errors when mounting volumes in Docker, ensure the host directory is owned by the user running the container or use `chmod` to grant access.
+If you see permission errors when mounting volumes in Docker, ensure the host directory is owned
+by the user running the container or use `chmod` to grant access.
 
 See [Docker Guide](docker.md#troubleshooting) for specific commands.
 

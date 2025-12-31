@@ -4,7 +4,8 @@ This document explains how to set up GitHub Pages for PulumiCost documentation.
 
 ## Overview
 
-PulumiCost documentation is deployed to GitHub Pages from the `docs/` directory using Jekyll. This guide shows how to configure the repository for automatic deployment.
+PulumiCost documentation is deployed to GitHub Pages from the `docs/` directory using Jekyll.
+This guide shows how to configure the repository for automatic deployment.
 
 ## Prerequisites
 
@@ -38,7 +39,8 @@ Ensure the workflow has permission to deploy:
 If using a custom domain:
 
 1. Create a `docs/CNAME` file with your domain:
-   ```
+
+   ```text
    docs.pulumicost.com
    ```
 
@@ -66,6 +68,7 @@ After push to main:
 ### Workflow Fails to Deploy
 
 **Check workflow permissions:**
+
 ```bash
 gh api repos/rshade/pulumicost-core/actions/permissions
 ```
@@ -73,12 +76,14 @@ gh api repos/rshade/pulumicost-core/actions/permissions
 ### Build Fails
 
 Check the workflow logs:
+
 1. Go to **Actions** tab
 2. Click on failed workflow
 3. Expand "Build Documentation" job
 4. Look for error messages
 
 Common issues:
+
 - Missing Ruby dependencies: Run `bundle install`
 - Jekyll build errors: Check `_config.yml` syntax
 - Link errors: Run `make docs-validate` locally
@@ -113,6 +118,7 @@ bundle exec jekyll build
 ### Monitor Deployments
 
 View all deployments:
+
 ```bash
 gh deployment list --repo rshade/pulumicost-core
 ```

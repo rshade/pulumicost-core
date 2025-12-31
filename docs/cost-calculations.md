@@ -405,11 +405,13 @@ metadata:
 - Processing time for complex queries
 
 #### Attribution Challenges
+
 - Resource tagging inconsistencies
 - Shared resource costs
 - Multi-account cost allocation
 
 #### Plugin Dependencies
+
 - Requires plugin installation and configuration
 - API rate limits and authentication
 - Network connectivity requirements
@@ -417,12 +419,14 @@ metadata:
 ### Improving Accuracy
 
 #### For Projected Costs
+
 1. **Keep specs updated**: Regularly update pricing specifications
 2. **Use plugins**: Leverage live pricing APIs when available
 3. **Include usage patterns**: Account for auto-scaling and variable usage
 4. **Regional awareness**: Use region-specific pricing
 
 #### For Actual Costs
+
 1. **Consistent tagging**: Implement comprehensive resource tagging
 2. **Regular reconciliation**: Compare projected vs actual regularly
 3. **Multiple data sources**: Use multiple plugins for validation
@@ -471,6 +475,7 @@ jq -r '.summary.totalMonthly' actual.json
 ### Cost Optimization
 
 #### Identify High-Cost Resources
+
 ```bash
 # Find most expensive resources
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json | \
@@ -478,6 +483,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json |
 ```
 
 #### Track Cost Trends
+
 ```bash
 # Generate daily cost trend
 for day in {01..31}; do

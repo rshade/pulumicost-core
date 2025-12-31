@@ -4,8 +4,6 @@ title: Frequently Asked Questions
 description: Common questions and answers about PulumiCost
 ---
 
-# Frequently Asked Questions
-
 ## Installation & Setup
 
 **Q: How do I install PulumiCost?**
@@ -26,6 +24,7 @@ For actual costs, it depends on available plugins (currently Vantage).
 **Q: Why are some resources showing $0 cost?**
 
 A: Some resources don't have pricing data available. This is normal for:
+
 - S3 buckets (storage costs apply only if data exists)
 - Databases (pricing depends on actual usage)
 - VPCs, subnets (no direct costs)
@@ -33,6 +32,7 @@ A: Some resources don't have pricing data available. This is normal for:
 **Q: How accurate are the projected costs?**
 
 A: 95%+ accurate for most resources. Actual costs depend on:
+
 - Real usage patterns
 - Discounts and reserved instances
 - Data transfer costs
@@ -67,6 +67,7 @@ A: Install the plugin first. See [Plugin Setup](../plugins/vantage/setup.md).
 **Q: "No cost data available"**
 
 A: Some resources don't have pricing. Check:
+
 1. Is plugin/spec configured?
 2. Are resource types supported?
 3. Does plugin have credentials?
@@ -102,7 +103,8 @@ A: Yes. Use `--output ndjson` for streaming.
 
 **Q: Where can I get help?**
 
-A: 
+A: See these resources:
+
 - [Troubleshooting Guide](troubleshooting.md)
 - [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
 - [GitHub Discussions](https://github.com/rshade/pulumicost-core/discussions)
@@ -114,4 +116,3 @@ A: [Open a GitHub Issue](https://github.com/rshade/pulumicost-core/issues/new)
 **Q: Can I contribute?**
 
 A: Yes! See [Contributing Guide](contributing.md).
-

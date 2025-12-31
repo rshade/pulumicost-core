@@ -4,11 +4,10 @@ title: Business Value
 description: Cost visibility, ROI, and competitive advantages of PulumiCost
 ---
 
-# PulumiCost: Business Value & ROI
-
 ## Executive Summary
 
-PulumiCost enables cloud cost visibility directly from infrastructure code, reducing cloud spending by **15-25%** while cutting cost analysis time by **80%**.
+PulumiCost enables cloud cost visibility directly from infrastructure code, reducing cloud spending
+by **15-25%** while cutting cost analysis time by **80%**.
 
 ---
 
@@ -25,6 +24,7 @@ PulumiCost enables cloud cost visibility directly from infrastructure code, redu
 ### The Impact
 
 **Hidden Costs Result In:**
+
 - Oversized instances (no cost feedback)
 - Redundant resources not being deprecated
 - Inefficient configurations running in production
@@ -38,16 +38,19 @@ PulumiCost enables cloud cost visibility directly from infrastructure code, redu
 ### What Changes
 
 ✅ **Costs appear in the development workflow**
+
 - See estimated costs before deploying
 - Understand cost impact of infrastructure changes
 - Make cost-aware architecture decisions
 
 ✅ **Cost is part of code review**
+
 - PR comments with cost estimates
 - Team consensus on cost-benefit tradeoffs
 - Historical tracking of cost changes
 
 ✅ **Developers are accountable for costs**
+
 - Direct feedback on their infrastructure choices
 - Incentive to write cost-efficient code
 - Cost-conscious culture from day one
@@ -59,11 +62,13 @@ PulumiCost enables cloud cost visibility directly from infrastructure code, redu
 ### 1. Cost Visibility (Immediate Impact)
 
 **Before:**
+
 - No way to estimate costs before deployment
 - Unexpected billing surprises
 - Cannot compare configuration options
 
 **With PulumiCost:**
+
 ```bash
 pulumicost cost projected --pulumi-json plan.json
 
@@ -80,11 +85,13 @@ TOTAL                     $133.00   USD
 ### 2. Automated Cost Analysis (Time Savings)
 
 **Time Savings:**
+
 - **Before:** 4-6 hours/week analyzing costs manually
 - **With PulumiCost:** 0.5 hours/week (automated)
 - **Savings:** 15-20 hours/month per team member
 
 **Cost Savings:**
+
 - $3,000-$5,000/month per team member
 - 80% reduction in cost analysis time
 - Payback period: < 1 month
@@ -92,16 +99,19 @@ TOTAL                     $133.00   USD
 ### 3. Preventive Cost Optimization (15-25% Reduction)
 
 **Before:** Reactive cost cutting
+
 - Wait for billing surprise
 - Emergency cost reduction projects
 - Rushed decisions with technical debt
 
 **With PulumiCost:** Preventive optimization
+
 - Right-size instances before deployment
 - Evaluate cost/performance tradeoffs
 - Systematic cost optimization
 
 **Real-World Results:**
+
 - **e-commerce company:** 18% cloud cost reduction (~$200K/year)
 - **SaaS startup:** 22% cost reduction (~$50K/year)
 - **Enterprise:** 15% cost reduction (~$5M/year)
@@ -109,11 +119,13 @@ TOTAL                     $133.00   USD
 ### 4. Cost Attribution & Chargeback (Governance)
 
 **Without PulumiCost:**
+
 - Cannot track costs by team/project/environment
 - No way to implement chargeback models
 - Finance doesn't understand technical costs
 
 **With PulumiCost:**
+
 ```bash
 # Cost by team
 pulumicost cost actual --filter "tag:team=platform"
@@ -126,6 +138,7 @@ pulumicost cost actual --filter "tag:project=mobile"
 ```
 
 **Impact:**
+
 - Teams see their actual costs
 - Chargeback models become implementable
 - Cost accountability improves behavior
@@ -133,11 +146,13 @@ pulumicost cost actual --filter "tag:project=mobile"
 ### 5. Cross-Cloud Visibility (Multi-Cloud Strategy)
 
 **Challenge:**
+
 - AWS, Azure, GCP costs fragmented across consoles
 - No unified reporting
 - Difficult to optimize multi-cloud strategy
 
 **Solution:**
+
 - PulumiCost + Vantage plugin = unified cost view
 - Compare costs across clouds automatically
 - Optimize cloud selection based on costs
@@ -164,7 +179,7 @@ pulumicost cost actual --filter "tag:project=mobile"
 
 ### ROI Timeline
 
-```
+```text
 Month 1: Implementation & setup costs (~$5K)
 Month 2: First cost optimizations discovered (~$20K savings)
 Month 3+: Continuous optimization (~$15-20K/month savings)
@@ -212,7 +227,7 @@ Payback period: 1-2 weeks
 
 ### Week 1: Pilot (1 project)
 
-```
+```text
 Monday: Install PulumiCost
 Tuesday: Run on first project
 Wednesday: Validate costs
@@ -222,7 +237,7 @@ Friday: Decision to expand
 
 ### Week 2-4: Team Rollout
 
-```
+```text
 Week 2: Integrate into CI/CD
 Week 3: Team training
 Week 4: Cost optimization sprint
@@ -230,7 +245,7 @@ Week 4: Cost optimization sprint
 
 ### Month 2+: Continuous Optimization
 
-```
+```text
 - Weekly cost reviews
 - Quarterly optimization initiatives
 - Continuous culture change
@@ -243,16 +258,19 @@ Week 4: Cost optimization sprint
 ### Common Concerns
 
 **"Will developers slow down?"**
+
 - PulumiCost adds <1 second to cost estimation
 - Actually speeds up decision-making
 - No negative performance impact
 
 **"Do we need new tools?"**
+
 - Works with existing Pulumi projects
 - No new infrastructure required
 - Simple CLI tool
 
 **"Is it accurate?"**
+
 - Highly accurate cost estimation
 - 95%+ match to actual bills
 - Validated against real infrastructure
@@ -285,6 +303,7 @@ Week 4: Cost optimization sprint
 **Problem:** Cloud costs growing 15% monthly, no visibility into why
 **Solution:** Implemented PulumiCost with Vantage plugin
 **Results:**
+
 - **Cost reduction:** 18% ($200K/year savings)
 - **Time savings:** 30 hours/month per team
 - **Culture change:** Cost-conscious architecture decisions
@@ -295,6 +314,7 @@ Week 4: Cost optimization sprint
 **Problem:** No accountability for cloud costs, departmental budgets exceeded
 **Solution:** Implemented chargeback model with PulumiCost
 **Results:**
+
 - **Cost reduction:** 22% ($5M/year savings)
 - **Budget accuracy:** 95% variance (from 40%)
 - **Governance:** Automated cost attribution by department

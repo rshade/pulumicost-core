@@ -9,22 +9,30 @@ PulumiCost is designed specifically for the Pulumi ecosystem, offering unique ad
 
 | Feature | PulumiCost | Infracost | Cloud Provider Calculators |
 | :--- | :--- | :--- | :--- |
-| **Pulumi Native** | ✅ First-class citizen | ⚠️ via Terraform translation | ❌ No integration |
-| **Plugin Architecture** | ✅ Extensible ecosystem | ❌ Monolithic binary | ❌ N/A |
-| **Actual Costs** | ✅ Integration with Vantage, etc. | ❌ Estimate only | ✅ Yes (Historical) |
-| **Local Specs** | ✅ Air-gapped capable | ⚠️ Requires API connectivity | ❌ Online only |
+| **Pulumi Native** | ✅ First-class | ⚠️ Terraform translation | ❌ None |
+| **Plugin Architecture** | ✅ Extensible | ❌ Monolithic | ❌ N/A |
+| **Actual Costs** | ✅ Vantage, etc. | ❌ Estimate only | ✅ Historical |
+| **Local Specs** | ✅ Air-gapped | ⚠️ Requires API | ❌ Online only |
 | **Open Source** | ✅ Apache 2.0 | ✅ Apache 2.0 | ❌ Proprietary |
 
 ## Why PulumiCost?
 
 ### 1. Built for Pulumi
 
-Unlike tools that treat Pulumi as a second-class citizen (often by converting to Terraform HCL first), PulumiCost understands Pulumi's resource model natively. This leads to higher accuracy and better support for Pulumi-specific features like ComponentResources.
+Unlike tools that treat Pulumi as a second-class citizen (often by converting to
+Terraform HCL first), PulumiCost understands Pulumi's resource model natively.
+This leads to higher accuracy and better support for Pulumi-specific features
+like ComponentResources.
 
 ### 2. Extensible Plugin System
 
-PulumiCost uses a gRPC-based plugin system. This means you can write your own pricing source or cost policy engine in any language, without waiting for the core team to implement it.
+PulumiCost uses a gRPC-based plugin system. This means you can write your own
+pricing source or cost policy engine in any language, without waiting for the
+core team to implement it.
 
 ### 3. Unified View (Projected vs. Actual)
 
-PulumiCost aims to close the loop between what you *think* you will spend (Projected) and what you *actually* spend (Actual). By integrating with providers like Vantage or AWS Cost Explorer (via plugins), you get a complete financial picture.
+PulumiCost aims to close the loop between what you *think* you will spend
+(Projected) and what you *actually* spend (Actual). By integrating with
+providers like Vantage or AWS Cost Explorer (via plugins), you get a complete
+financial picture.

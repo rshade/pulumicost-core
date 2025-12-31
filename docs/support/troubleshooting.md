@@ -4,13 +4,12 @@ title: Troubleshooting Guide
 description: Common issues and solutions
 ---
 
-# Troubleshooting Guide
-
 ## Installation Issues
 
 **"pulumicost: command not found"**
 
 Solution:
+
 ```bash
 # Build from source
 make build
@@ -25,6 +24,7 @@ ls -la bin/pulumicost
 **"make: command not found"**
 
 Solution:
+
 ```bash
 # Install make
 # macOS
@@ -42,12 +42,14 @@ make --version
 **"No cost data available"**
 
 Causes:
+
 1. Plugin not installed
 2. Plugin not configured
 3. Resource type not supported
 4. API credentials invalid
 
 Solution:
+
 ```bash
 # Check plugins
 pulumicost plugin list
@@ -60,6 +62,7 @@ pulumicost plugin validate
 **"Invalid date format"**
 
 Solution:
+
 ```bash
 # Use YYYY-MM-DD
 pulumicost cost actual --from 2024-01-01
@@ -71,6 +74,7 @@ pulumicost cost actual --from 2024-01-01T00:00:00Z
 **"Filter not working"**
 
 Solution:
+
 ```bash
 # Check filter syntax
 pulumicost cost actual --filter "tag:env=prod"
@@ -95,6 +99,7 @@ chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
 **"Plugin timeout"**
 
 Solution:
+
 1. Check network connectivity
 2. Verify API credentials
 3. Check plugin logs
@@ -103,6 +108,7 @@ Solution:
 **"API authentication failed"**
 
 Solution:
+
 ```bash
 # Verify credentials
 echo $VANTAGE_API_KEY  # For Vantage
@@ -116,6 +122,7 @@ cat ~/.pulumicost/config.yaml
 **"CLI is slow"**
 
 Solution:
+
 ```bash
 # Filter to smaller dataset
 pulumicost cost actual --from 2024-01-31 --to 2024-01-31
@@ -127,6 +134,7 @@ pulumicost cost actual --output ndjson
 **"Plugin is timing out"**
 
 Solution:
+
 1. Check plugin is running
 2. Verify network connectivity
 3. Check plugin logs
@@ -137,6 +145,7 @@ Solution:
 **"Pulumi JSON file not found"**
 
 Solution:
+
 ```bash
 # Generate plan
 pulumi preview --json > plan.json
@@ -148,6 +157,7 @@ cat plan.json | head
 **"Permission denied"**
 
 Solution:
+
 ```bash
 # Fix permissions
 chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
@@ -162,6 +172,7 @@ chmod +x bin/pulumicost
 **"Configuration not found"**
 
 Solution:
+
 ```bash
 # Vantage requires config
 # See: docs/plugins/vantage/setup.md
@@ -174,6 +185,7 @@ mkdir -p ~/.pulumicost/specs
 **"Default currency error"**
 
 Solution:
+
 ```bash
 # Ensure specs have currency
 cat ~/.pulumicost/specs/*.yaml | grep -i currency
@@ -185,15 +197,17 @@ cat ~/.pulumicost/specs/*.yaml | grep -i currency
 ## Getting More Help
 
 1. **Check logs:**
+
    ```bash
    pulumicost cost actual --debug
    ```
 
 2. **Read relevant guide:**
+
    - [User Guide](../guides/user-guide.md)
    - [Plugin Documentation](../plugins/)
    - [Configuration Guide](../deployment/configuration.md)
 
 3. **Report issue:**
-   - [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
 
+   - [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
