@@ -203,7 +203,7 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 			args:        []string{"cost", "actual", "--pulumi-json", "test.json"},
 			expectError: true,
 			errorCheck: func(t *testing.T, err error) {
-				assert.Contains(t, err.Error(), "required flag(s) \"from\" not set")
+				assert.Contains(t, err.Error(), "--from is required when using --pulumi-json")
 			},
 		},
 		{

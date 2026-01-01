@@ -1,4 +1,6 @@
-package integration
+//go:build nightly
+
+package integration_test
 
 import (
 	"bytes"
