@@ -1,3 +1,5 @@
+//go:build nightly
+
 // Package e2e_test provides end-to-end tests for the pulumicost CLI workflows.
 package e2e_test
 

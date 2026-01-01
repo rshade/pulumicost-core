@@ -84,9 +84,9 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost actual basic",
 			command: "cost",
-			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01"},
+			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--to", "2025-12-31"},
 			checkOutput: func(t *testing.T, _ string, err error) {
-				// Should succeed with default 'to' being now
+				// Should succeed with explicit date range
 				require.NoError(t, err)
 				// Command should complete successfully
 			},
@@ -117,6 +117,8 @@ func TestCLIIntegration(t *testing.T) {
 				planPath,
 				"--from",
 				"2025-01-01",
+				"--to",
+				"2025-12-31",
 				"--group-by",
 				"type",
 			},
@@ -203,7 +205,7 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 			args:        []string{"cost", "actual", "--pulumi-json", "test.json"},
 			expectError: true,
 			errorCheck: func(t *testing.T, err error) {
-				assert.Contains(t, err.Error(), "required flag(s) \"from\" not set")
+				assert.Contains(t, err.Error(), "--from is required when using --pulumi-json")
 			},
 		},
 		{
@@ -407,6 +409,8 @@ func TestOutputFormats(t *testing.T) {
 					planPath,
 					"--from",
 					"2025-01-01",
+					"--to",
+					"2025-12-31",
 					"--output",
 					format,
 				},

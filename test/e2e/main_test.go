@@ -368,11 +368,20 @@ func (tc *TestContext) runCmdOutput(ctx context.Context, dir string, env []strin
 		cmd.Env = append(cmd.Env, "PULUMI_CONFIG_PASSPHRASE="+passphrase)
 	}
 
-	output, err := cmd.CombinedOutput()
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
 	if err != nil {
-		return output, fmt.Errorf("%s %v failed: %w\noutput: %s", name, args, err, string(output))
+		return stdout.Bytes(), fmt.Errorf("%s %v failed: %w\nstdout: %s\nstderr: %s", name, args, err, stdout.String(), stderr.String())
 	}
-	return output, nil
+
+	if stderr.Len() > 0 {
+		tc.T.Logf("%s %v stderr:\n%s", name, args, stderr.String())
+	}
+
+	return stdout.Bytes(), nil
 }
 
 func (tc *TestContext) CopyDir(src, dst string) error {

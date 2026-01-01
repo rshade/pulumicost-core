@@ -1,0 +1,193 @@
+{
+  "version": 3,
+  "deployment": {
+    "manifest": {
+      "time": "2025-12-01T10:00:00.000000000Z",
+      "magic": "2c2f9e9b9e0b8e4e8e5e4e3e2e1e0e",
+      "version": "v3.100.0"
+    },
+    "resources": [
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::pulumi:pulumi:Stack::multi-cloud-stack-dev",
+        "type": "pulumi:pulumi:Stack",
+        "custom": false
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:aws::default_us-east-1",
+        "type": "pulumi:providers:aws",
+        "custom": true,
+        "id": "aws-provider-id-123",
+        "inputs": {
+          "region": "us-east-1"
+        },
+        "outputs": {
+          "region": "us-east-1"
+        }
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:azure-native::default",
+        "type": "pulumi:providers:azure-native",
+        "custom": true,
+        "id": "azure-provider-id-456",
+        "inputs": {
+          "subscriptionId": "12345678-1234-1234-1234-123456789012"
+        },
+        "outputs": {
+          "subscriptionId": "12345678-1234-1234-1234-123456789012"
+        }
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:gcp::default_us-central1",
+        "type": "pulumi:providers:gcp",
+        "custom": true,
+        "id": "gcp-provider-id-789",
+        "inputs": {
+          "project": "my-gcp-project",
+          "region": "us-central1"
+        },
+        "outputs": {
+          "project": "my-gcp-project",
+          "region": "us-central1"
+        }
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::aws:ec2/instance:Instance::aws-web-server",
+        "type": "aws:ec2/instance:Instance",
+        "custom": true,
+        "id": "i-0123456789abcdef0",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:aws::default_us-east-1",
+        "inputs": {
+          "ami": "ami-0123456789abcdef0",
+          "instanceType": "t3.medium",
+          "tags": {
+            "Name": "aws-web-server",
+            "Environment": "dev"
+          }
+        },
+        "outputs": {
+          "arn": "arn:aws:ec2:us-east-1:123456789012:instance/i-0123456789abcdef0",
+          "instanceType": "t3.medium",
+          "publicIp": "54.123.45.67",
+          "privateIp": "10.0.1.100"
+        },
+        "created": "2025-12-01T10:00:00Z",
+        "modified": "2025-12-15T14:30:00Z"
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::azure-native:compute:VirtualMachine::azure-web-server",
+        "type": "azure-native:compute:VirtualMachine",
+        "custom": true,
+        "id": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/azure-web-server",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:azure-native::default",
+        "inputs": {
+          "resourceGroupName": "my-rg",
+          "vmName": "azure-web-server",
+          "vmSize": "Standard_D2s_v3",
+          "location": "eastus"
+        },
+        "outputs": {
+          "id": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/azure-web-server",
+          "vmSize": "Standard_D2s_v3",
+          "location": "eastus"
+        },
+        "created": "2025-12-02T08:30:00Z",
+        "modified": "2025-12-10T12:00:00Z"
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::gcp:compute/instance:Instance::gcp-web-server",
+        "type": "gcp:compute/instance:Instance",
+        "custom": true,
+        "id": "projects/my-gcp-project/zones/us-central1-a/instances/gcp-web-server",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:gcp::default_us-central1",
+        "inputs": {
+          "name": "gcp-web-server",
+          "machineType": "n2-standard-2",
+          "zone": "us-central1-a",
+          "bootDisk": {
+            "initializeParams": {
+              "image": "debian-cloud/debian-11"
+            }
+          }
+        },
+        "outputs": {
+          "id": "projects/my-gcp-project/zones/us-central1-a/instances/gcp-web-server",
+          "machineType": "n2-standard-2",
+          "zone": "us-central1-a",
+          "networkInterfaces": [
+            {
+              "networkIp": "10.128.0.100"
+            }
+          ]
+        },
+        "created": "2025-12-03T14:15:00Z",
+        "modified": "2025-12-03T14:15:00Z"
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::aws:rds/instance:Instance::aws-database",
+        "type": "aws:rds/instance:Instance",
+        "custom": true,
+        "id": "db-instance-primary",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:aws::default_us-east-1",
+        "inputs": {
+          "instanceClass": "db.t3.medium",
+          "engine": "postgres",
+          "engineVersion": "14.5",
+          "allocatedStorage": 100
+        },
+        "outputs": {
+          "arn": "arn:aws:rds:us-east-1:123456789012:db:db-instance-primary",
+          "endpoint": "db-instance-primary.abc123.us-east-1.rds.amazonaws.com:5432",
+          "instanceClass": "db.t3.medium"
+        },
+        "created": "2025-12-01T10:05:00Z",
+        "modified": "2025-12-01T10:05:00Z"
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::azure-native:storage:StorageAccount::azure-storage",
+        "type": "azure-native:storage:StorageAccount",
+        "custom": true,
+        "id": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Storage/storageAccounts/mystorageaccount",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:azure-native::default",
+        "inputs": {
+          "resourceGroupName": "my-rg",
+          "accountName": "mystorageaccount",
+          "kind": "StorageV2",
+          "location": "eastus"
+        },
+        "outputs": {
+          "id": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Storage/storageAccounts/mystorageaccount",
+          "primaryEndpoints": {
+            "blob": "https://mystorageaccount.blob.core.windows.net/"
+          }
+        },
+        "created": "2025-12-02T09:00:00Z",
+        "modified": "2025-12-02T09:00:00Z"
+      },
+      {
+        "urn": "urn:pulumi:dev::multi-cloud-stack::gcp:storage/bucket:Bucket::gcp-storage",
+        "type": "gcp:storage/bucket:Bucket",
+        "custom": true,
+        "id": "my-gcp-bucket",
+        "external": false,
+        "provider": "urn:pulumi:dev::multi-cloud-stack::pulumi:providers:gcp::default_us-central1",
+        "inputs": {
+          "name": "my-gcp-bucket",
+          "location": "US",
+          "storageClass": "STANDARD"
+        },
+        "outputs": {
+          "id": "my-gcp-bucket",
+          "selfLink": "https://www.googleapis.com/storage/v1/b/my-gcp-bucket",
+          "url": "gs://my-gcp-bucket"
+        },
+        "created": "2025-12-03T14:30:00Z",
+        "modified": "2025-12-03T14:30:00Z"
+      }
+    ]
+  }
+}

@@ -24,13 +24,13 @@ func TestNewCostActualCmd(t *testing.T) {
 			name:        "missing required flags",
 			args:        []string{},
 			expectError: true,
-			errorMsg:    "required flag(s)",
+			errorMsg:    "either --pulumi-json or --pulumi-state is required",
 		},
 		{
 			name:        "missing from flag",
 			args:        []string{"--pulumi-json", "test.json"},
 			expectError: true,
-			errorMsg:    "required flag(s) \"from\" not set",
+			errorMsg:    "--from is required when using --pulumi-json",
 		},
 		{
 			name:        "help flag",
@@ -51,10 +51,11 @@ func TestNewCostActualCmd(t *testing.T) {
 			errorMsg:    "loading Pulumi plan",
 		},
 		{
-			name: "with required flags only (to defaults to now)",
+			name: "with required flags only",
 			args: []string{
 				"--pulumi-json", "test.json",
 				"--from", "2025-01-01",
+				"--to", "2025-12-31",
 			},
 			expectError: true, // Will fail because file doesn't exist
 			errorMsg:    "loading Pulumi plan",
@@ -210,6 +211,178 @@ func TestParseTimeRange(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.True(t, to.After(from) || to.Equal(from))
+			}
+		})
+	}
+}
+
+// TestCostActualCmdPulumiStateFlag tests the --pulumi-state flag for state-based actual cost.
+func TestCostActualCmdPulumiStateFlag(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	cmd := cli.NewCostActualCmd()
+
+	// Check --pulumi-state flag exists
+	pulumiStateFlag := cmd.Flags().Lookup("pulumi-state")
+	assert.NotNil(t, pulumiStateFlag, "--pulumi-state flag should exist")
+	assert.Equal(t, "string", pulumiStateFlag.Value.Type())
+	assert.Contains(t, pulumiStateFlag.Usage, "state")
+}
+
+// TestCostActualCmdMutuallyExclusiveInputs tests that --pulumi-json and --pulumi-state are mutually exclusive.
+func TestCostActualCmdMutuallyExclusiveInputs(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "both pulumi-json and pulumi-state provided",
+			args: []string{
+				"--pulumi-json", "test.json",
+				"--pulumi-state", "state.json",
+				"--from", "2025-01-01",
+			},
+			expectError: true,
+			errorMsg:    "mutually exclusive",
+		},
+		{
+			name: "neither pulumi-json nor pulumi-state provided",
+			args: []string{
+				"--from", "2025-01-01",
+			},
+			expectError: true,
+			errorMsg:    "either --pulumi-json or --pulumi-state",
+		},
+		{
+			name: "only pulumi-state provided without from (auto-detect)",
+			args: []string{
+				"--pulumi-state", "../../test/fixtures/state/valid-state.json",
+			},
+			// Command succeeds: --from is auto-detected from earliest Created timestamp in state
+			// Plugin may report resource errors (missing IDs), but command completes successfully
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			cmd := cli.NewCostActualCmd()
+			cmd.SetOut(&buf)
+			cmd.SetErr(&buf)
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+
+			if tt.expectError {
+				require.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestCostActualCmdHelpWithStateFlag tests that help includes --pulumi-state documentation.
+func TestCostActualCmdHelpWithStateFlag(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	var buf bytes.Buffer
+	cmd := cli.NewCostActualCmd()
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"--help"})
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "--pulumi-state")
+	assert.Contains(t, output, "state")
+}
+
+// TestCostActualCmdEstimateConfidenceFlag tests the --estimate-confidence flag.
+func TestCostActualCmdEstimateConfidenceFlag(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	cmd := cli.NewCostActualCmd()
+
+	// Check --estimate-confidence flag exists
+	estimateConfidenceFlag := cmd.Flags().Lookup("estimate-confidence")
+	assert.NotNil(t, estimateConfidenceFlag, "--estimate-confidence flag should exist")
+	assert.Equal(t, "bool", estimateConfidenceFlag.Value.Type())
+	assert.Contains(t, estimateConfidenceFlag.Usage, "confidence")
+}
+
+// TestCostActualCmdHelpWithEstimateConfidence tests that help includes confidence documentation.
+func TestCostActualCmdHelpWithEstimateConfidence(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	var buf bytes.Buffer
+	cmd := cli.NewCostActualCmd()
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"--help"})
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "--estimate-confidence")
+	assert.Contains(t, output, "confidence")
+}
+
+// TestCostActualCmdWithEstimateConfidenceFlag tests the flag is accepted without error.
+func TestCostActualCmdWithEstimateConfidenceFlag(t *testing.T) {
+	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "estimate-confidence flag with state file",
+			args: []string{
+				"--pulumi-state", "../../test/fixtures/state/valid-state.json",
+				"--estimate-confidence",
+			},
+			// Command succeeds - flag is accepted
+			expectError: false,
+		},
+		{
+			name: "estimate-confidence false (explicit)",
+			args: []string{
+				"--pulumi-state", "../../test/fixtures/state/valid-state.json",
+				"--estimate-confidence=false",
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			cmd := cli.NewCostActualCmd()
+			cmd.SetOut(&buf)
+			cmd.SetErr(&buf)
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+
+			if tt.expectError {
+				require.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

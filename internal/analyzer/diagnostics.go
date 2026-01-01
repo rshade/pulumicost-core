@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
@@ -126,27 +127,22 @@ func formatCostMessage(cost engine.CostResult) string {
 		message = "Unable to estimate cost"
 	}
 
-	// Append sustainability metrics if present
+	// Append sustainability metrics if present (sorted for deterministic output - SC-003 fix)
 	if len(cost.Sustainability) > 0 {
-		// Use a fixed order for deterministic output
 		var sustainParts []string
-		// We can't easily sort map keys without importing sort package,
-		// but typically there's only one or two metrics (e.g. gCO2e).
-		// Let's just iterate and append. For tests, deterministic order helps,
-		// but map iteration is random.
-		// Since we're just appending to a string for display, strict order isn't critical
-		// unless we're doing string matching in tests.
-		// Let's check keys to provide a stable-ish output for common keys.
-		if m, ok := cost.Sustainability["gCO2e"]; ok {
-			sustainParts = append(sustainParts, fmt.Sprintf("Carbon: %.2f %s", m.Value, m.Unit))
+		// Sort keys for deterministic output
+		keys := make([]string, 0, len(cost.Sustainability))
+		for k := range cost.Sustainability {
+			keys = append(keys, k)
 		}
-		// Add other keys if needed, or iterate remaining.
-		// For now, let's just append all of them.
-		for k, m := range cost.Sustainability {
+		sort.Strings(keys)
+		for _, k := range keys {
+			m := cost.Sustainability[k]
 			if k == "gCO2e" {
-				continue // Already added
+				sustainParts = append(sustainParts, fmt.Sprintf("Carbon: %.2f %s", m.Value, m.Unit))
+			} else {
+				sustainParts = append(sustainParts, fmt.Sprintf("%s: %.2f %s", k, m.Value, m.Unit))
 			}
-			sustainParts = append(sustainParts, fmt.Sprintf("%s: %.2f %s", k, m.Value, m.Unit))
 		}
 
 		if len(sustainParts) > 0 {

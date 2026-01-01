@@ -571,6 +571,11 @@ func (e *Engine) getActualCostForResource(
 		return *resourceResult, errors
 	}
 
+	// Try state-based cost estimation as fallback
+	if stateResult := e.tryStateBasedEstimation(ctx, resource, request); stateResult != nil {
+		return *stateResult, errors
+	}
+
 	// Create placeholder result
 	notes := "No actual cost data available"
 	if len(errors) > 0 {
@@ -583,11 +588,97 @@ func (e *Engine) getActualCostForResource(
 		Adapter:      "none",
 		Currency:     defaultCurrency,
 		TotalCost:    0,
+		Confidence:   ConfidenceUnknown,
 		Notes:        notes,
 		StartDate:    request.From,
 		EndDate:      request.To,
 		CostPeriod:   FormatPeriod(request.From, request.To),
 	}, errors
+}
+
+// tryStateBasedEstimation attempts to calculate costs using state-based estimation.
+// Returns nil if state-based estimation is not possible for this resource.
+func (e *Engine) tryStateBasedEstimation(
+	ctx context.Context,
+	resource ResourceDescriptor,
+	request ActualCostRequest,
+) *CostResult {
+	log := logging.FromContext(ctx)
+
+	created, extractErr := ExtractCreatedTimestamp(resource)
+	if extractErr != nil {
+		log.Debug().Ctx(ctx).Str("resource_id", resource.ID).Err(extractErr).
+			Msg("cannot extract created timestamp, skipping state-based estimation")
+		return nil
+	}
+
+	if created.IsZero() {
+		return nil
+	}
+
+	hourlyRate, rateErr := e.getHourlyRateForResource(ctx, resource)
+	if rateErr != nil {
+		log.Debug().Ctx(ctx).Str("resource_id", resource.ID).Err(rateErr).
+			Msg("cannot get hourly rate for state-based estimation")
+		return nil
+	}
+
+	ref := time.Now()
+	if !request.To.IsZero() && request.To.Before(time.Now()) {
+		ref = request.To
+	}
+
+	start := created
+	if !request.From.IsZero() && request.From.After(created) {
+		start = request.From
+	}
+
+	isExternal := IsExternalResource(resource)
+	stateCost := CalculateStateCost(StateCostInput{
+		Resource:   resource,
+		HourlyRate: hourlyRate,
+		CreatedAt:  start,
+		IsExternal: isExternal,
+	}, ref)
+
+	confidence := DetermineConfidence(false, isExternal)
+	notes := stateCost.Notes
+	if notes != "" {
+		notes += "; " + UptimeAssumptionNote
+	} else {
+		notes = UptimeAssumptionNote
+	}
+
+	return &CostResult{
+		ResourceType: resource.Type,
+		ResourceID:   resource.ID,
+		Adapter:      "estimate",
+		Currency:     defaultCurrency,
+		Hourly:       hourlyRate,
+		TotalCost:    stateCost.TotalCost,
+		Confidence:   confidence,
+		Notes:        notes,
+		StartDate:    start,
+		EndDate:      ref,
+		CostPeriod:   FormatPeriod(start, ref),
+	}
+}
+
+// getHourlyRateForResource gets the hourly rate for a resource from projected cost.
+func (e *Engine) getHourlyRateForResource(
+	ctx context.Context,
+	resource ResourceDescriptor,
+) (float64, error) {
+	for _, client := range e.clients {
+		costResult, err := e.getProjectedCostFromPlugin(ctx, client, resource)
+		if err != nil {
+			continue
+		}
+		if costResult != nil {
+			return costResult.Hourly, nil
+		}
+	}
+	return 0, errors.New("no plugin returned projected cost")
 }
 
 func (e *Engine) getProjectedCostFromPlugin(

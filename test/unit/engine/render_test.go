@@ -231,7 +231,7 @@ func TestRenderActualCostResults_TableFormat(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := engine.RenderActualCostResults(&buf, engine.OutputTable, results)
+	err := engine.RenderActualCostResults(&buf, engine.OutputTable, results, false)
 	require.NoError(t, err)
 
 	output := buf.String()
@@ -253,7 +253,7 @@ func TestRenderActualCostResults_JSONFormat(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := engine.RenderActualCostResults(&buf, engine.OutputJSON, results)
+	err := engine.RenderActualCostResults(&buf, engine.OutputJSON, results, false)
 	require.NoError(t, err)
 
 	output := buf.String()
@@ -273,7 +273,7 @@ func TestRenderActualCostResults_NDJSONFormat(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := engine.RenderActualCostResults(&buf, engine.OutputNDJSON, results)
+	err := engine.RenderActualCostResults(&buf, engine.OutputNDJSON, results, false)
 	require.NoError(t, err)
 
 	output := buf.String()

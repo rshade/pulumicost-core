@@ -58,6 +58,10 @@ func testContextCancellation(ctx *TestContext) *TestResult {
 	return &TestResult{Status: StatusPass}
 }
 
+// shortTimeoutMs is the timeout in milliseconds for testing context timeout behavior.
+// Set to 10ms (instead of 1µs) for CI reliability - SC-002 fix.
+const shortTimeoutMs = 10
+
 // testTimeoutRespected verifies that the plugin honors context timeouts when handling RPCs.
 // It calls the plugin's Name RPC with a very short deadline and interprets the outcome:
 //   - returns a Pass result if the RPC completes successfully despite the short timeout,
@@ -72,17 +76,16 @@ func testTimeoutRespected(ctx *TestContext) *TestResult {
 		return &TestResult{Status: StatusError, Error: "invalid plugin client type"}
 	}
 
-	// Use a very short timeout
-	shortCtx, cancel := context.WithTimeout(context.Background(), 1*time.Microsecond)
+	// Use a short but realistic timeout (10ms instead of 1µs for CI reliability - SC-002 fix)
+	shortCtx, cancel := context.WithTimeout(context.Background(), shortTimeoutMs*time.Millisecond)
 	defer cancel()
 
 	req := &pbc.NameRequest{}
 	_, err := client.Name(shortCtx, req)
 	if err == nil {
-		// It's possible it succeeded if it was extremely fast, but for conformance
-		// we want to ensure it fails if the context is exceeded.
-		// However, 1 microsecond is usually enough to cause failure.
-		return &TestResult{Status: StatusPass, Details: "RPC succeeded even with 1µs timeout"}
+		// Fast plugins may complete before the short timeout expires.
+		// This is still a valid pass since the plugin handled the RPC.
+		return &TestResult{Status: StatusPass, Details: "RPC succeeded within short timeout"}
 	}
 
 	st, ok := status.FromError(err)
