@@ -487,8 +487,10 @@ func resolveSKUAndRegion(provider string, properties map[string]string) (string,
 		region = mapping.ExtractRegion(properties)
 	}
 
-	// Fallback to environment variables for region if still empty
-	if region == "" {
+	// Fallback to AWS environment variables for region if still empty
+	// IMPORTANT: Only apply AWS-specific env vars to AWS resources to avoid
+	// incorrect region assignment for Azure/GCP resources (SC-001 fix)
+	if region == "" && strings.ToLower(provider) == "aws" {
 		if envReg := os.Getenv("AWS_REGION"); envReg != "" {
 			region = envReg
 		} else {

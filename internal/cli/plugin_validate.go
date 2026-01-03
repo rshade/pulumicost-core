@@ -12,6 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ErrPluginValidationFailed is returned when one or more plugins fail validation.
+// This replaces os.Exit(1) to allow proper testing and error handling (SC-002 fix).
+var ErrPluginValidationFailed = errors.New("one or more plugins failed validation")
+
 // NewPluginValidateCmd creates the plugin validate command for validating plugin installations.
 func NewPluginValidateCmd() *cobra.Command {
 	var targetPlugin string
@@ -182,8 +186,8 @@ func filterPlugins(
 //   - plugins: the list of plugins to validate.
 //
 // Returns:
-//   - error: always returns nil when it returns; the process may exit with status 1 if any
-//     plugin fails validation.
+//   - error: returns ErrPluginValidationFailed if any plugin fails validation,
+//     nil otherwise.
 func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.PluginInfo) error {
 	cmd.Printf("Validating %d plugin(s)...\n\n", len(plugins))
 
@@ -197,7 +201,7 @@ func runValidation(ctx context.Context, cmd *cobra.Command, plugins []registry.P
 	cmd.Printf("\nValidation complete: %d/%d plugins valid\n", validCount, len(plugins))
 
 	if validCount < len(plugins) {
-		os.Exit(1)
+		return ErrPluginValidationFailed
 	}
 	return nil
 }

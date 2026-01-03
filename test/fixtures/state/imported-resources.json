@@ -1,0 +1,95 @@
+{
+  "version": 3,
+  "deployment": {
+    "manifest": {
+      "time": "2025-12-20T12:00:00.000000000Z",
+      "magic": "3c3d7e8f9a0b7c5d8e6f5d4c3b2a1b",
+      "version": "v3.100.0"
+    },
+    "resources": [
+      {
+        "urn": "urn:pulumi:staging::import-stack::pulumi:pulumi:Stack::import-stack-staging",
+        "type": "pulumi:pulumi:Stack",
+        "custom": false
+      },
+      {
+        "urn": "urn:pulumi:staging::import-stack::pulumi:providers:aws::default_us-east-1",
+        "type": "pulumi:providers:aws",
+        "custom": true,
+        "id": "provider-import-456",
+        "inputs": {
+          "region": "us-east-1"
+        },
+        "outputs": {
+          "region": "us-east-1"
+        }
+      },
+      {
+        "urn": "urn:pulumi:staging::import-stack::aws:ec2/instance:Instance::imported-server",
+        "type": "aws:ec2/instance:Instance",
+        "custom": true,
+        "id": "i-import0123456789b",
+        "external": true,
+        "provider": "urn:pulumi:staging::import-stack::pulumi:providers:aws::default_us-east-1",
+        "inputs": {
+          "ami": "ami-imported1234567",
+          "instanceType": "m5.xlarge",
+          "tags": {
+            "Name": "imported-server",
+            "ImportedAt": "2025-12-20"
+          }
+        },
+        "outputs": {
+          "arn": "arn:aws:ec2:us-east-1:123456789012:instance/i-import0123456789b",
+          "instanceType": "m5.xlarge",
+          "publicIp": "3.14.159.26",
+          "privateIp": "10.0.2.50"
+        },
+        "created": "2025-12-20T12:00:00Z",
+        "modified": "2025-12-20T12:00:00Z"
+      },
+      {
+        "urn": "urn:pulumi:staging::import-stack::aws:elb/loadBalancer:LoadBalancer::imported-lb",
+        "type": "aws:elb/loadBalancer:LoadBalancer",
+        "custom": true,
+        "id": "imported-load-balancer",
+        "external": true,
+        "provider": "urn:pulumi:staging::import-stack::pulumi:providers:aws::default_us-east-1",
+        "inputs": {
+          "name": "imported-load-balancer",
+          "subnets": ["subnet-12345678", "subnet-87654321"]
+        },
+        "outputs": {
+          "arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/imported-load-balancer",
+          "dnsName": "imported-load-balancer-123456789.us-east-1.elb.amazonaws.com"
+        },
+        "created": "2025-12-20T12:05:00Z",
+        "modified": "2025-12-20T12:05:00Z"
+      },
+      {
+        "urn": "urn:pulumi:staging::import-stack::aws:ec2/instance:Instance::native-server",
+        "type": "aws:ec2/instance:Instance",
+        "custom": true,
+        "id": "i-native0123456789c",
+        "external": false,
+        "provider": "urn:pulumi:staging::import-stack::pulumi:providers:aws::default_us-east-1",
+        "inputs": {
+          "ami": "ami-native1234567890",
+          "instanceType": "t3.small",
+          "tags": {
+            "Name": "native-server",
+            "ManagedBy": "Pulumi"
+          }
+        },
+        "outputs": {
+          "arn": "arn:aws:ec2:us-east-1:123456789012:instance/i-native0123456789c",
+          "instanceType": "t3.small",
+          "publicIp": "52.24.36.48",
+          "privateIp": "10.0.2.100"
+        },
+        "created": "2025-12-15T09:00:00Z",
+        "modified": "2025-12-15T09:00:00Z"
+      }
+    ]
+  }
+}

@@ -1672,6 +1672,98 @@ func TestGetActualCost_ValidationFailure_EmptyResourceID(t *testing.T) {
 	}
 }
 
+// TestResolveSKUAndRegion_AWSRegionFallbackScope verifies that AWS_REGION and
+// AWS_DEFAULT_REGION environment variables are ONLY applied to AWS resources.
+// This is critical for SC-001 (CI reliability) - Azure/GCP resources should NOT
+// inherit AWS region values.
+func TestResolveSKUAndRegion_AWSRegionFallbackScope(t *testing.T) {
+	tests := []struct {
+		name           string
+		provider       string
+		properties     map[string]string
+		envVars        map[string]string
+		expectedRegion string
+	}{
+		{
+			name:       "AWS resource uses AWS_REGION when no region in properties",
+			provider:   "aws",
+			properties: map[string]string{"instanceType": "t3.micro"},
+			envVars:    map[string]string{"AWS_REGION": "us-east-1"},
+			// AWS should use env var fallback
+			expectedRegion: "us-east-1",
+		},
+		{
+			name:       "Azure resource does NOT use AWS_REGION fallback",
+			provider:   "azure",
+			properties: map[string]string{"vmSize": "Standard_B1s"},
+			envVars:    map[string]string{"AWS_REGION": "us-east-1"},
+			// Azure should NOT inherit AWS region - returns empty (no Azure region specified)
+			expectedRegion: "",
+		},
+		{
+			name:       "GCP resource does NOT use AWS_REGION fallback",
+			provider:   "gcp",
+			properties: map[string]string{"machineType": "n1-standard-1"},
+			envVars:    map[string]string{"AWS_REGION": "us-east-1"},
+			// GCP should NOT inherit AWS region - returns empty (no GCP region specified)
+			expectedRegion: "",
+		},
+		{
+			name:       "Google-native resource does NOT use AWS_REGION fallback",
+			provider:   "google-native",
+			properties: map[string]string{"machineType": "e2-micro"},
+			envVars:    map[string]string{"AWS_REGION": "eu-west-2", "AWS_DEFAULT_REGION": "eu-central-1"},
+			// Google-native should NOT inherit AWS region
+			expectedRegion: "",
+		},
+		{
+			name:       "Azure resource with explicit region ignores AWS_REGION",
+			provider:   "azure",
+			properties: map[string]string{"vmSize": "Standard_B1s", "location": "eastus"},
+			envVars:    map[string]string{"AWS_REGION": "us-east-1"},
+			// Azure should use its own location, not AWS_REGION
+			expectedRegion: "eastus",
+		},
+		{
+			name:       "AWS resource with explicit region ignores AWS_REGION env var",
+			provider:   "aws",
+			properties: map[string]string{"instanceType": "t3.micro", "region": "eu-west-2"},
+			envVars:    map[string]string{"AWS_REGION": "us-east-1"},
+			// Explicit region takes precedence over env var
+			expectedRegion: "eu-west-2",
+		},
+		{
+			name:           "AWS resource uses AWS_DEFAULT_REGION when AWS_REGION not set",
+			provider:       "aws",
+			properties:     map[string]string{"instanceType": "t3.micro"},
+			envVars:        map[string]string{"AWS_DEFAULT_REGION": "ap-southeast-1"},
+			expectedRegion: "ap-southeast-1",
+		},
+		{
+			name:           "Azure resource with no region and no AWS env vars",
+			provider:       "azure",
+			properties:     map[string]string{"vmSize": "Standard_B1s"},
+			envVars:        map[string]string{},
+			expectedRegion: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up environment variables
+			for key, val := range tt.envVars {
+				t.Setenv(key, val)
+			}
+
+			_, region := resolveSKUAndRegion(tt.provider, tt.properties)
+			if region != tt.expectedRegion {
+				t.Errorf("resolveSKUAndRegion(%q) region = %q, want %q",
+					tt.provider, region, tt.expectedRegion)
+			}
+		})
+	}
+}
+
 // T011: TestGetActualCost_ValidationFailure_InvalidTimeRange verifies that
 // requests with end time before start time trigger pre-flight validation failure.
 func TestGetActualCost_ValidationFailure_InvalidTimeRange(t *testing.T) {

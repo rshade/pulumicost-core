@@ -66,6 +66,7 @@ func RenderActualCostOutput(
 	outputFormat string,
 	resultWithErrors *engine.CostResultWithErrors,
 	groupBy string,
+	estimateConfidence bool,
 ) error {
 	fmtType := engine.OutputFormat(config.GetOutputFormat(outputFormat))
 
@@ -76,7 +77,7 @@ func RenderActualCostOutput(
 
 	if fmtType == engine.OutputJSON || fmtType == engine.OutputNDJSON {
 		// Use existing logic for JSON/NDJSON (handling aggregation inside)
-		return renderActualCostOutput(cmd.OutOrStdout(), fmtType, resultWithErrors.Results, groupBy)
+		return renderActualCostOutput(cmd.OutOrStdout(), fmtType, resultWithErrors.Results, groupBy, estimateConfidence)
 	}
 
 	mode := tui.DetectOutputMode(false, false, false)
@@ -87,7 +88,7 @@ func RenderActualCostOutput(
 	case tui.OutputModeStyled, tui.OutputModePlain:
 		fallthrough
 	default:
-		if err := renderActualCostOutput(cmd.OutOrStdout(), engine.OutputTable, resultWithErrors.Results, groupBy); err != nil {
+		if err := renderActualCostOutput(cmd.OutOrStdout(), engine.OutputTable, resultWithErrors.Results, groupBy, estimateConfidence); err != nil {
 			return err
 		}
 		displayErrorSummary(cmd, resultWithErrors, engine.OutputTable)
