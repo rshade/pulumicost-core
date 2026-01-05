@@ -8,9 +8,9 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/oklog/ulid/v2 v2.1.1
-	github.com/pulumi/pulumi/sdk/v3 v3.213.0
+	github.com/pulumi/pulumi/sdk/v3 v3.214.1
 	github.com/rs/zerolog v1.34.0
-	github.com/rshade/pulumicost-spec v0.4.11
+	github.com/rshade/pulumicost-spec v0.4.12
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/term v0.38.0
@@ -21,6 +21,8 @@ require (
 )
 
 require (
+	connectrpc.com/connect v1.19.1 // indirect
+	connectrpc.com/grpchealth v1.4.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
