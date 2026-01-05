@@ -263,7 +263,7 @@ functionality. Users need basic actual cost estimation working first.
 
 ## References
 
-- Research Document: `GetActualCost.md`
+- Research Document: `research.md`
 - Existing State Parser: `internal/ingest/state.go`
 - [GitHub Actions Run #20610627111](https://github.com/rshade/pulumicost-core/actions/runs/20610627111)
 - [Pulumi v3.60.0 Release Notes](https://github.com/pulumi/pulumi/discussions/12529)
