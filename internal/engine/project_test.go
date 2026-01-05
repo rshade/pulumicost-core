@@ -3,6 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"io"
+	"strings"
 	"testing"
 )
 
@@ -106,7 +107,7 @@ func TestRenderActualCostResults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RenderActualCostResults(io.Discard, tt.format, tt.results)
+			err := RenderActualCostResults(io.Discard, tt.format, tt.results, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderActualCostResults() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -346,7 +347,7 @@ func TestRenderingWithNilResults(t *testing.T) {
 	})
 
 	t.Run("RenderActualCostResults with nil", func(t *testing.T) {
-		err := RenderActualCostResults(io.Discard, OutputJSON, nil)
+		err := RenderActualCostResults(io.Discard, OutputJSON, nil, false)
 		if err != nil {
 			t.Errorf("RenderActualCostResults with nil should not error: %v", err)
 		}
@@ -370,7 +371,7 @@ func TestRenderingWithEmptyResults(t *testing.T) {
 	})
 
 	t.Run("RenderActualCostResults with empty slice", func(t *testing.T) {
-		err := RenderActualCostResults(io.Discard, OutputTable, []CostResult{})
+		err := RenderActualCostResults(io.Discard, OutputTable, []CostResult{}, false)
 		if err != nil {
 			t.Errorf("RenderActualCostResults with empty should not error: %v", err)
 		}
@@ -437,6 +438,88 @@ func TestMultiProviderRendering(t *testing.T) {
 	})
 }
 
+// TestRenderBreakdowns_DeterministicOrder tests that renderBreakdowns produces deterministic output.
+// This is critical for SC-003 (deterministic output) to ensure CI tests pass reliably.
+func TestRenderBreakdowns_DeterministicOrder(t *testing.T) {
+	// Create aggregated results with multiple entries in each breakdown map.
+	// Map iteration order in Go is non-deterministic, so we need to verify
+	// that the output is sorted alphabetically regardless of insertion order.
+	aggregated := &AggregatedResults{
+		Summary: CostSummary{
+			TotalMonthly: 300.0,
+			TotalHourly:  0.41,
+			Currency:     "USD",
+			// Insert in non-alphabetical order to test sorting
+			ByProvider: map[string]float64{
+				"gcp":   100.0,
+				"aws":   150.0,
+				"azure": 50.0,
+			},
+			ByService: map[string]float64{
+				"rds":     50.0,
+				"ec2":     100.0,
+				"compute": 75.0,
+				"storage": 75.0,
+			},
+			ByAdapter: map[string]float64{
+				"kubecost":   200.0,
+				"local-spec": 100.0,
+			},
+		},
+		Resources: []CostResult{},
+	}
+
+	// Run the render function multiple times and verify output is identical
+	var outputs []string
+	for i := 0; i < 10; i++ {
+		var buf strings.Builder
+		renderBreakdowns(&buf, aggregated)
+		outputs = append(outputs, buf.String())
+	}
+
+	// All outputs should be identical
+	for i := 1; i < len(outputs); i++ {
+		if outputs[i] != outputs[0] {
+			t.Errorf("renderBreakdowns produced non-deterministic output on iteration %d", i)
+			t.Logf("Expected:\n%s", outputs[0])
+			t.Logf("Got:\n%s", outputs[i])
+		}
+	}
+
+	// Verify the output contains keys in alphabetical order
+	output := outputs[0]
+
+	// Check provider order: aws < azure < gcp
+	awsIdx := strings.Index(output, "aws:")
+	azureIdx := strings.Index(output, "azure:")
+	gcpIdx := strings.Index(output, "gcp:")
+	if awsIdx == -1 || azureIdx == -1 || gcpIdx == -1 {
+		t.Error("Expected all providers to be present in output")
+	} else if !(awsIdx < azureIdx && azureIdx < gcpIdx) {
+		t.Error("Providers not in alphabetical order (aws, azure, gcp)")
+	}
+
+	// Check service order: compute < ec2 < rds < storage
+	computeIdx := strings.Index(output, "compute:")
+	ec2Idx := strings.Index(output, "ec2:")
+	rdsIdx := strings.Index(output, "rds:")
+	storageIdx := strings.Index(output, "storage:")
+	if computeIdx == -1 || ec2Idx == -1 || rdsIdx == -1 || storageIdx == -1 {
+		t.Error("Expected all services to be present in output")
+	} else if !(computeIdx < ec2Idx && ec2Idx < rdsIdx && rdsIdx < storageIdx) {
+		t.Error("Services not in alphabetical order (compute, ec2, rds, storage)")
+	}
+
+	// Check adapter order: kubecost < local-spec
+	kubecostIdx := strings.Index(output, "kubecost:")
+	localSpecIdx := strings.Index(output, "local-spec:")
+	if kubecostIdx == -1 || localSpecIdx == -1 {
+		t.Error("Expected all adapters to be present in output")
+	} else if !(kubecostIdx < localSpecIdx) {
+		t.Error("Adapters not in alphabetical order (kubecost, local-spec)")
+	}
+}
+
 // TestLongResourceNameHandling tests truncation behavior.
 func TestLongResourceNameHandling(t *testing.T) {
 	longID := "i-" + string(make([]byte, 100))
@@ -457,5 +540,154 @@ func TestLongResourceNameHandling(t *testing.T) {
 	err := RenderResults(io.Discard, OutputTable, results)
 	if err != nil {
 		t.Errorf("Long resource name rendering failed: %v", err)
+	}
+}
+
+// TestRenderActualCostResultsWithConfidence tests confidence column in table output.
+func TestRenderActualCostResultsWithConfidence(t *testing.T) {
+	results := []CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			ResourceID:   "i-12345",
+			Adapter:      "kubecost",
+			Currency:     "USD",
+			TotalCost:    150.00,
+			CostPeriod:   "30 days",
+			Confidence:   ConfidenceHigh,
+		},
+		{
+			ResourceType: "aws:rds:Instance",
+			ResourceID:   "db-001",
+			Adapter:      "local-spec",
+			Currency:     "USD",
+			Monthly:      75.00,
+			Confidence:   ConfidenceMedium,
+		},
+		{
+			ResourceType: "aws:s3:Bucket",
+			ResourceID:   "my-bucket",
+			Adapter:      "local-spec",
+			Currency:     "USD",
+			Monthly:      5.00,
+			Confidence:   ConfidenceLow,
+		},
+	}
+
+	var buf strings.Builder
+	err := RenderActualCostResults(&buf, OutputTable, results, true)
+	if err != nil {
+		t.Fatalf("RenderActualCostResults with confidence failed: %v", err)
+	}
+
+	output := buf.String()
+
+	// Check header contains CONFIDENCE column
+	if !strings.Contains(output, "Confidence") {
+		t.Error("Expected 'Confidence' header in table output")
+	}
+
+	// Check confidence values appear in output
+	if !strings.Contains(output, "HIGH") {
+		t.Error("Expected 'HIGH' confidence in output")
+	}
+	if !strings.Contains(output, "MEDIUM") {
+		t.Error("Expected 'MEDIUM' confidence in output")
+	}
+	if !strings.Contains(output, "LOW") {
+		t.Error("Expected 'LOW' confidence in output")
+	}
+}
+
+// TestRenderActualCostResultsWithConfidenceJSON tests confidence field in JSON output.
+func TestRenderActualCostResultsWithConfidenceJSON(t *testing.T) {
+	results := []CostResult{
+		{
+			ResourceType: "aws:ec2:Instance",
+			ResourceID:   "i-12345",
+			Adapter:      "kubecost",
+			Currency:     "USD",
+			TotalCost:    150.00,
+			Confidence:   ConfidenceHigh,
+		},
+		{
+			ResourceType: "aws:rds:Instance",
+			ResourceID:   "db-001",
+			Adapter:      "local-spec",
+			Currency:     "USD",
+			Monthly:      75.00,
+			Confidence:   ConfidenceLow,
+		},
+	}
+
+	var buf strings.Builder
+	err := RenderActualCostResults(&buf, OutputJSON, results, true)
+	if err != nil {
+		t.Fatalf("RenderActualCostResults with confidence (JSON) failed: %v", err)
+	}
+
+	output := buf.String()
+
+	// Parse JSON to verify confidence field
+	var parsed []CostResult
+	if err := json.Unmarshal([]byte(output), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON output: %v", err)
+	}
+
+	if len(parsed) != 2 {
+		t.Fatalf("Expected 2 results, got %d", len(parsed))
+	}
+
+	// Verify confidence is preserved in JSON
+	if parsed[0].Confidence != ConfidenceHigh {
+		t.Errorf("Expected first result confidence to be HIGH, got %v", parsed[0].Confidence)
+	}
+	if parsed[1].Confidence != ConfidenceLow {
+		t.Errorf("Expected second result confidence to be LOW, got %v", parsed[1].Confidence)
+	}
+}
+
+// TestConfidenceInCostResultJSON tests that Confidence is properly serialized in CostResult JSON.
+func TestConfidenceInCostResultJSON(t *testing.T) {
+	result := CostResult{
+		ResourceType: "aws:ec2:Instance",
+		ResourceID:   "i-12345",
+		Monthly:      50.00,
+		Currency:     "USD",
+		Confidence:   ConfidenceMedium,
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("Failed to marshal CostResult: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// Verify confidence field is present
+	if !strings.Contains(jsonStr, `"confidence":"medium"`) {
+		t.Errorf("Expected confidence field in JSON, got: %s", jsonStr)
+	}
+}
+
+// TestConfidenceOmittedWhenUnknown tests that empty confidence is omitted in JSON.
+func TestConfidenceOmittedWhenUnknown(t *testing.T) {
+	result := CostResult{
+		ResourceType: "aws:ec2:Instance",
+		ResourceID:   "i-12345",
+		Monthly:      50.00,
+		Currency:     "USD",
+		Confidence:   ConfidenceUnknown, // empty string
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("Failed to marshal CostResult: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// Verify confidence field is omitted (omitempty behavior)
+	if strings.Contains(jsonStr, `"confidence"`) {
+		t.Errorf("Expected confidence to be omitted when unknown, got: %s", jsonStr)
 	}
 }

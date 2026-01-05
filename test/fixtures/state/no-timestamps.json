@@ -1,0 +1,63 @@
+{
+  "version": 3,
+  "deployment": {
+    "manifest": {
+      "time": "2023-01-15T08:00:00.000000000Z",
+      "magic": "1a1b9c9d9e0a8b4c8d5c4b3a2b1a0b",
+      "version": "v3.50.0"
+    },
+    "resources": [
+      {
+        "urn": "urn:pulumi:prod::legacy-stack::pulumi:pulumi:Stack::legacy-stack-prod",
+        "type": "pulumi:pulumi:Stack",
+        "custom": false
+      },
+      {
+        "urn": "urn:pulumi:prod::legacy-stack::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "custom": true,
+        "id": "provider-legacy-123",
+        "inputs": {
+          "region": "us-west-2"
+        },
+        "outputs": {
+          "region": "us-west-2"
+        }
+      },
+      {
+        "urn": "urn:pulumi:prod::legacy-stack::aws:ec2/instance:Instance::legacy-server",
+        "type": "aws:ec2/instance:Instance",
+        "custom": true,
+        "id": "i-legacy0123456789a",
+        "external": false,
+        "provider": "urn:pulumi:prod::legacy-stack::pulumi:providers:aws::default",
+        "inputs": {
+          "ami": "ami-legacy1234567890",
+          "instanceType": "t2.large"
+        },
+        "outputs": {
+          "arn": "arn:aws:ec2:us-west-2:123456789012:instance/i-legacy0123456789a",
+          "instanceType": "t2.large",
+          "publicIp": "52.88.77.66"
+        }
+      },
+      {
+        "urn": "urn:pulumi:prod::legacy-stack::aws:rds/instance:Instance::legacy-db",
+        "type": "aws:rds/instance:Instance",
+        "custom": true,
+        "id": "legacy-database",
+        "external": false,
+        "provider": "urn:pulumi:prod::legacy-stack::pulumi:providers:aws::default",
+        "inputs": {
+          "instanceClass": "db.r5.large",
+          "engine": "mysql",
+          "engineVersion": "8.0"
+        },
+        "outputs": {
+          "arn": "arn:aws:rds:us-west-2:123456789012:db:legacy-database",
+          "endpoint": "legacy-database.xyz789.us-west-2.rds.amazonaws.com:3306"
+        }
+      }
+    ]
+  }
+}

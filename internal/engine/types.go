@@ -177,6 +177,12 @@ type CostResult struct {
 	// Positive values indicate cost increase, negative values indicate decrease.
 	// The baseline depends on context (e.g., previous period for actual costs, budget for projected costs).
 	Delta float64 `json:"delta,omitempty"`
+
+	// Confidence indicates the reliability level of this cost estimate.
+	// HIGH: Real billing data from cloud APIs
+	// MEDIUM: Runtime-based estimate from Pulumi timestamps
+	// LOW: Imported resource (timestamp may be inaccurate)
+	Confidence Confidence `json:"confidence,omitempty"`
 }
 
 // ErrorDetail captures information about a failed resource cost calculation.
@@ -226,12 +232,13 @@ func (c *CostResultWithErrors) ErrorSummary() string {
 
 // ActualCostRequest contains parameters for querying historical actual costs with filtering and grouping.
 type ActualCostRequest struct {
-	Resources []ResourceDescriptor
-	From      time.Time
-	To        time.Time
-	Adapter   string
-	GroupBy   string
-	Tags      map[string]string
+	Resources          []ResourceDescriptor
+	From               time.Time
+	To                 time.Time
+	Adapter            string
+	GroupBy            string
+	Tags               map[string]string
+	EstimateConfidence bool // Show confidence level in output
 }
 
 // CrossProviderAggregation represents daily/monthly cost aggregation across providers.

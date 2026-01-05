@@ -97,7 +97,7 @@ func TestActualCost_FilterByTag(t *testing.T) {
 	// Filter by env=prod tag
 	output, err := h.Execute(
 		"cost", "actual", "--pulumi-json", planFile,
-		"--from", "2025-01-01",
+		"--from", "2025-01-01", "--to", "2025-12-31",
 		"--filter", "tag:env=prod", "--output", "json",
 	)
 	require.NoError(t, err)
@@ -128,7 +128,7 @@ func TestActualCost_FilterByTagAndType(t *testing.T) {
 	// Test filter combined with group-by
 	output, err := h.Execute(
 		"cost", "actual", "--pulumi-json", planFile,
-		"--from", "2025-01-01",
+		"--from", "2025-01-01", "--to", "2025-12-31",
 		"--filter", "tag:env=prod", "--group-by", "type", "--output", "json",
 	)
 	require.NoError(t, err)

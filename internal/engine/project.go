@@ -67,17 +67,55 @@ func RenderResults(writer io.Writer, format OutputFormat, results []CostResult) 
 // results to be rendered.
 //
 // It returns an error if the selected renderer fails or if the format is unsupported.
-func RenderActualCostResults(writer io.Writer, format OutputFormat, results []CostResult) error {
+func RenderActualCostResults(writer io.Writer, format OutputFormat, results []CostResult, showConfidence bool) error {
 	switch format {
 	case OutputTable:
-		return renderActualCostTable(writer, results)
+		return renderActualCostTable(writer, results, showConfidence)
 	case OutputJSON:
-		return renderJSONCostResults(writer, results)
+		return RenderActualCostJSON(writer, results, showConfidence)
 	case OutputNDJSON:
-		return renderNDJSON(writer, results)
+		return RenderActualCostNDJSON(writer, results, showConfidence)
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
+}
+
+// RenderActualCostJSON renders actual cost results as a JSON array with optional confidence field.
+func RenderActualCostJSON(writer io.Writer, results []CostResult, showConfidence bool) error {
+	// If not showing confidence, clear it from all results before encoding
+	if !showConfidence {
+		cleanedResults := make([]CostResult, len(results))
+		for i, result := range results {
+			cleanedResults[i] = result
+			cleanedResults[i].Confidence = ConfidenceUnknown
+		}
+		encoder := json.NewEncoder(writer)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(cleanedResults)
+	}
+
+	encoder := json.NewEncoder(writer)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(results)
+}
+
+// RenderActualCostNDJSON renders actual cost results as NDJSON with optional confidence field.
+func RenderActualCostNDJSON(writer io.Writer, results []CostResult, showConfidence bool) error {
+	encoder := json.NewEncoder(writer)
+	for _, result := range results {
+		if !showConfidence {
+			resultCopy := result
+			resultCopy.Confidence = ConfidenceUnknown
+			if err := encoder.Encode(resultCopy); err != nil {
+				return err
+			}
+		} else {
+			if err := encoder.Encode(result); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // RenderCrossProviderAggregation renders cross-provider aggregation data using the specified output format.
@@ -164,31 +202,49 @@ func renderSummary(w io.Writer, aggregated *AggregatedResults) {
 // receives the formatted output and aggregated provides the Summary (ByProvider,
 // ByService, ByAdapter and Currency) used for the breakdowns.
 func renderBreakdowns(w io.Writer, aggregated *AggregatedResults) {
-	// Print breakdown by provider
+	// Print breakdown by provider (sorted for deterministic output - SC-003 fix)
 	if len(aggregated.Summary.ByProvider) > 0 {
 		fmt.Fprintf(w, "BY PROVIDER\n")
 		fmt.Fprintf(w, "-----------\n")
-		for provider, cost := range aggregated.Summary.ByProvider {
+		providers := make([]string, 0, len(aggregated.Summary.ByProvider))
+		for provider := range aggregated.Summary.ByProvider {
+			providers = append(providers, provider)
+		}
+		sort.Strings(providers)
+		for _, provider := range providers {
+			cost := aggregated.Summary.ByProvider[provider]
 			fmt.Fprintf(w, "%s:\t%.2f %s\n", provider, cost, aggregated.Summary.Currency)
 		}
 		fmt.Fprintf(w, "\n")
 	}
 
-	// Print breakdown by service
+	// Print breakdown by service (sorted for deterministic output - SC-003 fix)
 	if len(aggregated.Summary.ByService) > 0 {
 		fmt.Fprintf(w, "BY SERVICE\n")
 		fmt.Fprintf(w, "----------\n")
-		for service, cost := range aggregated.Summary.ByService {
+		services := make([]string, 0, len(aggregated.Summary.ByService))
+		for service := range aggregated.Summary.ByService {
+			services = append(services, service)
+		}
+		sort.Strings(services)
+		for _, service := range services {
+			cost := aggregated.Summary.ByService[service]
 			fmt.Fprintf(w, "%s:\t%.2f %s\n", service, cost, aggregated.Summary.Currency)
 		}
 		fmt.Fprintf(w, "\n")
 	}
 
-	// Print breakdown by adapter
+	// Print breakdown by adapter (sorted for deterministic output - SC-003 fix)
 	if len(aggregated.Summary.ByAdapter) > 0 {
 		fmt.Fprintf(w, "BY ADAPTER\n")
 		fmt.Fprintf(w, "----------\n")
-		for adapter, cost := range aggregated.Summary.ByAdapter {
+		adapters := make([]string, 0, len(aggregated.Summary.ByAdapter))
+		for adapter := range aggregated.Summary.ByAdapter {
+			adapters = append(adapters, adapter)
+		}
+		sort.Strings(adapters)
+		for _, adapter := range adapters {
+			cost := aggregated.Summary.ByAdapter[adapter]
 			fmt.Fprintf(w, "%s:\t%.2f %s\n", adapter, cost, aggregated.Summary.Currency)
 		}
 		fmt.Fprintf(w, "\n")
@@ -293,11 +349,12 @@ func formatResourceNotes(result CostResult) string {
 // flushes the internal tabwriter.
 //
 // Parameters:
-//   - writer: destination for the rendered table output.
+//   - writer: destination for rendered table output.
 //   - results: slice of CostResult values to render.
+//   - showConfidence: whether to include confidence column.
 //
 // Returns an error if flushing the tabwriter fails.
-func renderActualCostTable(writer io.Writer, results []CostResult) error {
+func renderActualCostTable(writer io.Writer, results []CostResult, showConfidence bool) error {
 	w := tabwriter.NewWriter(writer, 0, 0, defaultTabPadding, ' ', 0)
 
 	// Check if we have actual cost data to determine appropriate headers
@@ -309,10 +366,10 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 		}
 	}
 
-	renderActualCostHeader(w, hasActualCosts)
+	renderActualCostHeader(w, hasActualCosts, showConfidence)
 
 	for _, result := range results {
-		renderActualCostRow(w, result, hasActualCosts)
+		renderActualCostRow(w, result, hasActualCosts, showConfidence)
 	}
 
 	return w.Flush()
@@ -321,14 +378,36 @@ func renderActualCostTable(writer io.Writer, results []CostResult) error {
 // renderActualCostHeader writes the table header for actual-cost output to w.
 // If hasActualCosts is true it writes columns for Total Cost and Period;
 // otherwise it writes a header for Projected Monthly values.
-func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
+// If showConfidence is true, a Confidence column is added.
+func renderActualCostHeader(w io.Writer, hasActualCosts bool, showConfidence bool) {
+	headers, separators := buildActualCostHeaderColumns(hasActualCosts, showConfidence)
+	fmt.Fprintln(w, strings.Join(headers, "\t"))
+	fmt.Fprintln(w, strings.Join(separators, "\t"))
+}
+
+// buildActualCostHeaderColumns returns the header labels and separator lines
+// for actual cost table output based on the display options.
+func buildActualCostHeaderColumns(hasActualCosts bool, showConfidence bool) ([]string, []string) {
+	headers := []string{"Resource", "Adapter"}
+	separators := []string{"--------", "-------"}
+
 	if hasActualCosts {
-		fmt.Fprintln(w, "Resource\tAdapter\tTotal Cost\tPeriod\tCurrency\tNotes")
-		fmt.Fprintln(w, "--------\t-------\t----------\t------\t--------\t-----")
+		headers = append(headers, "Total Cost", "Period")
+		separators = append(separators, "----------", "------")
 	} else {
-		fmt.Fprintln(w, "Resource\tAdapter\tProjected Monthly\tCurrency\tNotes")
-		fmt.Fprintln(w, "--------\t-------\t-----------------\t--------\t-----")
+		headers = append(headers, "Projected Monthly")
+		separators = append(separators, "-----------------")
 	}
+
+	if showConfidence {
+		headers = append(headers, "Confidence")
+		separators = append(separators, "----------")
+	}
+
+	headers = append(headers, "Currency", "Notes")
+	separators = append(separators, "--------", "-----")
+
+	return headers, separators
 }
 
 // renderActualCostRow writes a single row for a cost result into the actual-cost table.
@@ -341,6 +420,7 @@ func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 //   - result: the CostResult to render.
 //   - hasActualCosts: when true, the row contains Total Cost and Period columns; when false,
 //     the row contains the Projected Monthly column.
+//   - showConfidence: when true, includes a Confidence column in the output.
 //
 // Behavior details:
 //   - If hasActualCosts is true, the Total Cost column shows result.TotalCost formatted with
@@ -350,42 +430,62 @@ func renderActualCostHeader(w io.Writer, hasActualCosts bool) {
 //   - If hasActualCosts is false, the row shows result.Monthly formatted with two decimals.
 //   - The Currency and Notes columns are always emitted. Notes include existing notes and a
 //     bracketed list of sustainability metrics when present.
-func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool) {
-	resource := fmt.Sprintf("%s/%s", result.ResourceType, result.ResourceID)
+func renderActualCostRow(w io.Writer, result CostResult, hasActualCosts bool, showConfidence bool) {
+	resource := formatResourceName(result.ResourceType, result.ResourceID)
+	notes := formatResourceNotes(result)
+	columns := buildActualCostRowColumns(result, resource, notes, hasActualCosts, showConfidence)
+	fmt.Fprintln(w, strings.Join(columns, "\t"))
+}
+
+// formatResourceName formats the resource name as "ResourceType/ResourceID",
+// truncating with ellipsis if it exceeds maxResourceDisplayLen.
+func formatResourceName(resourceType, resourceID string) string {
+	resource := fmt.Sprintf("%s/%s", resourceType, resourceID)
 	if len(resource) > maxResourceDisplayLen {
 		resource = resource[:maxResourceDisplayLen-len(truncationEllipsis)] + truncationEllipsis
 	}
+	return resource
+}
 
-	notes := formatResourceNotes(result)
+// buildActualCostRowColumns constructs the column values for an actual cost row
+// based on the display options.
+func buildActualCostRowColumns(
+	result CostResult,
+	resource, notes string,
+	hasActualCosts, showConfidence bool,
+) []string {
+	columns := []string{resource, result.Adapter}
 
 	if hasActualCosts {
-		costDisplay := fmt.Sprintf("%.2f", result.TotalCost)
-		if result.TotalCost == 0 && result.Monthly > 0 {
-			costDisplay = fmt.Sprintf("%.2f (est)", result.Monthly)
-		}
-
-		period := result.CostPeriod
-		if period == "" {
-			period = "monthly (est)"
-		}
-
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			resource,
-			result.Adapter,
-			costDisplay,
-			period,
-			result.Currency,
-			notes,
-		)
+		columns = append(columns, formatCostDisplay(result), formatPeriodDisplay(result))
 	} else {
-		fmt.Fprintf(w, "%s\t%s\t%.2f\t%s\t%s\n",
-			resource,
-			result.Adapter,
-			result.Monthly,
-			result.Currency,
-			notes,
-		)
+		columns = append(columns, fmt.Sprintf("%.2f", result.Monthly))
 	}
+
+	if showConfidence {
+		columns = append(columns, result.Confidence.DisplayLabel())
+	}
+
+	columns = append(columns, result.Currency, notes)
+	return columns
+}
+
+// formatCostDisplay formats the cost value for display,
+// using estimated value if actual cost is zero but monthly is available.
+func formatCostDisplay(result CostResult) string {
+	if result.TotalCost == 0 && result.Monthly > 0 {
+		return fmt.Sprintf("%.2f (est)", result.Monthly)
+	}
+	return fmt.Sprintf("%.2f", result.TotalCost)
+}
+
+// formatPeriodDisplay returns the period string for display,
+// defaulting to "monthly (est)" if empty.
+func formatPeriodDisplay(result CostResult) string {
+	if result.CostPeriod == "" {
+		return "monthly (est)"
+	}
+	return result.CostPeriod
 }
 
 // renderJSON writes the aggregated results as indented JSON to the provided writer.
@@ -395,18 +495,6 @@ func renderJSON(writer io.Writer, aggregated *AggregatedResults) error {
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(aggregated)
-}
-
-// renderJSONCostResults writes the provided cost results as pretty-printed JSON to the specified writer.
-//
-// writer is the destination for the JSON output.
-// results is the slice of CostResult values to be encoded.
-//
-// It returns any error encountered while encoding/writing the JSON.
-func renderJSONCostResults(writer io.Writer, results []CostResult) error {
-	encoder := json.NewEncoder(writer)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(results)
 }
 
 // renderNDJSON writes each CostResult in results as a separate JSON object on its own line to stdout,
@@ -555,7 +643,7 @@ func renderNDJSONCrossProvider(writer io.Writer, aggregations []CrossProviderAgg
 // For unknown or unmapped codes, it returns the original currency code.
 func getCurrencySymbol(currency string) string {
 	switch currency {
-	case "USD":
+	case defaultCurrency: // "USD"
 		return "$"
 	case "EUR":
 		return "€"

@@ -1,8 +1,25 @@
-# pulumicost-core Strategic Roadmap
+---
+title: pulumicost-core Strategic Roadmap
+description: >-
+  Strategic roadmap mapping 1:1 with GitHub Issues, outlining the evolution
+  of pulumicost-core while adhering to technical guardrails.
+layout: docs
+---
 
 This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the
 evolution of `pulumicost-core` while strictly adhering to the technical
 guardrails in `CONTEXT.md`.
+
+## Table of Contents
+
+- [Past Milestones](#past-milestones-done)
+- [Immediate Priority](#immediate-priority-bug-fixes)
+- [Current Focus (v0.2.0)](#current-focus-v020---state-based-costs--plugin-maturity)
+- [Near-Term Vision (v0.3.0)](#near-term-vision-v030---budgeting--intelligence)
+- [Stability & Maintenance](#stability--maintenance)
+- [Documentation](#documentation)
+- [Icebox / Backlog](#icebox--backlog)
+- [Naming & Branding](#naming--branding)
 
 ## Past Milestones (Done)
 
@@ -15,51 +32,66 @@ guardrails in `CONTEXT.md`.
   - [x] Support for `Supports()` gRPC handler (#160, #165)
   - [x] CLI Filter Flag (#203)
   - [x] Test Infrastructure Hardening (#200)
-
-## Current Focus (v0.2.0 - Automation & Stability)
-
-- [ ] **Pulumi Analyzer Integration & E2E**
+- [x] **v0.1.3-v0.1.5: Analyzer & Recommendations**
   - [x] Core Analyzer implementation (#245, #229)
   - [x] E2E testing with Pulumi Automation API (#177, #238)
-  - [x] Comprehensive E2E tests for Analyzer integration
-        ([#228](https://github.com/rshade/pulumicost-core/issues/228))
-  - [ ] Cross-Repository Integration Test Workflow
-        ([#236](https://github.com/rshade/pulumicost-core/issues/236))
-  - [x] Add recommendations to analyzer diagnostics
-        ([#321](https://github.com/rshade/pulumicost-core/issues/321))
-- [ ] **Developer Experience & Tooling**
+  - [x] Comprehensive E2E tests for Analyzer integration (#228)
+  - [x] Add recommendations to analyzer diagnostics (#321)
+  - [x] Shared TUI package with Bubble Tea (#222, #258)
+  - [x] Pagination for large datasets (#225)
+  - [x] Plugin installer: remove old versions during install (#237)
+
+## Immediate Priority (Bug Fixes)
+
+- [ ] **Test Reliability & CI Stability**
+  - [ ] Fix nightly test failure
+        ([#378](https://github.com/rshade/pulumicost-core/issues/378))
+  - [ ] Fix AWS fallback scope and non-deterministic output
+        ([#324](https://github.com/rshade/pulumicost-core/issues/324))
+  - [ ] Fix E2E and Conformance test reliability issues
+        ([#323](https://github.com/rshade/pulumicost-core/issues/323))
+
+## Current Focus (v0.2.0 - State-Based Costs & Plugin Maturity)
+
+- [ ] **State-Based Actual Cost Estimation** *(Next Feature)*
+  - [ ] Implement state-based actual cost estimation for `cost actual`
+        ([#380](https://github.com/rshade/pulumicost-core/issues/380))
+  - [ ] Add `--estimate-confidence` flag for actual cost transparency
+        ([#333](https://github.com/rshade/pulumicost-core/issues/333))
+- [ ] **Plugin Ecosystem Maturity**
+  - [ ] Implement GetPluginInfo consumer-side requirements
+        ([#376](https://github.com/rshade/pulumicost-core/issues/376))
+        *Blocked on: pulumicost-spec #029 release*
   - [ ] Update Plugin Generator Templates (includes gRPC reflection)
         ([#248](https://github.com/rshade/pulumicost-core/issues/248))
+- [ ] **Developer Experience & Tooling**
   - [ ] Dynamic Data Recording via Integration Plans
         ([#275](https://github.com/rshade/pulumicost-core/issues/275))
+  - [ ] Cross-Repository Integration Test Workflow
+        ([#236](https://github.com/rshade/pulumicost-core/issues/236))
 - [ ] **Enhanced Visualization**
-  - [x] Shared TUI package with Bubble Tea (#222, #258)
   - [ ] Upgrade cost commands to enhanced TUI
         ([#218](https://github.com/rshade/pulumicost-core/issues/218))
 
-## Near-Term Vision (v0.3.0 - Intelligence & Sustainability)
+## Near-Term Vision (v0.3.0 - Budgeting & Intelligence)
 
-- [ ] **Budgeting & Cost Controls**
+- [ ] **Budgeting & Cost Controls** *(Budget Health Suite)*
   - [ ] Budget health calculation & threshold alerting
         ([#267](https://github.com/rshade/pulumicost-core/issues/267))
   - [ ] Provider filtering & summary aggregation for Budgets
         ([#263](https://github.com/rshade/pulumicost-core/issues/263))
-  - [ ] Flexible budget scoping (per-provider, per-resource)
-        ([#221](https://github.com/rshade/pulumicost-core/issues/221))
   - [ ] Budget status display in CLI
         ([#217](https://github.com/rshade/pulumicost-core/issues/217))
+  - [ ] Flexible budget scoping (per-provider, per-resource)
+        ([#221](https://github.com/rshade/pulumicost-core/issues/221))
+  - [ ] Exit codes for budget threshold violations
+        ([#219](https://github.com/rshade/pulumicost-core/issues/219))
+  - [ ] Namespace filtering & Kubecost metadata handling
+        ([#266](https://github.com/rshade/pulumicost-core/issues/266))
 - [ ] **Sustainability (GreenOps)**
-  - [x] Integrate Sustainability Metrics into Engine & TUI
-        ([#302](https://github.com/rshade/pulumicost-core/issues/302))
+  - [x] Integrate Sustainability Metrics into Engine & TUI (#302)
   - [ ] GreenOps Impact Equivalencies
         ([#303](https://github.com/rshade/pulumicost-core/issues/303))
-- [ ] **Actionable Insights**
-  - [ ] Recommendations command for FinOps optimization
-        ([#216](https://github.com/rshade/pulumicost-core/issues/216))
-  - [ ] Support extended RecommendationActionType enum
-        ([#298](https://github.com/rshade/pulumicost-core/issues/298))
-  - [ ] Add --estimate-confidence flag for actual cost transparency
-        ([#333](https://github.com/rshade/pulumicost-core/issues/333))
 - [ ] **Forecasting & Projections ("Cost Time Machine")**
       ([#364](https://github.com/rshade/pulumicost-core/issues/364))
   - [ ] Projection Math Engine (Linear/Exponential extrapolation)
@@ -83,27 +115,64 @@ guardrails in `CONTEXT.md`.
 ## Stability & Maintenance
 
 - [x] **Quality Gates**
-  - [x] Improve CLI package coverage to 75% (achieved 74.5%)
-        ([#269](https://github.com/rshade/pulumicost-core/issues/269))
-  - [x] Integration Test Suite for Plugin Communication
-        ([#235](https://github.com/rshade/pulumicost-core/issues/235))
-- [ ] **Performance & Scale**
-  - [x] Pagination for large datasets
-        ([#225](https://github.com/rshade/pulumicost-core/issues/225))
-  - [x] Plugin installer: remove old versions during install
-        ([#237](https://github.com/rshade/pulumicost-core/issues/237))
+  - [x] Improve CLI package coverage to 75% (achieved 74.5%) (#269)
+  - [x] Integration Test Suite for Plugin Communication (#235)
+- [ ] **Integration Testing Expansion**
+  - [ ] Integration tests for resource filtering and output formats
+        ([#319](https://github.com/rshade/pulumicost-core/issues/319))
+  - [ ] Integration tests for cross-provider aggregation
+        ([#251](https://github.com/rshade/pulumicost-core/issues/251))
+  - [ ] Integration tests for `--group-by` flag
+        ([#250](https://github.com/rshade/pulumicost-core/issues/250))
+  - [ ] Integration tests for `cost actual` command scenarios
+        ([#252](https://github.com/rshade/pulumicost-core/issues/252))
+  - [ ] Integration tests for config management commands
+        ([#254](https://github.com/rshade/pulumicost-core/issues/254))
+  - [ ] E2E test for actual cost command
+        ([#334](https://github.com/rshade/pulumicost-core/issues/334))
+- [ ] **Fuzzing & Security**
+  - [ ] Create fuzz test skeleton for JSON parser
+        ([#330](https://github.com/rshade/pulumicost-core/issues/330))
+  - [ ] Improve fuzzing seeds, benchmarks, and validation
+        ([#326](https://github.com/rshade/pulumicost-core/issues/326))
 - [ ] **CI/CD & Automation**
   - [ ] Harden Nightly Analysis Workflow
         ([#325](https://github.com/rshade/pulumicost-core/issues/325))
-  - [ ] Automated nightly failure analysis with OpenCode
-        ([#271](https://github.com/rshade/pulumicost-core/issues/271))
+- [ ] **Code Quality Refactoring**
+  - [ ] Extract shared applyFilters helper
+        ([#337](https://github.com/rshade/pulumicost-core/issues/337))
+  - [ ] Remove redundant .Ctx(ctx) calls in ingest/state.go
+        ([#338](https://github.com/rshade/pulumicost-core/issues/338))
+  - [ ] Pre-allocate slice in GetCustomResourcesWithContext
+        ([#339](https://github.com/rshade/pulumicost-core/issues/339))
+  - [ ] Simplify map conversion in state_test.go
+        ([#340](https://github.com/rshade/pulumicost-core/issues/340))
+
+## Documentation
+
+- [ ] **User & Developer Guides**
+  - [ ] Expand Support Channels documentation
+        ([#353](https://github.com/rshade/pulumicost-core/issues/353))
+  - [ ] Expand Troubleshooting Guide
+        ([#352](https://github.com/rshade/pulumicost-core/issues/352))
+  - [ ] Expand Configuration Guide
+        ([#351](https://github.com/rshade/pulumicost-core/issues/351))
+  - [ ] Expand Security Guide
+        ([#350](https://github.com/rshade/pulumicost-core/issues/350))
+  - [ ] Expand Deployment Overview
+        ([#349](https://github.com/rshade/pulumicost-core/issues/349))
+  - [ ] Update documentation for TUI features, budgets, and recommendations
+        ([#226](https://github.com/rshade/pulumicost-core/issues/226))
 
 ## Icebox / Backlog
 
 - [ ] Plugin integrity verification strategy (#164)
 - [ ] Webhook and email notifications for budget alerts (#220) - *Likely
       requires external service integration to maintain core statelessness*
-- [ ] Vantage Plugin Integration (#103) - *Deprioritized*
+- [ ] Accessibility options (--no-color, --plain, high contrast) (#224)
+- [ ] Configuration validation with helpful error messages (#223)
+- [ ] Registry should pick latest version when multiple versions installed (#140)
+- [ ] Plugin developer upgrade command for SDK migrations (#270) - *Research*
 - [ ] **Dependency Visualization ("Blast Radius")**
       ([#366](https://github.com/rshade/pulumicost-core/issues/366))
   - [ ] TUI: Interactive Dependency Tree view (consuming Lineage Metadata)
@@ -143,12 +212,14 @@ guardrails in `CONTEXT.md`.
   - *Objective*: Replace the dry `pulumicost` name with a stronger brand identity.
   - *Current Leader*: **Tailly** (CLI: `tally`)
     - *Vibe*: Developer-friendly, ecosystem-native (the "Tail" of the Pulumi Platypus).
-    - *Command*: `tally cost projected` (avoiding `tail` conflict, preserving clear verb structure).
+    - *Command*: `tally cost projected` (avoiding `tail` conflict while
+      preserving clear verb structure).
     - *Mascot Potential*: High (Platypus).
   - *Alternative*: **FinFocus** (CLI: `fin`)
     - *Vibe*: Enterprise, compliance-focused (FinOps FOCUS spec).
     - *Command*: `fin cost projected`.
-  - *Decision*: Leaning towards **Tailly** for better DX, while acknowledging **FinFocus** has stronger enterprise signaling.
+  - *Decision*: Leaning towards **Tailly** for better DX; **FinFocus**
+    offers stronger enterprise signaling.
 
 ### Strategic Research Items (The "Detailed Horizon")
 
