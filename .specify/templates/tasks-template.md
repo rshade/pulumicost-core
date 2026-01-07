@@ -12,6 +12,8 @@ description: "Task list template for feature implementation"
 
 **Completeness**: Per Constitution Principle VI (Implementation Completeness), all tasks MUST be fully implemented. Stub functions, placeholders, and TODO comments are strictly forbidden.
 
+**Documentation**: Per Constitution Principle IV, documentation (README, docs/) MUST be updated concurrently with implementation to prevent drift.
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`

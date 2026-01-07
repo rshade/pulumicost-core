@@ -1,4 +1,30 @@
 <!--
+Sync Impact Report - Constitution v1.4.0 (Documentation Synchronization)
+======================================================================
+
+Version Change: 1.3.0 → 1.4.0
+Change Type: Expanded guidance (MINOR)
+
+Changes Made:
+- Renamed Principle IV to "Documentation Synchronization & Quality"
+- Explicitly mandates `README.md` and `docs/` updates concurrently with implementation
+- Added rationale regarding documentation drift and single source of truth
+
+Rationale:
+- To prevent documentation drift where code evolves but docs lag behind
+- Ensures `README.md` and `docs/` are always accurate reflections of the codebase
+
+Templates Requiring Updates:
+- ✅ .specify/templates/plan-template.md (Updated Constitution Check)
+- ✅ .specify/templates/tasks-template.md (Added Principle IV reference)
+
+Follow-up TODOs:
+- None
+
+Date: 2026-01-07
+
+---
+
 Sync Impact Report - Constitution v1.3.0 (Implementation Completeness)
 ====================================================================
 
@@ -108,16 +134,19 @@ every commit. Platform-specific code MUST be isolated and documented.
 **Rationale**: Infrastructure teams use diverse operating systems.
 Cross-platform support is essential for adoption and prevents vendor lock-in.
 
-### IV. Documentation as Code
+### IV. Documentation Synchronization & Quality
 
 Every user-facing feature MUST have corresponding documentation before
-release. Documentation MUST include audience-specific guides (User, Developer,
-Architect, Business). All code examples in documentation MUST be tested.
-Documentation linting MUST pass in CI.
+release. `README.md` and the `docs/` directory MUST be updated concurrently
+with implementation to prevent documentation drift. Documentation MUST
+include audience-specific guides (User, Developer, Architect, Business).
+All code examples in documentation MUST be tested. Documentation linting
+MUST pass in CI.
 
-**Rationale**: Complex systems require comprehensive documentation.
-Audience-specific guides ensure all stakeholders can adopt and extend
-PulumiCost effectively.
+**Rationale**: Outdated documentation misleads users and erodes trust.
+Synchronous updates ensure the codebase and documentation remain a single
+source of truth. Audience-specific guides ensure all stakeholders can adopt
+and extend PulumiCost effectively.
 
 ### V. Protocol Stability
 
@@ -252,4 +281,4 @@ When using the Pulumi SDK (`github.com/pulumi/pulumi/sdk/v3`):
 - Earlier versions may have different package structures or missing types
 - This ensures compatibility with the current Pulumi Analyzer protocol
 
-**Version**: 1.3.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2025-12-23
+**Version**: 1.4.0 | **Ratified**: 2025-11-06 | **Last Amended**: 2026-01-07
