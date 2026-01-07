@@ -47,7 +47,7 @@ graph TD
 
 ### Plugin Lifecycle
 
-1. **Discovery**: Registry scans `~/.pulumicost/plugins/` directory
+1. **Discovery**: Registry scans `~/.pulumicost/plugins/` directory and selects the latest version of each plugin (using Semantic Versioning).
 2. **Launch**: Process launcher starts plugin binary
 3. **Connection**: gRPC connection establishment
 4. **Authentication**: Plugin authenticates with data source
@@ -72,6 +72,16 @@ graph TD
 ```
 
 ## Plugin Management
+
+### Plugin Versioning
+
+PulumiCost Core supports side-by-side installation of multiple plugin versions. When performing cost analysis or other operations, the system automatically selects the **latest version** of each installed plugin based on Semantic Versioning (SemVer) rules.
+
+- **Pre-release versions** (e.g., `v1.0.0-alpha`) are ignored if a stable version (e.g., `v1.0.0`) is present.
+- **Invalid versions** are skipped with a warning.
+- **Corrupted directories** are skipped with a warning.
+
+To use a specific older version, you must currently uninstall newer versions or use a custom plugin directory.
 
 ### List Available Plugins
 

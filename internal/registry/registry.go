@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/logging"
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
@@ -74,6 +75,65 @@ func (r *Registry) ListPlugins() ([]PluginInfo, error) {
 	return plugins, nil
 }
 
+// ListLatestPlugins scans the plugin directory and returns only the latest version
+// of each plugin. Plugins with same name in different locations are treated as
+// duplicates and the latest version across all locations is selected.
+// Returns warnings for invalid or corrupted plugins.
+func (r *Registry) ListLatestPlugins() ([]PluginInfo, []string, error) {
+	allPlugins, err := r.ListPlugins()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	latest := make(map[string]PluginInfo)
+	var warnings []string
+
+	for _, plugin := range allPlugins {
+		v, verErr := semver.NewVersion(plugin.Version)
+		if verErr != nil {
+			warnings = append(warnings,
+				fmt.Sprintf("Plugin %s version %s has invalid semver format: %v",
+					plugin.Name, plugin.Version, verErr))
+			continue
+		}
+
+		existing, ok := latest[plugin.Name]
+		if !ok {
+			latest[plugin.Name] = plugin
+			continue
+		}
+
+		vExisting, errExisting := semver.NewVersion(existing.Version)
+		if errExisting != nil || v.GreaterThan(vExisting) {
+			latest[plugin.Name] = plugin
+		}
+	}
+
+	result := make([]PluginInfo, 0, len(latest))
+	for _, plugin := range latest {
+		result = append(result, plugin)
+	}
+
+	return result, warnings, nil
+}
+
+// GetLatestPlugin returns the latest version of a specific plugin.
+// Returns (PluginInfo{}, false) if plugin not found or all versions are invalid.
+func (r *Registry) GetLatestPlugin(name string) (PluginInfo, bool) {
+	plugins, _, err := r.ListLatestPlugins()
+	if err != nil {
+		return PluginInfo{}, false
+	}
+
+	for _, plugin := range plugins {
+		if plugin.Name == name {
+			return plugin, true
+		}
+	}
+
+	return PluginInfo{}, false
+}
+
 func (r *Registry) findBinary(dir string) string {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -120,7 +180,7 @@ func (r *Registry) Open(
 		Str("plugin_root", r.root).
 		Msg("opening plugins")
 
-	plugins, err := r.ListPlugins()
+	plugins, warnings, err := r.ListLatestPlugins()
 	if err != nil {
 		log.Error().
 			Ctx(ctx).
@@ -130,11 +190,26 @@ func (r *Registry) Open(
 		return nil, nil, err
 	}
 
+	for _, warning := range warnings {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "registry").
+			Str("warning", warning).
+			Msg("plugin warning")
+	}
+
 	log.Debug().
 		Ctx(ctx).
 		Str("component", "registry").
 		Int("discovered_plugins", len(plugins)).
 		Msg("plugins discovered")
+
+	var filteredPlugins []PluginInfo
+	for _, plugin := range plugins {
+		if onlyName == "" || plugin.Name == onlyName {
+			filteredPlugins = append(filteredPlugins, plugin)
+		}
+	}
 
 	var clients []*pluginhost.Client
 	cleanup := func() {
@@ -143,17 +218,7 @@ func (r *Registry) Open(
 		}
 	}
 
-	for _, plugin := range plugins {
-		if onlyName != "" && plugin.Name != onlyName {
-			log.Debug().
-				Ctx(ctx).
-				Str("component", "registry").
-				Str("plugin_name", plugin.Name).
-				Str("filter", onlyName).
-				Msg("skipping plugin (filter mismatch)")
-			continue
-		}
-
+	for _, plugin := range filteredPlugins {
 		log.Debug().
 			Ctx(ctx).
 			Str("component", "registry").
@@ -188,7 +253,6 @@ func (r *Registry) Open(
 		Ctx(ctx).
 		Str("component", "registry").
 		Int("connected_plugins", len(clients)).
-		Int("total_discovered", len(plugins)).
 		Msg("plugin discovery complete")
 
 	return clients, cleanup, nil
