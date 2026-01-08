@@ -117,7 +117,7 @@ func TestListLatestPlugins_FSErrors(t *testing.T) {
 	}
 
 	dir := t.TempDir()
-	// Create a directory with no permissions
+	// Create an unreadable subdirectory (noPermDir)
 	noPermDir := filepath.Join(dir, "no-perm-plugin")
 	err := os.MkdirAll(noPermDir, 0000)
 	require.NoError(t, err, "Failed to create test directory")
@@ -131,14 +131,7 @@ func TestListLatestPlugins_FSErrors(t *testing.T) {
 	}
 
 	plugins, _, err := reg.ListLatestPlugins()
-	if err != nil {
-		// It might fail or just return empty depending on implementation
-		// Ideally it should not crash
-		t.Logf(
-			"ListLatestPlugins returned error (expected behavior for root read failure): %v",
-			err,
-		)
-	}
+	require.NoError(t, err)
 
 	assert.Len(t, plugins, 0, "expected 0 plugins from unreadable dir")
 }

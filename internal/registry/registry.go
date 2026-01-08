@@ -198,18 +198,18 @@ func (r *Registry) Open(
 			Msg("plugin warning")
 	}
 
-	log.Debug().
-		Ctx(ctx).
-		Str("component", "registry").
-		Int("discovered_plugins", len(plugins)).
-		Msg("latest plugins discovered after filtering")
-
 	var filteredPlugins []PluginInfo
 	for _, plugin := range plugins {
 		if onlyName == "" || plugin.Name == onlyName {
 			filteredPlugins = append(filteredPlugins, plugin)
 		}
 	}
+
+	log.Debug().
+		Ctx(ctx).
+		Str("component", "registry").
+		Int("discovered_plugins", len(filteredPlugins)).
+		Msg("latest plugins discovered after filtering")
 
 	var clients []*pluginhost.Client
 	cleanup := func() {
