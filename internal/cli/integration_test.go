@@ -16,6 +16,8 @@ import (
 func TestCLIIntegration(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("PULUMICOST_HOME", t.TempDir())
 	// Create a temporary directory for test files
 	tmpDir := t.TempDir()
 
@@ -84,7 +86,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost actual basic",
 			command: "cost",
-			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-01-01", "--to", "2025-12-31"},
+			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2026-01-01", "--to", "2026-01-31"},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				// Should succeed with explicit date range
 				require.NoError(t, err)
@@ -99,9 +101,9 @@ func TestCLIIntegration(t *testing.T) {
 				"--pulumi-json",
 				planPath,
 				"--from",
-				"2025-01-01",
+				"2026-01-01",
 				"--to",
-				"2025-01-31",
+				"2026-01-02",
 			},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				require.NoError(t, err)
@@ -116,9 +118,9 @@ func TestCLIIntegration(t *testing.T) {
 				"--pulumi-json",
 				planPath,
 				"--from",
-				"2025-01-01",
+				"2026-01-01",
 				"--to",
-				"2025-12-31",
+				"2026-01-31",
 				"--group-by",
 				"type",
 			},
@@ -408,9 +410,9 @@ func TestOutputFormats(t *testing.T) {
 					"--pulumi-json",
 					planPath,
 					"--from",
-					"2025-01-01",
+					"2026-01-01",
 					"--to",
-					"2025-12-31",
+					"2026-01-31",
 					"--output",
 					format,
 				},
@@ -469,8 +471,8 @@ func TestFlagCombinations(t *testing.T) {
 		cmd.SetArgs([]string{
 			"cost", "actual",
 			"--pulumi-json", planPath,
-			"--from", "2025-01-01",
-			"--to", "2025-01-31",
+			"--from", "2026-01-01",
+			"--to", "2026-01-02",
 			"--output", "json",
 			"--group-by", "type",
 			"--adapter", "test-adapter",
