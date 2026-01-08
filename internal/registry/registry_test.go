@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
 
@@ -117,9 +119,8 @@ func TestListLatestPlugins_FSErrors(t *testing.T) {
 	dir := t.TempDir()
 	// Create a directory with no permissions
 	noPermDir := filepath.Join(dir, "no-perm-plugin")
-	if err := os.MkdirAll(noPermDir, 0000); err != nil {
-		t.Fatal(err)
-	}
+	err := os.MkdirAll(noPermDir, 0000)
+	require.NoError(t, err, "Failed to create test directory")
 	defer func() {
 		_ = os.Chmod(noPermDir, 0755) // Cleanup
 	}()
@@ -139,28 +140,23 @@ func TestListLatestPlugins_FSErrors(t *testing.T) {
 		)
 	}
 
-	if len(plugins) != 0 {
-		t.Errorf("expected 0 plugins from unreadable dir, got %d", len(plugins))
-	}
+	assert.Len(t, plugins, 0, "expected 0 plugins from unreadable dir")
 }
 
 func TestListLatestPlugins_BinaryValidation(t *testing.T) {
 	dir := t.TempDir()
 
 	// 1. Missing Binary
-	if err := os.MkdirAll(filepath.Join(dir, "missing-bin", "v1.0.0"), 0755); err != nil {
-		t.Fatal(err)
-	}
+	err := os.MkdirAll(filepath.Join(dir, "missing-bin", "v1.0.0"), 0755)
+	require.NoError(t, err, "Failed to create test directory")
 
 	// 2. Non-executable Binary (Linux/Mac only)
 	if runtime.GOOS != "windows" {
 		nonExecDir := filepath.Join(dir, "non-exec", "v1.0.0")
-		if err := os.MkdirAll(nonExecDir, 0755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(filepath.Join(nonExecDir, "non-exec"), []byte("data"), 0644); err != nil {
-			t.Fatal(err)
-		}
+		err = os.MkdirAll(nonExecDir, 0755)
+		require.NoError(t, err, "Failed to create test directory")
+		err = os.WriteFile(filepath.Join(nonExecDir, "non-exec"), []byte("data"), 0644)
+		require.NoError(t, err, "Failed to create test binary")
 	}
 
 	reg := &Registry{
@@ -169,13 +165,8 @@ func TestListLatestPlugins_BinaryValidation(t *testing.T) {
 	}
 
 	plugins, _, err := reg.ListLatestPlugins()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if len(plugins) != 0 {
-		t.Errorf("expected 0 plugins (invalid binaries), got %d: %v", len(plugins), plugins)
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Empty(t, plugins, "expected 0 plugins (invalid binaries)")
 }
 
 func TestListLatestPlugins_Concurrency(t *testing.T) {
@@ -236,25 +227,14 @@ func TestRegistry_Open_WithWarnings(t *testing.T) {
 		defer cleanup()
 	}
 
-	if err != nil {
-		t.Fatalf("Open failed: %v", err)
-	}
+	require.NoError(t, err, "Open failed")
+	assert.Len(t, clients, 0, "Expected 0 clients (mock fails)")
 
-	if len(clients) != 0 {
-		t.Errorf("Expected 0 clients (mock fails), got %d", len(clients))
-	}
-
-	// Verify it attempted to launch the valid plugins
+	// Verify it attempted to launch valid plugins
 	// Expected valid plugins: "prerelease-test", "invalid-ver-test" (names from createEdgeCasePluginDir)
-	// The binary names are created by createPluginVersion as the plugin Name.
+	// The binary names are created by createPluginVersion as plugin Name.
 	expectedAttempts := []string{"prerelease-test", "invalid-ver-test"}
-	if len(mock.startCalled) != len(expectedAttempts) {
-		t.Errorf(
-			"Expected %d launch attempts, got %d",
-			len(expectedAttempts),
-			len(mock.startCalled),
-		)
-	}
+	assert.Len(t, mock.startCalled, len(expectedAttempts), "Expected %d launch attempts", len(expectedAttempts))
 
 	for _, name := range expectedAttempts {
 		// On windows it adds .exe
@@ -262,9 +242,7 @@ func TestRegistry_Open_WithWarnings(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			key += ".exe"
 		}
-		if mock.startCalled[key] != 1 {
-			t.Errorf("Expected 1 launch attempt for %s, got %d", key, mock.startCalled[key])
-		}
+		assert.Equal(t, 1, mock.startCalled[key], "launch attempts for %s", key)
 	}
 }
 
@@ -676,24 +654,15 @@ func verifyListLatestPluginsResult(
 	wantWarningsCount int,
 ) {
 	if wantErr && err == nil {
-		t.Error("expected error but got none")
+		require.Error(t, err, "expected error but got none")
 		return
 	}
 	if !wantErr && err != nil {
-		t.Errorf("unexpected error: %v", err)
+		require.NoError(t, err, "unexpected error")
 		return
 	}
-	if len(plugins) != wantCount {
-		t.Errorf("expected %d plugins, got %d", wantCount, len(plugins))
-	}
-	if len(warnings) != wantWarningsCount {
-		t.Errorf(
-			"expected %d warnings, got %d. Warnings: %v",
-			wantWarningsCount,
-			len(warnings),
-			warnings,
-		)
-	}
+	require.Len(t, plugins, wantCount, "expected %d plugins", wantCount)
+	require.Len(t, warnings, wantWarningsCount, "expected %d warnings. Warnings: %v", wantWarningsCount, warnings)
 	if wantPlugins != nil {
 		verifyExpectedPlugins(t, plugins, wantPlugins)
 	}

@@ -130,11 +130,12 @@ func TestGetGitHubToken(t *testing.T) {
 		t.Errorf("getGitHubToken() = %v, want test-token", token)
 	}
 
-	// Test with empty environment variable
+	// Test with empty environment variable (token is optional)
 	t.Setenv("GITHUB_TOKEN", "")
-	_ = getGitHubToken()
-	// This will either return empty or gh auth token result
-	// Just verify it doesn't panic
+	token = getGitHubToken()
+	if token != "" {
+		t.Errorf("getGitHubToken() with empty env = %v, want empty string", token)
+	}
 }
 
 func TestConstants(t *testing.T) {

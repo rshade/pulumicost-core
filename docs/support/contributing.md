@@ -1,5 +1,6 @@
 ---
 title: Contributing to PulumiCost Core
+description: Contributing guidelines for PulumiCost Core
 layout: default
 ---
 
@@ -231,9 +232,13 @@ All specifications, plans, and templates are stored in the `.specify/` directory
     └── checklist-template.md
 ```
 
-**Important**: Review [.specify/memory/constitution.md](https://github.com/rshade/pulumicost-core/blob/main/.specify/memory/constitution.md)
-before starting any feature work. It defines the core principles and quality
-gates that all contributions must follow.
+**Important**: All feature work must follow these core principles and quality gates:
+
+1. **Statelessness**: Core must remain stateless - no persistent storage in-core
+2. **Plugin Protocol First**: Changes to functionality require spec updates in pulumicost-spec
+3. **Test Coverage**: Minimum 80% overall, 95% for critical paths
+4. **Documentation**: Exported symbols require docstrings
+5. **Code Quality**: Must pass golangci-lint, go vet, and gofmt checks
 
 ## Minor Bug Fixes
 
@@ -308,12 +313,12 @@ go test -fuzz=. -fuzztime=30s ./internal/ingest
 
 **Fuzz test locations:**
 
-| Package           | Test Function        | Target               |
-| ----------------- | -------------------- | -------------------- |
-| `internal/ingest` | `FuzzJSON`           | JSON parser          |
-| `internal/ingest` | `FuzzPulumiPlanParse`| Full plan parsing    |
-| `internal/spec`   | `FuzzYAML`           | YAML spec parsing    |
-| `internal/spec`   | `FuzzSpecFilename`   | Spec filename parser |
+| Package           | Test Function         | Target               |
+| ----------------- | --------------------- | -------------------- |
+| `internal/ingest` | `FuzzJSON`            | JSON parser          |
+| `internal/ingest` | `FuzzPulumiPlanParse` | Full plan parsing    |
+| `internal/spec`   | `FuzzYAML`            | YAML spec parsing    |
+| `internal/spec`   | `FuzzSpecFilename`    | Spec filename parser |
 
 **Seed corpus:**
 
@@ -342,14 +347,14 @@ go test -bench=BenchmarkScale1K -benchtime=10x -benchmem ./test/benchmarks/...
 
 **Available benchmarks:**
 
-| Benchmark                    | Description             | Target    |
-| ---------------------------- | ----------------------- | --------- |
-| `BenchmarkScale1K`           | 1,000 resources         | < 1s      |
-| `BenchmarkScale10K`          | 10,000 resources        | < 30s     |
-| `BenchmarkScale100K`         | 100,000 resources       | < 5min    |
-| `BenchmarkDeeplyNested`      | Deep nesting complexity | < 1s      |
-| `BenchmarkJSONParsing`       | JSON parsing at scale   | Baseline  |
-| `BenchmarkGeneratorOverhead` | Generator overhead      | Baseline  |
+| Benchmark                    | Description             | Target   |
+| ---------------------------- | ----------------------- | -------- |
+| `BenchmarkScale1K`           | 1,000 resources         | < 1s     |
+| `BenchmarkScale10K`          | 10,000 resources        | < 30s    |
+| `BenchmarkScale100K`         | 100,000 resources       | < 5min   |
+| `BenchmarkDeeplyNested`      | Deep nesting complexity | < 1s     |
+| `BenchmarkJSONParsing`       | JSON parsing at scale   | Baseline |
+| `BenchmarkGeneratorOverhead` | Generator overhead      | Baseline |
 
 **Benchmark guidelines:**
 
@@ -449,9 +454,9 @@ PulumiCost operates as a three-repository ecosystem:
 [spec]: https://github.com/rshade/pulumicost-spec
 [plugin]: https://github.com/rshade/pulumicost-plugin
 
-Cross-repository changes require coordination. See the
-[constitution](https://github.com/rshade/pulumicost-core/blob/main/.specify/memory/constitution.md) for the cross-repo change
-protocol.
+Cross-repository changes require coordination. All changes to the plugin protocol
+must be proposed in the pulumicost-spec repository first, then synchronized to
+core and plugin implementations.
 
 ## Getting Help
 

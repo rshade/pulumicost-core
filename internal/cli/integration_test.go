@@ -188,6 +188,8 @@ func TestCLIIntegration(t *testing.T) {
 func TestErrorHandlingEdgeCases(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("PULUMICOST_HOME", t.TempDir())
 	tests := []struct {
 		name        string
 		args        []string
@@ -364,6 +366,8 @@ func TestDateParsingEdgeCases(t *testing.T) {
 func TestOutputFormats(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("PULUMICOST_HOME", t.TempDir())
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 
@@ -430,6 +434,8 @@ func TestOutputFormats(t *testing.T) {
 func TestFlagCombinations(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("PULUMICOST_HOME", t.TempDir())
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 

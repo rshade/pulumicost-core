@@ -103,8 +103,8 @@ func (r *Registry) ListLatestPlugins() ([]PluginInfo, []string, error) {
 			continue
 		}
 
-		vExisting, errExisting := semver.NewVersion(existing.Version)
-		if errExisting != nil || v.GreaterThan(vExisting) {
+		vExisting, _ := semver.NewVersion(existing.Version)
+		if v.GreaterThan(vExisting) {
 			latest[plugin.Name] = plugin
 		}
 	}
@@ -118,20 +118,20 @@ func (r *Registry) ListLatestPlugins() ([]PluginInfo, []string, error) {
 }
 
 // GetLatestPlugin returns the latest version of a specific plugin.
-// Returns (PluginInfo{}, false) if plugin not found or all versions are invalid.
-func (r *Registry) GetLatestPlugin(name string) (PluginInfo, bool) {
-	plugins, _, err := r.ListLatestPlugins()
+// Returns (PluginInfo{}, false, warnings) if plugin not found or all versions are invalid.
+func (r *Registry) GetLatestPlugin(name string) (PluginInfo, bool, []string, error) {
+	plugins, warnings, err := r.ListLatestPlugins()
 	if err != nil {
-		return PluginInfo{}, false
+		return PluginInfo{}, false, warnings, err
 	}
 
 	for _, plugin := range plugins {
 		if plugin.Name == name {
-			return plugin, true
+			return plugin, true, warnings, nil
 		}
 	}
 
-	return PluginInfo{}, false
+	return PluginInfo{}, false, warnings, nil
 }
 
 func (r *Registry) findBinary(dir string) string {
@@ -202,7 +202,7 @@ func (r *Registry) Open(
 		Ctx(ctx).
 		Str("component", "registry").
 		Int("discovered_plugins", len(plugins)).
-		Msg("plugins discovered")
+		Msg("latest plugins discovered after filtering")
 
 	var filteredPlugins []PluginInfo
 	for _, plugin := range plugins {

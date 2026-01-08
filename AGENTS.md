@@ -127,10 +127,12 @@
 
 ### Error Recovery
 
-- Use context cancellation for timeouts: `ctx, cancel := context.WithTimeout(ctx, timeout)`
+- Use context cancellation for timeouts: `ctx, cancel :=
+context.WithTimeout(ctx, timeout)`
 - Log warnings for non-critical failures but continue processing
 - Return partial results when possible instead of failing completely
-- Always check context cancellation in loops: `if err := ctx.Err(); err != nil { return }`
+- Always check context cancellation in loops: `if err := ctx.Err(); err != nil {
+return }`
 
 ### Logging Patterns
 
@@ -145,9 +147,7 @@
 ## Active Technologies
 
 - Go 1.25.5 + github.com/Masterminds/semver/v3, existing plugin
-  infrastructure (001-latest-plugin-version)
-
-- Go 1.25.5 + github.com/Masterminds/semver/v3 (already in go.mod)
+  infrastructure (already in go.mod, 001-latest-plugin-version)
 - File system (plugin directory structure:
   `~/.pulumicost/plugins/<plugin-name>/<version>/`)
 - Go 1.25.5 + existing CLI infrastructure, test helpers

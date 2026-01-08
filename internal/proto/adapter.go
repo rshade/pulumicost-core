@@ -467,7 +467,6 @@ func (c *clientAdapter) Name(
 // If the region cannot be determined from properties, the function falls back to the AWS_REGION or
 // AWS_DEFAULT_REGION environment variables.
 // provider is the cloud provider identifier; properties contains resource-specific key/value attributes.
-// It returns the resolved SKU and region as strings (either or both may be empty if not found).
 func resolveSKUAndRegion(provider string, properties map[string]string) (string, string) {
 	var sku, region string
 	switch strings.ToLower(provider) {
