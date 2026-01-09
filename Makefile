@@ -7,12 +7,13 @@ GOLANGCI_LINT?=$(HOME)/go/bin/golangci-lint
 GOLANGCI_LINT_VERSION?=2.6.2
 MARKDOWNLINT?=markdownlint
 MARKDOWNLINT_FILES?=AGENTS.md
+ACTIONLINT?=$(HOME)/go/bin/actionlint
 
 LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VERSION)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
                   -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
 
-.PHONY: all build build-recorder build-plugin install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
+.PHONY: all build build-recorder build-plugin install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint lint-actions validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
 
 all: build build-plugin
 
@@ -83,6 +84,14 @@ lint:
 		(echo "markdownlint CLI not found. Install with"; \
 		echo "  npm install -g markdownlint-cli@0.45.0"; exit 1)
 	$(MARKDOWNLINT) $(MARKDOWNLINT_FILES)
+	@$(MAKE) lint-actions
+
+lint-actions:
+	@echo "Running actionlint..."
+	@command -v $(ACTIONLINT) >/dev/null 2>&1 || \
+		(echo "actionlint not found. Install with"; \
+		echo "  go install github.com/rhysd/actionlint/cmd/actionlint@latest"; exit 1)
+	$(ACTIONLINT)
 
 validate:
 	@echo "Running validation..."
