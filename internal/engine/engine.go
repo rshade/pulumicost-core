@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/logging"
@@ -28,6 +31,13 @@ const (
 	defaultComputeMonthlyCost   = 20.0  // Default monthly cost for compute resources
 	defaultServiceName          = "default"
 	defaultCurrency             = "USD" // Default currency for cost calculations
+)
+
+const (
+	// defaultConcurrencyMultiplier is the default multiplier for NumCPU to determine worker count.
+	defaultConcurrencyMultiplier = 2
+	// envConcurrencyMultiplier is the environment variable to override the default multiplier.
+	envConcurrencyMultiplier = "PULUMICOST_CONCURRENCY_MULTIPLIER"
 )
 
 // ContextKey is a custom type for context keys to avoid collisions.
@@ -74,6 +84,26 @@ func New(clients []*pluginhost.Client, loader SpecLoader) *Engine {
 	}
 }
 
+func (e *Engine) getConcurrencyMultiplier() int {
+	if val := os.Getenv(envConcurrencyMultiplier); val != "" {
+		if i, err := strconv.Atoi(val); err == nil && i > 0 {
+			return i
+		}
+	}
+	return defaultConcurrencyMultiplier
+}
+
+func (e *Engine) getWorkerCount(jobCount int) int {
+	if jobCount == 0 {
+		return 0
+	}
+	numWorkers := runtime.NumCPU() * e.getConcurrencyMultiplier()
+	if jobCount < numWorkers {
+		numWorkers = jobCount
+	}
+	return numWorkers
+}
+
 // GetProjectedCost calculates projected costs for the given resources using plugins or specs.
 //
 //nolint:gocognit,funlen // Comprehensive cost calculation requires multiple nested conditions and fallbacks.
@@ -106,105 +136,163 @@ func (e *Engine) GetProjectedCost(
 		}
 	}
 
-	var results []CostResult
-	var ctxErr error
+	type job struct {
+		index    int
+		resource ResourceDescriptor
+	}
 
-	for _, resource := range resources {
-		// Check if context is cancelled before processing each resource
-		if err := ctx.Err(); err != nil {
-			log.Warn().
-				Ctx(ctx).
-				Str("component", "engine").
-				Int("processed", len(results)).
-				Int("total", len(resources)).
-				Msg("query timeout reached, returning partial results")
-			ctxErr = err
-			break
-		}
+	type workerResult struct {
+		index   int
+		results []CostResult
+	}
 
-		var resourceResults []CostResult
+	numWorkers := e.getWorkerCount(len(resources))
+	if numWorkers == 0 {
+		return []CostResult{}, nil
+	}
 
-		for _, client := range e.clients {
-			log.Debug().
-				Ctx(ctx).
-				Str("component", "engine").
-				Str("resource_type", resource.Type).
-				Str("resource_id", resource.ID).
-				Str("plugin", client.Name).
-				Msg("querying plugin for projected cost")
+	jobs := make(chan job, len(resources))
+	resultsChan := make(chan workerResult, len(resources))
+	var wg sync.WaitGroup
 
-			// Apply per-resource timeout for plugin calls
-			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
-			result, err := e.getProjectedCostFromPlugin(resourceCtx, client, resource)
-			resourceCancel()
-			if err != nil {
-				log.Debug().
-					Ctx(ctx).
-					Str("component", "engine").
-					Str("resource_type", resource.Type).
-					Str("plugin", client.Name).
-					Err(err).
-					Msg("plugin did not return cost data")
-				continue
+	// Worker function
+	worker := func() {
+		defer wg.Done()
+		for j := range jobs {
+			// Check context cancellation
+			if ctx.Err() != nil {
+				return
 			}
-			if result != nil {
-				log.Debug().
-					Ctx(ctx).
-					Str("component", "engine").
-					Str("resource_type", resource.Type).
-					Str("plugin", client.Name).
-					Float64("monthly_cost", result.Monthly).
-					Msg("plugin returned cost data")
-				resourceResults = append(resourceResults, *result)
-			}
-		}
 
-		if len(resourceResults) == 0 {
-			// Single spec fallback per resource
-			if e.loader != nil {
+			resource := j.resource
+			var resourceResults []CostResult
+
+			for _, client := range e.clients {
 				log.Debug().
 					Ctx(ctx).
 					Str("component", "engine").
 					Str("resource_type", resource.Type).
 					Str("resource_id", resource.ID).
-					Msg("no plugin data, trying spec fallback")
+					Str("plugin", client.Name).
+					Msg("querying plugin for projected cost")
 
-				if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
+				// Apply per-resource timeout for plugin calls
+				resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
+				result, err := e.getProjectedCostFromPlugin(resourceCtx, client, resource)
+				resourceCancel()
+				if err != nil {
 					log.Debug().
 						Ctx(ctx).
 						Str("component", "engine").
 						Str("resource_type", resource.Type).
-						Float64("monthly_cost", specRes.Monthly).
-						Msg("spec fallback provided cost data")
-					results = append(results, *specRes)
+						Str("plugin", client.Name).
+						Err(err).
+						Msg("plugin did not return cost data")
 					continue
+				}
+				if result != nil {
+					log.Debug().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("plugin", client.Name).
+						Float64("monthly_cost", result.Monthly).
+						Msg("plugin returned cost data")
+					resourceResults = append(resourceResults, *result)
 				}
 			}
 
-			// Final fallback: no cost data available
-			log.Warn().
-				Ctx(ctx).
-				Str("component", "engine").
-				Str("resource_type", resource.Type).
-				Str("resource_id", resource.ID).
-				Msg("no pricing data available from plugins or specs")
+			if len(resourceResults) == 0 {
+				// Single spec fallback per resource
+				if e.loader != nil {
+					log.Debug().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("resource_id", resource.ID).
+						Msg("no plugin data, trying spec fallback")
 
-			results = append(results, CostResult{
-				ResourceType: resource.Type,
-				ResourceID:   resource.ID,
-				Adapter:      "none",
-				Currency:     defaultCurrency,
-				Monthly:      0,
-				Hourly:       0,
-				Notes:        "No pricing information available",
-			})
-		} else {
-			results = append(results, resourceResults...)
+					if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
+						log.Debug().
+							Ctx(ctx).
+							Str("component", "engine").
+							Str("resource_type", resource.Type).
+							Float64("monthly_cost", specRes.Monthly).
+							Msg("spec fallback provided cost data")
+						resourceResults = append(resourceResults, *specRes)
+					}
+				}
+
+				if len(resourceResults) == 0 {
+					// Final fallback: no cost data available
+					log.Warn().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("resource_id", resource.ID).
+						Msg("no pricing data available from plugins or specs")
+
+					resourceResults = append(resourceResults, CostResult{
+						ResourceType: resource.Type,
+						ResourceID:   resource.ID,
+						Adapter:      "none",
+						Currency:     defaultCurrency,
+						Monthly:      0,
+						Hourly:       0,
+						Notes:        "No pricing information available",
+					})
+				}
+			}
+
+			resultsChan <- workerResult{index: j.index, results: resourceResults}
 		}
 	}
 
-	if ctxErr != nil {
-		return results, fmt.Errorf("projected cost calculation cancelled: %w", ctxErr)
+	// Start workers
+	for range numWorkers {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Submit jobs
+	for i, resource := range resources {
+		jobs <- job{index: i, resource: resource}
+	}
+	close(jobs)
+
+	// Wait for workers in a goroutine to close resultsChan
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
+	var collectedResults []workerResult
+	for res := range resultsChan {
+		collectedResults = append(collectedResults, res)
+	}
+
+	if ctx.Err() != nil {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "engine").
+			Int("processed", len(collectedResults)).
+			Int("total", len(resources)).
+			Msg("query timeout reached, returning partial results")
+	}
+
+	// Sort by index to preserve order
+	sort.Slice(collectedResults, func(i, j int) bool {
+		return collectedResults[i].index < collectedResults[j].index
+	})
+
+	var results []CostResult
+	for _, cr := range collectedResults {
+		results = append(results, cr.results...)
+	}
+
+	if ctx.Err() != nil {
+		return results, fmt.Errorf("projected cost calculation cancelled: %w", ctx.Err())
 	}
 
 	log.Info().
@@ -219,80 +307,145 @@ func (e *Engine) GetProjectedCost(
 }
 
 // GetProjectedCostWithErrors calculates projected costs with comprehensive error tracking.
-// It returns results for all resources (with placeholders for failures) and aggregated error details.
+//
+//nolint:funlen // Parallel implementation requires worker setup
 func (e *Engine) GetProjectedCostWithErrors(
 	ctx context.Context,
 	resources []ResourceDescriptor,
 ) (*CostResultWithErrors, error) {
-	result := &CostResultWithErrors{
+	type job struct {
+		index    int
+		resource ResourceDescriptor
+	}
+
+	type workerResult struct {
+		index   int
+		results []CostResult
+		errors  []ErrorDetail
+	}
+
+	numWorkers := e.getWorkerCount(len(resources))
+	if numWorkers == 0 {
+		return &CostResultWithErrors{}, nil
+	}
+
+	jobs := make(chan job, len(resources))
+	resultsChan := make(chan workerResult, len(resources))
+	var wg sync.WaitGroup
+
+	worker := func() {
+		defer wg.Done()
+		for j := range jobs {
+			if ctx.Err() != nil {
+				return
+			}
+
+			resource := j.resource
+			var resourceResults []CostResult
+			var resourceErrors []ErrorDetail
+
+			// Try each plugin client
+			for _, client := range e.clients {
+				pluginResult, err := e.getProjectedCostFromPlugin(ctx, client, resource)
+				if err != nil {
+					// Log error with structured fields using context-based logger
+					log := logging.FromContext(ctx)
+					log.Warn().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("resource_id", resource.ID).
+						Str("plugin", client.Name).
+						Err(err).
+						Msg("plugin call failed for projected cost")
+
+					// Track error instead of silent failure
+					resourceErrors = append(resourceErrors, ErrorDetail{
+						ResourceType: resource.Type,
+						ResourceID:   resource.ID,
+						PluginName:   client.Name,
+						Error:        fmt.Errorf("plugin call failed: %w", err),
+						Timestamp:    time.Now(),
+					})
+					continue
+				}
+				if pluginResult != nil {
+					engineResult := *pluginResult
+					resourceResults = append(resourceResults, engineResult)
+				}
+			}
+
+			// If no results from plugins, try spec fallback
+			if len(resourceResults) == 0 {
+				fallbackUsed := false
+				if e.loader != nil {
+					if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
+						resourceResults = append(resourceResults, *specRes)
+						fallbackUsed = true
+					}
+				}
+
+				if !fallbackUsed {
+					// Final fallback: no cost data available
+					resourceResults = append(resourceResults, CostResult{
+						ResourceType: resource.Type,
+						ResourceID:   resource.ID,
+						Adapter:      "none",
+						Currency:     defaultCurrency,
+						Monthly:      0,
+						Hourly:       0,
+						Notes:        "No pricing information available",
+					})
+				}
+			}
+
+			resultsChan <- workerResult{
+				index:   j.index,
+				results: resourceResults,
+				errors:  resourceErrors,
+			}
+		}
+	}
+
+	for range numWorkers {
+		wg.Add(1)
+		go worker()
+	}
+
+	for i, resource := range resources {
+		jobs <- job{index: i, resource: resource}
+	}
+	close(jobs)
+
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	var collectedResults []workerResult
+	for res := range resultsChan {
+		collectedResults = append(collectedResults, res)
+	}
+
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	sort.Slice(collectedResults, func(i, j int) bool {
+		return collectedResults[i].index < collectedResults[j].index
+	})
+
+	finalResult := &CostResultWithErrors{
 		Results: []CostResult{},
 		Errors:  []ErrorDetail{},
 	}
 
-	for _, resource := range resources {
-		var resourceResults []CostResult
-		var resourceErrors []ErrorDetail
-
-		// Try each plugin client
-		for _, client := range e.clients {
-			pluginResult, err := e.getProjectedCostFromPlugin(ctx, client, resource)
-			if err != nil {
-				// Log error with structured fields using context-based logger
-				log := logging.FromContext(ctx)
-				log.Warn().
-					Ctx(ctx).
-					Str("component", "engine").
-					Str("resource_type", resource.Type).
-					Str("resource_id", resource.ID).
-					Str("plugin", client.Name).
-					Err(err).
-					Msg("plugin call failed for projected cost")
-
-				// Track error instead of silent failure
-				resourceErrors = append(resourceErrors, ErrorDetail{
-					ResourceType: resource.Type,
-					ResourceID:   resource.ID,
-					PluginName:   client.Name,
-					Error:        fmt.Errorf("plugin call failed: %w", err),
-					Timestamp:    time.Now(),
-				})
-				continue
-			}
-			if pluginResult != nil {
-				engineResult := *pluginResult
-				// Ensure sustainability map is copied if needed (though it should already be correct from getProjectedCostFromPlugin)
-				resourceResults = append(resourceResults, engineResult)
-			}
-		}
-
-		// If no results from plugins, try spec fallback
-		if len(resourceResults) == 0 {
-			if e.loader != nil {
-				if specRes := e.getProjectedCostFromSpec(ctx, resource); specRes != nil {
-					result.Results = append(result.Results, *specRes)
-					result.Errors = append(result.Errors, resourceErrors...)
-					continue
-				}
-			}
-
-			// Final fallback: no cost data available
-			result.Results = append(result.Results, CostResult{
-				ResourceType: resource.Type,
-				ResourceID:   resource.ID,
-				Adapter:      "none",
-				Currency:     defaultCurrency,
-				Monthly:      0,
-				Hourly:       0,
-				Notes:        "No pricing information available",
-			})
-			result.Errors = append(result.Errors, resourceErrors...)
-		} else {
-			result.Results = append(result.Results, resourceResults...)
-			result.Errors = append(result.Errors, resourceErrors...)
-		}
+	for _, cr := range collectedResults {
+		finalResult.Results = append(finalResult.Results, cr.results...)
+		finalResult.Errors = append(finalResult.Errors, cr.errors...)
 	}
 
-	return result, nil
+	return finalResult, nil
 }
 
 // GetActualCost retrieves historical actual costs from plugins for the specified time range.
@@ -342,105 +495,172 @@ func (e *Engine) GetActualCostWithOptions(
 		}
 	}
 
-	var results []CostResult
+	type job struct {
+		index    int
+		resource ResourceDescriptor
+	}
+
+	type workerResult struct {
+		index        int
+		result       *CostResult
+		partialError error
+	}
+
+	numWorkers := e.getWorkerCount(len(request.Resources))
+	if numWorkers == 0 {
+		return []CostResult{}, nil
+	}
+
+	jobs := make(chan job, len(request.Resources))
+	resultsChan := make(chan workerResult, len(request.Resources))
+	var wg sync.WaitGroup
+
+	worker := func() {
+		defer wg.Done()
+		for j := range jobs {
+			if ctx.Err() != nil {
+				return
+			}
+
+			resource := j.resource
+
+			// Filter by tags if specified
+			if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("resource_id", resource.ID).
+					Msg("resource filtered out by tags")
+				resultsChan <- workerResult{index: j.index, result: nil}
+				continue
+			}
+
+			var resourceResult *CostResult
+			var partialErr error
+
+			for _, client := range e.clients {
+				if request.Adapter != "" && client.Name != request.Adapter {
+					continue
+				}
+
+				log.Debug().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("resource_id", resource.ID).
+					Str("plugin", client.Name).
+					Msg("querying plugin for actual cost")
+
+				// Apply per-resource timeout for plugin calls
+				resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
+				result, err := e.getActualCostFromPlugin(
+					resourceCtx,
+					client,
+					resource,
+					request.From,
+					request.To,
+				)
+				resourceCancel()
+				if err != nil {
+					log.Debug().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("plugin", client.Name).
+						Err(err).
+						Msg("plugin did not return actual cost data")
+					newErr := fmt.Errorf("plugin %s: %w", client.Name, err)
+					if partialErr == nil {
+						partialErr = newErr
+					} else {
+						partialErr = errors.Join(partialErr, newErr)
+					}
+					continue
+				}
+				if result != nil {
+					log.Debug().
+						Ctx(ctx).
+						Str("component", "engine").
+						Str("resource_type", resource.Type).
+						Str("plugin", client.Name).
+						Float64("total_cost", result.TotalCost).
+						Msg("plugin returned actual cost data")
+					resourceResult = result
+					break
+				}
+			}
+
+			// If no plugin provided data, create a placeholder result
+			if resourceResult == nil {
+				log.Warn().
+					Ctx(ctx).
+					Str("component", "engine").
+					Str("resource_type", resource.Type).
+					Str("resource_id", resource.ID).
+					Msg("no actual cost data available from plugins")
+
+				resourceResult = &CostResult{
+					ResourceType: resource.Type,
+					ResourceID:   resource.ID,
+					Adapter:      "none",
+					Currency:     defaultCurrency,
+					TotalCost:    0,
+					Notes:        "No actual cost data available",
+					StartDate:    request.From,
+					EndDate:      request.To,
+					CostPeriod:   FormatPeriod(request.From, request.To),
+				}
+			}
+
+			resultsChan <- workerResult{index: j.index, result: resourceResult, partialError: partialErr}
+		}
+	}
+
+	for range numWorkers {
+		wg.Add(1)
+		go worker()
+	}
+
+	for i, resource := range request.Resources {
+		jobs <- job{index: i, resource: resource}
+	}
+	close(jobs)
+
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	var collectedResults []workerResult
 	var partialErrors []error
-	var ctxErr error
 
-	for _, resource := range request.Resources {
-		// Check if context is cancelled before processing each resource
-		if err := ctx.Err(); err != nil {
-			log.Warn().
-				Ctx(ctx).
-				Str("component", "engine").
-				Int("processed", len(results)).
-				Int("total", len(request.Resources)).
-				Msg("query timeout reached, returning partial results")
-			ctxErr = err
-			break
+	for res := range resultsChan {
+		collectedResults = append(collectedResults, res)
+		if res.partialError != nil {
+			partialErrors = append(partialErrors, res.partialError)
 		}
+	}
 
-		// Filter by tags if specified
-		if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
-			log.Debug().
-				Ctx(ctx).
-				Str("component", "engine").
-				Str("resource_type", resource.Type).
-				Str("resource_id", resource.ID).
-				Msg("resource filtered out by tags")
-			continue
+	if ctx.Err() != nil {
+		log.Warn().
+			Ctx(ctx).
+			Str("component", "engine").
+			Int("processed", len(collectedResults)).
+			Int("total", len(request.Resources)).
+			Msg("query timeout reached, returning partial results")
+		return nil, fmt.Errorf("actual cost calculation cancelled: %w", ctx.Err())
+	}
+
+	sort.Slice(collectedResults, func(i, j int) bool {
+		return collectedResults[i].index < collectedResults[j].index
+	})
+
+	var results []CostResult
+	for _, cr := range collectedResults {
+		if cr.result != nil {
+			results = append(results, *cr.result)
 		}
-
-		var resourceResult *CostResult
-		for _, client := range e.clients {
-			if request.Adapter != "" && client.Name != request.Adapter {
-				continue
-			}
-
-			log.Debug().
-				Ctx(ctx).
-				Str("component", "engine").
-				Str("resource_type", resource.Type).
-				Str("resource_id", resource.ID).
-				Str("plugin", client.Name).
-				Msg("querying plugin for actual cost")
-
-			// Apply per-resource timeout for plugin calls
-			resourceCtx, resourceCancel := context.WithTimeout(ctx, perResourceTimeout)
-			result, err := e.getActualCostFromPlugin(
-				resourceCtx,
-				client,
-				resource,
-				request.From,
-				request.To,
-			)
-			resourceCancel()
-			if err != nil {
-				log.Debug().
-					Ctx(ctx).
-					Str("component", "engine").
-					Str("resource_type", resource.Type).
-					Str("plugin", client.Name).
-					Err(err).
-					Msg("plugin did not return actual cost data")
-				partialErrors = append(partialErrors, fmt.Errorf("plugin %s: %w", client.Name, err))
-				continue
-			}
-			if result != nil {
-				log.Debug().
-					Ctx(ctx).
-					Str("component", "engine").
-					Str("resource_type", resource.Type).
-					Str("plugin", client.Name).
-					Float64("total_cost", result.TotalCost).
-					Msg("plugin returned actual cost data")
-				resourceResult = result
-				break
-			}
-		}
-
-		// If no plugin provided data, create a placeholder result
-		if resourceResult == nil {
-			log.Warn().
-				Ctx(ctx).
-				Str("component", "engine").
-				Str("resource_type", resource.Type).
-				Str("resource_id", resource.ID).
-				Msg("no actual cost data available from plugins")
-
-			resourceResult = &CostResult{
-				ResourceType: resource.Type,
-				ResourceID:   resource.ID,
-				Adapter:      "none",
-				Currency:     defaultCurrency,
-				TotalCost:    0,
-				Notes:        "No actual cost data available",
-				StartDate:    request.From,
-				EndDate:      request.To,
-				CostPeriod:   FormatPeriod(request.From, request.To),
-			}
-		}
-
-		results = append(results, *resourceResult)
 	}
 
 	// Group results if requested
@@ -463,10 +683,6 @@ func (e *Engine) GetActualCostWithOptions(
 			Msg("some plugins returned errors during actual cost calculation")
 	}
 
-	if ctxErr != nil {
-		return results, fmt.Errorf("actual cost calculation cancelled: %w", ctxErr)
-	}
-
 	log.Info().
 		Ctx(ctx).
 		Str("component", "engine").
@@ -480,24 +696,90 @@ func (e *Engine) GetActualCostWithOptions(
 
 // GetActualCostWithOptionsAndErrors retrieves actual costs with comprehensive error tracking.
 // It returns results for all resources (with placeholders for failures) and aggregated error details.
+//
+//nolint:funlen // Parallel implementation requires worker setup
 func (e *Engine) GetActualCostWithOptionsAndErrors(
 	ctx context.Context,
 	request ActualCostRequest,
 ) (*CostResultWithErrors, error) {
+	type job struct {
+		index    int
+		resource ResourceDescriptor
+	}
+
+	type workerResult struct {
+		index  int
+		result *CostResult
+		errors []ErrorDetail
+	}
+
+	numWorkers := e.getWorkerCount(len(request.Resources))
+	if numWorkers == 0 {
+		return &CostResultWithErrors{}, nil
+	}
+
+	jobs := make(chan job, len(request.Resources))
+	resultsChan := make(chan workerResult, len(request.Resources))
+	var wg sync.WaitGroup
+
+	worker := func() {
+		defer wg.Done()
+		for j := range jobs {
+			if ctx.Err() != nil {
+				return
+			}
+
+			resource := j.resource
+
+			// Filter by tags if specified
+			if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
+				resultsChan <- workerResult{index: j.index, result: nil, errors: nil}
+				continue
+			}
+
+			resourceResult, errors := e.getActualCostForResource(ctx, resource, request)
+			resultsChan <- workerResult{index: j.index, result: &resourceResult, errors: errors}
+		}
+	}
+
+	for range numWorkers {
+		wg.Add(1)
+		go worker()
+	}
+
+	for i, resource := range request.Resources {
+		jobs <- job{index: i, resource: resource}
+	}
+	close(jobs)
+
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	var collectedResults []workerResult
+	for res := range resultsChan {
+		collectedResults = append(collectedResults, res)
+	}
+
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	sort.Slice(collectedResults, func(i, j int) bool {
+		return collectedResults[i].index < collectedResults[j].index
+	})
+
 	result := &CostResultWithErrors{
 		Results: []CostResult{},
 		Errors:  []ErrorDetail{},
 	}
 
-	for _, resource := range request.Resources {
-		// Filter by tags if specified
-		if len(request.Tags) > 0 && !MatchesTags(resource, request.Tags) {
-			continue
+	for _, cr := range collectedResults {
+		if cr.result != nil {
+			result.Results = append(result.Results, *cr.result)
 		}
-
-		resourceResult, errors := e.getActualCostForResource(ctx, resource, request)
-		result.Errors = append(result.Errors, errors...)
-		result.Results = append(result.Results, resourceResult)
+		result.Errors = append(result.Errors, cr.errors...)
 	}
 
 	// Group results if requested
