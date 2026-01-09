@@ -2,6 +2,7 @@ package registry // needs access to unexported methods
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,7 +11,233 @@ import (
 	"time"
 
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 )
+
+func TestListLatestPlugins(t *testing.T) {
+	tests := []struct {
+		name              string
+		setupDir          func(t *testing.T) string
+		wantCount         int
+		wantPlugins       []PluginInfo
+		wantWarningsCount int
+		wantErr           bool
+	}{
+		{
+			name: "empty directory",
+			setupDir: func(t *testing.T) string {
+				return t.TempDir()
+			},
+			wantCount: 0,
+		},
+		{
+			name: "single plugin single version",
+			setupDir: func(t *testing.T) string {
+				return createSinglePluginDir(t, "testplugin", "v1.0.0")
+			},
+			wantCount: 1,
+			wantPlugins: []PluginInfo{
+				{Name: "testplugin", Version: "v1.0.0"},
+			},
+		},
+		{
+			name:      "multiple plugins single version",
+			setupDir:  createMultiplePluginsDir,
+			wantCount: 2,
+			wantPlugins: []PluginInfo{
+				{Name: "aws-plugin", Version: "v1.0.0"},
+				{Name: "kubecost", Version: "v2.1.0"},
+			},
+		},
+		{
+			name:      "same plugin multiple versions selects latest",
+			setupDir:  createMultiVersionPluginDir,
+			wantCount: 1,
+			wantPlugins: []PluginInfo{
+				{Name: "testplugin", Version: "v2.0.0"},
+			},
+		},
+		{
+			name: "three versions selects highest",
+			setupDir: func(t *testing.T) string {
+				dir := t.TempDir()
+				versions := []string{"v1.0.0", "v1.1.0", "v2.0.0"}
+				for _, v := range versions {
+					if err := createPluginVersion(dir, "tri-ver", v); err != nil {
+						t.Fatal(err)
+					}
+				}
+				return dir
+			},
+			wantCount: 1,
+			wantPlugins: []PluginInfo{
+				{Name: "tri-ver", Version: "v2.0.0"},
+			},
+		},
+		{
+			name:              "edge cases: pre-release, invalid, corrupt",
+			setupDir:          createEdgeCasePluginDir,
+			wantCount:         2,
+			wantWarningsCount: 1, // Invalid version triggers warning
+			wantPlugins: []PluginInfo{
+				{Name: "prerelease-test", Version: "v1.0.0"},  // Stable over pre-release
+				{Name: "invalid-ver-test", Version: "v1.0.0"}, // Valid one picked
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootDir := tt.setupDir(t)
+			reg := &Registry{
+				root:     rootDir,
+				launcher: pluginhost.NewProcessLauncher(),
+			}
+
+			plugins, warnings, err := reg.ListLatestPlugins()
+			verifyListLatestPluginsResult(
+				t,
+				plugins,
+				warnings,
+				err,
+				tt.wantErr,
+				tt.wantCount,
+				tt.wantPlugins,
+				tt.wantWarningsCount,
+			)
+		})
+	}
+}
+
+func TestListLatestPlugins_FSErrors(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping permission tests on Windows")
+	}
+
+	dir := t.TempDir()
+	// Create an unreadable subdirectory (noPermDir)
+	noPermDir := filepath.Join(dir, "no-perm-plugin")
+	err := os.MkdirAll(noPermDir, 0000)
+	require.NoError(t, err, "Failed to create test directory")
+	defer func() {
+		_ = os.Chmod(noPermDir, 0755) // Cleanup
+	}()
+
+	reg := &Registry{
+		root:     dir,
+		launcher: pluginhost.NewProcessLauncher(),
+	}
+
+	plugins, _, err := reg.ListLatestPlugins()
+	require.NoError(t, err)
+
+	assert.Len(t, plugins, 0, "expected 0 plugins from unreadable dir")
+}
+
+func TestListLatestPlugins_BinaryValidation(t *testing.T) {
+	dir := t.TempDir()
+
+	// 1. Missing Binary
+	err := os.MkdirAll(filepath.Join(dir, "missing-bin", "v1.0.0"), 0755)
+	require.NoError(t, err, "Failed to create test directory")
+
+	// 2. Non-executable Binary (Linux/Mac only)
+	if runtime.GOOS != "windows" {
+		nonExecDir := filepath.Join(dir, "non-exec", "v1.0.0")
+		err = os.MkdirAll(nonExecDir, 0755)
+		require.NoError(t, err, "Failed to create test directory")
+		err = os.WriteFile(filepath.Join(nonExecDir, "non-exec"), []byte("data"), 0644)
+		require.NoError(t, err, "Failed to create test binary")
+	}
+
+	reg := &Registry{
+		root:     dir,
+		launcher: pluginhost.NewProcessLauncher(),
+	}
+
+	plugins, _, err := reg.ListLatestPlugins()
+	require.NoError(t, err, "unexpected error")
+	assert.Empty(t, plugins, "expected 0 plugins (invalid binaries)")
+}
+
+func TestListLatestPlugins_Concurrency(t *testing.T) {
+	dir := createMultiVersionPluginDir(t)
+	reg := &Registry{
+		root:     dir,
+		launcher: pluginhost.NewProcessLauncher(),
+	}
+
+	concurrency := 10
+	errCh := make(chan error, concurrency)
+
+	for i := 0; i < concurrency; i++ {
+		go func() {
+			_, _, err := reg.ListLatestPlugins()
+			errCh <- err
+		}()
+	}
+
+	for i := 0; i < concurrency; i++ {
+		if err := <-errCh; err != nil {
+			t.Errorf("concurrent ListLatestPlugins failed: %v", err)
+		}
+	}
+}
+
+type mockLauncher struct {
+	startCalled map[string]int
+}
+
+func (m *mockLauncher) Start(
+	ctx context.Context,
+	path string,
+	args ...string,
+) (*grpc.ClientConn, func() error, error) {
+	if m.startCalled == nil {
+		m.startCalled = make(map[string]int)
+	}
+	m.startCalled[filepath.Base(path)]++
+	return nil, func() error { return nil }, errors.New("mock launch failed")
+}
+
+func TestRegistry_Open_WithWarnings(t *testing.T) {
+	// Create directory with valid and invalid plugins
+	dir := createEdgeCasePluginDir(t)
+	mock := &mockLauncher{}
+	reg := &Registry{
+		root:     dir,
+		launcher: mock,
+	}
+
+	ctx := context.Background()
+	// Open should proceed despite warnings about invalid versions
+	// It will try to launch valid plugins. Mock launcher returns error,
+	// so Open will log warnings and return (clients=empty, err=nil).
+	clients, cleanup, err := reg.Open(ctx, "")
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	require.NoError(t, err, "Open failed")
+	assert.Len(t, clients, 0, "Expected 0 clients (mock fails)")
+
+	// Verify it attempted to launch valid plugins
+	// Expected valid plugins: "prerelease-test", "invalid-ver-test" (names from createEdgeCasePluginDir)
+	// The binary names are created by createPluginVersion as plugin Name.
+	expectedAttempts := []string{"prerelease-test", "invalid-ver-test"}
+	assert.Len(t, mock.startCalled, len(expectedAttempts), "Expected %d launch attempts", len(expectedAttempts))
+
+	for _, name := range expectedAttempts {
+		// On windows it adds .exe
+		key := name
+		if runtime.GOOS == "windows" {
+			key += ".exe"
+		}
+		assert.Equal(t, 1, mock.startCalled[key], "launch attempts for %s", key)
+	}
+}
 
 func TestListPlugins(t *testing.T) {
 	tests := []struct {
@@ -362,6 +589,75 @@ func verifyBinaryExecutable(t *testing.T, binPath string) {
 		if filepath.Ext(binPath) != ".exe" {
 			t.Error("found binary on Windows doesn't have .exe extension")
 		}
+	}
+}
+
+func createEdgeCasePluginDir(t *testing.T) string {
+	dir := t.TempDir()
+
+	// 1. Pre-release vs Stable: v1.0.0-alpha vs v1.0.0
+	// Should select v1.0.0
+	if err := createPluginVersion(dir, "prerelease-test", "v1.0.0-alpha"); err != nil {
+		t.Fatal(err)
+	}
+	if err := createPluginVersion(dir, "prerelease-test", "v1.0.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Invalid Version: invalid-version
+	// Should be skipped/warned
+	if err := createPluginVersion(dir, "invalid-ver-test", "invalid-version"); err != nil {
+		t.Fatal(err)
+	}
+	// Add a valid one to ensure it's picked up
+	if err := createPluginVersion(dir, "invalid-ver-test", "v1.0.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Corrupted Directory (file instead of dir)
+	// Should be skipped/warned
+	corruptPath := filepath.Join(dir, "corrupt-plugin")
+	if err := os.WriteFile(corruptPath, []byte("file-not-dir"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	return dir
+}
+
+func createPluginVersion(rootDir, name, version string) error {
+	pluginDir := filepath.Join(rootDir, name, version)
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		return err
+	}
+	binPath := filepath.Join(pluginDir, name)
+	if runtime.GOOS == "windows" {
+		binPath += ".exe"
+	}
+	return os.WriteFile(binPath, []byte("#!/bin/bash\necho "+version), 0755)
+}
+
+func verifyListLatestPluginsResult(
+	t *testing.T,
+	plugins []PluginInfo,
+	warnings []string,
+	err error,
+	wantErr bool,
+	wantCount int,
+	wantPlugins []PluginInfo,
+	wantWarningsCount int,
+) {
+	if wantErr && err == nil {
+		require.Error(t, err, "expected error but got none")
+		return
+	}
+	if !wantErr && err != nil {
+		require.NoError(t, err, "unexpected error")
+		return
+	}
+	require.Len(t, plugins, wantCount, "expected %d plugins", wantCount)
+	require.Len(t, warnings, wantWarningsCount, "expected %d warnings. Warnings: %v", wantWarningsCount, warnings)
+	if wantPlugins != nil {
+		verifyExpectedPlugins(t, plugins, wantPlugins)
 	}
 }
 

@@ -1,0 +1,78 @@
+# Docker ignore file
+
+# Git
+.git/
+.gitignore
+
+# Node modules
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+
+# Go build artifacts
+*.exe
+*.test
+bin/
+vendor/
+*.out
+coverage.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Documentation build
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Archives
+*.zip
+*.tar.gz
+*.tar
+
+# Testing
+*.coverprofile
+profile.cov
+
+# Build directories
+dist/
+build/
+
+# MCP Configuration files (keep local)
+.mcp*.json
+
+# Development files
+PR_MESSAGE.md
+CodeRabbitPrompt.md
+issues.md
+github_comments.json
+coderabbit-output/
+coderabbit_analysis.json
+
+# Nightly failure analysis artifacts
+context.txt
+analysis.md
+
+# Recorder plugin output directory
+**/recorded_data/

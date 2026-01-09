@@ -18,6 +18,8 @@ import (
 const (
 	// maxErrorsToDisplay is the maximum number of errors to show in summary before truncating.
 	maxErrorsToDisplay = 5
+	// awsProvider is the AWS provider name constant.
+	awsProvider = "aws"
 )
 
 // ErrorDetail captures information about a failed resource cost calculation.
@@ -465,11 +467,10 @@ func (c *clientAdapter) Name(
 // If the region cannot be determined from properties, the function falls back to the AWS_REGION or
 // AWS_DEFAULT_REGION environment variables.
 // provider is the cloud provider identifier; properties contains resource-specific key/value attributes.
-// It returns the resolved SKU and region as strings (either or both may be empty if not found).
 func resolveSKUAndRegion(provider string, properties map[string]string) (string, string) {
 	var sku, region string
 	switch strings.ToLower(provider) {
-	case "aws":
+	case awsProvider:
 		sku = mapping.ExtractAWSSKU(properties)
 		if sku == "" {
 			// Fallback for RDS and other AWS resources not covered by ExtractAWSSKU

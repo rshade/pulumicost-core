@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
 	"time"
@@ -69,21 +68,11 @@ func NewGitHubClient() *GitHubClient {
 	}
 }
 
-// getGitHubToken returns a GitHub authentication token or an empty string if none is available.
-// It first returns the value of the GITHUB_TOKEN environment variable, and if unset it attempts
-// to obtain a token from the `gh auth token` command.
+// getGitHubToken returns a GitHub authentication token from the GITHUB_TOKEN
+// environment variable. Returns empty string if not set. The token is optional
+// - anonymous requests will work for public repositories but may be rate-limited.
 func getGitHubToken() string {
-	// Try GITHUB_TOKEN first
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
-		return token
-	}
-	// Try gh auth token
-	cmd := exec.Command("gh", "auth", "token") //nolint:noctx // trusted command, no context needed
-	out, err := cmd.Output()
-	if err == nil {
-		return strings.TrimSpace(string(out))
-	}
-	return ""
+	return os.Getenv("GITHUB_TOKEN")
 }
 
 // GetLatestRelease returns the latest release for a repository.
