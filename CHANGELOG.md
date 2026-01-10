@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4](https://github.com/rshade/pulumicost-core/compare/v0.1.3...v0.1.4) (2026-01-10)
+
+
+### Added
+
+* **cli:** add cost recommendations command with action type filtering ([#375](https://github.com/rshade/pulumicost-core/issues/375)) ([1d32dca](https://github.com/rshade/pulumicost-core/commit/1d32dca6b19b5191a341d740093e26520f36328a)), closes [#298](https://github.com/rshade/pulumicost-core/issues/298)
+* **cli:** add Pulumi tool plugin mode support ([#379](https://github.com/rshade/pulumicost-core/issues/379)) ([62bf5c7](https://github.com/rshade/pulumicost-core/commit/62bf5c7b5ec02f4bbd2d0c4bbec97af56655e26e)), closes [#246](https://github.com/rshade/pulumicost-core/issues/246)
+* **cli:** add state-based actual cost estimation with confidence levels ([#382](https://github.com/rshade/pulumicost-core/issues/382)) ([80f8c28](https://github.com/rshade/pulumicost-core/commit/80f8c28164da9671cb62cf7b1efb6c2e96626211)), closes [#380](https://github.com/rshade/pulumicost-core/issues/380)
+* **cli:** enhance cost recommendations with TUI and summary mode ([#377](https://github.com/rshade/pulumicost-core/issues/377)) ([4c900cb](https://github.com/rshade/pulumicost-core/commit/4c900cb1e1835ad89bd25e34c404fd7bfbe61dc8)), closes [#216](https://github.com/rshade/pulumicost-core/issues/216)
+* **proto:** add pre-flight request validation using pluginsdk ([#372](https://github.com/rshade/pulumicost-core/issues/372)) ([e53f2d6](https://github.com/rshade/pulumicost-core/commit/e53f2d6a09496603ae2f5bac9d623c1537419083)), closes [#233](https://github.com/rshade/pulumicost-core/issues/233)
+* **registry:** auto-select latest plugin version ([#391](https://github.com/rshade/pulumicost-core/issues/391)) ([48c4fa3](https://github.com/rshade/pulumicost-core/commit/48c4fa36722eaaf16750ecc3c08c364fce199390))
+* **tui:** add interactive cost display with Bubble Tea ([#345](https://github.com/rshade/pulumicost-core/issues/345)) ([de8645c](https://github.com/rshade/pulumicost-core/commit/de8645c543dc354a881f8df3b52a6ae14198cf33)), closes [#106](https://github.com/rshade/pulumicost-core/issues/106)
+
+
+### Fixed
+
+* **deps:** update go dependencies ([#355](https://github.com/rshade/pulumicost-core/issues/355)) ([f2694d8](https://github.com/rshade/pulumicost-core/commit/f2694d8eef7d4f4bce5db0bc6360c7ae0d0739c8))
+* **deps:** update go dependencies ([#388](https://github.com/rshade/pulumicost-core/issues/388)) ([d893f98](https://github.com/rshade/pulumicost-core/commit/d893f98075f88e918bcabb56c85fc9cfd74c513f))
+
+
+### Documentation
+
+* fixing markdownlint issues ([#381](https://github.com/rshade/pulumicost-core/issues/381)) ([11e21bc](https://github.com/rshade/pulumicost-core/commit/11e21bcb8de8062cd6bf1de08f178fbbe030d717))
+* update roadmap and README for completed milestones ([#373](https://github.com/rshade/pulumicost-core/issues/373)) ([2c8f16b](https://github.com/rshade/pulumicost-core/commit/2c8f16b9ff48e81b776040966adb1087bc7592dc)), closes [#320](https://github.com/rshade/pulumicost-core/issues/320)
+* updating roadmap and fixing links ([#363](https://github.com/rshade/pulumicost-core/issues/363)) ([98da1c2](https://github.com/rshade/pulumicost-core/commit/98da1c2a3675e89e58ecbc6c27b5ca441288c908))
+* updating roadmap and fixing links ([#363](https://github.com/rshade/pulumicost-core/issues/363)) ([8e5395b](https://github.com/rshade/pulumicost-core/commit/8e5395b75033a7c3518f577b995fb77fd57373e4))
+
 ## [0.1.3](https://github.com/rshade/pulumicost-core/compare/v0.1.2...v0.1.3) (2025-12-27)
 
 
