@@ -12,6 +12,7 @@ import (
 	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -418,6 +419,8 @@ type RecommendationImpact struct {
 }
 
 // CostSourceClient wraps the generated gRPC client from pulumicost-spec.
+//
+//nolint:dupl // Mock implementation in adapter_test.go intentionally mirrors this interface.
 type CostSourceClient interface {
 	Name(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*NameResponse, error)
 	GetProjectedCost(
@@ -435,6 +438,16 @@ type CostSourceClient interface {
 		in *GetRecommendationsRequest,
 		opts ...grpc.CallOption,
 	) (*GetRecommendationsResponse, error)
+	GetPluginInfo(
+		ctx context.Context,
+		in *emptypb.Empty,
+		opts ...grpc.CallOption,
+	) (*pbc.GetPluginInfoResponse, error)
+	DryRun(
+		ctx context.Context,
+		in *pbc.DryRunRequest,
+		opts ...grpc.CallOption,
+	) (*pbc.DryRunResponse, error)
 }
 
 // NewCostSourceClient creates a new cost source client using the real proto client.
@@ -459,6 +472,22 @@ func (c *clientAdapter) Name(
 		return nil, err
 	}
 	return &NameResponse{Name: resp.GetName()}, nil
+}
+
+func (c *clientAdapter) GetPluginInfo(
+	ctx context.Context,
+	_ *emptypb.Empty,
+	opts ...grpc.CallOption,
+) (*pbc.GetPluginInfoResponse, error) {
+	return c.client.GetPluginInfo(ctx, &pbc.GetPluginInfoRequest{}, opts...)
+}
+
+func (c *clientAdapter) DryRun(
+	ctx context.Context,
+	in *pbc.DryRunRequest,
+	opts ...grpc.CallOption,
+) (*pbc.DryRunResponse, error) {
+	return c.client.DryRun(ctx, in, opts...)
 }
 
 // resolveSKUAndRegion extracts the SKU and region from resource properties based on the cloud provider.

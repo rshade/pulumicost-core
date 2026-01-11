@@ -100,9 +100,11 @@ func TestPluginListCmdOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
 	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
+	// Need to set args to empty to avoid using os.Args
+	cmd.SetArgs([]string{})
 
 	// The command should execute without error even when no plugins exist
-	err := cmd.RunE(cmd, []string{})
+	err := cmd.Execute()
 	require.NoError(t, err)
 }
 

@@ -10,6 +10,7 @@ import (
 
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // mockCostSourceClient is a mock implementation of CostSourceClient for testing.
@@ -30,6 +31,16 @@ type mockCostSourceClient struct {
 		in *GetRecommendationsRequest,
 		opts ...grpc.CallOption,
 	) (*GetRecommendationsResponse, error)
+	getPluginInfoFunc func(
+		ctx context.Context,
+		in *emptypb.Empty,
+		opts ...grpc.CallOption,
+	) (*pbc.GetPluginInfoResponse, error)
+	dryRunFunc func(
+		ctx context.Context,
+		in *pbc.DryRunRequest,
+		opts ...grpc.CallOption,
+	) (*pbc.DryRunResponse, error)
 }
 
 func (m *mockCostSourceClient) Name(
@@ -41,6 +52,28 @@ func (m *mockCostSourceClient) Name(
 		return m.nameFunc(ctx, in, opts...)
 	}
 	return &NameResponse{Name: "mock-plugin"}, nil
+}
+
+func (m *mockCostSourceClient) GetPluginInfo(
+	ctx context.Context,
+	in *emptypb.Empty,
+	opts ...grpc.CallOption,
+) (*pbc.GetPluginInfoResponse, error) {
+	if m.getPluginInfoFunc != nil {
+		return m.getPluginInfoFunc(ctx, in, opts...)
+	}
+	return &pbc.GetPluginInfoResponse{}, nil
+}
+
+func (m *mockCostSourceClient) DryRun(
+	ctx context.Context,
+	in *pbc.DryRunRequest,
+	opts ...grpc.CallOption,
+) (*pbc.DryRunResponse, error) {
+	if m.dryRunFunc != nil {
+		return m.dryRunFunc(ctx, in, opts...)
+	}
+	return &pbc.DryRunResponse{}, nil
 }
 
 func (m *mockCostSourceClient) GetProjectedCost(
@@ -74,6 +107,62 @@ func (m *mockCostSourceClient) GetRecommendations(
 		return m.getRecommendationsFunc(ctx, in, opts...)
 	}
 	return &GetRecommendationsResponse{Recommendations: []*Recommendation{}}, nil
+}
+
+// T020: Unit test for DryRun wrapper.
+func TestDryRun(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			dryRunFunc: func(ctx context.Context, in *pbc.DryRunRequest, opts ...grpc.CallOption) (*pbc.DryRunResponse, error) {
+				return &pbc.DryRunResponse{
+					FieldMappings: []*pbc.FieldMapping{
+						{FieldName: "instanceType", SupportStatus: pbc.FieldSupportStatus(1)}, // 1 = MAPPED (assuming)
+					},
+				}, nil
+			},
+		}
+
+		resp, err := mockClient.DryRun(context.Background(), &pbc.DryRunRequest{
+			Resource: &pbc.ResourceDescriptor{ResourceType: "aws:ec2:Instance"},
+		})
+		if err != nil {
+			t.Fatalf("DryRun failed: %v", err)
+		}
+		if len(resp.GetFieldMappings()) != 1 {
+			t.Errorf("Expected 1 mapped field, got %d", len(resp.GetFieldMappings()))
+		}
+		if resp.GetFieldMappings()[0].GetFieldName() != "instanceType" {
+			t.Errorf("Expected field instanceType, got %s", resp.GetFieldMappings()[0].GetFieldName())
+		}
+	})
+
+	t.Run("Unimplemented", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			dryRunFunc: func(ctx context.Context, in *pbc.DryRunRequest, opts ...grpc.CallOption) (*pbc.DryRunResponse, error) {
+				return nil, errors.New("unimplemented")
+			},
+		}
+
+		_, err := mockClient.DryRun(context.Background(), &pbc.DryRunRequest{})
+		if err == nil {
+			t.Error("Expected error for unimplemented DryRun")
+		}
+	})
+
+	t.Run("InvalidResource", func(t *testing.T) {
+		mockClient := &mockCostSourceClient{
+			dryRunFunc: func(ctx context.Context, in *pbc.DryRunRequest, opts ...grpc.CallOption) (*pbc.DryRunResponse, error) {
+				return nil, errors.New("invalid resource type")
+			},
+		}
+
+		_, err := mockClient.DryRun(context.Background(), &pbc.DryRunRequest{
+			Resource: &pbc.ResourceDescriptor{ResourceType: "invalid"},
+		})
+		if err == nil {
+			t.Error("Expected error for invalid resource")
+		}
+	})
 }
 
 // T003: Unit test for ErrorDetail struct creation.

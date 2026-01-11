@@ -308,7 +308,7 @@ func (e *Engine) GetProjectedCost(
 
 // GetProjectedCostWithErrors calculates projected costs with comprehensive error tracking.
 //
-//nolint:funlen // Parallel implementation requires worker setup
+//nolint:funlen,gocognit // Parallel implementation requires worker setup
 func (e *Engine) GetProjectedCostWithErrors(
 	ctx context.Context,
 	resources []ResourceDescriptor,
@@ -696,8 +696,6 @@ func (e *Engine) GetActualCostWithOptions(
 
 // GetActualCostWithOptionsAndErrors retrieves actual costs with comprehensive error tracking.
 // It returns results for all resources (with placeholders for failures) and aggregated error details.
-//
-//nolint:funlen // Parallel implementation requires worker setup
 func (e *Engine) GetActualCostWithOptionsAndErrors(
 	ctx context.Context,
 	request ActualCostRequest,

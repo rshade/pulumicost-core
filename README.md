@@ -12,7 +12,7 @@ PulumiCost Core is a CLI tool that analyzes Pulumi infrastructure definitions to
 ## Key Features
 
 - **📊 Projected Costs**: Estimate monthly costs before deploying infrastructure
-- **💰 Actual Costs**: Track historical spending with detailed breakdowns  
+- **💰 Actual Costs**: Track historical spending with detailed breakdowns
 - **🔌 Plugin-Based**: Extensible architecture supporting multiple cost data sources
 - **🌱 Sustainability**: Estimate carbon footprint and energy usage
 - **📈 Advanced Analytics**: Resource grouping, filtering, and aggregation
@@ -51,32 +51,36 @@ pulumi preview --json > plan.json
 ### 3. Calculate Costs
 
 **Projected Costs** - Estimate costs before deployment:
+
 ```bash
 pulumicost cost projected --pulumi-json plan.json
 ```
 
 **Actual Costs** (FUTURE) - View historical spending (requires plugins):
+
 ```bash
 # Last 7 days
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
 
-# Specific date range  
+# Specific date range
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 ```
 
 ## Example Output
 
 ### Projected Cost Analysis
+
 ```bash
 $ pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 
 RESOURCE                          ADAPTER     MONTHLY   CURRENCY  NOTES
 aws:ec2/instance:Instance         aws-spec    $7.50     USD       t3.micro Linux on-demand
-aws:s3/bucket:Bucket             none        $0.00     USD       No pricing information available  
+aws:s3/bucket:Bucket             none        $0.00     USD       No pricing information available
 aws:rds/instance:Instance        none        $0.00     USD       No pricing information available
 ```
 
 ### Actual Cost Analysis (FUTURE)
+
 ```bash
 $ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type --output json
 {
@@ -93,13 +97,15 @@ $ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by ty
 ## Core Concepts
 
 ### Resource Analysis Flow
+
 1. **Export** - Generate Pulumi plan JSON with `pulumi preview --json`
-2. **Parse** - Extract resource definitions and properties  
+2. **Parse** - Extract resource definitions and properties
 3. **Query** - Fetch cost data via plugins or local specifications
 4. **Aggregate** - Calculate totals with grouping and filtering options
 5. **Output** - Present results in table, JSON, or NDJSON format
 
 ### Plugin Architecture
+
 PulumiCost uses plugins to fetch cost data from various sources:
 
 - **Cost Plugins**: Query cloud provider APIs (Kubecost, Vantage, AWS Cost Explorer, etc.)
@@ -109,6 +115,7 @@ PulumiCost uses plugins to fetch cost data from various sources:
 ## Advanced Usage
 
 ### Resource Filtering
+
 ```bash
 # Filter by resource type
 pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
@@ -118,6 +125,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag
 ```
 
 ### Cost Aggregation (FUTURE)
+
 ```bash
 # Group by provider
 pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
@@ -130,6 +138,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
 ```
 
 ### Output Formats
+
 ```bash
 # Table format (default)
 pulumicost cost projected --pulumi-json plan.json --output table
@@ -144,6 +153,7 @@ pulumicost cost projected --pulumi-json plan.json --output ndjson
 ## Configuration
 
 ### Basic Configuration (FUTURE)
+
 PulumiCost can be configured using a YAML file at `~/.pulumicost/config.yaml`:
 
 ```bash
@@ -157,6 +167,7 @@ pulumicost config set plugins.aws.region us-west-2
 ```
 
 ### Environment Variables for Secrets
+
 For sensitive values like API keys and credentials, use environment variables instead of storing them in configuration files:
 
 ```bash
@@ -178,6 +189,7 @@ export PULUMICOST_PLUGIN_VANTAGE_API_TOKEN="your-token"
 Environment variables override configuration file values and are the recommended way to handle sensitive data. The naming convention is: `PULUMICOST_PLUGIN_<PLUGIN_NAME>_<KEY_NAME>` in uppercase.
 
 ### Configuration Management Commands (FUTURE)
+
 ```bash
 # View configuration
 pulumicost config get output.default_format
@@ -190,36 +202,49 @@ pulumicost config validate
 ## Plugin Management
 
 ### List Available Plugins
+
 ```bash
 pulumicost plugin list
 ```
 
+### Inspect Plugin Capabilities
+
+```bash
+pulumicost plugin inspect <plugin> <resource-type>
+```
+
 ### Install Plugin
+
 ```bash
 pulumicost plugin install <plugin>
 ```
 
 ### Update Plugin
+
 ```bash
 pulumicost plugin update <plugin>
 ```
 
 ### Remove Plugin
+
 ```bash
 pulumicost plugin remove <plugin>
 ```
 
-### Validate Plugin Installation  
+### Validate Plugin Installation
+
 ```bash
 pulumicost plugin validate
 ```
 
 ### Certify Plugin
+
 ```bash
 pulumicost plugin certify <plugin>
 ```
 
 ### Plugin Directory Structure
+
 ```
 ~/.pulumicost/plugins/
 ├── kubecost/
@@ -243,6 +268,7 @@ Complete documentation is available in the [docs/](docs/) directory with guides 
 - **💼 Business/CEO**: [Business Value](docs/guides/business-value.md) - ROI and competitive advantage
 
 **Quick Links:**
+
 - [🚀 5-Minute Quickstart](docs/getting-started/quickstart.md)
 - [📖 Full Documentation Index](docs/README.md)
 - [🔌 Available Plugins](docs/plugins/) - Vantage, Kubecost, and more
@@ -253,7 +279,7 @@ Complete documentation is available in the [docs/](docs/) directory with guides 
 ## Use Cases
 
 - **💡 Pre-deployment Planning**: Estimate costs before infrastructure changes
-- **📊 Cost Optimization**: Identify expensive resources and right-size instances  
+- **📊 Cost Optimization**: Identify expensive resources and right-size instances
 - **🔍 Cost Attribution**: Track spending by team, environment, or project
 - **📈 Trend Analysis**: Monitor cost changes over time
 - **🚨 Budget Monitoring**: Set up alerts for cost thresholds
@@ -291,7 +317,7 @@ This helps maintainers quickly identify and resolve regressions.
 
 We welcome contributions! See our development documentation:
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and guidelines  
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and guidelines
 - [CLAUDE.md](CLAUDE.md) - AI assistant development context
 - [Architecture Documentation](internal/) - Internal package documentation
 

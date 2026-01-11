@@ -19,6 +19,7 @@ pulumicost plugin install     # Install a plugin
 pulumicost plugin update      # Update a plugin
 pulumicost plugin remove      # Remove a plugin
 pulumicost plugin list        # List installed plugins
+pulumicost plugin inspect     # Inspect plugin capabilities
 pulumicost plugin validate    # Validate plugin setup
 pulumicost plugin conformance # Run conformance tests
 pulumicost plugin certify     # Run certification tests
@@ -240,9 +241,48 @@ pulumicost plugin list [options]
 pulumicost plugin list
 
 # Output:
-# NAME      VERSION   STATUS
-# vantage   0.1.0     installed
-# kubecost  0.2.0     installed
+# NAME      VERSION   SPEC    PATH
+# vantage   0.1.0     0.4.14  /Users/me/.pulumicost/plugins/vantage/v0.1.0/pulumicost-plugin-vantage
+# kubecost  0.2.0     0.4.14  /Users/me/.pulumicost/plugins/kubecost/v0.2.0/pulumicost-plugin-kubecost
+```
+
+## plugin inspect
+
+Inspect a plugin's capabilities and field mappings.
+
+### Usage
+
+```bash
+pulumicost plugin inspect <plugin-name> <resource-type> [options]
+```
+
+### Options
+
+| Flag | Description | Default |
+| --- | --- | --- |
+| `--version` | Specify plugin version to inspect | latest |
+| `--json` | Output in JSON format | false |
+| `--help` | Show help | |
+
+### Examples
+
+```bash
+# Inspect field mappings for AWS EC2 Instance
+pulumicost plugin inspect aws-public aws:ec2/instance:Instance
+
+# Output:
+# Field Mappings:
+# FIELD                STATUS     CONDITION
+# -------------------- ---------- ------------------------------
+# instanceType         MAPPED
+# region               MAPPED
+# tags                 IGNORED    Not used for pricing
+
+# Inspect specific version
+pulumicost plugin inspect aws-public aws:ec2/instance:Instance --version v0.1.0
+
+# Output as JSON
+pulumicost plugin inspect aws-public aws:ec2/instance:Instance --json
 ```
 
 ## plugin validate
@@ -412,6 +452,7 @@ pulumicost [global options] command [command options]
 | `--help` | Show help |
 | `--version` | Show version |
 | `--debug` | Enable debug logging |
+| `--skip-version-check` | Skip plugin spec version compatibility check |
 
 ## Date Formats
 

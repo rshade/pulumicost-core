@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/rshade/pulumicost-core/internal/registry"
 	"github.com/spf13/cobra"
 )
@@ -52,13 +55,7 @@ func NewPluginListCmd() *cobra.Command {
 // If the registry cannot be loaded the function returns an error wrapping the underlying
 // cause. If no entries exist the function prints "No plugins available in registry."
 // to the command output and returns nil. For entries with an empty security level the
-// security column defaults to "community". Any error produced while flushing the
-// runPluginListAvailable loads all plugin entries from the registry and writes a tabulated
-// list of Name, Description, Repository, and Security columns to the command's output.
-// If the registry cannot be loaded an error wrapping the underlying cause is returned.
-// If no entries exist, the function prints "No plugins available in registry." and returns nil.
-// The provided cmd is used as the output destination.
-// Returns an error if registry loading or writing the output fails.
+// security column defaults to "community".
 func runPluginListAvailable(cmd *cobra.Command) error {
 	entries, err := registry.GetAllPluginEntries()
 	if err != nil {
@@ -93,6 +90,16 @@ func runPluginListAvailable(cmd *cobra.Command) error {
 	return w.Flush()
 }
 
+type enrichedPluginInfo struct {
+	registry.PluginInfo
+
+	// Metadata
+	SpecVersion    string
+	RuntimeVersion string
+}
+
+const notAvailable = "N/A"
+
 // runPluginListCmd lists installed plugins and writes a tabulated listing to the provided Cobra command output.
 // It checks whether the configured plugin directory exists and prints a message and returns nil if it does not.
 // If no plugins are installed it prints 'No plugins found.' and returns nil.
@@ -117,10 +124,54 @@ func runPluginListCmd(cmd *cobra.Command, verbose bool) error {
 		return nil
 	}
 
-	return displayPlugins(cmd, plugins, verbose)
+	var enriched []enrichedPluginInfo
+	ctx := cmd.Context()
+
+	for _, p := range plugins {
+		// Launch plugin to get metadata
+		launcher := pluginhost.NewProcessLauncher()
+		// 5s timeout for launch + info
+		const launchTimeout = 5 * time.Second
+		launchCtx, cancel := context.WithTimeout(ctx, launchTimeout)
+		client, launchErr := pluginhost.NewClient(launchCtx, launcher, p.Path)
+		if launchErr != nil {
+			// T036: Omit plugins that fail (or show with N/A?)
+			// Spec says omit plugins that timeout or fail.
+			cancel()
+			continue
+		}
+
+		// NewClient already fetches Info internally and populates Metadata!
+		// But wait, NewClient only populates Metadata if GetPluginInfo succeeds.
+		// If it failed (legacy), Metadata is nil.
+
+		specVer := notAvailable
+		runVer := notAvailable
+
+		if client.Metadata != nil {
+			specVer = client.Metadata.SpecVersion
+			runVer = client.Metadata.Version
+		}
+
+		enriched = append(enriched, enrichedPluginInfo{
+			PluginInfo:     p,
+			SpecVersion:    specVer,
+			RuntimeVersion: runVer,
+		})
+
+		_ = client.Close()
+		cancel()
+	}
+
+	if len(enriched) == 0 && len(plugins) > 0 {
+		cmd.Println("No healthy plugins found (all failed to respond).")
+		return nil
+	}
+
+	return displayPlugins(cmd, enriched, verbose)
 }
 
-func displayPlugins(cmd *cobra.Command, plugins []registry.PluginInfo, verbose bool) error {
+func displayPlugins(cmd *cobra.Command, plugins []enrichedPluginInfo, verbose bool) error {
 	const tabPadding = 2
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, tabPadding, ' ', 0)
 
@@ -130,23 +181,33 @@ func displayPlugins(cmd *cobra.Command, plugins []registry.PluginInfo, verbose b
 	return displaySimplePlugins(w, plugins)
 }
 
-func displayVerbosePlugins(w *tabwriter.Writer, plugins []registry.PluginInfo) error {
-	fmt.Fprintln(w, "Name\tVersion\tPath\tExecutable")
-	fmt.Fprintln(w, "----\t-------\t----\t----------")
+func displayVerbosePlugins(w *tabwriter.Writer, plugins []enrichedPluginInfo) error {
+	fmt.Fprintln(w, "Name\tVersion\tSpec\tPath\tExecutable")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t----------")
 
 	for _, plugin := range plugins {
 		execStatus := getExecutableStatus(plugin.Path)
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", plugin.Name, plugin.Version, plugin.Path, execStatus)
+		// Use RuntimeVersion if available, fallback to dir version
+		ver := plugin.RuntimeVersion
+		if ver == notAvailable {
+			ver = plugin.Version // Fallback to directory version
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", plugin.Name, ver, plugin.SpecVersion, plugin.Path, execStatus)
 	}
 	return w.Flush()
 }
 
-func displaySimplePlugins(w *tabwriter.Writer, plugins []registry.PluginInfo) error {
-	fmt.Fprintln(w, "Name\tVersion\tPath")
-	fmt.Fprintln(w, "----\t-------\t----")
+func displaySimplePlugins(w *tabwriter.Writer, plugins []enrichedPluginInfo) error {
+	fmt.Fprintln(w, "Name\tVersion\tSpec\tPath")
+	fmt.Fprintln(w, "----\t-------\t----\t----")
 
 	for _, plugin := range plugins {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", plugin.Name, plugin.Version, plugin.Path)
+		ver := plugin.RuntimeVersion
+		if ver == notAvailable {
+			ver = plugin.Version
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", plugin.Name, ver, plugin.SpecVersion, plugin.Path)
 	}
 	return w.Flush()
 }
