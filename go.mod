@@ -13,7 +13,7 @@ require (
 	github.com/rshade/pulumicost-spec v0.4.14
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/term v0.38.0
+	golang.org/x/term v0.39.0
 	golang.org/x/text v0.32.0
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
