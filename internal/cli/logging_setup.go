@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"context"
 	"os"
 
 	"github.com/rshade/pulumicost-core/internal/config"
 	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +38,8 @@ func setupLogging(cmd *cobra.Command) logging.LogPathResult {
 		logging.PrintFallbackWarning(cmd.ErrOrStderr(), result.FallbackReason)
 	}
 
-	ctx := cmd.Context()
+	skipVersionCheck, _ := cmd.Flags().GetBool("skip-version-check")
+	ctx := context.WithValue(cmd.Context(), pluginhost.SkipVersionCheckKey, skipVersionCheck)
 	traceID := logging.GetOrGenerateTraceID(ctx)
 	ctx = logging.ContextWithTraceID(ctx, traceID)
 	ctx = logger.WithContext(ctx)

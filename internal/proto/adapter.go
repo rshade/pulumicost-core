@@ -12,7 +12,6 @@ import (
 	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -440,7 +439,7 @@ type CostSourceClient interface {
 	) (*GetRecommendationsResponse, error)
 	GetPluginInfo(
 		ctx context.Context,
-		in *emptypb.Empty,
+		in *Empty,
 		opts ...grpc.CallOption,
 	) (*pbc.GetPluginInfoResponse, error)
 	DryRun(
@@ -476,7 +475,7 @@ func (c *clientAdapter) Name(
 
 func (c *clientAdapter) GetPluginInfo(
 	ctx context.Context,
-	_ *emptypb.Empty,
+	_ *Empty,
 	opts ...grpc.CallOption,
 ) (*pbc.GetPluginInfoResponse, error) {
 	return c.client.GetPluginInfo(ctx, &pbc.GetPluginInfoRequest{}, opts...)

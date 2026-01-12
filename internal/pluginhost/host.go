@@ -9,7 +9,6 @@ import (
 	"github.com/rshade/pulumicost-core/internal/proto"
 	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // contextKey is a private type for context keys to avoid collisions.
@@ -62,7 +61,7 @@ func NewClient(ctx context.Context, launcher Launcher, binPath string) (*Client,
 	infoCtx, cancel := context.WithTimeout(ctx, infoTimeout)
 	defer cancel()
 
-	infoResp, err := api.GetPluginInfo(infoCtx, &emptypb.Empty{})
+	infoResp, err := api.GetPluginInfo(infoCtx, &proto.Empty{})
 	if err != nil {
 		handleGetPluginInfoError(ctx, client.Name, err)
 		return client, nil
@@ -94,7 +93,8 @@ func handleGetPluginInfoError(ctx context.Context, pluginName string, err error)
 }
 
 func checkVersionCompatibility(ctx context.Context, pluginName, pluginSpecVersion string) {
-	skipCheck, _ := ctx.Value(SkipVersionCheckKey).(bool)
+	v, ok := ctx.Value(SkipVersionCheckKey).(bool)
+	skipCheck := ok && v
 	if skipCheck {
 		return
 	}

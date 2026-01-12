@@ -42,6 +42,26 @@ func (s *mockServer) Name(_ context.Context, _ *pbc.NameRequest) (*pbc.NameRespo
 	}, nil
 }
 
+// GetPluginInfo implements the GetPluginInfo RPC method.
+func (s *mockServer) GetPluginInfo(_ context.Context, _ *pbc.GetPluginInfoRequest) (*pbc.GetPluginInfoResponse, error) {
+	// Simulate latency if configured
+	latency := s.plugin.GetLatency()
+	if latency > 0 {
+		time.Sleep(time.Duration(latency) * time.Millisecond)
+	}
+
+	// Check for error injection
+	if err := s.plugin.ShouldInjectError("GetPluginInfo"); err != nil {
+		return nil, toGRPCError(err)
+	}
+
+	config := s.plugin.GetConfig()
+	return &pbc.GetPluginInfoResponse{
+		Version:     config.PluginVersion,
+		SpecVersion: config.PluginSpecVersion,
+	}, nil
+}
+
 // GetProjectedCost implements the GetProjectedCost RPC method.
 func (s *mockServer) GetProjectedCost(
 	_ context.Context,

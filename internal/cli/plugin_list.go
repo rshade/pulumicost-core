@@ -94,8 +94,16 @@ type enrichedPluginInfo struct {
 	registry.PluginInfo
 
 	// Metadata
-	SpecVersion    string
-	RuntimeVersion string
+	SpecVersion    string `json:"specVersion"`
+	RuntimeVersion string `json:"runtimeVersion"`
+}
+
+// displayVersion returns RuntimeVersion when it's not notAvailable, otherwise Version.
+func (p enrichedPluginInfo) displayVersion() string {
+	if p.RuntimeVersion != notAvailable {
+		return p.RuntimeVersion
+	}
+	return p.Version
 }
 
 const notAvailable = "N/A"
@@ -126,24 +134,18 @@ func runPluginListCmd(cmd *cobra.Command, verbose bool) error {
 
 	var enriched []enrichedPluginInfo
 	ctx := cmd.Context()
+	launcher := pluginhost.NewProcessLauncher()
 
 	for _, p := range plugins {
 		// Launch plugin to get metadata
-		launcher := pluginhost.NewProcessLauncher()
 		// 5s timeout for launch + info
 		const launchTimeout = 5 * time.Second
 		launchCtx, cancel := context.WithTimeout(ctx, launchTimeout)
 		client, launchErr := pluginhost.NewClient(launchCtx, launcher, p.Path)
 		if launchErr != nil {
-			// T036: Omit plugins that fail (or show with N/A?)
-			// Spec says omit plugins that timeout or fail.
 			cancel()
 			continue
 		}
-
-		// NewClient already fetches Info internally and populates Metadata!
-		// But wait, NewClient only populates Metadata if GetPluginInfo succeeds.
-		// If it failed (legacy), Metadata is nil.
 
 		specVer := notAvailable
 		runVer := notAvailable
@@ -187,11 +189,7 @@ func displayVerbosePlugins(w *tabwriter.Writer, plugins []enrichedPluginInfo) er
 
 	for _, plugin := range plugins {
 		execStatus := getExecutableStatus(plugin.Path)
-		// Use RuntimeVersion if available, fallback to dir version
-		ver := plugin.RuntimeVersion
-		if ver == notAvailable {
-			ver = plugin.Version // Fallback to directory version
-		}
+		ver := plugin.displayVersion()
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", plugin.Name, ver, plugin.SpecVersion, plugin.Path, execStatus)
 	}
@@ -203,10 +201,7 @@ func displaySimplePlugins(w *tabwriter.Writer, plugins []enrichedPluginInfo) err
 	fmt.Fprintln(w, "----\t-------\t----\t----")
 
 	for _, plugin := range plugins {
-		ver := plugin.RuntimeVersion
-		if ver == notAvailable {
-			ver = plugin.Version
-		}
+		ver := plugin.displayVersion()
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", plugin.Name, ver, plugin.SpecVersion, plugin.Path)
 	}
 	return w.Flush()

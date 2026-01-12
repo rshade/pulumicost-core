@@ -2,6 +2,7 @@ package pluginhost_test
 
 import (
 	"context"
+	"errors"
 	"net"
 	"testing"
 	"time"
@@ -58,15 +59,14 @@ func (m *grpcMockLauncher) Start(
 	path string,
 	args ...string,
 ) (*grpc.ClientConn, func() error, error) {
-	conn, err := grpc.DialContext(
-		ctx,
-		"bufnet",
+	conn, err := grpc.NewClient(
+		"passthrough:///bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return m.listener.Dial()
 		}),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	return conn, func() error { return nil }, err
+	return conn, func() error { return conn.Close() }, err
 }
 
 func setupMockServer(_ *testing.T, srv *mockCostSourceServer) (*grpcMockLauncher, func()) {
@@ -75,7 +75,8 @@ func setupMockServer(_ *testing.T, srv *mockCostSourceServer) (*grpcMockLauncher
 	pbc.RegisterCostSourceServiceServer(s, srv)
 	go func() {
 		if err := s.Serve(listener); err != nil {
-			// server might be stopped
+			if !errors.Is(err, grpc.ErrServerStopped) {
+			}
 		}
 	}()
 
@@ -109,10 +110,8 @@ func TestGetPluginInfo_Success(t *testing.T) {
 	defer client.Close()
 
 	// Verify client has stored metadata
-	// Note: We haven't added the field to Client yet, so this part of the test will fail compilation
-	// until we update the Client struct. For now we assert err is nil.
 	assert.Equal(t, "test-plugin", client.Name)
-	// assert.Equal(t, "1.0.0", client.Metadata.Version)
+	assert.Equal(t, "1.0.0", client.Metadata.Version)
 }
 
 func TestGetPluginInfo_Unimplemented(t *testing.T) {
@@ -145,18 +144,10 @@ func TestGetPluginInfo_Timeout(t *testing.T) {
 	defer cleanup()
 
 	ctx := context.Background()
-	// NewClient will likely fail or log warning depending on implementation preference for timeout.
-	// Spec says: "If GetPluginInfo times out, treat as legacy plugin (Unimplemented)" OR fail?
-	// T016 says: "call GetPluginInfo with 5-second timeout".
-	// T036 says: "omit plugins that timeout".
-	// But NewClient is initialization. If it times out here, we probably want to fail or warn.
-	// Let's assume for now it should succeed but maybe without metadata, or fail.
-	// Task T011 says "TestGetPluginInfo_Timeout", implying we need to handle it.
-
+	// On timeout, NewClient logs a warning and returns client with nil Metadata
 	client, err := pluginhost.NewClient(ctx, launcher, "dummy")
-	// If strict check, this might fail.
-	// If soft check, it might pass.
-	// Let's assume soft failure (warn and proceed) for now, or we'll see actual behavior.
-	_ = client
-	_ = err
+	require.NoError(t, err)
+	require.NotNil(t, client)
+	assert.Equal(t, "slow-plugin", client.Name)
+	assert.Nil(t, client.Metadata)
 }

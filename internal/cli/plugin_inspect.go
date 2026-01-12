@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/rshade/pulumicost-core/internal/pluginhost"
 	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
 	"github.com/spf13/cobra"
@@ -41,8 +44,14 @@ This command performs a dry-run against the plugin to retrieve field mappings fo
 func runPluginInspect(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
 	resourceType := args[1]
-	jsonOutput, _ := cmd.Flags().GetBool("json")
-	version, _ := cmd.Flags().GetString("version")
+	jsonOutput, err := cmd.Flags().GetBool("json")
+	if err != nil {
+		return fmt.Errorf("failed to get json flag: %w", err)
+	}
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return fmt.Errorf("failed to get version flag: %w", err)
+	}
 	ctx := cmd.Context()
 
 	path, err := findPluginPath(pluginName, version)
@@ -80,9 +89,9 @@ func runPluginInspect(cmd *cobra.Command, args []string) error {
 
 	// 4. Render output
 	if jsonOutput {
-		return renderJSON(resp, os.Stdout)
+		return renderJSON(resp, cmd.OutOrStdout())
 	}
-	renderTable(resp, os.Stdout)
+	renderTable(resp, cmd.OutOrStdout())
 	return nil
 }
 
@@ -92,7 +101,7 @@ func findPluginPath(name, version string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	pluginDir := fmt.Sprintf("%s/.pulumicost/plugins/%s", home, name)
+	pluginDir := filepath.Join(home, ".pulumicost", "plugins", name)
 
 	if version == "" {
 		v, vErr := findLatestVersion(pluginDir, name)
@@ -102,7 +111,7 @@ func findPluginPath(name, version string) (string, error) {
 		version = v
 	}
 
-	binPath := fmt.Sprintf("%s/%s/%s", pluginDir, version, name)
+	binPath := filepath.Join(pluginDir, version, name)
 	if _, statErr := os.Stat(binPath); statErr != nil {
 		// Windows extension check
 		if _, statErrExe := os.Stat(binPath + ".exe"); statErrExe == nil {
@@ -119,38 +128,47 @@ func findLatestVersion(pluginDir, name string) (string, error) {
 		return "", fmt.Errorf("plugin '%s' not installed (checked %s)", name, pluginDir)
 	}
 	var latest string
+	var latestVer *semver.Version
 	for _, e := range entries {
 		if e.IsDir() && strings.HasPrefix(e.Name(), "v") {
-			if latest == "" || e.Name() > latest {
+			verStr := strings.TrimPrefix(e.Name(), "v")
+			ver, err := semver.NewVersion(verStr)
+			if err != nil {
+				continue // Skip entries that fail to parse as semver
+			}
+			if latestVer == nil || ver.Compare(latestVer) > 0 {
+				latestVer = ver
 				latest = e.Name()
 			}
 		}
 	}
 	if latest == "" {
-		return "", fmt.Errorf("no versions found for plugin '%s'", name)
+		return "", fmt.Errorf("no valid semver versions found for plugin '%s'", name)
 	}
 	return latest, nil
 }
 
-func renderJSON(resp *pbc.DryRunResponse, w *os.File) error {
+func renderJSON(resp *pbc.DryRunResponse, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(resp)
 }
 
-func renderTable(resp *pbc.DryRunResponse, w *os.File) {
+func renderTable(resp *pbc.DryRunResponse, w io.Writer) {
 	const (
-		colWidthField     = 20
-		colWidthStatus    = 10
-		colWidthCondition = 30
+		colWidthField  = 20
+		colWidthStatus = 10
 	)
 
+	// Build format string using column widths for consistency
+	rowFormat := fmt.Sprintf("%%-%ds %%-%ds %%s\n", colWidthField, colWidthStatus)
+
 	fmt.Fprintf(w, "Field Mappings:\n")
-	fmt.Fprintf(w, "%-20s %-10s %s\n", "FIELD", "STATUS", "CONDITION")
+	fmt.Fprintf(w, rowFormat, "FIELD", "STATUS", "CONDITION")
 	fmt.Fprintf(w, "%s %s %s\n",
 		strings.Repeat("-", colWidthField),
 		strings.Repeat("-", colWidthStatus),
-		strings.Repeat("-", colWidthCondition))
+		strings.Repeat("-", colWidthStatus)) // CONDITION column has variable width
 
 	for _, m := range resp.GetFieldMappings() {
 		status := "UNKNOWN"
@@ -167,6 +185,6 @@ func renderTable(resp *pbc.DryRunResponse, w *os.File) {
 			status = "UNKNOWN"
 		}
 
-		fmt.Fprintf(w, "%-20s %-10s %s\n", m.GetFieldName(), status, m.GetConditionDescription())
+		fmt.Fprintf(w, rowFormat, m.GetFieldName(), status, m.GetConditionDescription())
 	}
 }

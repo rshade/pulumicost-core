@@ -3,7 +3,7 @@ package pluginhost
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCompareSpecVersions(t *testing.T) {
@@ -25,6 +25,13 @@ func TestCompareSpecVersions(t *testing.T) {
 			name:          "Compatible minor update",
 			coreVersion:   "0.4.14",
 			pluginVersion: "0.4.15",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Minor difference returns Compatible",
+			coreVersion:   "0.4.14",
+			pluginVersion: "0.5.0",
 			wantResult:    Compatible,
 			wantErr:       false,
 		},
@@ -63,17 +70,66 @@ func TestCompareSpecVersions(t *testing.T) {
 			wantResult:    Invalid,
 			wantErr:       true,
 		},
+		{
+			name:          "Empty core version",
+			coreVersion:   "",
+			pluginVersion: "0.4.14",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "Empty plugin version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "V-prefixed versions (both)",
+			coreVersion:   "v0.4.14",
+			pluginVersion: "v0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "V-prefixed core version",
+			coreVersion:   "v0.4.14",
+			pluginVersion: "0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "V-prefixed plugin version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "v0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Pre-release core version",
+			coreVersion:   "0.5.0-alpha.1",
+			pluginVersion: "0.5.0",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Pre-release plugin version",
+			coreVersion:   "0.5.0",
+			pluginVersion: "0.5.0-alpha.1",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := CompareSpecVersions(tt.coreVersion, tt.pluginVersion)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
-			assert.Equal(t, tt.wantResult, got)
+			require.Equal(t, tt.wantResult, got)
 		})
 	}
 }

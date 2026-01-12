@@ -29,6 +29,12 @@ type MockConfig struct {
 
 	// LatencyMS specifies simulated latency in milliseconds
 	LatencyMS int
+
+	// PluginVersion specifies the plugin version to return in GetPluginInfo
+	PluginVersion string
+
+	// PluginSpecVersion specifies the spec version to return in GetPluginInfo
+	PluginSpecVersion string
 }
 
 // ErrorType represents different types of errors the mock can simulate.

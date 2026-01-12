@@ -12,8 +12,6 @@ type CompatibilityResult int
 const (
 	// Compatible indicates the versions are compatible.
 	Compatible CompatibilityResult = iota
-	// MinorMismatch indicates a minor version difference (usually compatible).
-	MinorMismatch
 	// MajorMismatch indicates a major version difference (likely incompatible).
 	MajorMismatch
 	// Invalid indicates one or both version strings are invalid.
@@ -35,13 +33,6 @@ func CompareSpecVersions(coreVersion, pluginVersion string) (CompatibilityResult
 
 	if cVer.Major() != pVer.Major() {
 		return MajorMismatch, nil
-	}
-
-	// Minor version differences are generally compatible in semver,
-	// but we track them just in case specific logic is needed later.
-	// For now, if major matches, we consider it compatible.
-	if cVer.Minor() != pVer.Minor() {
-		return Compatible, nil
 	}
 
 	return Compatible, nil

@@ -6,6 +6,7 @@ import (
 
 	"github.com/rshade/pulumicost-core/internal/cli"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewPluginInspectCmd(t *testing.T) {
@@ -18,26 +19,32 @@ func TestInspectCommand_Flags(t *testing.T) {
 	cmd := cli.NewPluginInspectCmd()
 
 	jsonFlag := cmd.Flags().Lookup("json")
-	assert.NotNil(t, jsonFlag)
+	require.NotNil(t, jsonFlag)
 	assert.Equal(t, "bool", jsonFlag.Value.Type())
 
 	verFlag := cmd.Flags().Lookup("version")
-	assert.NotNil(t, verFlag)
+	require.NotNil(t, verFlag)
 	assert.Equal(t, "string", verFlag.Value.Type())
 }
 
 func TestInspectCommand_PluginNotFound(t *testing.T) {
-	cmd := cli.NewPluginInspectCmd()
-	var buf bytes.Buffer
-	cmd.SetOut(&buf)
-	cmd.SetErr(&buf)
-	// Missing arguments
-	cmd.SetArgs([]string{})
-	err := cmd.Execute()
-	assert.Error(t, err) // Should error on missing args
+	t.Run("missing args", func(t *testing.T) {
+		cmd := cli.NewPluginInspectCmd()
+		var buf bytes.Buffer
+		cmd.SetOut(&buf)
+		cmd.SetErr(&buf)
+		cmd.SetArgs([]string{})
+		err := cmd.Execute()
+		assert.Error(t, err) // Should error on missing args
+	})
 
-	// Non-existent plugin
-	cmd.SetArgs([]string{"non-existent-plugin", "aws:ec2:Instance"})
-	err = cmd.Execute()
-	assert.Error(t, err)
+	t.Run("non-existent plugin", func(t *testing.T) {
+		cmd := cli.NewPluginInspectCmd()
+		var buf bytes.Buffer
+		cmd.SetOut(&buf)
+		cmd.SetErr(&buf)
+		cmd.SetArgs([]string{"non-existent-plugin", "aws:ec2:Instance"})
+		err := cmd.Execute()
+		assert.Error(t, err)
+	})
 }
