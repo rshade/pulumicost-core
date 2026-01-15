@@ -74,7 +74,7 @@ each story.
 **Goal**: Enable users to run any CLI command with `--debug` flag and see complete decision flow from
 command start to finish, including plugin lookup attempts, fallback decisions, and duration.
 
-**Independent Test**: Run `pulumicost cost projected --debug --pulumi-json examples/plans/aws-simple-plan.json`
+**Independent Test**: Run `finfocus cost projected --debug --pulumi-json examples/plans/aws-simple-plan.json`
 and verify structured log output shows command start, resource ingestion, plugin lookups, cost
 calculations, and command completion with duration.
 
@@ -98,7 +98,7 @@ calculations, and command completion with duration.
 - [x] T032 [US1] Add cost calculation logging with duration_ms in internal/engine/engine.go
 - [x] T033 [US1] Add fallback decision logging (WARN level) when plugin returns no price in internal/engine/engine.go
 - [x] T034 [US1] Add spec loading logging in internal/spec/loader.go
-- [x] T035 [US1] Initialize main logger at startup in cmd/pulumicost/main.go
+- [x] T035 [US1] Initialize main logger at startup in cmd/finfocus/main.go
 
 **Checkpoint**: User Story 1 complete - debug mode shows full decision flow, independently testable
 
@@ -121,7 +121,7 @@ verify same trace ID appears in both log streams.
 ### Implementation for User Story 2
 
 - [x] T039 [US2] Create TraceInterceptor function returning grpc.UnaryClientInterceptor in internal/pluginhost/grpc.go
-- [x] T040 [US2] Define TraceIDMetadataKey constant as "x-pulumicost-trace-id" in internal/pluginhost/grpc.go
+- [x] T040 [US2] Define TraceIDMetadataKey constant as "x-finfocus-trace-id" in internal/pluginhost/grpc.go
 - [x] T041 [US2] Apply interceptor when creating gRPC connection in internal/pluginhost/process.go
 - [x] T042 [US2] Add plugin connection lifecycle logging (connect, disconnect, errors) in internal/pluginhost/process.go
 - [x] T043 [US2] Add gRPC call logging with method name in internal/pluginhost/grpc.go
@@ -135,14 +135,14 @@ verify same trace ID appears in both log streams.
 **Goal**: Allow operators to configure log level and format via config file, environment variables,
 or CLI flags with proper precedence (CLI > env > config > default).
 
-**Independent Test**: Set `PULUMICOST_LOG_LEVEL=error` and config file level to debug, verify only
+**Independent Test**: Set `FINFOCUS_LOG_LEVEL=error` and config file level to debug, verify only
 ERROR logs appear (environment takes precedence over config file).
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
 - [x] T044 [P] [US3] Unit test for configuration precedence (CLI > env > config) in internal/config/config_test.go
-- [x] T045 [P] [US3] Unit test for PULUMICOST_LOG_LEVEL environment variable in internal/config/config_test.go
-- [x] T046 [P] [US3] Unit test for PULUMICOST_LOG_FORMAT environment variable in internal/config/config_test.go
+- [x] T045 [P] [US3] Unit test for FINFOCUS_LOG_LEVEL environment variable in internal/config/config_test.go
+- [x] T046 [P] [US3] Unit test for FINFOCUS_LOG_FORMAT environment variable in internal/config/config_test.go
 - [x] T047 [P] [US3] Unit test for invalid log level fallback to INFO in internal/config/config_test.go
 
 ### Implementation for User Story 3
@@ -150,8 +150,8 @@ ERROR logs appear (environment takes precedence over config file).
 - [x] T048 [US3] Extend LoggingConfig struct with all fields (level, format, output, file, caller, stack_trace) in internal/config/config.go
 - [x] T049 [US3] Implement resolveLogLevel function checking CLI > env > config > default in internal/config/config.go
 - [x] T050 [US3] Implement resolveLogFormat function checking env > config > default in internal/config/config.go
-- [x] T051 [US3] Add PULUMICOST_LOG_LEVEL environment variable support in internal/config/config.go
-- [x] T052 [US3] Add PULUMICOST_LOG_FORMAT environment variable support in internal/config/config.go
+- [x] T051 [US3] Add FINFOCUS_LOG_LEVEL environment variable support in internal/config/config.go
+- [x] T052 [US3] Add FINFOCUS_LOG_FORMAT environment variable support in internal/config/config.go
 - [x] T053 [US3] Add file output support with fallback to stderr in internal/logging/zerolog.go
 - [x] T054 [US3] Add invalid log level warning and fallback in internal/logging/zerolog.go
 - [x] T055 [US3] Wire config resolution to logger initialization in internal/cli/root.go (call resolveLogLevel/resolveLogFormat, pass to NewLogger)
@@ -162,21 +162,21 @@ ERROR logs appear (environment takes precedence over config file).
 
 ## Phase 6: User Story 4 - Injecting External Trace IDs (Priority: P4)
 
-**Goal**: Allow enterprise users to inject their pipeline's trace ID via PULUMICOST_TRACE_ID environment
+**Goal**: Allow enterprise users to inject their pipeline's trace ID via FINFOCUS_TRACE_ID environment
 variable for correlation with broader observability systems.
 
-**Independent Test**: Set `PULUMICOST_TRACE_ID=external-trace-12345` and run any command, verify all
+**Independent Test**: Set `FINFOCUS_TRACE_ID=external-trace-12345` and run any command, verify all
 log entries use "external-trace-12345" as trace_id value.
 
 ### Tests for User Story 4 (MANDATORY - TDD Required) ⚠️
 
-- [x] T056 [P] [US4] Unit test for PULUMICOST_TRACE_ID environment variable override in internal/logging/zerolog_test.go
+- [x] T056 [P] [US4] Unit test for FINFOCUS_TRACE_ID environment variable override in internal/logging/zerolog_test.go
 - [x] T057 [P] [US4] Unit test for external trace ID appearing in all log entries in internal/logging/zerolog_test.go
 - [x] T058 [P] [US4] Integration test validating external trace ID flow in test/integration/trace_propagation_test.go
 
 ### Implementation for User Story 4
 
-- [x] T059 [US4] Check PULUMICOST_TRACE_ID before generating new trace ID in internal/logging/zerolog.go
+- [x] T059 [US4] Check FINFOCUS_TRACE_ID before generating new trace ID in internal/logging/zerolog.go
 
 **Checkpoint**: User Story 4 complete - external trace IDs properly injected, independently testable
 
@@ -275,7 +275,7 @@ Task: T023 "Integration test for full debug output flow in test/integration/logg
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
 3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test `pulumicost cost projected --debug` independently
+4. **STOP and VALIDATE**: Test `finfocus cost projected --debug` independently
 5. Deploy/demo if ready
 
 ### Incremental Delivery

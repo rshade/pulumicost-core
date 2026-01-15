@@ -4,7 +4,7 @@
 
 ### Architecture Overview
 
-This plan outlines the implementation of a hardened test infrastructure for PulumiCost Core. The primary goal is to enhance system stability, platform compatibility, and scalability through a multi-layered testing strategy. This involves:
+This plan outlines the implementation of a hardened test infrastructure for FinFocus Core. The primary goal is to enhance system stability, platform compatibility, and scalability through a multi-layered testing strategy. This involves:
 
 1.  **Fuzz Testing**: Integrating Go's native fuzzing capabilities (`testing.F` introduced in Go 1.18) into the `internal/ingest` and `internal/spec` packages to test JSON and YAML parsers against malformed inputs.
 2.  **Cross-Platform Testing**: Leveraging GitHub Actions matrix builds to execute the test suite on Ubuntu, macOS, and Windows runners. This will be configured to run on Nightly builds and Release tags to optimize CI resource usage.
@@ -30,7 +30,7 @@ This plan outlines the implementation of a hardened test infrastructure for Pulu
     -   `internal/config`: Configuration validation logic.
 -   **Out-of-Scope**:
     -   Changes to the core engine logic (unless bugs are found during testing).
-    -   Plugin-specific testing (this is the responsibility of `pulumicost-plugin` repos, though integration tests may touch them).
+    -   Plugin-specific testing (this is the responsibility of `finfocus-plugin` repos, though integration tests may touch them).
     -   UI/UX changes.
 
 ### Data Model Changes

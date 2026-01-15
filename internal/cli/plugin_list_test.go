@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewPluginListCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -55,7 +55,7 @@ func TestNewPluginListCmd(t *testing.T) {
 
 func TestPluginListCmdFlags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check verbose flag
@@ -68,7 +68,7 @@ func TestPluginListCmdFlags(t *testing.T) {
 
 func TestPluginListCmdHelp(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginListCmd()
 	cmd.SetOut(&buf)
@@ -86,19 +86,19 @@ func TestPluginListCmdHelp(t *testing.T) {
 
 func TestPluginListCmdExamples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
-	assert.Contains(t, cmd.Example, "pulumicost plugin list")
-	assert.Contains(t, cmd.Example, "pulumicost plugin list --verbose")
+	assert.Contains(t, cmd.Example, "finfocus plugin list")
+	assert.Contains(t, cmd.Example, "finfocus plugin list --verbose")
 	assert.Contains(t, cmd.Example, "List plugins with detailed information")
 }
 
 func TestPluginListCmdOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 	// Need to set args to empty to avoid using os.Args
 	cmd.SetArgs([]string{})
@@ -110,7 +110,7 @@ func TestPluginListCmdOutput(t *testing.T) {
 
 func TestPluginListCmdAvailable(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginListCmd()
 	cmd.SetOut(&buf)
@@ -133,7 +133,7 @@ func TestPluginListCmdAvailable(t *testing.T) {
 
 func TestPluginListCmdAvailableFlag(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginListCmd()
 
 	// Check available flag

@@ -5,12 +5,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // stubHome sets up an isolated HOME directory for testing to prevent
-// tests from reading/writing the real ~/.pulumicost directory.
+// tests from reading/writing the real ~/.finfocus directory.
 func stubHome(t *testing.T) {
 	t.Helper()
 	dir := t.TempDir()
@@ -62,7 +63,7 @@ func TestConfig_NewStrict(t *testing.T) {
 		stubHome(t)
 
 		// Create a corrupted config file
-		configDir := filepath.Join(os.Getenv("HOME"), ".pulumicost")
+		configDir := filepath.Join(os.Getenv("HOME"), ".finfocus")
 		err := os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 
@@ -232,7 +233,7 @@ func TestConfig_Validation(t *testing.T) {
 }
 
 func TestConfig_SaveLoad(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "pulumicost-config-test")
+	tmpDir, err := os.MkdirTemp("", "finfocus-config-test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -314,20 +315,20 @@ func TestConfig_PluginMethods(t *testing.T) {
 func TestConfig_EnvironmentOverrides(t *testing.T) {
 	// Set environment variables
 	customLogFile := filepath.Join(t.TempDir(), "custom.log")
-	os.Setenv("PULUMICOST_OUTPUT_FORMAT", "json")
-	os.Setenv("PULUMICOST_OUTPUT_PRECISION", "5")
-	os.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-	os.Setenv("PULUMICOST_LOG_FILE", customLogFile)
-	os.Setenv("PULUMICOST_PLUGIN_AWS_REGION", "eu-west-1")
-	os.Setenv("PULUMICOST_PLUGIN_AWS_PROFILE", "test")
+	os.Setenv("FINFOCUS_OUTPUT_FORMAT", "json")
+	os.Setenv("FINFOCUS_OUTPUT_PRECISION", "5")
+	os.Setenv("FINFOCUS_LOG_LEVEL", "debug")
+	os.Setenv("FINFOCUS_LOG_FILE", customLogFile)
+	os.Setenv("FINFOCUS_PLUGIN_AWS_REGION", "eu-west-1")
+	os.Setenv("FINFOCUS_PLUGIN_AWS_PROFILE", "test")
 
 	defer func() {
-		os.Unsetenv("PULUMICOST_OUTPUT_FORMAT")
-		os.Unsetenv("PULUMICOST_OUTPUT_PRECISION")
-		os.Unsetenv("PULUMICOST_LOG_LEVEL")
-		os.Unsetenv("PULUMICOST_LOG_FILE")
-		os.Unsetenv("PULUMICOST_PLUGIN_AWS_REGION")
-		os.Unsetenv("PULUMICOST_PLUGIN_AWS_PROFILE")
+		os.Unsetenv("FINFOCUS_OUTPUT_FORMAT")
+		os.Unsetenv("FINFOCUS_OUTPUT_PRECISION")
+		os.Unsetenv("FINFOCUS_LOG_LEVEL")
+		os.Unsetenv("FINFOCUS_LOG_FILE")
+		os.Unsetenv("FINFOCUS_PLUGIN_AWS_REGION")
+		os.Unsetenv("FINFOCUS_PLUGIN_AWS_PROFILE")
 	}()
 
 	stubHome(t)
@@ -361,7 +362,7 @@ func TestConfig_BackwardCompatibility(t *testing.T) {
 func TestConfig_Precedence_EnvOverridesConfigFile(t *testing.T) {
 	// Create a temporary config file with specific values
 	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, ".pulumicost", "config.yaml")
+	configPath := filepath.Join(tmpDir, ".finfocus", "config.yaml")
 	err := os.MkdirAll(filepath.Dir(configPath), 0700)
 	require.NoError(t, err)
 
@@ -378,8 +379,8 @@ logging:
 	t.Setenv("USERPROFILE", tmpDir)
 
 	// Set environment variables that should override config file
-	t.Setenv("PULUMICOST_LOG_LEVEL", "debug")
-	t.Setenv("PULUMICOST_LOG_FORMAT", "text")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "debug")
+	t.Setenv("FINFOCUS_LOG_FORMAT", "text")
 
 	cfg := New()
 
@@ -388,8 +389,8 @@ logging:
 	assert.Equal(t, "text", cfg.Logging.Format, "env should override config file format")
 }
 
-// T045: Unit test for PULUMICOST_LOG_LEVEL environment variable.
-func TestConfig_PULUMICOST_LOG_LEVEL_EnvVar(t *testing.T) {
+// T045: Unit test for FINFOCUS_LOG_LEVEL environment variable.
+func TestConfig_FINFOCUS_LOG_LEVEL_EnvVar(t *testing.T) {
 	stubHome(t)
 
 	// Test various log levels via environment variable
@@ -406,7 +407,7 @@ func TestConfig_PULUMICOST_LOG_LEVEL_EnvVar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.envValue, func(t *testing.T) {
-			t.Setenv("PULUMICOST_LOG_LEVEL", tt.envValue)
+			t.Setenv("FINFOCUS_LOG_LEVEL", tt.envValue)
 
 			cfg := New()
 			assert.Equal(t, tt.expectedLevel, cfg.Logging.Level)
@@ -414,8 +415,8 @@ func TestConfig_PULUMICOST_LOG_LEVEL_EnvVar(t *testing.T) {
 	}
 }
 
-// T046: Unit test for PULUMICOST_LOG_FORMAT environment variable.
-func TestConfig_PULUMICOST_LOG_FORMAT_EnvVar(t *testing.T) {
+// T046: Unit test for FINFOCUS_LOG_FORMAT environment variable.
+func TestConfig_FINFOCUS_LOG_FORMAT_EnvVar(t *testing.T) {
 	stubHome(t)
 
 	// Test various log formats via environment variable
@@ -430,7 +431,7 @@ func TestConfig_PULUMICOST_LOG_FORMAT_EnvVar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.envValue, func(t *testing.T) {
-			t.Setenv("PULUMICOST_LOG_FORMAT", tt.envValue)
+			t.Setenv("FINFOCUS_LOG_FORMAT", tt.envValue)
 
 			cfg := New()
 			assert.Equal(t, tt.expectedFormat, cfg.Logging.Format)
@@ -455,11 +456,11 @@ func TestConfig_InvalidLogLevel_Validation(t *testing.T) {
 // Test that defaults work correctly when no env vars are set.
 func TestConfig_Defaults_NoEnvVars(t *testing.T) {
 	// Clear all relevant env vars
-	t.Setenv("PULUMICOST_LOG_LEVEL", "")
-	t.Setenv("PULUMICOST_LOG_FORMAT", "")
-	t.Setenv("PULUMICOST_LOG_FILE", "")
-	t.Setenv("PULUMICOST_OUTPUT_FORMAT", "")
-	t.Setenv("PULUMICOST_OUTPUT_PRECISION", "")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "")
+	t.Setenv("FINFOCUS_LOG_FORMAT", "")
+	t.Setenv("FINFOCUS_LOG_FILE", "")
+	t.Setenv("FINFOCUS_OUTPUT_FORMAT", "")
+	t.Setenv("FINFOCUS_OUTPUT_PRECISION", "")
 
 	stubHome(t)
 	cfg := New()
@@ -472,13 +473,13 @@ func TestConfig_Defaults_NoEnvVars(t *testing.T) {
 }
 
 // T011: Test PULUMI_HOME precedence for config path resolution.
-// When PULUMI_HOME is set, config should be loaded from $PULUMI_HOME/pulumicost/.
+// When PULUMI_HOME is set, config should be loaded from $PULUMI_HOME/finfocus/.
 func TestConfig_PULUMI_HOME_Precedence(t *testing.T) {
-	t.Run("PULUMI_HOME set - uses pulumicost subdir", func(t *testing.T) {
+	t.Run("PULUMI_HOME set - uses finfocus subdir", func(t *testing.T) {
 		// Create a fake PULUMI_HOME with a config file
 		pulumiHome := t.TempDir()
-		pulumicostDir := filepath.Join(pulumiHome, "pulumicost")
-		err := os.MkdirAll(pulumicostDir, 0700)
+		finfocusDir := filepath.Join(pulumiHome, "finfocus")
+		err := os.MkdirAll(finfocusDir, 0700)
 		require.NoError(t, err)
 
 		// Create a config file with a distinctive value
@@ -487,7 +488,7 @@ output:
   default_format: ndjson
   precision: 7
 `
-		configPath := filepath.Join(pulumicostDir, "config.yaml")
+		configPath := filepath.Join(finfocusDir, "config.yaml")
 		err = os.WriteFile(configPath, []byte(configContent), 0600)
 		require.NoError(t, err)
 
@@ -497,7 +498,7 @@ output:
 
 		cfg := New()
 
-		// Config should come from PULUMI_HOME/pulumicost/
+		// Config should come from PULUMI_HOME/finfocus/
 		assert.Equal(t, "ndjson", cfg.Output.DefaultFormat, "should use config from PULUMI_HOME")
 		assert.Equal(t, 7, cfg.Output.Precision, "should use precision from PULUMI_HOME config")
 	})
@@ -505,8 +506,8 @@ output:
 	t.Run("PULUMI_HOME not set - uses default HOME path", func(t *testing.T) {
 		// Create a fake HOME with a config file
 		homeDir := t.TempDir()
-		pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-		err := os.MkdirAll(pulumicostDir, 0700)
+		finfocusDir := filepath.Join(homeDir, ".finfocus")
+		err := os.MkdirAll(finfocusDir, 0700)
 		require.NoError(t, err)
 
 		// Create a config file with a distinctive value
@@ -515,7 +516,7 @@ output:
   default_format: json
   precision: 3
 `
-		configPath := filepath.Join(pulumicostDir, "config.yaml")
+		configPath := filepath.Join(finfocusDir, "config.yaml")
 		err = os.WriteFile(configPath, []byte(configContent), 0600)
 		require.NoError(t, err)
 
@@ -526,8 +527,8 @@ output:
 
 		cfg := New()
 
-		// Config should come from HOME/.pulumicost/
-		assert.Equal(t, "json", cfg.Output.DefaultFormat, "should use config from HOME/.pulumicost")
+		// Config should come from HOME/.finfocus/
+		assert.Equal(t, "json", cfg.Output.DefaultFormat, "should use config from HOME/.finfocus")
 		assert.Equal(t, 3, cfg.Output.Precision, "should use precision from HOME config")
 	})
 
@@ -551,25 +552,25 @@ output:
 		homeDir := t.TempDir()
 
 		// Create PULUMI_HOME config
-		pulumicostDirPulumi := filepath.Join(pulumiHome, "pulumicost")
-		err := os.MkdirAll(pulumicostDirPulumi, 0700)
+		finfocusDirPulumi := filepath.Join(pulumiHome, "finfocus")
+		err := os.MkdirAll(finfocusDirPulumi, 0700)
 		require.NoError(t, err)
 		pulumiConfig := `
 output:
   default_format: ndjson
 `
-		err = os.WriteFile(filepath.Join(pulumicostDirPulumi, "config.yaml"), []byte(pulumiConfig), 0600)
+		err = os.WriteFile(filepath.Join(finfocusDirPulumi, "config.yaml"), []byte(pulumiConfig), 0600)
 		require.NoError(t, err)
 
 		// Create HOME config with different value
-		pulumicostDirHome := filepath.Join(homeDir, ".pulumicost")
-		err = os.MkdirAll(pulumicostDirHome, 0700)
+		finfocusDirHome := filepath.Join(homeDir, ".finfocus")
+		err = os.MkdirAll(finfocusDirHome, 0700)
 		require.NoError(t, err)
 		homeConfig := `
 output:
   default_format: json
 `
-		err = os.WriteFile(filepath.Join(pulumicostDirHome, "config.yaml"), []byte(homeConfig), 0600)
+		err = os.WriteFile(filepath.Join(finfocusDirHome, "config.yaml"), []byte(homeConfig), 0600)
 		require.NoError(t, err)
 
 		// Set both
@@ -584,6 +585,35 @@ output:
 	})
 }
 
+// TestConfig_Compatibility tests legacy environment variable support.
+func TestConfig_Compatibility(t *testing.T) {
+	t.Run("legacy env vars ignored by default", func(t *testing.T) {
+		t.Setenv("FINFOCUS_COMPAT", "")
+		t.Setenv("PULUMICOST_LOG_LEVEL", "debug")
+		stubHome(t)
+		cfg := New()
+		assert.Equal(t, "info", cfg.Logging.Level)
+	})
+
+	t.Run("legacy env vars respected when FINFOCUS_COMPAT=1", func(t *testing.T) {
+		t.Logf("pluginsdk.EnvLogLevel: %s", pluginsdk.EnvLogLevel)
+		t.Setenv("FINFOCUS_COMPAT", "1")
+		t.Setenv("PULUMICOST_LOG_LEVEL", "debug")
+		stubHome(t)
+		cfg := New()
+		assert.Equal(t, "debug", cfg.Logging.Level)
+	})
+
+	t.Run("FINFOCUS_ takes precedence over PULUMICOST_ even with compat", func(t *testing.T) {
+		t.Setenv("FINFOCUS_COMPAT", "1")
+		t.Setenv("FINFOCUS_LOG_LEVEL", "warn")
+		t.Setenv("PULUMICOST_LOG_LEVEL", "debug")
+		stubHome(t)
+		cfg := New()
+		assert.Equal(t, "warn", cfg.Logging.Level)
+	})
+}
+
 // TestResolveConfigDir tests the config directory resolution logic.
 func TestResolveConfigDir(t *testing.T) {
 	t.Run("with PULUMI_HOME", func(t *testing.T) {
@@ -592,7 +622,7 @@ func TestResolveConfigDir(t *testing.T) {
 		stubHome(t)
 
 		dir := ResolveConfigDir()
-		assert.Equal(t, filepath.Join(pulumiHome, "pulumicost"), dir)
+		assert.Equal(t, filepath.Join(pulumiHome, "finfocus"), dir)
 	})
 
 	t.Run("without PULUMI_HOME", func(t *testing.T) {
@@ -602,7 +632,7 @@ func TestResolveConfigDir(t *testing.T) {
 		t.Setenv("USERPROFILE", homeDir)
 
 		dir := ResolveConfigDir()
-		assert.Equal(t, filepath.Join(homeDir, ".pulumicost"), dir)
+		assert.Equal(t, filepath.Join(homeDir, ".finfocus"), dir)
 	})
 
 	t.Run("fallback when HOME is unset", func(t *testing.T) {
@@ -616,6 +646,6 @@ func TestResolveConfigDir(t *testing.T) {
 		assert.NotEqual(t, "", dir)
 		assert.NotEqual(t, "/", dir)
 		assert.NotEqual(t, "\\", dir)
-		assert.Contains(t, dir, ".pulumicost")
+		assert.Contains(t, dir, ".finfocus")
 	})
 }

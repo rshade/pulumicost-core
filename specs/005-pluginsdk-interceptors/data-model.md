@@ -7,7 +7,7 @@
 
 ### ServeConfig (Extended)
 
-Configuration structure for serving a PulumiCost plugin via gRPC.
+Configuration structure for serving a FinFocus plugin via gRPC.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|

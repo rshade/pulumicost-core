@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/test/integration/helpers"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/test/integration/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +29,7 @@ func TestConfigLoading_EnvironmentVariables(t *testing.T) {
 
 	// Set environment variables
 	env := map[string]string{
-		"PULUMICOST_OUTPUT_FORMAT": "json",
+		"FINFOCUS_OUTPUT_FORMAT": "json",
 	}
 
 	h.WithEnv(env, func() {
@@ -46,12 +46,12 @@ func TestConfigLoading_ConfigFile(t *testing.T) {
 
 	// Create temporary home directory
 	tempHome := h.CreateTempDir()
-	pulumicostDir := filepath.Join(tempHome, ".pulumicost")
-	err := os.MkdirAll(pulumicostDir, 0755)
-	require.NoError(t, err, "Failed to create pulumicost directory")
+	finfocusDir := filepath.Join(tempHome, ".finfocus")
+	err := os.MkdirAll(finfocusDir, 0755)
+	require.NoError(t, err, "Failed to create finfocus directory")
 
 	// Create config file
-	configFile := filepath.Join(pulumicostDir, "config.yaml")
+	configFile := filepath.Join(finfocusDir, "config.yaml")
 	configContent := `output:
   default_format: ndjson
   precision: 3
@@ -82,12 +82,12 @@ func TestConfigLoading_PrecedenceOrder(t *testing.T) {
 
 	// Create temporary home directory
 	tempHome := h.CreateTempDir()
-	pulumicostDir := filepath.Join(tempHome, ".pulumicost")
-	err := os.MkdirAll(pulumicostDir, 0755)
+	finfocusDir := filepath.Join(tempHome, ".finfocus")
+	err := os.MkdirAll(finfocusDir, 0755)
 	require.NoError(t, err)
 
 	// Create config file with json format
-	configFile := filepath.Join(pulumicostDir, "config.yaml")
+	configFile := filepath.Join(finfocusDir, "config.yaml")
 	configContent := `output:
   default_format: json
 `
@@ -97,7 +97,7 @@ func TestConfigLoading_PrecedenceOrder(t *testing.T) {
 	// Set environment variable (should override file)
 	env := map[string]string{
 		"HOME":                     tempHome,
-		"PULUMICOST_OUTPUT_FORMAT": "ndjson",
+		"FINFOCUS_OUTPUT_FORMAT": "ndjson",
 	}
 
 	h.WithEnv(env, func() {
@@ -114,13 +114,13 @@ func TestConfigLoading_InvalidConfigFile(t *testing.T) {
 
 	// Create temporary home directory
 	tempHome := h.CreateTempDir()
-	pulumicostDir := filepath.Join(tempHome, ".pulumicost")
-	err := os.MkdirAll(pulumicostDir, 0755)
+	finfocusDir := filepath.Join(tempHome, ".finfocus")
+	err := os.MkdirAll(finfocusDir, 0755)
 	require.NoError(t, err)
 
 	// Create invalid config file
 	invalidConfig := `invalid: [yaml content`
-	configFile := filepath.Join(pulumicostDir, "config.yaml")
+	configFile := filepath.Join(finfocusDir, "config.yaml")
 	err = os.WriteFile(configFile, []byte(invalidConfig), 0644)
 	require.NoError(t, err)
 
@@ -166,7 +166,7 @@ func TestConfigLoading_CLIFlags(t *testing.T) {
 
 	// Set environment variable
 	env := map[string]string{
-		"PULUMICOST_OUTPUT_FORMAT": "table",
+		"FINFOCUS_OUTPUT_FORMAT": "table",
 	}
 
 	h.WithEnv(env, func() {
@@ -198,8 +198,8 @@ func TestConfigLoading_PluginDirectory(t *testing.T) {
 	h.WithEnv(env, func() {
 		cfg := config.New()
 
-		// Verify plugin directory is set correctly (should be ~/.pulumicost/plugins)
-		expectedPluginDir := filepath.Join(tempHome, ".pulumicost", "plugins")
+		// Verify plugin directory is set correctly (should be ~/.finfocus/plugins)
+		expectedPluginDir := filepath.Join(tempHome, ".finfocus", "plugins")
 		assert.Equal(t, expectedPluginDir, cfg.PluginDir, "Should use default plugin directory")
 	})
 }
@@ -219,8 +219,8 @@ func TestConfigLoading_SpecDirectory(t *testing.T) {
 	h.WithEnv(env, func() {
 		cfg := config.New()
 
-		// Verify spec directory is set correctly (should be ~/.pulumicost/specs)
-		expectedSpecDir := filepath.Join(tempHome, ".pulumicost", "specs")
+		// Verify spec directory is set correctly (should be ~/.finfocus/specs)
+		expectedSpecDir := filepath.Join(tempHome, ".finfocus", "specs")
 		assert.Equal(t, expectedSpecDir, cfg.SpecDir, "Should use default spec directory")
 	})
 }

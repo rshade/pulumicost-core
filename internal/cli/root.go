@@ -1,20 +1,30 @@
 package cli
 
 import (
+	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/migration"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
+
+// isTerminal checks if the given file is a terminal.
+func isTerminal(f *os.File) bool {
+	return term.IsTerminal(int(f.Fd()))
+}
 
 // logger is the package-level logger for CLI operations.
 var logger zerolog.Logger //nolint:gochecknoglobals // Required for zerolog context integration
 
-// NewRootCmd creates the root Cobra command for the pulumicost CLI.
+// NewRootCmd creates the root Cobra command for the finfocus CLI.
 // It wires up logging, tracing, audit logging, and subcommands (cost, plugin, config, analyzer).
 // The command dynamically adjusts its Use and Example strings based on whether it's running
-// as a Pulumi tool plugin (detected via binary name or PULUMICOST_PLUGIN_MODE env var).
+// as a Pulumi tool plugin (detected via binary name or FINFOCUS_PLUGIN_MODE env var).
 func NewRootCmd(ver string) *cobra.Command {
 	return NewRootCmdWithArgs(ver, os.Args, os.LookupEnv)
 }
@@ -28,20 +38,33 @@ func NewRootCmdWithArgs(ver string, args []string, lookupEnv func(string) (strin
 	pluginMode := DetectPluginMode(args, lookupEnv)
 
 	// Select the appropriate Use and Example strings based on mode
-	useName := "pulumicost"
+	useName := "finfocus"
 	example := rootCmdExample
 	if pluginMode {
-		useName = "pulumi plugin run tool cost"
+		useName = "pulumi plugin run tool finfocus"
 		example = pluginCmdExample
 	}
 
 	cmd := &cobra.Command{
 		Use:     useName,
-		Short:   "PulumiCost CLI and plugin host",
-		Long:    "PulumiCost: Calculate projected and actual cloud costs via plugins",
+		Short:   "FinFocus CLI and plugin host",
+		Long:    "FinFocus: Calculate projected and actual cloud costs via plugins",
 		Version: ver,
 		Example: example,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// Check for migration if in interactive terminal
+			if isTerminal(os.Stdin) {
+				if err := migration.RunMigration(cmd.OutOrStdout(), cmd.InOrStdin()); err != nil {
+					// We log the error but don't fail the command as migration is best-effort
+					fmt.Fprintf(os.Stderr, "Warning: migration check failed: %v\n", err)
+				}
+
+				// Alias reminder
+				if os.Getenv("FINFOCUS_HIDE_ALIAS_HINT") == "" && !DetectPluginMode(os.Args, os.LookupEnv) {
+					fmt.Fprintln(os.Stderr, "Tip: Add 'alias fin=finfocus' to your shell profile for a shorter command!")
+				}
+			}
+
 			result := setupLogging(cmd)
 			logResult = &result
 			return nil
@@ -59,47 +82,47 @@ func NewRootCmdWithArgs(ver string, args []string, lookupEnv func(string) (strin
 }
 
 const rootCmdExample = `  # Calculate projected costs from a Pulumi plan
-  pulumicost cost projected --pulumi-json plan.json
+  finfocus cost projected --pulumi-json plan.json
 
   # Get actual costs for the last 7 days
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-07
 
   # Install a plugin from registry
-  pulumicost plugin install kubecost
+  finfocus plugin install kubecost
 
   # List installed plugins
-  pulumicost plugin list
+  finfocus plugin list
 
   # Initialize a new plugin project
-  pulumicost plugin init aws-plugin --author "Your Name" --providers aws
+  finfocus plugin init aws-plugin --author "Your Name" --providers aws
 
   # Validate all plugins
-  pulumicost plugin validate
+  finfocus plugin validate
 
   # Initialize configuration
-  pulumicost config init
+  finfocus config init
 
   # Set configuration values
-  pulumicost config set output.default_format json`
+  finfocus config set output.default_format json`
 
 // pluginCmdExample is the example text shown when running as a Pulumi tool plugin.
 const pluginCmdExample = `  # Calculate projected costs from a Pulumi plan
-  pulumi plugin run tool cost -- cost projected --pulumi-json plan.json
+  pulumi plugin run tool finfocus -- cost projected --pulumi-json plan.json
 
   # Get actual costs for the last 7 days
-  pulumi plugin run tool cost -- cost actual --pulumi-json plan.json --from 2025-01-07
+  pulumi plugin run tool finfocus -- cost actual --pulumi-json plan.json --from 2025-01-07
 
   # List installed plugins
-  pulumi plugin run tool cost -- plugin list
+  pulumi plugin run tool finfocus -- plugin list
 
   # Validate all plugins
-  pulumi plugin run tool cost -- plugin validate
+  pulumi plugin run tool finfocus -- plugin validate
 
   # Initialize configuration
-  pulumi plugin run tool cost -- config init
+  pulumi plugin run tool finfocus -- config init
 
   # Set configuration values
-  pulumi plugin run tool cost -- config set output.default_format json`
+  pulumi plugin run tool finfocus -- config set output.default_format json`
 
 // newCostCmd creates the cost command group with projected, actual, and recommendations subcommands.
 func newCostCmd() *cobra.Command {

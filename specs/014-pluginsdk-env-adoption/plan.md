@@ -7,12 +7,12 @@
 
 ## Summary
 
-Migrate pulumicost-core to use standardized pluginsdk/env.go constants for environment variable handling, ensuring consistency between core and plugins and centralizing variable definitions.
+Migrate finfocus-core to use standardized pluginsdk/env.go constants for environment variable handling, ensuring consistency between core and plugins and centralizing variable definitions.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5  
-**Primary Dependencies**: pluginsdk from pulumicost-spec v0.4.5+ (github.com/rshade/pulumicost-spec/sdk/go/pluginsdk)  
+**Primary Dependencies**: pluginsdk from finfocus-spec v0.4.5+ (github.com/rshade/finfocus-spec/sdk/go/pluginsdk)  
 **Storage**: N/A (environment variable configuration)  
 **Testing**: Go unit tests, integration tests  
 **Target Platform**: Cross-platform (Linux amd64/arm64, macOS amd64/arm64, Windows amd64)  
@@ -25,7 +25,7 @@ Migrate pulumicost-core to use standardized pluginsdk/env.go constants for envir
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic (plugin host) - core remains provider-agnostic
 - [x] **Test-Driven Development**: Tests will be updated/maintained, integration test added (80% minimum coverage maintained)
@@ -33,7 +33,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: CLAUDE.md will be updated with patterns
 - [x] **Protocol Stability**: No protocol changes - only environment variable naming standardization
 - [x] **Quality Gates**: All CI checks (tests, lint, security) will pass
-- [x] **Multi-Repo Coordination**: Depends on pulumicost-spec#127, documented in spec
+- [x] **Multi-Repo Coordination**: Depends on finfocus-spec#127, documented in spec
 
 **Violations Requiring Justification**: None - all principles followed
 
@@ -55,7 +55,7 @@ specs/[###-feature]/
 
 ```text
 # Core Go CLI application
-cmd/pulumicost/          # CLI entry point
+cmd/finfocus/          # CLI entry point
 internal/                # Internal packages
 ├── pluginhost/         # Plugin process management (target for env var changes)
 ├── config/             # Configuration handling
@@ -69,7 +69,7 @@ test/                    # Test fixtures and helpers
 └── e2e/               # End-to-end tests
 
 # Dependencies
-go.mod                   # Go module dependencies (will add pulumicost-spec)
+go.mod                   # Go module dependencies (will add finfocus-spec)
 ```
 
 **Structure Decision**: Single Go project following existing repository structure. Changes primarily in internal/pluginhost/ for environment variable handling and potential updates to cmd/gen/ for code generator.

@@ -13,7 +13,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}PulumiCost E2E Test Runner${NC}"
+echo -e "${GREEN}FinFocus E2E Test Runner${NC}"
 echo "=============================="
 echo ""
 
@@ -61,21 +61,21 @@ export PULUMI_CONFIG_PASSPHRASE="${PULUMI_CONFIG_PASSPHRASE:-e2e-test-passphrase
 export E2E_TIMEOUT_MINS="${E2E_TIMEOUT_MINS:-60}"
 
 # Enable debug logging for troubleshooting
-export PULUMICOST_LOG_LEVEL="${PULUMICOST_LOG_LEVEL:-debug}"
-export PULUMICOST_LOG_FORMAT="${PULUMICOST_LOG_FORMAT:-console}"
+export FINFOCUS_LOG_LEVEL="${FINFOCUS_LOG_LEVEL:-debug}"
+export FINFOCUS_LOG_FORMAT="${FINFOCUS_LOG_FORMAT:-console}"
 
 echo "  AWS_REGION: ${AWS_REGION}"
 echo "  E2E_REGION: ${E2E_REGION}"
-echo "  PULUMICOST_LOG_LEVEL: ${PULUMICOST_LOG_LEVEL}"
-echo "  PULUMICOST_LOG_FORMAT: ${PULUMICOST_LOG_FORMAT}"
+echo "  FINFOCUS_LOG_LEVEL: ${FINFOCUS_LOG_LEVEL}"
+echo "  FINFOCUS_LOG_FORMAT: ${FINFOCUS_LOG_FORMAT}"
 
-# Build pulumicost binary if needed
+# Build finfocus binary if needed
 echo ""
-echo -e "${YELLOW}Building pulumicost binary...${NC}"
+echo -e "${YELLOW}Building finfocus binary...${NC}"
 cd "${PROJECT_ROOT}"
 make build
-export PULUMICOST_BINARY="${PROJECT_ROOT}/bin/pulumicost"
-echo "  Binary: ${PULUMICOST_BINARY}"
+export FINFOCUS_BINARY="${PROJECT_ROOT}/bin/finfocus"
+echo "  Binary: ${FINFOCUS_BINARY}"
 
 # Run the tests
 echo ""
@@ -108,8 +108,8 @@ while [[ $# -gt 0 ]]; do
             ;;
         -debug)
             DEBUG_MODE="true"
-            export PULUMICOST_LOG_LEVEL="trace"
-            echo -e "${YELLOW}Debug mode enabled - PULUMICOST_LOG_LEVEL=trace${NC}"
+            export FINFOCUS_LOG_LEVEL="trace"
+            echo -e "${YELLOW}Debug mode enabled - FINFOCUS_LOG_LEVEL=trace${NC}"
             shift
             ;;
         -install-plugin)
@@ -147,7 +147,7 @@ echo ""
 echo -e "${YELLOW}Environment Summary:${NC}"
 echo "  PROJECT_ROOT: ${PROJECT_ROOT}"
 echo "  SCRIPT_DIR: ${SCRIPT_DIR}"
-echo "  PULUMICOST_BINARY: ${PULUMICOST_BINARY:-will be set after build}"
+echo "  FINFOCUS_BINARY: ${FINFOCUS_BINARY:-will be set after build}"
 echo "  TEST_FILTER: ${TEST_FILTER:-<all tests>}"
 echo "  TIMEOUT: ${E2E_TIMEOUT_MINS}m"
 if [ -n "${DEBUG_MODE}" ]; then
@@ -164,7 +164,7 @@ fi
 if [ -n "${INSTALL_PLUGIN}" ]; then
     echo ""
     echo -e "${YELLOW}Installing plugin: ${INSTALL_PLUGIN}...${NC}"
-    if "${PULUMICOST_BINARY}" plugin install "${INSTALL_PLUGIN}" --force; then
+    if "${FINFOCUS_BINARY}" plugin install "${INSTALL_PLUGIN}" --force; then
         echo -e "${GREEN}Plugin ${INSTALL_PLUGIN} installed successfully${NC}"
     else
         echo -e "${RED}WARNING: Failed to install plugin ${INSTALL_PLUGIN}${NC}"
@@ -174,7 +174,7 @@ if [ -n "${INSTALL_PLUGIN}" ]; then
     # Show installed plugins
     echo ""
     echo -e "${YELLOW}Installed plugins:${NC}"
-    "${PULUMICOST_BINARY}" plugin list || true
+    "${FINFOCUS_BINARY}" plugin list || true
 fi
 
 # Run the tests

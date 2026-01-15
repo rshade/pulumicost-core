@@ -1,15 +1,15 @@
-# Test configuration for PulumiCost
+# Test configuration for FinFocus
 # This file is used by integration tests to verify configuration loading
 
 # Plugin configuration
 plugins:
-  directory: "~/.pulumicost/plugins"
+  directory: "~/.finfocus/plugins"
   timeout: 30s
   max_retries: 3
   
 # Pricing specification configuration  
 specs:
-  directory: "~/.pulumicost/specs"
+  directory: "~/.finfocus/specs"
   cache_ttl: 3600s
   
 # Output configuration
@@ -45,7 +45,7 @@ logging:
 cache:
   enabled: true
   ttl: 1800s
-  directory: "~/.pulumicost/cache"
+  directory: "~/.finfocus/cache"
   
 # Rate limiting
 rate_limiting:

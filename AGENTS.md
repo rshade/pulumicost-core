@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-- `cmd/pulumicost`: CLI entrypoint and flag wiring.
+- `cmd/finfocus`: CLI entrypoint and flag wiring.
 - `internal/` packages: core logic (engine, ingest, registry, pluginhost,
   config, logging, analyzer) kept unexported.
 - `pkg/version`: shared version/build metadata used by the CLI.
@@ -14,7 +14,7 @@
 
 ## Build, Test, and Development Commands
 
-- `make build`: Compile the `pulumicost` binary to `bin/` with version metadata.
+- `make build`: Compile the `finfocus` binary to `bin/` with version metadata.
 - `make test` | `make test-race`: Run unit tests (optionally with race detector).
 - `go test -run TestName ./path/to/package`: Run a specific test in a package.
 - `go test -v ./... -run TestFunc`: Run a specific test function across all packages.
@@ -51,7 +51,7 @@
 - Exported identifiers require Go doc comments when part of the CLI surface.
 - Struct fields: use JSON/YAML tags for serialization (`yaml:"field_name"`).
 - CLI flags: kebab-case (`--pulumi-json`); config/env keys: uppercase snake
-  (`PULUMICOST_PLUGIN_*`).
+  (`FINFOCUS_PLUGIN_*`).
 - Interface definitions before implementations; prefer small interfaces.
 - Use `context.Context` throughout for cancellation and timeout handling.
 
@@ -100,11 +100,11 @@
 
 ## Security & Configuration Tips
 
-- Do not commit secrets; prefer env vars (`PULUMICOST_PLUGIN_AWS_*`,
-  `PULUMICOST_PLUGIN_VANTAGE_*`, etc.) and `~/.pulumicost/config.yaml` for local
+- Do not commit secrets; prefer env vars (`FINFOCUS_PLUGIN_AWS_*`,
+  `FINFOCUS_PLUGIN_VANTAGE_*`, etc.) and `~/.finfocus/config.yaml` for local
   config.
-- Plugins live under `~/.pulumicost/plugins/`; validate with
-  `pulumicost plugin validate` before shipping.
+- Plugins live under `~/.finfocus/plugins/`; validate with
+  `finfocus plugin validate` before shipping.
 - Treat Pulumi plan JSON files as sensitive if they contain identifiers; scrub
   or use redacted fixtures in examples.
 
@@ -112,10 +112,10 @@
 
 ### Plugin Development
 
-- Use `pulumicost plugin init` to scaffold new plugin projects
-- Implement the plugin protocol from pulumicost-spec
-- Test plugins with `pulumicost plugin certify` before shipping
-- Install to `~/.pulumicost/plugins/<name>/<version>/`
+- Use `finfocus plugin init` to scaffold new plugin projects
+- Implement the plugin protocol from finfocus-spec
+- Test plugins with `finfocus plugin certify` before shipping
+- Install to `~/.finfocus/plugins/<name>/<version>/`
 
 ### Adding New Resource Types
 
@@ -149,9 +149,9 @@ return }`
 - Go 1.25.5 + github.com/Masterminds/semver/v3, existing plugin
   infrastructure (already in go.mod, 001-latest-plugin-version)
 - File system (plugin directory structure:
-  `~/.pulumicost/plugins/<plugin-name>/<version>/`)
+  `~/.finfocus/plugins/<plugin-name>/<version>/`)
 - Go 1.25.5 + existing CLI infrastructure, test helpers
-- Go 1.25.5 + pluginsdk from pulumicost-spec
+- Go 1.25.5 + pluginsdk from finfocus-spec
 - Environment variable constants via pluginsdk
 - Go 1.25.5 + charmbracelet/lipgloss v1.0.0, golang.org/x/term v0.37.0
 

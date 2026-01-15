@@ -1,4 +1,4 @@
-name: pulumicost-e2e-ec2
+name: finfocus-e2e-ec2
 runtime: yaml
 description: E2E test project for EC2 cost validation
 

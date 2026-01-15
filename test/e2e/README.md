@@ -1,11 +1,11 @@
 # End-to-End Tests
 
-This directory contains E2E tests for Pulumicost Core.
+This directory contains E2E tests for FinFocus Core.
 
 ## Running Tests
 
 Prerequisites:
-- `pulumicost` binary built and available in `bin/` or `PATH`.
+- `finfocus` binary built and available in `bin/` or `PATH`.
 - Fixtures available in `test/fixtures/plans/`.
 
 Run all E2E tests:
@@ -23,5 +23,5 @@ go test -v -tags e2e ./test/e2e/...
 
 ## Helpers
 
-The tests rely on `findPulumicostBinary()` to locate the executable.
+The tests rely on `findFinFocusBinary()` to locate the executable.
 Tests use `exec.Command` to run the binary against fixture plans.

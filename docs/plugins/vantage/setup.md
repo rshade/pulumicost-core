@@ -1,11 +1,11 @@
 ---
 layout: default
 title: Vantage Plugin Setup Guide
-description: Step-by-step installation and configuration guide for the PulumiCost Vantage plugin
+description: Step-by-step installation and configuration guide for the FinFocus Vantage plugin
 ---
 
 This guide walks you through installing and configuring the Vantage plugin for
-PulumiCost. Follow these steps to enable multi-cloud cost aggregation using
+FinFocus. Follow these steps to enable multi-cloud cost aggregation using
 Vantage's cost visibility platform.
 
 ## Table of Contents
@@ -25,7 +25,7 @@ Before installing the Vantage plugin, ensure you have:
 
 ### Required
 
-- **PulumiCost Core** installed (v0.1.0 or later)
+- **FinFocus Core** installed (v0.1.0 or later)
 - **Vantage Account** with API access enabled
 - **Vantage API Token** (see [Authentication Guide](authentication.md))
 - **Cost Report Token** or **Workspace Token** from Vantage
@@ -52,34 +52,34 @@ Download the latest release for your platform:
 
 ```bash
 # Linux (amd64)
-curl -Lo pulumicost-vantage https://github.com/rshade/pulumicost-plugin-vantage/releases/latest/download/pulumicost-vantage-linux-amd64
-chmod +x pulumicost-vantage
-sudo mv pulumicost-vantage /usr/local/bin/
+curl -Lo finfocus-vantage https://github.com/rshade/finfocus-plugin-vantage/releases/latest/download/finfocus-vantage-linux-amd64
+chmod +x finfocus-vantage
+sudo mv finfocus-vantage /usr/local/bin/
 
 # Linux (arm64)
-curl -Lo pulumicost-vantage https://github.com/rshade/pulumicost-plugin-vantage/releases/latest/download/pulumicost-vantage-linux-arm64
-chmod +x pulumicost-vantage
-sudo mv pulumicost-vantage /usr/local/bin/
+curl -Lo finfocus-vantage https://github.com/rshade/finfocus-plugin-vantage/releases/latest/download/finfocus-vantage-linux-arm64
+chmod +x finfocus-vantage
+sudo mv finfocus-vantage /usr/local/bin/
 
 # macOS (amd64)
-curl -Lo pulumicost-vantage https://github.com/rshade/pulumicost-plugin-vantage/releases/latest/download/pulumicost-vantage-darwin-amd64
-chmod +x pulumicost-vantage
-sudo mv pulumicost-vantage /usr/local/bin/
+curl -Lo finfocus-vantage https://github.com/rshade/finfocus-plugin-vantage/releases/latest/download/finfocus-vantage-darwin-amd64
+chmod +x finfocus-vantage
+sudo mv finfocus-vantage /usr/local/bin/
 ```
 
-### Option 2: Install via PulumiCost Plugin Manager
+### Option 2: Install via FinFocus Plugin Manager
 
-Install through PulumiCost's plugin system:
+Install through FinFocus's plugin system:
 
 ```bash
 # Install plugin (coming soon)
-pulumicost plugin install vantage
+finfocus plugin install vantage
 
 # List installed plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Verify installation
-pulumicost plugin validate vantage
+finfocus plugin validate vantage
 ```
 
 ### Option 3: Build from Source
@@ -88,14 +88,14 @@ For development or customization:
 
 ```bash
 # Clone repository
-git clone https://github.com/rshade/pulumicost-plugin-vantage.git
-cd pulumicost-plugin-vantage
+git clone https://github.com/rshade/finfocus-plugin-vantage.git
+cd finfocus-plugin-vantage
 
 # Build binary
 make build
 
-# Binary created at: bin/pulumicost-vantage
-./bin/pulumicost-vantage --version
+# Binary created at: bin/finfocus-vantage
+./bin/finfocus-vantage --version
 ```
 
 ### Verify Installation
@@ -104,11 +104,11 @@ Confirm the plugin is installed correctly:
 
 ```bash
 # Check version
-pulumicost-vantage --version
-# Expected output: pulumicost-vantage version 0.1.0
+finfocus-vantage --version
+# Expected output: finfocus-vantage version 0.1.0
 
 # View help
-pulumicost-vantage --help
+finfocus-vantage --help
 ```
 
 ---
@@ -117,11 +117,11 @@ pulumicost-vantage --help
 
 ### Step 1: Create Configuration Directory
 
-Create a directory for PulumiCost configuration:
+Create a directory for FinFocus configuration:
 
 ```bash
-mkdir -p ~/.pulumicost/plugins/vantage
-cd ~/.pulumicost/plugins/vantage
+mkdir -p ~/.finfocus/plugins/vantage
+cd ~/.finfocus/plugins/vantage
 ```
 
 ### Step 2: Create Configuration File
@@ -133,7 +133,7 @@ version: 0.1
 source: vantage
 
 credentials:
-  token: ${PULUMICOST_VANTAGE_TOKEN}
+  token: ${FINFOCUS_VANTAGE_TOKEN}
 
 params:
   # Use Cost Report Token (preferred) or Workspace Token
@@ -165,13 +165,13 @@ Configure authentication using environment variables:
 
 ```bash
 # Set Vantage API token
-export PULUMICOST_VANTAGE_TOKEN="your_vantage_api_token"
+export FINFOCUS_VANTAGE_TOKEN="your_vantage_api_token"
 
 # Optional: Set specific tokens
-export PULUMICOST_VANTAGE_COST_REPORT_TOKEN="cr_your_report_token"
+export FINFOCUS_VANTAGE_COST_REPORT_TOKEN="cr_your_report_token"
 
 # Persist in shell profile
-echo 'export PULUMICOST_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
+echo 'export FINFOCUS_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -187,7 +187,7 @@ Test your configuration file:
 yamllint config.yaml
 
 # Test configuration loading
-pulumicost-vantage pull --config config.yaml --dry-run
+finfocus-vantage pull --config config.yaml --dry-run
 ```
 
 ---
@@ -196,15 +196,15 @@ pulumicost-vantage pull --config config.yaml --dry-run
 
 ### Verify Plugin Registration
 
-Check that PulumiCost recognizes the plugin:
+Check that FinFocus recognizes the plugin:
 
 ```bash
 # List registered plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Expected output:
 # NAME      VERSION  STATUS   LOCATION
-# vantage   0.1.0    active   ~/.pulumicost/plugins/vantage
+# vantage   0.1.0    active   ~/.finfocus/plugins/vantage
 ```
 
 ### Verify API Connectivity
@@ -213,7 +213,7 @@ Test Vantage API connection:
 
 ```bash
 # Test authentication
-curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
   https://api.vantage.sh/costs
 
 # Expected: 200 OK or 400 (bad params), NOT 401 (auth failure)
@@ -225,7 +225,7 @@ Test cost data retrieval:
 
 ```bash
 # Dry run to test configuration
-pulumicost-vantage pull --config config.yaml --dry-run
+finfocus-vantage pull --config config.yaml --dry-run
 
 # Expected output:
 # Configuration valid
@@ -245,7 +245,7 @@ Import historical cost data:
 
 ```bash
 # Backfill last 12 months of cost data
-pulumicost-vantage backfill --config config.yaml --months 12
+finfocus-vantage backfill --config config.yaml --months 12
 
 # Expected output:
 # Fetching costs from 2024-01-01 to 2024-12-31...
@@ -260,15 +260,15 @@ pulumicost-vantage backfill --config config.yaml --months 12
 Check imported data:
 
 ```bash
-# Query projected costs using PulumiCost CLI
-pulumicost cost projected \
+# Query projected costs using FinFocus CLI
+finfocus cost projected \
   --plugin vantage \
   --provider aws \
   --start-date 2024-01-01 \
   --end-date 2024-01-31
 
 # Query actual costs
-pulumicost cost actual \
+finfocus cost actual \
   --plugin vantage \
   --start-date 2024-01-01 \
   --end-date 2024-01-31
@@ -285,30 +285,30 @@ Configure daily incremental sync:
 crontab -e
 
 # Add this line:
-0 2 * * * /usr/local/bin/pulumicost-vantage pull --config ~/.pulumicost/plugins/vantage/config.yaml
+0 2 * * * /usr/local/bin/finfocus-vantage pull --config ~/.finfocus/plugins/vantage/config.yaml
 ```
 
 **Using systemd Timer:**
 
-Create `/etc/systemd/system/pulumicost-vantage.service`:
+Create `/etc/systemd/system/finfocus-vantage.service`:
 
 ```ini
 [Unit]
-Description=PulumiCost Vantage Daily Sync
+Description=FinFocus Vantage Daily Sync
 After=network.target
 
 [Service]
 Type=oneshot
-User=pulumicost
-Environment="PULUMICOST_VANTAGE_TOKEN=your_token"
-ExecStart=/usr/local/bin/pulumicost-vantage pull --config /etc/pulumicost/config.yaml
+User=finfocus
+Environment="FINFOCUS_VANTAGE_TOKEN=your_token"
+ExecStart=/usr/local/bin/finfocus-vantage pull --config /etc/finfocus/config.yaml
 ```
 
-Create `/etc/systemd/system/pulumicost-vantage.timer`:
+Create `/etc/systemd/system/finfocus-vantage.timer`:
 
 ```ini
 [Unit]
-Description=Run PulumiCost Vantage Sync Daily
+Description=Run FinFocus Vantage Sync Daily
 
 [Timer]
 OnCalendar=daily
@@ -323,11 +323,11 @@ Enable and start the timer:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable pulumicost-vantage.timer
-sudo systemctl start pulumicost-vantage.timer
+sudo systemctl enable finfocus-vantage.timer
+sudo systemctl start finfocus-vantage.timer
 
 # Check timer status
-systemctl status pulumicost-vantage.timer
+systemctl status finfocus-vantage.timer
 ```
 
 ---
@@ -347,19 +347,19 @@ Error: plugin 'vantage' not found
 1. Verify installation path:
 
    ```bash
-   ls -la ~/.pulumicost/plugins/vantage/
+   ls -la ~/.finfocus/plugins/vantage/
    ```
 
 2. Check plugin registry:
 
    ```bash
-   pulumicost plugin list
+   finfocus plugin list
    ```
 
 3. Reinstall plugin:
 
    ```bash
-   pulumicost plugin install vantage
+   finfocus plugin install vantage
    ```
 
 ### Issue: Authentication Failed
@@ -375,14 +375,14 @@ Error: 401 Unauthorized
 1. Verify token is set:
 
    ```bash
-   echo $PULUMICOST_VANTAGE_TOKEN
+   echo $FINFOCUS_VANTAGE_TOKEN
    # Should output your token (not empty)
    ```
 
 2. Test token validity:
 
    ```bash
-   curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+   curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
      https://api.vantage.sh/costs
    ```
 
@@ -458,7 +458,7 @@ After successful setup:
 
 ## Additional Resources
 
-- [Vantage Plugin README](https://github.com/rshade/pulumicost-plugin-vantage)
+- [Vantage Plugin README](https://github.com/rshade/finfocus-plugin-vantage)
 - [Vantage API Documentation](https://docs.vantage.sh/api)
-- [PulumiCost Plugin Development Guide](../plugin-development.md)
-- [PulumiCost Plugin SDK Reference](../plugin-sdk.md)
+- [FinFocus Plugin Development Guide](../plugin-development.md)
+- [FinFocus Plugin SDK Reference](../plugin-sdk.md)

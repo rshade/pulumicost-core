@@ -25,7 +25,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Documentation supports the plugin architecture (documenting the Analyzer and Plugin commands).
 - [x] **Test-Driven Development**: Documentation will be linted (`make docs-lint`).

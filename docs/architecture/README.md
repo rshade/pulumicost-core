@@ -1,6 +1,6 @@
 # Architecture & System Design
 
-Deep dive into PulumiCost system architecture and design patterns.
+Deep dive into FinFocus system architecture and design patterns.
 
 ## Key Documents
 
@@ -18,7 +18,7 @@ Visual architecture diagrams are in the [diagrams/](diagrams/) directory:
 - Data flow
 - Plugin lifecycle
 - Cost calculation flow
-- Integration example (Pulumi → PulumiCost → Vantage)
+- Integration example (Pulumi → FinFocus → Vantage)
 
 ---
 

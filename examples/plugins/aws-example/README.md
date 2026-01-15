@@ -1,6 +1,6 @@
 # AWS Example Plugin
 
-This is a reference implementation of a PulumiCost plugin for AWS cost calculations. It demonstrates best practices and patterns for plugin development.
+This is a reference implementation of a FinFocus plugin for AWS cost calculations. It demonstrates best practices and patterns for plugin development.
 
 ## Features
 
@@ -34,38 +34,38 @@ This is a reference implementation of a PulumiCost plugin for AWS cost calculati
 ### Prerequisites
 
 - Go 1.25.5+
-- PulumiCost Core development environment
+- FinFocus Core development environment
 
 ### Build the Plugin
 
 ```bash
 # From the examples/plugins/aws-example directory
-go build -o bin/pulumicost-plugin-aws-example main.go
+go build -o bin/finfocus-plugin-aws-example main.go
 ```
 
 ### Test the Plugin
 
 ```bash
 # Start the plugin manually for testing
-./bin/pulumicost-plugin-aws-example
+./bin/finfocus-plugin-aws-example
 
-# In another terminal, test with PulumiCost
-pulumicost cost projected --pulumi-json test-plan.json
+# In another terminal, test with FinFocus
+finfocus cost projected --pulumi-json test-plan.json
 ```
 
 ### Install for Local Testing
 
 ```bash
 # Create plugin directory structure
-mkdir -p ~/.pulumicost/plugins/aws-example/1.0.0
+mkdir -p ~/.finfocus/plugins/aws-example/1.0.0
 
 # Copy binary and manifest
-cp bin/pulumicost-plugin-aws-example ~/.pulumicost/plugins/aws-example/1.0.0/
-cp manifest.yaml ~/.pulumicost/plugins/aws-example/1.0.0/plugin.manifest.json
+cp bin/finfocus-plugin-aws-example ~/.finfocus/plugins/aws-example/1.0.0/
+cp manifest.yaml ~/.finfocus/plugins/aws-example/1.0.0/plugin.manifest.json
 
 # Verify installation
-pulumicost plugin list
-pulumicost plugin validate
+finfocus plugin list
+finfocus plugin validate
 ```
 
 ## Example Usage
@@ -96,7 +96,7 @@ With a Pulumi plan containing AWS resources:
 Calculate projected costs:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 ## Implementation Details
@@ -178,7 +178,7 @@ The plugin supports configuration through:
 
 ## Testing
 
-Use the PulumiCost SDK testing utilities:
+Use the FinFocus SDK testing utilities:
 
 ```go
 func TestAWSPlugin(t *testing.T) {
@@ -203,4 +203,4 @@ This example plugin serves as a template for AWS plugin development. Contributio
 
 ## License
 
-Same as PulumiCost Core project.
+Same as FinFocus Core project.

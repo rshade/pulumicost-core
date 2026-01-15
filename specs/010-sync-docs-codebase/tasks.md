@@ -52,7 +52,7 @@
 ## Phase 4: User Story 2 & 4 - CLI Reference & Troubleshooting
 
 **Goal**: Provide complete command reference and troubleshooting aids.
-**Independent Test**: `pulumicost --help` commands match docs; Error codes in docs match codebase.
+**Independent Test**: `finfocus --help` commands match docs; Error codes in docs match codebase.
 
 - [x] T009 [US2] Update `docs/reference/cli-commands.md` (Add plugin init/install/update/remove, analyzer serve)
 - [x] T010 [P] [US4] Create `docs/reference/error-codes.md` (Engine & Config errors)

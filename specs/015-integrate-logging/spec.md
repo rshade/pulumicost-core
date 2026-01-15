@@ -17,18 +17,18 @@ The logging package (`internal/logging`) has been partially integrated into CLI,
 
 ### User Story 1 - Configure Logging Behavior (Priority: P1)
 
-As an operator deploying PulumiCost in a production environment, I want to configure logging behavior through configuration files so that logs integrate with my existing log management infrastructure.
+As an operator deploying FinFocus in a production environment, I want to configure logging behavior through configuration files so that logs integrate with my existing log management infrastructure.
 
 **Why this priority**: Production deployments require configurable logging for operational visibility and compliance.
-Without configuration, operators cannot integrate PulumiCost with existing monitoring systems.
+Without configuration, operators cannot integrate FinFocus with existing monitoring systems.
 
 **Independent Test**: Can be fully tested by setting logging configuration and verifying log output format, level, and destination match the configuration.
 
 **Acceptance Scenarios**:
 
-1. **Given** a configuration file with `logging.level: debug`, **When** I run any pulumicost command, **Then** debug-level messages appear in the output
-2. **Given** a configuration file with `logging.format: json`, **When** I run any pulumicost command, **Then** all log output is valid JSON with consistent schema
-3. **Given** a configuration file with `logging.output: file` and `logging.file: /var/log/pulumicost.log`, **When** I run any pulumicost command, **Then** logs are written to the specified file
+1. **Given** a configuration file with `logging.level: debug`, **When** I run any finfocus command, **Then** debug-level messages appear in the output
+2. **Given** a configuration file with `logging.format: json`, **When** I run any finfocus command, **Then** all log output is valid JSON with consistent schema
+3. **Given** a configuration file with `logging.output: file` and `logging.file: /var/log/finfocus.log`, **When** I run any finfocus command, **Then** logs are written to the specified file
 
 ---
 
@@ -42,9 +42,9 @@ As an operator, I want to see where logs are being written when I run commands s
 
 **Acceptance Scenarios**:
 
-1. **Given** logging configured to write to a file, **When** I run any pulumicost command, **Then** the CLI displays the log file path at startup (e.g., "Logging to: /var/log/pulumicost.log")
-2. **Given** logging configured to write to stderr (default), **When** I run any pulumicost command with --debug, **Then** no log path message is shown (logs appear inline)
-3. **Given** logging configured to a file that cannot be written, **When** I run any pulumicost command, **Then** the CLI displays a warning about the fallback to stderr
+1. **Given** logging configured to write to a file, **When** I run any finfocus command, **Then** the CLI displays the log file path at startup (e.g., "Logging to: /var/log/finfocus.log")
+2. **Given** logging configured to write to stderr (default), **When** I run any finfocus command with --debug, **Then** no log path message is shown (logs appear inline)
+3. **Given** logging configured to a file that cannot be written, **When** I run any finfocus command, **Then** the CLI displays a warning about the fallback to stderr
 
 ---
 
@@ -58,8 +58,8 @@ As a security auditor, I want to track all cost queries with timestamps, users, 
 
 **Acceptance Scenarios**:
 
-1. **Given** audit logging is enabled, **When** I run `pulumicost cost projected --pulumi-json plan.json`, **Then** an audit entry is logged with timestamp, trace_id, command, and input file path
-2. **Given** audit logging is enabled, **When** I run `pulumicost cost actual` with date range flags,
+1. **Given** audit logging is enabled, **When** I run `finfocus cost projected --pulumi-json plan.json`, **Then** an audit entry is logged with timestamp, trace_id, command, and input file path
+2. **Given** audit logging is enabled, **When** I run `finfocus cost actual` with date range flags,
    **Then** an audit entry is logged with timestamp, trace_id, command, and date range
 3. **Given** audit logging writes to a separate audit log file, **When** I review the audit log, **Then** I can filter by date, command type, or trace_id
 
@@ -76,7 +76,7 @@ As a security auditor, I want to track all cost queries with timestamps, users, 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST read logging configuration from `~/.pulumicost/config.yaml` under the `logging` section
+- **FR-001**: System MUST read logging configuration from `~/.finfocus/config.yaml` under the `logging` section
 - **FR-002**: System MUST support configuration of log level (trace, debug, info, warn, error)
 - **FR-003**: System MUST support configuration of log format (json, console/text)
 - **FR-004**: System MUST support configuration of log output destination (stderr, stdout, file)
@@ -87,7 +87,7 @@ As a security auditor, I want to track all cost queries with timestamps, users, 
 - **FR-009**: Audit entries MUST include timestamp, trace_id, command name, and relevant parameters
 - **FR-010**: System MUST gracefully fall back to stderr if configured file destination is unavailable
 - **FR-011**: CLI flags (--debug) MUST override configuration file settings
-- **FR-012**: Environment variables (PULUMICOST_LOG_LEVEL, PULUMICOST_LOG_FORMAT) MUST override configuration file settings
+- **FR-012**: Environment variables (FINFOCUS_LOG_LEVEL, FINFOCUS_LOG_FORMAT) MUST override configuration file settings
 - **FR-013**: System MUST automatically redact sensitive data patterns (api_key, password, token, secret, credential, auth) in all log output
 
 ### Configuration Schema
@@ -105,7 +105,7 @@ logging:
     file: ""           # separate audit log file (optional)
 ```
 
-**Note**: Log rotation is intentionally not managed by PulumiCost. Operators should use external tools (logrotate, systemd journal, etc.) to manage log file rotation based on their infrastructure requirements.
+**Note**: Log rotation is intentionally not managed by FinFocus. Operators should use external tools (logrotate, systemd journal, etc.) to manage log file rotation based on their infrastructure requirements.
 
 ### Key Entities
 

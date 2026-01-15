@@ -3,7 +3,7 @@ package plugin_test
 import (
 	"testing"
 
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"github.com/stretchr/testify/assert"
 )
 

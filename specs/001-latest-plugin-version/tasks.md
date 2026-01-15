@@ -41,7 +41,7 @@
 
 **Goal**: Ensure users can list all installed versions of each plugin.
 **Priority**: P2
-**Independent Test**: `pulumicost plugin list` displays all versions of installed plugins.
+**Independent Test**: `finfocus plugin list` displays all versions of installed plugins.
 
 ### Tests
 

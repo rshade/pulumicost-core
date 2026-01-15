@@ -233,7 +233,7 @@ func (r *SuiteReport) buildJUnitTestcases() []junitTestcase {
 // buildJUnitOutput creates the complete JUnit XML structure.
 func (r *SuiteReport) buildJUnitOutput(testcases []junitTestcase) junitTestsuites {
 	return junitTestsuites{
-		Name:     "pulumicost-conformance",
+		Name:     "finfocus-conformance",
 		Tests:    r.Summary.Total,
 		Failures: r.Summary.Failed + r.Summary.Errors,
 		Skipped:  r.Summary.Skipped,

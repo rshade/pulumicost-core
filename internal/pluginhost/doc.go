@@ -1,6 +1,6 @@
 // Package pluginhost manages plugin lifecycle and gRPC communication.
 //
-// Plugins are external processes that implement the PulumiCost plugin protocol.
+// Plugins are external processes that implement the FinFocus plugin protocol.
 // This package handles launching, connecting to, and communicating with plugins.
 //
 // # Plugin Launchers

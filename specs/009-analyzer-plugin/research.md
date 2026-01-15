@@ -140,7 +140,7 @@ Format: urn:pulumi:stack::project::pulumi:providers:aws::default
 ```go
 &pulumirpc.AnalyzeDiagnostic{
     PolicyName:        "cost-estimate",
-    PolicyPackName:    "pulumicost",
+    PolicyPackName:    "finfocus",
     PolicyPackVersion: version.Version,
     Description:       "Resource cost estimation",
     Message:           "Estimated Monthly Cost: $25.50 USD",
@@ -220,16 +220,16 @@ func configureAnalyzerLogging() zerolog.Logger {
 **Configuration Path** (from spec clarifications):
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 analyzer:
   plugins:
     vantage:
-      path: ~/.pulumicost/plugins/vantage/v1.0.0/pulumicost-plugin-vantage
+      path: ~/.finfocus/plugins/vantage/v1.0.0/finfocus-plugin-vantage
       enabled: true
       env:
         VANTAGE_API_KEY: "${VANTAGE_API_KEY}"
     kubecost:
-      path: ~/.pulumicost/plugins/kubecost/v1.0.0/pulumicost-plugin-kubecost
+      path: ~/.finfocus/plugins/kubecost/v1.0.0/finfocus-plugin-kubecost
       enabled: true
 ```
 
@@ -252,7 +252,7 @@ analyzer:
 **Timeout Configuration** (from spec Q&A):
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 analyzer:
   timeout:
     per_resource: 5s      # Per-resource timeout
@@ -262,31 +262,31 @@ analyzer:
 
 ### 10. CLI Subcommand Design
 
-**Decision**: Distinct `pulumicost analyzer serve` subcommand (non-hidden)
+**Decision**: Distinct `finfocus analyzer serve` subcommand (non-hidden)
 
 **Rationale**: The spec clarifies (Q: Which approach for invoking analyzer mode? → A: Distinct Subcommand, non-hidden).
 
 **Command Structure**:
 
 ```bash
-pulumicost analyzer serve [flags]
+finfocus analyzer serve [flags]
 
 Flags:
   --debug         Enable debug logging
-  --config        Path to config file (default: ~/.pulumicost/config.yaml)
+  --config        Path to config file (default: ~/.finfocus/config.yaml)
   --timeout       Overall analysis timeout (default: 60s)
 
 # Usage in Pulumi.yaml:
 # analyzers:
 #   - cost
-# (Pulumi will run: pulumicost analyzer serve)
+# (Pulumi will run: finfocus analyzer serve)
 ```
 
 **Plugin Naming Convention**:
 
-- Binary: `pulumi-analyzer-cost` (or `pulumicost` with analyzer subcommand)
+- Binary: `pulumi-analyzer-cost` (or `finfocus` with analyzer subcommand)
 - Install path: `~/.pulumi/plugins/analyzer-cost-vX.Y.Z/`
-- Or: symlink `pulumi-analyzer-cost` → `pulumicost`
+- Or: symlink `pulumi-analyzer-cost` → `finfocus`
 
 ## Clarifications Resolved
 
@@ -327,5 +327,5 @@ Flags:
 
 - Pulumi Analyzer Protocol: `/mnt/c/GitHub/go/src/github.com/pulumi/pulumi/proto/pulumi/analyzer.proto`
 - Pulumi SDK Implementation: `/mnt/c/GitHub/go/src/github.com/pulumi/pulumi/sdk/go/common/resource/plugin/analyzer_plugin.go`
-- PulumiCost Spec Protocol: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
+- FinFocus Spec Protocol: `/mnt/c/GitHub/go/src/github.com/rshade/finfocus-spec/proto/finfocus/v1/costsource.proto`
 - Existing Engine: `/mnt/c/GitHub/go/src/worktrees/analyzer-plugin/internal/engine/engine.go`

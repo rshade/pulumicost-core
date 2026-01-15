@@ -1,10 +1,10 @@
 ---
 title: Testing Guide
-description: Comprehensive guide to testing in Pulumicost Core
+description: Comprehensive guide to testing in FinFocus Core
 layout: default
 ---
 
-This guide covers the testing philosophy, strategy, and practical instructions for Pulumicost Core.
+This guide covers the testing philosophy, strategy, and practical instructions for FinFocus Core.
 
 ## Testing Philosophy
 
@@ -16,12 +16,12 @@ This guide covers the testing philosophy, strategy, and practical instructions f
 
 ## Test Categories
 
-| Category | Path | Description |
-|----------|------|-------------|
-| **Unit** | `test/unit/` | Isolated tests for individual functions/methods. |
+| Category        | Path                | Description                                                 |
+| --------------- | ------------------- | ----------------------------------------------------------- |
+| **Unit**        | `test/unit/`        | Isolated tests for individual functions/methods.            |
 | **Integration** | `test/integration/` | Tests for component interactions (CLI -> Engine -> Plugin). |
-| **E2E** | `test/e2e/` | Full system tests running against fixtures. |
-| **Benchmarks** | `test/benchmarks/` | Performance tests for regression detection. |
+| **E2E**         | `test/e2e/`         | Full system tests running against fixtures.                 |
+| **Benchmarks**  | `test/benchmarks/`  | Performance tests for regression detection.                 |
 
 ## Running Tests
 

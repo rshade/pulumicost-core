@@ -1,6 +1,6 @@
 # Mock Plugin
 
-This package provides a configurable mock plugin for testing PulumiCost's plugin communication layer.
+This package provides a configurable mock plugin for testing FinFocus's plugin communication layer.
 
 ## Features
 
@@ -20,7 +20,7 @@ package mytest
 
 import (
     "testing"
-    "github.com/rshade/pulumicost-core/test/mocks/plugin"
+    "github.com/rshade/finfocus/test/mocks/plugin"
 )
 
 func TestWithMockPlugin(t *testing.T) {

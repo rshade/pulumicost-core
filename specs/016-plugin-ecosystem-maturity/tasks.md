@@ -58,7 +58,7 @@ can be implemented
 **Goal**: Plugin developers can run conformance suite against their plugin
 binary to verify protocol compliance
 
-**Independent Test**: Run `pulumicost plugin conformance ./test-plugin` and
+**Independent Test**: Run `finfocus plugin conformance ./test-plugin` and
 receive pass/fail report for each protocol requirement
 
 ### Tests for User Story 1 (MANDATORY - TDD Required)
@@ -181,7 +181,7 @@ with compatibility status and any issues
 - [x] T058 Run `make test` and ensure 80% coverage
 - [x] T059 [P] Create plugin developer documentation in docs/plugins/plugin-development.md
 - [x] T060 [P] Add troubleshooting guide to docs/plugins/troubleshooting.md
-- [x] T061 Verify certification works against recorder plugin (e.g. `pulumicost plugin certify ./bin/pulumicost-plugin-recorder`)
+- [x] T061 Verify certification works against recorder plugin (e.g. `finfocus plugin certify ./bin/finfocus-plugin-recorder`)
 
 ---
 

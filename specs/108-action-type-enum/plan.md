@@ -5,16 +5,16 @@
 
 ## Summary
 
-Update pulumicost-core to fully support the 5 new `RecommendationActionType`
+Update finfocus-core to fully support the 5 new `RecommendationActionType`
 enum values (MIGRATE, CONSOLIDATE, SCHEDULE, REFACTOR, OTHER) from
-pulumicost-spec v0.4.9+. The dependency is already in place (v0.4.11); this
+finfocus-spec v0.4.9+. The dependency is already in place (v0.4.11); this
 feature adds Core-side handling for filter parsing, TUI display labels, CLI
 help text, and JSON serialization.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: pulumicost-spec v0.4.11 (pluginsdk), cobra v1.10.1,
+**Primary Dependencies**: finfocus-spec v0.4.11 (pluginsdk), cobra v1.10.1,
   bubbletea v1.3.10, lipgloss v1.1.0
 **Storage**: N/A (stateless enum mapping)
 **Testing**: go test (stdlib), testify v1.11.1
@@ -28,7 +28,7 @@ help text, and JSON serialization.
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: This is orchestration logic (enum parsing/
       display) not a cost data source. Plugins already return these types via
@@ -39,11 +39,11 @@ Verify compliance with PulumiCost Core Constitution:
       specific code.
 - [x] **Documentation as Code**: CLI help text updated with all action types.
 - [x] **Protocol Stability**: No proto changes - using existing enum values from
-      pulumicost-spec v0.4.9+.
+      finfocus-spec v0.4.9+.
 - [x] **Implementation Completeness**: Full support for all 11 action types, no
       stubs or TODOs.
 - [x] **Quality Gates**: Tests, lint, coverage checks apply.
-- [x] **Multi-Repo Coordination**: Depends on pulumicost-spec v0.4.11 which is
+- [x] **Multi-Repo Coordination**: Depends on finfocus-spec v0.4.11 which is
       already integrated.
 
 **Violations Requiring Justification**: None

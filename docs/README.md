@@ -1,6 +1,6 @@
-# PulumiCost Documentation
+# FinFocus Documentation
 
-Welcome to the PulumiCost documentation hub. Whether you're a user, engineer, architect,
+Welcome to the FinFocus documentation hub. Whether you're a user, engineer, architect,
 or business stakeholder, you'll find comprehensive guides to help you succeed.
 
 ## Quick Navigation
@@ -60,7 +60,7 @@ or business stakeholder, you'll find comprehensive guides to help you succeed.
 ### 2. View Projected Costs
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Output:**
@@ -76,13 +76,13 @@ Total: $7.50 USD
 
 ### 3. Zero-Click Cost Estimation
 
-Integrate PulumiCost directly into your `pulumi preview` workflow.
+Integrate FinFocus directly into your `pulumi preview` workflow.
 
 ```yaml
 # Configure analyzer in Pulumi.yaml
 plugins:
-  - path: pulumicost
-    args: ["analyzer", "serve"]
+  - path: finfocus
+    args: ['analyzer', 'serve']
 ```
 
 Then run:
@@ -109,7 +109,7 @@ pulumi preview
 
 #### For Plugin Developers
 
-- **[Plugin Development Guide](plugins/plugin-development.md)** - How to build a PulumiCost plugin
+- **[Plugin Development Guide](plugins/plugin-development.md)** - How to build a FinFocus plugin
 - **[Plugin SDK Reference](plugins/plugin-sdk.md)** - API and SDK documentation
 - **[Plugin Examples](plugins/plugin-examples.md)** - Code patterns and examples
 - **[Plugin Checklist](plugins/plugin-checklist.md)** - Ensure your plugin is complete
@@ -147,7 +147,7 @@ pulumi preview
 
 - **[FAQ](support/faq.md)** - Frequently asked questions
 - **[Troubleshooting Guide](support/troubleshooting.md)** - Problem-solving by symptom
-- **[Contributing](support/contributing.md)** - How to contribute to PulumiCost
+- **[Contributing](support/contributing.md)** - How to contribute to FinFocus
 - **[Code of Conduct](support/code-of-conduct.md)** - Community guidelines
 - **[Support Channels](support/support-channels.md)** - Where to get help
 
@@ -155,7 +155,7 @@ pulumi preview
 
 ## Key Concepts
 
-### What is PulumiCost?
+### What is FinFocus?
 
 **Key Features:**
 
@@ -173,14 +173,14 @@ pulumi preview
 
 ```text
 1. You define infrastructure with Pulumi
-2. PulumiCost reads your Pulumi definitions
+2. FinFocus reads your Pulumi definitions
 3. Plugins fetch pricing and cost data
-4. PulumiCost calculates and displays results
+4. FinFocus calculates and displays results
 ```
 
 ### Plugin-Based Architecture
 
-PulumiCost uses a plugin system to support multiple cost providers:
+FinFocus uses a plugin system to support multiple cost providers:
 
 - **Vantage** (IN PROGRESS) - Multi-cloud cost aggregation
 - **Kubecost** (PLANNED) - Kubernetes cost allocation
@@ -208,7 +208,7 @@ See [plan.md](plan.md) for complete documentation architecture, maintenance stra
 
 ### By Use Case
 
-- **I just installed PulumiCost** → [Quickstart](getting-started/quickstart.md)
+- **I just installed FinFocus** → [Quickstart](getting-started/quickstart.md)
 - **I want to integrate with Vantage** → [Vantage Setup](plugins/vantage/setup.md)
 - **I'm building a custom plugin** → [Plugin Development](plugins/plugin-development.md)
 - **I'm integrating with CI/CD** → [CI/CD Integration](deployment/cicd-integration.md)
@@ -216,7 +216,7 @@ See [plan.md](plan.md) for complete documentation architecture, maintenance stra
 
 ### By Problem
 
-- **"How do I install PulumiCost?"** → [Installation Guide](getting-started/installation.md)
+- **"How do I install FinFocus?"** → [Installation Guide](getting-started/installation.md)
 - **"How do I configure it?"** → [Configuration Guide](deployment/configuration.md)
 - **"How do I build a plugin?"** → [Plugin Development](plugins/plugin-development.md)
 - **"What's the cost calculation?"** → [Cost Calculation](architecture/cost-calculation.md)
@@ -308,7 +308,7 @@ See [Contributing Guide](support/contributing.md) for how to:
 
 ## For LLM/AI Tools
 
-If you're an AI assistant helping someone with PulumiCost, see [llms.txt](llms.txt) for a
+If you're an AI assistant helping someone with FinFocus, see [llms.txt](llms.txt) for a
 machine-readable index of all documentation.
 
 ---

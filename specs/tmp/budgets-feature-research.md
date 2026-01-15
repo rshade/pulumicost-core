@@ -1,18 +1,18 @@
 # Budgets & Alerts Feature Research & Design
 
 > This document captures research, design decisions, and implementation
-> details for the budgets and alerts feature across pulumicost-spec and
-> pulumicost-core.
+> details for the budgets and alerts feature across finfocus-spec and
+> finfocus-core.
 
 ## Planned Issues
 
 | Repository | Issue | Scope | Priority |
 | ---------- | ----- | ----- | -------- |
-| pulumicost-core | MVP: CLI budget alerts | Global scope, CLI output | P0 |
-| pulumicost-core | Enhancement: Exit codes | CI/CD integration | P1 |
-| pulumicost-core | Enhancement: Notifications | Webhooks, email | P2 |
-| pulumicost-core | Enhancement: Flexible scoping | Per-provider, per-type | P2 |
-| pulumicost-spec | GetBudgets RPC | Plugin-provided budgets | P3 |
+| finfocus-core | MVP: CLI budget alerts | Global scope, CLI output | P0 |
+| finfocus-core | Enhancement: Exit codes | CI/CD integration | P1 |
+| finfocus-core | Enhancement: Notifications | Webhooks, email | P2 |
+| finfocus-core | Enhancement: Flexible scoping | Per-provider, per-type | P2 |
+| finfocus-spec | GetBudgets RPC | Plugin-provided budgets | P3 |
 
 ## Cross-Provider Research Summary
 
@@ -281,7 +281,7 @@ One APIs.
 ### MVP Configuration (Global Scope)
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 cost:
   budgets:
     amount: 100
@@ -297,7 +297,7 @@ cost:
 ### Enhanced Configuration (Flexible Scoping - Future)
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 cost:
   budgets:
     global:
@@ -321,7 +321,7 @@ cost:
 ### Exit Codes Configuration (Enhancement 1)
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 cost:
   budgets:
     amount: 100
@@ -335,14 +335,14 @@ cost:
 Or via environment variable:
 
 ```bash
-export PULUMICOST_BUDGET_EXIT_ON_THRESHOLD=true
-export PULUMICOST_BUDGET_EXIT_CODE=2
+export FINFOCUS_BUDGET_EXIT_ON_THRESHOLD=true
+export FINFOCUS_BUDGET_EXIT_CODE=2
 ```
 
 ### Notifications Configuration (Enhancement 2)
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 cost:
   budgets:
     amount: 100
@@ -514,7 +514,7 @@ type BudgetsProvider interface {
 
 ## Implementation File Structure
 
-### pulumicost-core MVP
+### finfocus-core MVP
 
 ```text
 internal/
@@ -526,7 +526,7 @@ internal/
     └── budget.go            # Budget comparison logic
 ```
 
-### pulumicost-core Enhancements
+### finfocus-core Enhancements
 
 ```text
 internal/
@@ -538,10 +538,10 @@ internal/
     └── budget.go            # Extended config with scoping
 ```
 
-### pulumicost-spec (Future)
+### finfocus-spec (Future)
 
 ```text
-proto/pulumicost/v1/
+proto/finfocus/v1/
 ├── budget.proto             # Budget messages
 └── costsource.proto         # Add GetBudgets RPC
 

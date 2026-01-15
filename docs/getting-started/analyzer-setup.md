@@ -1,16 +1,16 @@
 ---
 title: Analyzer Setup
-description: Setting up PulumiCost as a Pulumi Analyzer Policy Pack
+description: Setting up FinFocus as a Pulumi Analyzer Policy Pack
 layout: default
 ---
 
-PulumiCost integrates with Pulumi's analyzer framework as a **Policy Pack**. This allows you to see real-time cost
+FinFocus integrates with Pulumi's analyzer framework as a **Policy Pack**. This allows you to see real-time cost
 estimates directly within your `pulumi preview` and `pulumi up` workflow.
 
 ## Prerequisites
 
 - [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/) installed
-- `pulumicost` binary built (run `make build`)
+- `finfocus` binary built (run `make build`)
 
 ## Setup Instructions
 
@@ -18,33 +18,33 @@ Pulumi expects analyzer policy packs to follow a specific naming and directory c
 
 ### 1. Create a Policy Pack Directory
 
-Create a dedicated directory to hold your PulumiCost policy pack:
+Create a dedicated directory to hold your FinFocus policy pack:
 
 ```bash
-mkdir -p ~/.pulumicost/analyzer
+mkdir -p ~/.finfocus/analyzer
 ```
 
 ### 2. Configure the Policy Pack
 
-Create a `PulumiPolicy.yaml` file in that directory. This file tells Pulumi to use the `pulumicost` runtime.
+Create a `PulumiPolicy.yaml` file in that directory. This file tells Pulumi to use the `finfocus` runtime.
 
 ```bash
-cat > ~/.pulumicost/analyzer/PulumiPolicy.yaml << 'EOF'
-runtime: pulumicost
-name: pulumicost
+cat > ~/.finfocus/analyzer/PulumiPolicy.yaml << 'EOF'
+runtime: finfocus
+name: finfocus
 version: 0.1.0
 EOF
 ```
 
 ### 3. Install the Binary
 
-Copy your `pulumicost` binary to the policy pack directory, renaming it to match Pulumi's expected naming convention:
+Copy your `finfocus` binary to the policy pack directory, renaming it to match Pulumi's expected naming convention:
 `pulumi-analyzer-policy-<runtime>`.
 
 ```bash
-# From the pulumicost-core root directory
-cp bin/pulumicost ~/.pulumicost/analyzer/pulumi-analyzer-policy-pulumicost
-chmod +x ~/.pulumicost/analyzer/pulumi-analyzer-policy-pulumicost
+# From the finfocus root directory
+cp bin/finfocus ~/.finfocus/analyzer/pulumi-analyzer-policy-finfocus
+chmod +x ~/.finfocus/analyzer/pulumi-analyzer-policy-finfocus
 ```
 
 ### 4. Enable the Analyzer
@@ -54,13 +54,13 @@ To use the analyzer, you must point Pulumi to the policy pack directory during p
 #### Option A: CLI Flag (Recommended for testing)
 
 ```bash
-pulumi preview --policy-pack ~/.pulumicost/analyzer
+pulumi preview --policy-pack ~/.finfocus/analyzer
 ```
 
 #### Option B: Environment Variable (Recommended for CI/CD)
 
 ```bash
-export PULUMI_POLICY_PACK_PATH="$HOME/.pulumicost/analyzer"
+export PULUMI_POLICY_PACK_PATH="$HOME/.finfocus/analyzer"
 pulumi preview
 ```
 
@@ -70,9 +70,9 @@ Once configured, cost estimates will appear as **advisory diagnostics** in your 
 
 ```text
 Policies:
-    pulumicost@v0.1.0 (local: ~/.pulumicost/analyzer)
+    finfocus@v0.1.0 (local: ~/.finfocus/analyzer)
         - [advisory] [severity: low]  cost-estimate  (aws:ec2/instance:Instance: my-instance)
-          Estimated Monthly Cost: $7.50 USD (source: pulumicost-plugin-aws)
+          Estimated Monthly Cost: $7.50 USD (source: finfocus-plugin-aws)
         - [advisory] [severity: low]  stack-cost-summary  (pulumi:pulumi:Stack: my-stack)
           Total Estimated Monthly Cost: $7.50 USD (1 resources analyzed)
 ```
@@ -81,7 +81,7 @@ Policies:
 
 ### "could not start policy pack"
 
-Ensure the binary name in `~/.pulumicost/analyzer/` matches exactly: `pulumi-analyzer-policy-pulumicost`.
+Ensure the binary name in `~/.finfocus/analyzer/` matches exactly: `pulumi-analyzer-policy-finfocus`.
 
 ### No cost diagnostics appear
 
@@ -90,7 +90,7 @@ Ensure the binary name in `~/.pulumicost/analyzer/` matches exactly: `pulumi-ana
 3. Check logs by enabling debug mode:
 
    ```bash
-   PULUMICOST_LOG_LEVEL=debug pulumi preview --policy-pack ~/.pulumicost/analyzer
+   FINFOCUS_LOG_LEVEL=debug pulumi preview --policy-pack ~/.finfocus/analyzer
    ```
 
 ## Technical Details

@@ -25,9 +25,9 @@ As a user, I want to filter cost results by tag or resource type using the `--fi
 
 **Acceptance Scenarios**:
 
-1. **Given** the CLI is installed, **When** I run `pulumicost actual-cost --filter "tag:Environment=dev"`, **Then** the output should only show costs associated with resources having the "Environment=dev" tag.
-2. **Given** the CLI is installed, **When** I run `pulumicost actual-cost --filter "type:aws:s3/bucket"`, **Then** the output should only show costs for S3 buckets.
-3. **Given** the CLI is installed, **When** I run `pulumicost actual-cost --filter "tag:A" --filter "tag:B"`, **Then** the output should only show resources that match BOTH tag A AND tag B.
+1. **Given** the CLI is installed, **When** I run `finfocus actual-cost --filter "tag:Environment=dev"`, **Then** the output should only show costs associated with resources having the "Environment=dev" tag.
+2. **Given** the CLI is installed, **When** I run `finfocus actual-cost --filter "type:aws:s3/bucket"`, **Then** the output should only show costs for S3 buckets.
+3. **Given** the CLI is installed, **When** I run `finfocus actual-cost --filter "tag:A" --filter "tag:B"`, **Then** the output should only show resources that match BOTH tag A AND tag B.
 4. **Given** the integration test suite, **When** I run `TestActualCost_FilterByTag`, **Then** the test should pass without "unknown flag" errors.
 
 ### Edge Cases

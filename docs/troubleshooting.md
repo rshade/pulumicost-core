@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues, solutions, and debugging techniques for PulumiCost Core.
+Common issues, solutions, and debugging techniques for FinFocus Core.
 
 ## Table of Contents
 
@@ -18,11 +18,11 @@ Common issues, solutions, and debugging techniques for PulumiCost Core.
 
 ### Binary Not Found
 
-**Problem**: Command `pulumicost` not found after installation.
+**Problem**: Command `finfocus` not found after installation.
 
 ```bash
-$ pulumicost --help
-bash: pulumicost: command not found
+$ finfocus --help
+bash: finfocus: command not found
 ```
 
 **Solutions**:
@@ -30,7 +30,7 @@ bash: pulumicost: command not found
 1. **Check if binary is in PATH**:
 
    ```bash
-   which pulumicost
+   which finfocus
    echo $PATH
    ```
 
@@ -46,7 +46,7 @@ bash: pulumicost: command not found
    # For bash
    echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
    source ~/.bashrc
-   
+
    # For zsh
    echo 'export PATH=$PATH:/usr/local/bin' >> ~/.zshrc
    source ~/.zshrc
@@ -55,7 +55,7 @@ bash: pulumicost: command not found
 4. **Use full path**:
 
    ```bash
-   /usr/local/bin/pulumicost --help
+   /usr/local/bin/finfocus --help
    ```
 
 ### Permission Denied
@@ -63,8 +63,8 @@ bash: pulumicost: command not found
 **Problem**: Permission denied when running binary.
 
 ```bash
-$ pulumicost --help
-bash: ./pulumicost: Permission denied
+$ finfocus --help
+bash: ./finfocus: Permission denied
 ```
 
 **Solutions**:
@@ -72,21 +72,21 @@ bash: ./pulumicost: Permission denied
 1. **Make binary executable**:
 
    ```bash
-   chmod +x /usr/local/bin/pulumicost
+   chmod +x /usr/local/bin/finfocus
    ```
 
 2. **Check file permissions**:
 
    ```bash
-   ls -la /usr/local/bin/pulumicost
+   ls -la /usr/local/bin/finfocus
    # Should show: -rwxr-xr-x (executable permissions)
    ```
 
 3. **For downloaded files**:
 
    ```bash
-   chmod +x ./pulumicost
-   sudo mv ./pulumicost /usr/local/bin/
+   chmod +x ./finfocus
+   sudo mv ./finfocus /usr/local/bin/
    ```
 
 ### macOS Security Warning
@@ -94,27 +94,27 @@ bash: ./pulumicost: Permission denied
 **Problem**: macOS blocks unsigned binary.
 
 ```text
-"pulumicost" cannot be opened because the developer cannot be verified.
+"finfocus" cannot be opened because the developer cannot be verified.
 ```
 
 **Solutions**:
 
 1. **Allow via System Preferences**:
    - Go to System Preferences > Security & Privacy
-   - Click "Allow Anyway" for pulumicost
+   - Click "Allow Anyway" for finfocus
 
 2. **Command line bypass**:
 
    ```bash
-   sudo spctl --add /usr/local/bin/pulumicost
-   sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
+   sudo spctl --add /usr/local/bin/finfocus
+   sudo xattr -dr com.apple.quarantine /usr/local/bin/finfocus
    ```
 
 3. **Temporary bypass**:
 
    ```bash
-   xattr -dr com.apple.quarantine ./pulumicost
-   ./pulumicost --help
+   xattr -dr com.apple.quarantine ./finfocus
+   ./finfocus --help
    ```
 
 ### Version Compatibility
@@ -134,10 +134,10 @@ bash: ./pulumicost: Permission denied
 
    ```bash
    # For Intel Macs
-   curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-amd64 -o pulumicost
-   
+   curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-amd64 -o finfocus
+
    # For Apple Silicon Macs
-   curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-arm64 -o pulumicost
+   curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-arm64 -o finfocus
    ```
 
 ## Pulumi Integration
@@ -187,7 +187,7 @@ cat plan.json | jq '.' # Should parse without errors
    ```bash
    # If preview fails, try current state
    pulumi stack export > current-state.json
-   pulumicost cost projected --pulumi-json current-state.json
+   finfocus cost projected --pulumi-json current-state.json
    ```
 
 ### Empty Pulumi Plan
@@ -195,7 +195,7 @@ cat plan.json | jq '.' # Should parse without errors
 **Problem**: Pulumi plan contains no resources.
 
 ```bash
-$ pulumicost cost projected --pulumi-json plan.json
+$ finfocus cost projected --pulumi-json plan.json
 No resources found in Pulumi plan
 ```
 
@@ -224,7 +224,7 @@ No resources found in Pulumi plan
 
 ### Resource Type Recognition
 
-**Problem**: Resources not recognized by PulumiCost.
+**Problem**: Resources not recognized by FinFocus.
 
 ```text
 Resource type 'custom:provider/resource:Type' not supported
@@ -250,13 +250,13 @@ Resource type 'custom:provider/resource:Type' not supported
 
    ```bash
    # Filter to supported resources only
-   pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2"
+   finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2"
    ```
 
 4. **Create custom pricing spec**:
 
    ```bash
-   mkdir -p ~/.pulumicost/specs
+   mkdir -p ~/.finfocus/specs
    # Create YAML spec for custom resource type
    ```
 
@@ -267,7 +267,7 @@ Resource type 'custom:provider/resource:Type' not supported
 **Problem**: Plugins not discovered or loaded.
 
 ```bash
-$ pulumicost plugin list
+$ finfocus plugin list
 No plugins found
 ```
 
@@ -276,30 +276,30 @@ No plugins found
 1. **Check plugin directory structure**:
 
    ```bash
-   ls -la ~/.pulumicost/plugins/
-   ls -la ~/.pulumicost/plugins/*/*/
+   ls -la ~/.finfocus/plugins/
+   ls -la ~/.finfocus/plugins/*/*/
    ```
 
 2. **Verify directory structure**:
 
    ```text
-   ~/.pulumicost/plugins/
+   ~/.finfocus/plugins/
    └── kubecost/
        └── 1.0.0/
-           └── pulumicost-kubecost
+           └── finfocus-kubecost
    ```
 
 3. **Make plugin executable**:
 
    ```bash
-   chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
+   chmod +x ~/.finfocus/plugins/*/*/finfocus-*
    ```
 
 4. **Check plugin names**:
 
    ```bash
-   # Plugin binary must start with 'pulumicost-'
-   ls ~/.pulumicost/plugins/*/*/pulumicost-*
+   # Plugin binary must start with 'finfocus-'
+   ls ~/.finfocus/plugins/*/*/finfocus-*
    ```
 
 ### Plugin Validation Failures
@@ -307,7 +307,7 @@ No plugins found
 **Problem**: Plugin validation fails.
 
 ```bash
-$ pulumicost plugin validate
+$ finfocus plugin validate
 kubecost: FAILED - connection timeout
 ```
 
@@ -316,14 +316,14 @@ kubecost: FAILED - connection timeout
 1. **Test plugin directly**:
 
    ```bash
-   ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+   ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
    # Should start and show port information
    ```
 
 2. **Check plugin logs**:
 
    ```bash
-   PLUGIN_DEBUG=1 pulumicost plugin validate --adapter kubecost
+   PLUGIN_DEBUG=1 finfocus plugin validate --adapter kubecost
    ```
 
 3. **Network connectivity**:
@@ -354,7 +354,7 @@ Error: failed to connect to plugin: context deadline exceeded
 
    ```bash
    export PLUGIN_TIMEOUT=60s
-   pulumicost cost actual --adapter kubecost --from 2025-01-01
+   finfocus cost actual --adapter kubecost --from 2025-01-01
    ```
 
 2. **Check port conflicts**:
@@ -377,8 +377,8 @@ Error: failed to connect to plugin: context deadline exceeded
 
    ```bash
    # Kill any stuck plugin processes
-   pkill pulumicost-kubecost
-   ps aux | grep pulumicost
+   pkill finfocus-kubecost
+   ps aux | grep finfocus
    ```
 
 ## Cost Calculation Issues
@@ -403,8 +403,8 @@ aws:ec2/instance:Instance    none    $0.00    USD    No pricing information avai
 2. **Create local pricing specs**:
 
    ```bash
-   mkdir -p ~/.pulumicost/specs
-   cat > ~/.pulumicost/specs/aws-ec2-t3-micro.yaml << 'EOF'
+   mkdir -p ~/.finfocus/specs
+   cat > ~/.finfocus/specs/aws-ec2-t3-micro.yaml << 'EOF'
    provider: aws
    service: ec2
    sku: t3.micro
@@ -418,7 +418,7 @@ aws:ec2/instance:Instance    none    $0.00    USD    No pricing information avai
 3. **Use specific adapter**:
 
    ```bash
-   pulumicost cost projected --pulumi-json plan.json --adapter aws-plugin
+   finfocus cost projected --pulumi-json plan.json --adapter aws-plugin
    ```
 
 4. **Check resource properties**:
@@ -436,10 +436,10 @@ or plugins return "not supported" because properties are missing.
 **Diagnosis**: This often happens when `pulumi preview --json` structure changes
 (e.g., nesting inputs under `newState`).
 
-**Solution**: Ensure you are using a compatible version of `pulumicost` that
+**Solution**: Ensure you are using a compatible version of `finfocus` that
 handles the JSON structure of your Pulumi CLI version.
 
-- Update `pulumicost` to the latest version.
+- Update `finfocus` to the latest version.
 - Check `pulumi version` and ensure compatibility.
 
 ### Inaccurate Cost Estimates
@@ -457,7 +457,7 @@ handles the JSON structure of your Pulumi CLI version.
 2. **Check pricing spec accuracy**:
 
    ```bash
-   cat ~/.pulumicost/specs/aws-ec2-t3-micro.yaml
+   cat ~/.finfocus/specs/aws-ec2-t3-micro.yaml
    ```
 
 3. **Verify resource configuration**:
@@ -494,7 +494,7 @@ handles the JSON structure of your Pulumi CLI version.
 **Problem**: Actual cost queries return no data or errors.
 
 ```bash
-$ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+$ finfocus cost actual --pulumi-json plan.json --from 2025-01-01
 Error: no cost data available for time range
 ```
 
@@ -504,7 +504,7 @@ Error: no cost data available for time range
 
    ```bash
    # Ensure date range is valid and not too recent
-   pulumicost cost actual --pulumi-json plan.json --from 2025-01-07 --to 2025-01-14
+   finfocus cost actual --pulumi-json plan.json --from 2025-01-07 --to 2025-01-14
    ```
 
 2. **Billing data lag**:
@@ -512,7 +512,7 @@ Error: no cost data available for time range
    ```bash
    # Most billing APIs have 24-48 hour delays
    # Try querying older date ranges
-   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-02
+   finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-02
    ```
 
 3. **Resource matching**:
@@ -527,7 +527,7 @@ Error: no cost data available for time range
    ```bash
    # Verify plugin can access billing APIs
    export KUBECOST_API_URL="http://kubecost.example.com:9090"
-   pulumicost plugin validate --adapter kubecost
+   finfocus plugin validate --adapter kubecost
    ```
 
 ## Performance Problems
@@ -542,21 +542,21 @@ Error: no cost data available for time range
 
    ```bash
    # Avoid querying all plugins
-   pulumicost cost projected --pulumi-json plan.json --adapter kubecost
+   finfocus cost projected --pulumi-json plan.json --adapter kubecost
    ```
 
 2. **Filter resources**:
 
    ```bash
    # Process fewer resources
-   pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2"
+   finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2"
    ```
 
 3. **Increase timeout**:
 
    ```bash
    export PLUGIN_TIMEOUT=300s
-   pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+   finfocus cost actual --pulumi-json plan.json --from 2025-01-01
    ```
 
 4. **Parallel processing**:
@@ -585,14 +585,14 @@ Error: no cost data available for time range
 
    ```bash
    # More memory-efficient for large datasets
-   pulumicost cost projected --pulumi-json plan.json --output ndjson
+   finfocus cost projected --pulumi-json plan.json --output ndjson
    ```
 
 3. **Filter early**:
 
    ```bash
    # Reduce processing load
-   pulumicost cost projected --pulumi-json plan.json --filter "provider=aws"
+   finfocus cost projected --pulumi-json plan.json --filter "provider=aws"
    ```
 
 ### Network Timeouts
@@ -640,15 +640,15 @@ Error: no cost data available for time range
 1. **Create directories manually**:
 
    ```bash
-   mkdir -p ~/.pulumicost/plugins
-   mkdir -p ~/.pulumicost/specs
-   chmod 755 ~/.pulumicost/
+   mkdir -p ~/.finfocus/plugins
+   mkdir -p ~/.finfocus/specs
+   chmod 755 ~/.finfocus/
    ```
 
 2. **Fix ownership**:
 
    ```bash
-   chown -R $USER:$USER ~/.pulumicost/
+   chown -R $USER:$USER ~/.finfocus/
    ```
 
 3. **Check disk space**:
@@ -666,7 +666,7 @@ Error: no cost data available for time range
 1. **Check variable names**:
 
    ```bash
-   env | grep PULUMICOST
+   env | grep FINFOCUS
    env | grep -E "(AWS|KUBECOST|AZURE)"
    ```
 
@@ -694,8 +694,8 @@ Error: no cost data available for time range
 1. **Check file locations**:
 
    ```bash
-   ls -la ~/.pulumicost/
-   ls -la ~/.pulumicost/plugins/*/*/config.*
+   ls -la ~/.finfocus/
+   ls -la ~/.finfocus/plugins/*/*/config.*
    ```
 
 2. **Validate YAML syntax**:
@@ -709,8 +709,8 @@ Error: no cost data available for time range
 3. **Check file permissions**:
 
    ```bash
-   ls -la ~/.pulumicost/specs/*.yaml
-   chmod 644 ~/.pulumicost/specs/*.yaml
+   ls -la ~/.finfocus/specs/*.yaml
+   chmod 644 ~/.finfocus/specs/*.yaml
    ```
 
 ## Network and Authentication
@@ -811,29 +811,29 @@ Error: x509: certificate signed by unknown authority
 
 ```bash
 # Global debug mode
-pulumicost --debug cost projected --pulumi-json plan.json
+finfocus --debug cost projected --pulumi-json plan.json
 
 # Plugin-specific debugging
 export PLUGIN_DEBUG=1
 export PLUGIN_LOG_LEVEL=debug
-pulumicost cost actual --adapter kubecost --from 2025-01-01
+finfocus cost actual --adapter kubecost --from 2025-01-01
 ```
 
 ### Verbose Output
 
 ```bash
 # Increase verbosity
-pulumicost -v cost projected --pulumi-json plan.json
+finfocus -v cost projected --pulumi-json plan.json
 
 # Maximum verbosity
-pulumicost -vv cost actual --adapter kubecost --from 2025-01-01
+finfocus -vv cost actual --adapter kubecost --from 2025-01-01
 ```
 
 ### Log Analysis
 
 ```bash
 # Save logs to file
-pulumicost --debug cost projected --pulumi-json plan.json > debug.log 2>&1
+finfocus --debug cost projected --pulumi-json plan.json > debug.log 2>&1
 
 # Search for specific errors
 grep -i "error\|failed\|timeout" debug.log
@@ -846,11 +846,11 @@ grep -i "grpc\|plugin\|connect" debug.log
 
 ```bash
 # Test plugin directly
-~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost &
+~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost &
 PLUGIN_PID=$!
 
 # Test gRPC connection
-grpcurl -plaintext localhost:50051 pulumicost.v1.CostSourceService/Name
+grpcurl -plaintext localhost:50051 finfocus.v1.CostSourceService/Name
 
 # Clean up
 kill $PLUGIN_PID
@@ -861,14 +861,14 @@ kill $PLUGIN_PID
 ### "No such file or directory"
 
 ```bash
-Error: exec: "pulumicost-kubecost": executable file not found in $PATH
+Error: exec: "finfocus-kubecost": executable file not found in $PATH
 ```
 
 **Solution**: Plugin binary missing or not executable.
 
 ```bash
-ls -la ~/.pulumicost/plugins/kubecost/1.0.0/
-chmod +x ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+ls -la ~/.finfocus/plugins/kubecost/1.0.0/
+chmod +x ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 ```
 
 ### "Connection refused"
@@ -881,7 +881,7 @@ Error: connection refused: dial tcp 127.0.0.1:50051: connect: connection refused
 
 ```bash
 # Restart plugin validation
-pulumicost plugin validate
+finfocus plugin validate
 # Check for port conflicts
 lsof -i :50051
 ```
@@ -918,8 +918,8 @@ jq '.' plan.json
 
 ### Community Support
 
-1. **GitHub Issues**: https://github.com/rshade/pulumicost-core/issues
-2. **Discussions**: https://github.com/rshade/pulumicost-core/discussions
+1. **GitHub Issues**: https://github.com/rshade/finfocus/issues
+2. **Discussions**: https://github.com/rshade/finfocus/discussions
 3. **Documentation**: Check all docs in this repository
 
 ### Bug Reports
@@ -929,7 +929,7 @@ When reporting bugs, include:
 1. **Version information**:
 
    ```bash
-   pulumicost --version
+   finfocus --version
    ```
 
 2. **System information**:
@@ -942,13 +942,13 @@ When reporting bugs, include:
 3. **Debug logs**:
 
    ```bash
-   pulumicost --debug [command] > debug.log 2>&1
+   finfocus --debug [command] > debug.log 2>&1
    ```
 
 4. **Configuration details**:
 
    ```bash
-   ls -la ~/.pulumicost/
+   ls -la ~/.finfocus/
    env | grep -E "(PULUMI|AWS|KUBECOST)"
    ```
 
@@ -970,9 +970,9 @@ Before seeking help:
 
 - [ ] Check this troubleshooting guide
 - [ ] Try with `--debug` flag
-- [ ] Verify installation with `pulumicost --version`
+- [ ] Verify installation with `finfocus --version`
 - [ ] Test with provided examples
-- [ ] Check plugin status with `pulumicost plugin validate`
+- [ ] Check plugin status with `finfocus plugin validate`
 - [ ] Review environment variables and configuration
 - [ ] Test network connectivity to external APIs
 - [ ] Search existing GitHub issues

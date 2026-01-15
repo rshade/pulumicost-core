@@ -10,7 +10,7 @@
 
 We will implement this feature by extending the existing E2E test suite in `test/e2e`.
 The core strategy relies on treating the analyzer as a local plugin configured via `Pulumi.yaml`.
-We will build the `pulumicost` binary once (handled by `TestMain` or Makefile) and then point the test fixture to this binary.
+We will build the `finfocus` binary once (handled by `TestMain` or Makefile) and then point the test fixture to this binary.
 
 Implementation will follow a prioritized approach:
 
@@ -150,7 +150,7 @@ During implementation, the following additional work was done:
 
 The E2E tests use this exact setup (verified working 2025-12-09):
 
-1. Binary named `pulumi-analyzer-policy-pulumicost`
-2. `PulumiPolicy.yaml` with `runtime: pulumicost`
+1. Binary named `pulumi-analyzer-policy-finfocus`
+2. `PulumiPolicy.yaml` with `runtime: finfocus`
 3. Policy pack directory added to PATH
 4. `pulumi preview --policy-pack <path>` to activate

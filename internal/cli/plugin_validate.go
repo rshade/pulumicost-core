@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +25,13 @@ func NewPluginValidateCmd() *cobra.Command {
 		Short: "Validate installed plugins",
 		Long:  "Validate that installed plugins can be loaded and respond to basic API calls",
 		Example: `  # Validate all installed plugins
-  pulumicost plugin validate
+  finfocus plugin validate
 
   # Validate a specific plugin
-  pulumicost plugin validate --plugin aws-plugin
+  finfocus plugin validate --plugin aws-plugin
 
   # Validate kubecost plugin specifically
-  pulumicost plugin validate --plugin kubecost`,
+  finfocus plugin validate --plugin kubecost`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runPluginValidateCmd(cmd, targetPlugin)
 		},

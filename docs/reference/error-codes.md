@@ -1,25 +1,25 @@
 ---
 title: Error Codes
-description: Reference for Pulumicost error codes
+description: Reference for FinFocus error codes
 layout: default
 ---
 
-This page lists common error codes and messages returned by Pulumicost.
+This page lists common error codes and messages returned by FinFocus.
 
 ## CLI Errors
 
 ### ERR-001: Config File Error
 
 **Message**: "Failed to load configuration file"
-**Cause**: The configuration file at `~/.pulumicost/config.yaml` is invalid
+**Cause**: The configuration file at `~/.finfocus/config.yaml` is invalid
 or unreadable.
 **Fix**: Check permissions and YAML syntax.
 
 ### ERR-002: Plugin Not Found
 
 **Message**: "Plugin [name] not found"
-**Cause**: The requested plugin is not installed in `~/.pulumicost/plugins`.
-**Fix**: Run `pulumicost plugin install [name]`.
+**Cause**: The requested plugin is not installed in `~/.finfocus/plugins`.
+**Fix**: Run `finfocus plugin install [name]`.
 
 ## Engine Errors
 
@@ -28,7 +28,7 @@ or unreadable.
 **Message**: "No pricing data found for resource"
 **Cause**: The resource type or SKU is not supported by the pricing provider.
 **Fix**: Check if the resource is supported or add a local override in
-`~/.pulumicost/specs/`.
+`~/.finfocus/specs/`.
 
 ### ENG-002: Plugin Timeout
 

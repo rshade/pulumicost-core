@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -130,47 +130,43 @@ type AnalyzerPlugin struct {
 
 // ResolveConfigDir determines the configuration directory based on environment variables.
 // It follows this precedence order:
-// 1. $PULUMI_HOME/pulumicost/ - if PULUMI_HOME is set (Pulumi ecosystem integration)
-// 2. $HOME/.pulumicost/ - default fallback (legacy/standard behavior)
-// 3. ./.pulumicost - fallback of last resort if home directory cannot be determined
-//
-// This enables pulumicost to act as a "good citizen" in the Pulumi ecosystem when running
-// as a tool plugin, while maintaining backward compatibility for standalone usage.
+// 1. $FINFOCUS_HOME - explicit override
+// 2. $PULUMI_HOME/finfocus/ - if PULUMI_HOME is set (Pulumi ecosystem integration)
+// 3. $HOME/.finfocus/ - default fallback (standard behavior)
+// 4. ./.finfocus - fallback of last resort if home directory cannot be determined
 func ResolveConfigDir() string {
-	// Check PULUMI_HOME first (Pulumi ecosystem integration)
-	if pulumiHome := os.Getenv("PULUMI_HOME"); pulumiHome != "" {
-		return filepath.Join(pulumiHome, "pulumicost")
+	// Check explicit FINFOCUS_HOME first
+	if ffHome := os.Getenv("FINFOCUS_HOME"); ffHome != "" {
+		return ffHome
 	}
 
-	// Fall back to HOME/.pulumicost
+	// Check PULUMI_HOME (Pulumi ecosystem integration)
+	if pulumiHome := os.Getenv("PULUMI_HOME"); pulumiHome != "" {
+		return filepath.Join(pulumiHome, "finfocus")
+	}
+
+	// Fall back to HOME/.finfocus
 	homeDir, err := os.UserHomeDir()
 	if err != nil || homeDir == "" {
 		// Last resort fallback - use current working directory
-		// This can happen in containerized environments or when HOME is not set
 		cwd, cwdErr := os.Getwd()
 		if cwdErr != nil {
-			// Final fallback - use relative path from current directory
-			return ".pulumicost"
+			return ".finfocus"
 		}
-		return filepath.Join(cwd, ".pulumicost")
+		return filepath.Join(cwd, ".finfocus")
 	}
-	return filepath.Join(homeDir, ".pulumicost")
+	return filepath.Join(homeDir, ".finfocus")
 }
 
 // New creates a new configuration with defaults.
-// In strict mode (PULUMICOST_CONFIG_STRICT=true), corrupted config files cause a panic.
-// New creates a Config populated with sensible defaults and attempts to load overrides from the user's config file.
-// It resolves the config directory using ResolveConfigDir() which respects PULUMI_HOME when set.
-// If a config file exists it is loaded; on load errors the function logs warnings and continues using defaults.
-// When the environment variable PULUMICOST_CONFIG_STRICT is set to "true" or "1", permission errors or corrupted config content cause a panic instead of falling back to defaults.
-// Environment variable overrides are applied after loading the file.
+// In strict mode (FINFOCUS_CONFIG_STRICT=true), corrupted config files cause a panic.
 func New() *Config {
-	pulumicostDir := ResolveConfigDir()
+	finfocusDir := ResolveConfigDir()
 
 	cfg := &Config{
 		// Legacy fields
-		PluginDir: filepath.Join(pulumicostDir, "plugins"),
-		SpecDir:   filepath.Join(pulumicostDir, "specs"),
+		PluginDir: filepath.Join(finfocusDir, "plugins"),
+		SpecDir:   filepath.Join(finfocusDir, "specs"),
 
 		// New configuration
 		Output: OutputConfig{
@@ -181,7 +177,7 @@ func New() *Config {
 		Logging: LoggingConfig{
 			Level:  "info",
 			Format: "text",
-			File:   filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
+			File:   filepath.Join(finfocusDir, "logs", "finfocus.log"),
 			Outputs: []LogOutput{
 				{
 					Type:   "console",
@@ -199,12 +195,12 @@ func New() *Config {
 			Plugins: make(map[string]AnalyzerPlugin),
 		},
 
-		configPath: filepath.Join(pulumicostDir, "config.yaml"),
+		configPath: filepath.Join(finfocusDir, "config.yaml"),
 	}
 
 	// Check for strict mode
-	strictMode := os.Getenv("PULUMICOST_CONFIG_STRICT") == "true" ||
-		os.Getenv("PULUMICOST_CONFIG_STRICT") == "1"
+	strictMode := os.Getenv("FINFOCUS_CONFIG_STRICT") == "true" ||
+		os.Getenv("FINFOCUS_CONFIG_STRICT") == "1"
 
 	// Load from file if exists
 	if err := cfg.Load(); err != nil {
@@ -240,12 +236,12 @@ func New() *Config {
 // It returns an error instead of using defaults if the config file exists but cannot be parsed.
 // It uses ResolveConfigDir() to respect PULUMI_HOME when set.
 func NewStrict() (*Config, error) {
-	pulumicostDir := ResolveConfigDir()
+	finfocusDir := ResolveConfigDir()
 
 	cfg := &Config{
 		// Legacy fields
-		PluginDir: filepath.Join(pulumicostDir, "plugins"),
-		SpecDir:   filepath.Join(pulumicostDir, "specs"),
+		PluginDir: filepath.Join(finfocusDir, "plugins"),
+		SpecDir:   filepath.Join(finfocusDir, "specs"),
 
 		// New configuration
 		Output: OutputConfig{
@@ -256,7 +252,7 @@ func NewStrict() (*Config, error) {
 		Logging: LoggingConfig{
 			Level:  "info",
 			Format: "text",
-			File:   filepath.Join(pulumicostDir, "logs", "pulumicost.log"),
+			File:   filepath.Join(finfocusDir, "logs", "finfocus.log"),
 			Outputs: []LogOutput{
 				{
 					Type:   "console",
@@ -274,7 +270,7 @@ func NewStrict() (*Config, error) {
 			Plugins: make(map[string]AnalyzerPlugin),
 		},
 
-		configPath: filepath.Join(pulumicostDir, "config.yaml"),
+		configPath: filepath.Join(finfocusDir, "config.yaml"),
 	}
 
 	// Load from file with strict error handling
@@ -634,11 +630,16 @@ func (c *Config) SetPluginConfig(pluginName string, config map[string]interface{
 
 // applyEnvOverrides applies environment variable overrides.
 func (c *Config) applyEnvOverrides() {
+	// Compatibility layer for legacy PULUMICOST_ variables
+	if os.Getenv("FINFOCUS_COMPAT") == "1" || os.Getenv("FINFOCUS_COMPAT") == "true" {
+		c.applyLegacyEnvOverrides()
+	}
+
 	// Output overrides
-	if format := os.Getenv("PULUMICOST_OUTPUT_FORMAT"); format != "" {
+	if format := os.Getenv("FINFOCUS_OUTPUT_FORMAT"); format != "" {
 		c.Output.DefaultFormat = format
 	}
-	if precision := os.Getenv("PULUMICOST_OUTPUT_PRECISION"); precision != "" {
+	if precision := os.Getenv("FINFOCUS_OUTPUT_PRECISION"); precision != "" {
 		if p, err := strconv.Atoi(precision); err == nil {
 			c.Output.Precision = p
 		}
@@ -655,14 +656,61 @@ func (c *Config) applyEnvOverrides() {
 		c.Logging.File = logFile
 	}
 
-	// Plugin overrides (PULUMICOST_PLUGIN_<NAME>_<KEY>=value)
-	// More efficient: only scan environment variables that start with our prefix
+	// Plugin overrides (FINFOCUS_PLUGIN_<NAME>_<KEY>=value)
 	c.scanPluginEnvironmentVars()
+}
+
+// applyLegacyEnvOverrides handles backward compatibility for PULUMICOST_ variables.
+func (c *Config) applyLegacyEnvOverrides() {
+	if format := os.Getenv("PULUMICOST_OUTPUT_FORMAT"); format != "" {
+		c.Output.DefaultFormat = format
+	}
+	if precision := os.Getenv("PULUMICOST_OUTPUT_PRECISION"); precision != "" {
+		if p, err := strconv.Atoi(precision); err == nil {
+			c.Output.Precision = p
+		}
+	}
+	if level := os.Getenv("PULUMICOST_LOG_LEVEL"); level != "" {
+		c.Logging.Level = level
+	}
+	if format := os.Getenv("PULUMICOST_LOG_FORMAT"); format != "" {
+		c.Logging.Format = format
+	}
+	if logFile := os.Getenv("PULUMICOST_LOG_FILE"); logFile != "" {
+		c.Logging.File = logFile
+	}
+
+	// Legacy plugin overrides
+	const legacyPluginPrefix = "PULUMICOST_PLUGIN_"
+	for _, env := range os.Environ() {
+		if !strings.HasPrefix(env, legacyPluginPrefix) {
+			continue
+		}
+		parts := strings.SplitN(env, "=", envKeySeparatorCount)
+		if len(parts) != envKeySeparatorCount {
+			continue
+		}
+		key := parts[0]
+		value := parts[1]
+		keyParts := strings.Split(strings.TrimPrefix(key, legacyPluginPrefix), "_")
+		if len(keyParts) < minPluginKeyParts {
+			continue
+		}
+		pluginName := strings.ToLower(keyParts[0])
+		configKey := strings.ToLower(strings.Join(keyParts[1:], "_"))
+		if c.Plugins == nil {
+			c.Plugins = make(map[string]PluginConfig)
+		}
+		if _, exists := c.Plugins[pluginName]; !exists {
+			c.Plugins[pluginName] = PluginConfig{Config: make(map[string]interface{})}
+		}
+		c.Plugins[pluginName].Config[configKey] = value
+	}
 }
 
 // scanPluginEnvironmentVars efficiently scans for plugin-specific environment variables.
 func (c *Config) scanPluginEnvironmentVars() {
-	const pluginPrefix = "PULUMICOST_PLUGIN_"
+	const pluginPrefix = "FINFOCUS_PLUGIN_"
 
 	for _, env := range os.Environ() {
 		if !strings.HasPrefix(env, pluginPrefix) {

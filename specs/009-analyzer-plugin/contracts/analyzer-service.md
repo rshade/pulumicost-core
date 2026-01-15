@@ -131,7 +131,7 @@ message AnalyzeResponse {
 
 message AnalyzeDiagnostic {
     string policyName = 1;         // "cost-estimate" or "stack-cost-summary"
-    string policyPackName = 2;     // "pulumicost"
+    string policyPackName = 2;     // "finfocus"
     string policyPackVersion = 3;  // Plugin version
     string description = 4;        // Human description
     string message = 5;            // Cost message
@@ -157,8 +157,8 @@ message AnalyzeDiagnostic {
 
 ```protobuf
 message AnalyzerInfo {
-    string name = 1;           // "pulumicost"
-    string displayName = 2;    // "PulumiCost Analyzer"
+    string name = 1;           // "finfocus"
+    string displayName = 2;    // "FinFocus Analyzer"
     repeated PolicyInfo policies = 3;
     string version = 4;        // Plugin version
     bool supportsConfig = 5;   // false for MVP
@@ -175,7 +175,7 @@ message PolicyInfo {
 
 **Behavior**:
 
-- Return static metadata about pulumicost
+- Return static metadata about finfocus
 - List the "cost-estimate" policy
 - Version from build constants
 

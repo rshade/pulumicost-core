@@ -93,7 +93,7 @@ go tool cover -func=coverage.out
 make build
 
 # Test with example plan
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 
 # Expected output with errors:
 # COST SUMMARY

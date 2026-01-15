@@ -35,12 +35,12 @@ graph TD
 
 2. Execute CLI commands (not Automation API inline programs):
    - `pulumi preview --json > preview.json`
-   - `pulumicost cost projected --pulumi-json preview.json`
+   - `finfocus cost projected --pulumi-json preview.json`
 
 **Why YAML instead of Go?**
 - ⚡ **4x faster**: ~2.5 min vs 10+ min with Go projects
 - 📦 **No dependencies**: No `go mod tidy` or SDK downloads needed
-- 🎯 **Same output**: `pulumicost` only needs preview JSON - doesn't care what language generated it
+- 🎯 **Same output**: `finfocus` only needs preview JSON - doesn't care what language generated it
 
 **Rationale**: Go projects require downloading ~100MB+ of SDK dependencies and compiling. YAML projects are interpreted directly by Pulumi with no compilation step, making tests significantly faster.
 
@@ -137,7 +137,7 @@ graph TD
 
 **Solution**: Use a Personal Access Token (PAT) instead of `GITHUB_TOKEN` in release-please.
 
-### pulumicost-core
+### finfocus-core
 
 - [x] T039 Update `.github/workflows/release-please.yml` to use `RELEASE_PLEASE_TOKEN` PAT
 - [x] T040 Create PAT with `repo` and `workflow` scopes
@@ -157,7 +157,7 @@ graph TD
 
 **Problem**: `FindPlatformAsset` expects `{name}_{version}_{goos}_{goarch}.{ext}` but aws-public produces `{name}_{version}_{OS}_{ARCH}_{region}.{ext}` with different case/naming.
 
-### pulumicost-core Changes
+### finfocus-core Changes
 
 - [x] T046 Update `FindPlatformAsset` to try multiple naming patterns (flexible matching)
   - Added `AssetNamingHints` struct in `internal/registry/github.go`
@@ -172,16 +172,16 @@ graph TD
 - [x] T048 Add tests for flexible asset matching
   - Existing tests pass; flexible matching tested via unit tests
 
-### pulumicost-plugin-aws-public Issue
+### finfocus-plugin-aws-public Issue
 
 - [x] T049 Create GitHub issue to standardize GoReleaser asset naming
-  - Issue created: [#77](https://github.com/rshade/pulumicost-plugin-aws-public/issues/77)
+  - Issue created: [#77](https://github.com/rshade/finfocus-plugin-aws-public/issues/77)
 
 ### Verification
 
 - [x] T050 Re-run `TestProjectedCost_EC2_WithPlugin` after asset naming fixes
   - Asset naming: **FIXED** - Plugin downloads and extracts correctly
-  - Plugin discovery: **FIXED** - `pulumicost plugin list` shows aws-public
+  - Plugin discovery: **FIXED** - `finfocus plugin list` shows aws-public
   - AWS infrastructure: **WORKS** - EC2 resources deploy and cleanup correctly
   - **NEW BLOCKER**: Plugin protocol mismatch - plugin binary doesn't bind to TCP port
   - Error: `plugin failed to bind to port: timeout waiting for plugin to bind`
@@ -189,7 +189,7 @@ graph TD
 ### Script Enhancements
 
 - [x] T051 Enhanced `run-e2e-tests.sh` with debug logging
-  - Default `PULUMICOST_LOG_LEVEL=debug` and `PULUMICOST_LOG_FORMAT=console`
+  - Default `FINFOCUS_LOG_LEVEL=debug` and `FINFOCUS_LOG_FORMAT=console`
   - Added `-debug` flag for trace-level logging
   - Added environment summary output
 
@@ -200,7 +200,7 @@ graph TD
 
 ## Phase 12: Plugin Protocol Integration (NEW BLOCKER)
 
-**Goal**: Fix protocol mismatch between pulumicost-core and aws-public plugin.
+**Goal**: Fix protocol mismatch between finfocus-core and aws-public plugin.
 
 **Problem**: Plugin binary starts but never binds to the TCP port. Core waits 5s per attempt, retries 5 times, then gives up.
 
@@ -213,12 +213,12 @@ plugin failed to bind to port [error="timeout waiting for plugin to bind"]
 ### Investigation Complete ✅
 
 - [x] T054 Verify plugin protocol version compatibility between core and plugin
-  - **FOUND**: Environment variable mismatch (Core: `PULUMICOST_PLUGIN_PORT`, Plugin: `PORT`)
+  - **FOUND**: Environment variable mismatch (Core: `FINFOCUS_PLUGIN_PORT`, Plugin: `PORT`)
   - **FIXED**: Added `PORT` env var in `internal/pluginhost/process.go`
 - [x] T055 Check if plugin expects different launch mechanism (TCP vs stdio)
   - **CONFIRMED**: TCP mode works when correct env var is set
   - **FIXED**: Increased `pluginBindTimeout` from 5s to 15s for large plugins
-- [x] T056 Review pulumicost-spec gRPC protocol definitions for compatibility
+- [x] T056 Review finfocus-spec gRPC protocol definitions for compatibility
   - **FOUND**: Request validation requires `provider`, `resource_type`, `sku`, `region`
   - **PROBLEM**: Core adapter doesn't map Pulumi properties to plugin fields correctly
 
@@ -250,7 +250,7 @@ rpc error: code = InvalidArgument desc = resource descriptor missing required fi
 - [x] T060 Add unit tests for SKU/region extraction
 - [x] T061 Verify E2E test passes: `TestProjectedCost_EC2_WithPlugin`
 
-### Protocol Documentation (pulumicost-spec)
+### Protocol Documentation (finfocus-spec)
 
 - [x] T062 Create GitHub issue: Define required vs optional fields in proto schema
 - [x] T063 Create GitHub issue: Document property mapping from Pulumi to plugin fields
@@ -282,30 +282,30 @@ rpc error: code = InvalidArgument desc = resource descriptor missing required fi
 
 ## Phase 15: Environment Variable Standardization
 
-**Goal**: Centralize environment variable handling across the PulumiCost ecosystem using `pluginsdk/env.go`.
+**Goal**: Centralize environment variable handling across the FinFocus ecosystem using `pluginsdk/env.go`.
 
-**Problem**: Core sets `PULUMICOST_PLUGIN_PORT` but plugin SDK reads `PORT`. Temporary fix sets both, but proper solution is shared constants.
+**Problem**: Core sets `FINFOCUS_PLUGIN_PORT` but plugin SDK reads `PORT`. Temporary fix sets both, but proper solution is shared constants.
 
 ### Cross-Repository Issues Created
 
-- [x] T073 [pulumicost-spec#127](https://github.com/rshade/pulumicost-spec/issues/127): Create `pluginsdk/env.go` with:
+- [x] T073 [finfocus-spec#127](https://github.com/rshade/finfocus-spec/issues/127): Create `pluginsdk/env.go` with:
   - Centralized environment variable constants
-  - `GetPort()` with OR logic (PULUMICOST_PLUGIN_PORT || PORT)
+  - `GetPort()` with OR logic (FINFOCUS_PLUGIN_PORT || PORT)
   - `GetLogLevel()`, `GetLogFormat()`, `GetTraceID()` helpers
   - Best practices documentation
-- [x] T074 [pulumicost-core#230](https://github.com/rshade/pulumicost-core/issues/230): Adopt `pluginsdk/env.go`:
+- [x] T074 [finfocus-core#230](https://github.com/rshade/finfocus/issues/230): Adopt `pluginsdk/env.go`:
   - Replace hardcoded env var strings with constants
   - Update code generator to use `pluginsdk.GetPort()`
   - Update all env var usage in codebase
-- [x] T075 [pulumicost-plugin-aws-public#79](https://github.com/rshade/pulumicost-plugin-aws-public/issues/79): Migrate to `pluginsdk/env.go`:
+- [x] T075 [finfocus-plugin-aws-public#79](https://github.com/rshade/finfocus-plugin-aws-public/issues/79): Migrate to `pluginsdk/env.go`:
   - Replace direct `os.Getenv()` calls
-  - Verify plugin works with both PORT and PULUMICOST_PLUGIN_PORT
+  - Verify plugin works with both PORT and FINFOCUS_PLUGIN_PORT
 
 ### Implementation Order
 
-1. **pulumicost-spec#127** (Foundation) - Create `pluginsdk/env.go`
-2. **pulumicost-plugin-aws-public#79** - Migrate plugin to use new SDK
-3. **pulumicost-core#230** - Migrate core and update code generator
+1. **finfocus-spec#127** (Foundation) - Create `pluginsdk/env.go`
+2. **finfocus-plugin-aws-public#79** - Migrate plugin to use new SDK
+3. **finfocus-core#230** - Migrate core and update code generator
 
 ## Phase 16: Property Mapping Centralization
 
@@ -319,25 +319,25 @@ rpc error: code = InvalidArgument desc = resource descriptor missing required fi
 
 ### Cross-Repository Issues Created
 
-- [x] T076 [pulumicost-spec#128](https://github.com/rshade/pulumicost-spec/issues/128): Create `pluginsdk/mapping/` package:
+- [x] T076 [finfocus-spec#128](https://github.com/rshade/finfocus-spec/issues/128): Create `pluginsdk/mapping/` package:
   - `aws.go` - ExtractAWSSKU, ExtractAWSRegion, ExtractAWSRegionFromAZ
   - `azure.go` - ExtractAzureSKU, ExtractAzureRegion
   - `gcp.go` - ExtractGCPSKU, ExtractGCPRegion
   - `common.go` - Generic fallback extractors
   - Comprehensive unit tests
-- [x] T077 [pulumicost-core#231](https://github.com/rshade/pulumicost-core/issues/231): Migrate `extractSKU/extractRegion` to use `pluginsdk/mapping`:
+- [x] T077 [finfocus-core#231](https://github.com/rshade/finfocus/issues/231): Migrate `extractSKU/extractRegion` to use `pluginsdk/mapping`:
   - Import `pluginsdk/mapping` package
   - Replace local extraction functions with shared helpers
   - Update unit tests
-- [x] T078 [pulumicost-plugin-aws-public#80](https://github.com/rshade/pulumicost-plugin-aws-public/issues/80): Adopt `pluginsdk/mapping` helpers
-- [x] T079 [pulumicost-plugin-aws-ce#3](https://github.com/rshade/pulumicost-plugin-aws-ce/issues/3): Adopt `pluginsdk/mapping` helpers
+- [x] T078 [finfocus-plugin-aws-public#80](https://github.com/rshade/finfocus-plugin-aws-public/issues/80): Adopt `pluginsdk/mapping` helpers
+- [x] T079 [finfocus-plugin-aws-ce#3](https://github.com/rshade/finfocus-plugin-aws-ce/issues/3): Adopt `pluginsdk/mapping` helpers
 
 ### Implementation Order
 
-1. **pulumicost-spec#128** (Foundation) - Create `pluginsdk/mapping/` package
-2. **pulumicost-core#231** - Migrate core extraction functions
-3. **pulumicost-plugin-aws-public#80** - Plugin adoption
-4. **pulumicost-plugin-aws-ce#3** - Plugin adoption
+1. **finfocus-spec#128** (Foundation) - Create `pluginsdk/mapping/` package
+2. **finfocus-core#231** - Migrate core extraction functions
+3. **finfocus-plugin-aws-public#80** - Plugin adoption
+4. **finfocus-plugin-aws-ce#3** - Plugin adoption
 
 ## Phase 17: Port Communication Standardization
 
@@ -349,19 +349,19 @@ rpc error: code = InvalidArgument desc = resource descriptor missing required fi
 
 ### Cross-Repository Issues Created
 
-- [x] T080 [pulumicost-spec#129](https://github.com/rshade/pulumicost-spec/issues/129): Add `--port` flag parsing to pluginsdk.Serve():
+- [x] T080 [finfocus-spec#129](https://github.com/rshade/finfocus-spec/issues/129): Add `--port` flag parsing to pluginsdk.Serve():
   - Parse `--port=XXXXX` flag with highest priority
   - Remove `PORT` env var support completely
-  - Keep `PULUMICOST_PLUGIN_PORT` as fallback only
-- [x] T081 [pulumicost-core#232](https://github.com/rshade/pulumicost-core/issues/232): Remove `PORT` env var from process.go:
+  - Keep `FINFOCUS_PLUGIN_PORT` as fallback only
+- [x] T081 [finfocus-core#232](https://github.com/rshade/finfocus/issues/232): Remove `PORT` env var from process.go:
   - Stop setting `PORT` env var
   - Rely on `--port` flag for port communication
-  - Keep `PULUMICOST_PLUGIN_PORT` for debugging only
+  - Keep `FINFOCUS_PLUGIN_PORT` for debugging only
 
 ### Implementation Order
 
-1. **pulumicost-spec#129** (Plugin must support --port flag first)
-2. **pulumicost-core#232** (Then core removes PORT env var)
+1. **finfocus-spec#129** (Plugin must support --port flag first)
+2. **finfocus-core#232** (Then core removes PORT env var)
 
 ## Phase 18: Request Validation Helpers
 
@@ -371,16 +371,16 @@ rpc error: code = InvalidArgument desc = resource descriptor missing required fi
 
 ### Cross-Repository Issues Created
 
-- [x] T082 [pulumicost-spec#130](https://github.com/rshade/pulumicost-spec/issues/130): Create `pluginsdk/validation.go`:
+- [x] T082 [finfocus-spec#130](https://github.com/rshade/finfocus-spec/issues/130): Create `pluginsdk/validation.go`:
   - `ValidateProjectedCostRequest()` with actionable error messages
   - `ValidateActualCostRequest()` for actual cost queries
   - Error messages reference mapping helpers by name
-- [x] T083 [pulumicost-core#233](https://github.com/rshade/pulumicost-core/issues/233): Adopt `pluginsdk/validation.go`:
+- [x] T083 [finfocus-core#233](https://github.com/rshade/finfocus/issues/233): Adopt `pluginsdk/validation.go`:
   - Import validation helpers from spec
   - Call pre-flight validation before plugin calls
   - Log validation failures with context
 
 ### Implementation Order
 
-1. **pulumicost-spec#130** (Create validation helpers)
-2. **pulumicost-core#233** (Adopt in adapter.go)
+1. **finfocus-spec#130** (Create validation helpers)
+2. **finfocus-core#233** (Adopt in adapter.go)

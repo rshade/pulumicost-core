@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/pkg/version"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/pkg/version"
 )
 
 func TestRun(t *testing.T) {

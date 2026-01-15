@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add end-to-end tests that verify the PulumiCost Analyzer plugin works correctly with the real Pulumi CLI, ensuring the complete workflow from `pulumi preview` to cost diagnostic output functions as expected. Tests will follow existing E2E patterns in `test/e2e/` and integrate with `nightly.yml` workflow.
+Add end-to-end tests that verify the FinFocus Analyzer plugin works correctly with the real Pulumi CLI, ensuring the complete workflow from `pulumi preview` to cost diagnostic output functions as expected. Tests will follow existing E2E patterns in `test/e2e/` and integrate with `nightly.yml` workflow.
 
 ## Technical Context
 
@@ -23,7 +23,7 @@ Add end-to-end tests that verify the PulumiCost Analyzer plugin works correctly 
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Tests validate the analyzer plugin integration - aligns with plugin architecture
 - [x] **Test-Driven Development**: This IS the test implementation - tests are the deliverable
@@ -31,7 +31,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: Test code is self-documenting; test names describe functionality
 - [x] **Protocol Stability**: Tests validate existing analyzer gRPC protocol, no protocol changes
 - [x] **Quality Gates**: Tests will pass CI checks (lint, test, security)
-- [x] **Multi-Repo Coordination**: No cross-repo dependencies - tests are internal to pulumicost-core
+- [x] **Multi-Repo Coordination**: No cross-repo dependencies - tests are internal to finfocus-core
 
 **Violations Requiring Justification**: None
 
@@ -74,25 +74,25 @@ test/e2e/
 
 ### 1. Analyzer Configuration via Pulumi.yaml (Smart Binary Approach)
 
-**Decision**: The `pulumicost` binary will be made "smart" to detect if it's being invoked by the Pulumi engine as an analyzer plugin. If the executable name matches the Pulumi Analyzer convention (`pulumi-analyzer-<name>`), it will automatically start its gRPC server (`pulumicost analyzer serve`) without requiring explicit subcommand arguments. Otherwise, it will function as the standard CLI tool.
+**Decision**: The `finfocus` binary will be made "smart" to detect if it's being invoked by the Pulumi engine as an analyzer plugin. If the executable name matches the Pulumi Analyzer convention (`pulumi-analyzer-<name>`), it will automatically start its gRPC server (`finfocus analyzer serve`) without requiring explicit subcommand arguments. Otherwise, it will function as the standard CLI tool.
 
 **Configuration Format**:
 
 ```yaml
-name: pulumicost-analyzer-e2e
+name: finfocus-analyzer-e2e
 runtime: yaml
 description: E2E test for analyzer plugin
 
 plugins:
   analyzers:
-    - name: pulumicost
-      path: /path/to/plugin/directory # This directory will contain 'pulumi-analyzer-pulumicost'
+    - name: finfocus
+      path: /path/to/plugin/directory # This directory will contain 'pulumi-analyzer-finfocus'
       version: 0.0.0-dev
 ```
 
 **Rationale**:
 
-- **Seamless Integration**: Allows `pulumicost` to act as both a standalone
+- **Seamless Integration**: Allows `finfocus` to act as both a standalone
   CLI and a Pulumi Analyzer plugin from a single binary.
 - **No Wrapper Scripts**: Eliminates the need for platform-specific shell
   scripts (e.g., `.sh` for Linux, `.cmd` for Windows) within the test harness
@@ -129,7 +129,7 @@ plugins:
 "Total Estimated Monthly Cost: $"
 
 # Policy attribution
-"pulumicost"
+"finfocus"
 ```
 
 **Rationale**:

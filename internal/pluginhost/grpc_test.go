@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -145,7 +145,7 @@ func TestTraceInterceptor_PropagatesInvokerError(t *testing.T) {
 
 // Test the TraceIDMetadataKey constant value.
 func TestTraceIDMetadataKey_Value(t *testing.T) {
-	assert.Equal(t, "x-pulumicost-trace-id", TraceIDMetadataKey)
+	assert.Equal(t, "x-finfocus-trace-id", TraceIDMetadataKey)
 }
 
 func TestLoggedInterceptor(t *testing.T) {

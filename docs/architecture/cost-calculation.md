@@ -4,13 +4,13 @@ title: Cost Calculation Algorithms
 description: Detailed cost calculation algorithms, aggregation logic, and examples
 ---
 
-This document explains how PulumiCost calculates costs, including projected
+This document explains how FinFocus calculates costs, including projected
 cost estimation, actual cost retrieval, aggregation algorithms, and
 cross-provider cost analysis.
 
 ## Overview
 
-PulumiCost supports two types of cost calculations:
+FinFocus supports two types of cost calculations:
 
 1. **Projected Costs** - Estimate future infrastructure costs from Pulumi
    plans
@@ -100,7 +100,7 @@ to ensure comparability.
 **Request:**
 
 ```bash
-pulumicost cost actual \
+finfocus cost actual \
   --start-date 2024-01-01 \
   --end-date 2024-01-31 \
   --filter "tag:env=prod"
@@ -331,7 +331,7 @@ Else:
   {
     "resource_id": "aws-ec2-i-123",
     "provider": "aws",
-    "total_cost": 1500.00,
+    "total_cost": 1500.0,
     "currency": "USD",
     "start_date": "2024-01-01",
     "end_date": "2024-01-31"
@@ -339,7 +339,7 @@ Else:
   {
     "resource_id": "azure-vm-456",
     "provider": "azure",
-    "total_cost": 500.00,
+    "total_cost": 500.0,
     "currency": "USD",
     "start_date": "2024-01-01",
     "end_date": "2024-01-31"
@@ -433,7 +433,7 @@ Else:
 
 ## Fallback Cost Calculation
 
-When plugins are unavailable, PulumiCost uses local YAML specifications.
+When plugins are unavailable, FinFocus uses local YAML specifications.
 
 ### Spec Format
 
@@ -462,7 +462,7 @@ If no plugin or spec is available:
 
 ```json
 {
-  "cost_per_month": 0.00,
+  "cost_per_month": 0.0,
   "currency": "USD",
   "source": "unknown",
   "note": "No pricing data available"
@@ -476,7 +476,7 @@ If no plugin or spec is available:
 **Input:**
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Plan (10 t3.micro instances):**
@@ -523,7 +523,7 @@ Total: 37.96 + 74.46 + 2.30 = 114.72 USD/month
 **Request:**
 
 ```bash
-pulumicost cost actual \
+finfocus cost actual \
   --start-date 2024-01-01 \
   --end-date 2024-01-31 \
   --group-by daily

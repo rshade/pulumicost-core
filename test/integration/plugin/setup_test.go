@@ -281,9 +281,9 @@ func StartMockRegistryWithConfig(t *testing.T, cfg MockRegistryConfig) (*httptes
 			return
 		}
 
-		// Extract plugin name from repo (e.g., "pulumicost-plugin-test" -> "test")
+		// Extract plugin name from repo (e.g., "finfocus-plugin-test" -> "test")
 		repo := parts[2]
-		pluginName := strings.TrimPrefix(repo, "pulumicost-plugin-")
+		pluginName := strings.TrimPrefix(repo, "finfocus-plugin-")
 
 		// Get versions for this plugin
 		versions, exists := cfg.Plugins[pluginName]

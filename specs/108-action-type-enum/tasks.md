@@ -65,7 +65,7 @@ infrastructure. This is a prerequisite for all filtering/display features.
 
 **Purpose**: Verify dependencies and create new files
 
-- [x] T009 [Setup] Verify pulumicost-spec v0.4.11 is present with extended
+- [x] T009 [Setup] Verify finfocus-spec v0.4.11 is present with extended
       action types in go.mod
 - [x] T010 [Setup] Create new file internal/proto/action_types.go for action
       type utilities

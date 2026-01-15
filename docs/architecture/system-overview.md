@@ -1,10 +1,10 @@
 ---
 layout: default
 title: System Overview
-description: High-level architecture and design of PulumiCost cost calculation system
+description: High-level architecture and design of FinFocus cost calculation system
 ---
 
-PulumiCost is a CLI tool and plugin host system for calculating cloud
+FinFocus is a CLI tool and plugin host system for calculating cloud
 infrastructure costs from Pulumi infrastructure definitions. It provides
 both projected cost estimates and actual historical cost analysis through
 a plugin-based architecture.
@@ -96,7 +96,7 @@ The Registry discovers and manages plugin lifecycle from the filesystem.
 
 **Discovery Process:**
 
-1. Scan `~/.pulumicost/plugins/<name>/<version>/` directories
+1. Scan `~/.finfocus/plugins/<name>/<version>/` directories
 2. Validate plugin binaries (Unix permissions or Windows .exe extension)
 3. Load optional `plugin.manifest.json` metadata
 4. Build available plugins catalog
@@ -104,7 +104,7 @@ The Registry discovers and manages plugin lifecycle from the filesystem.
 **Directory Structure:**
 
 ```text
-~/.pulumicost/
+~/.finfocus/
 └── plugins/
     ├── kubecost/
     │   └── 1.0.0/
@@ -135,7 +135,7 @@ currency: USD
 description: AWS EC2 t3.micro instance pricing
 ```
 
-**Location:** `~/.pulumicost/specs/`
+**Location:** `~/.finfocus/specs/`
 
 ## Data Flow
 
@@ -152,7 +152,7 @@ Cost Results → Aggregation → Output Rendering
 ### Projected Cost Flow
 
 1. User generates Pulumi plan with `pulumi preview --json`
-2. User runs `pulumicost cost projected --pulumi-json plan.json`
+2. User runs `finfocus cost projected --pulumi-json plan.json`
 3. CLI passes plan path to Engine
 4. Engine delegates to Ingest to parse JSON
 5. Ingest extracts resources and builds ResourceDescriptors
@@ -167,7 +167,7 @@ Cost Results → Aggregation → Output Rendering
 
 ### Actual Cost Flow
 
-1. User runs `pulumicost cost actual --start-date X --end-date Y`
+1. User runs `finfocus cost actual --start-date X --end-date Y`
 2. CLI builds ActualCostRequest with time range and filters
 3. Engine connects to plugins
 4. For each resource, Engine queries plugin for actual costs
@@ -191,7 +191,7 @@ Cost Results → Aggregation → Output Rendering
 - Isolated plugin failures don't crash main system
 - Independent plugin versioning and deployment
 
-**Protocol:** gRPC using protocol buffers from `pulumicost-spec` repository
+**Protocol:** gRPC using protocol buffers from `finfocus-spec` repository
 
 See [Plugin Protocol](plugin-protocol.md) for complete gRPC specification.
 
@@ -204,7 +204,7 @@ See [Plugin Protocol](plugin-protocol.md) for complete gRPC specification.
 ```text
 1. Try available plugins for resource type
 2. If plugin fails or doesn't support:
-   → Load local YAML spec from ~/.pulumicost/specs/
+   → Load local YAML spec from ~/.finfocus/specs/
 3. If spec not found:
    → Return placeholder cost ($0.00 with "unknown" source)
 ```
@@ -355,24 +355,24 @@ With optional grouping by:
 - `github.com/spf13/cobra` - CLI framework
 - `google.golang.org/grpc` - Plugin communication
 - `gopkg.in/yaml.v3` - YAML spec parsing
-- `github.com/rshade/pulumicost-spec` - Protocol definitions
+- `github.com/rshade/finfocus-spec` - Protocol definitions
 
 ### Protocol Version
 
 Current protocol version: v0.1.0 (frozen and integrated)
 
 **Protocol Repository:**
-`github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
+`github.com/rshade/finfocus-spec/proto/finfocus/v1/costsource.proto`
 
 ## Plugin Protocol Integration
 
-The project uses real protocol buffer definitions from the `pulumicost-spec`
+The project uses real protocol buffer definitions from the `finfocus-spec`
 repository.
 
 **Integration:**
 
 - `internal/proto/adapter.go` - Adapts between engine and proto types
-- Generated SDK: `github.com/rshade/pulumicost-spec/sdk/go/proto`
+- Generated SDK: `github.com/rshade/finfocus-spec/sdk/go/proto`
 - gRPC v1.74.2, protobuf v1.36.7
 
 **Services:**
@@ -385,7 +385,7 @@ See [Plugin Protocol](plugin-protocol.md) for complete gRPC specification.
 ## Integration Example
 
 See [Integration Example Diagram](diagrams/integration-example.md) for a
-complete end-to-end example showing Pulumi → PulumiCost → Vantage API
+complete end-to-end example showing Pulumi → FinFocus → Vantage API
 integration.
 
 ---

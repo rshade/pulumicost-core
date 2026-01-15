@@ -17,7 +17,7 @@
 
 - **Plugin source**: `plugins/recorder/`
 - **Tests**: `plugins/recorder/*_test.go` (unit), `test/integration/` (integration)
-- **Build output**: `bin/pulumicost-plugin-recorder`
+- **Build output**: `bin/finfocus-plugin-recorder`
 
 ---
 
@@ -27,7 +27,7 @@
 
 - [x] T001 Create plugin directory structure at plugins/recorder/
 - [x] T002 [P] Initialize Go module for plugin with go.mod in plugins/recorder/ (using main module - monorepo pattern)
-- [x] T003 [P] Add pulumicost-spec v0.4.6+ dependency to plugins/recorder/go.mod (upgraded main go.mod to v0.4.6)
+- [x] T003 [P] Add finfocus-spec v0.4.6+ dependency to plugins/recorder/go.mod (upgraded main go.mod to v0.4.6)
 - [x] T004 [P] Add Makefile target `build-recorder` in Makefile
 - [x] T005 [P] Create plugin.manifest.json in plugins/recorder/plugin.manifest.json
 
@@ -151,7 +151,7 @@
 
 ### Implementation for User Story 4
 
-- [x] T051 [US4] Ensure binary builds to correct path bin/pulumicost-plugin-recorder
+- [x] T051 [US4] Ensure binary builds to correct path bin/finfocus-plugin-recorder
 - [x] T052 [US4] Add CI workflow step to build recorder in .github/workflows/ci.yml
 - [x] T053 [US4] Add CI workflow step to run recorder integration tests in .github/workflows/ci.yml
 - [x] T054 [US4] Create test fixture for recorder at test/fixtures/recorder/
@@ -170,7 +170,7 @@
 - [x] T058 [P] Verify cross-platform build with GOOS/GOARCH variations
 - [x] T058a [P] Add benchmark test validating <10ms recording overhead in plugins/recorder/recorder_test.go
 - [x] T059 Validate quickstart.md end-to-end from specs/018-recorder-plugin/quickstart.md
-- [x] T060 Run `pulumicost plugin validate` on installed recorder
+- [x] T060 Run `finfocus plugin validate` on installed recorder
 - [x] T061 Update CLAUDE.md with recorder plugin documentation
 
 ---

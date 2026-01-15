@@ -92,16 +92,16 @@ Returns the latest version of a specific plugin by name.
 
 Lists all installed plugins with their versions.
 
-**Command**: `pulumicost plugin list`  
+**Command**: `finfocus plugin list`  
 **Output Format**: Human-readable table
 
 **Response Structure**:
 
 ```
 PLUGIN NAME    VERSION    PATH
-aws-public     v2.0.0     /home/user/.pulumicost/plugins/aws-public/v2.0.0
-aws-public     v1.0.0     /home/user/.pulumicost/plugins/aws-public/v1.0.0
-vantage        v1.1.0     /home/user/.pulumicost/plugins/vantage/v1.1.0
+aws-public     v2.0.0     /home/user/.finfocus/plugins/aws-public/v2.0.0
+aws-public     v1.0.0     /home/user/.finfocus/plugins/aws-public/v1.0.0
+vantage        v1.1.0     /home/user/.finfocus/plugins/vantage/v1.1.0
 ```
 
 **Behavior**:
@@ -115,7 +115,7 @@ vantage        v1.1.0     /home/user/.pulumicost/plugins/vantage/v1.1.0
 
 Runs cost analysis using latest plugin versions.
 
-**Command**: `pulumicost cost analyze [options]`  
+**Command**: `finfocus cost analyze [options]`  
 **Behavior**: Uses `ListPlugins()` internally to get latest versions
 
 **Error Handling**:

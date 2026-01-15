@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 )
 
 func TestPluginInstallCmd_Help(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stdout bytes.Buffer
@@ -43,7 +43,7 @@ func TestPluginInstallCmd_Help(t *testing.T) {
 
 func TestPluginInstallCmd_NoArgs(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stderr bytes.Buffer
@@ -63,7 +63,7 @@ func TestPluginInstallCmd_NoArgs(t *testing.T) {
 
 func TestPluginInstallCmd_InvalidPlugin(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stderr bytes.Buffer
@@ -78,7 +78,7 @@ func TestPluginInstallCmd_InvalidPlugin(t *testing.T) {
 
 func TestPluginInstallCmd_InvalidGitHubURL(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stderr bytes.Buffer
@@ -93,7 +93,7 @@ func TestPluginInstallCmd_InvalidGitHubURL(t *testing.T) {
 
 func TestPluginInstallCmd_Flags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	// Get the install command to check flags
@@ -118,7 +118,7 @@ func TestPluginInstallCmd_Flags(t *testing.T) {
 
 func TestPluginInstallCmd_Examples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stdout bytes.Buffer
@@ -134,7 +134,7 @@ func TestPluginInstallCmd_Examples(t *testing.T) {
 
 	// Check for example commands
 	examples := []string{
-		"pulumicost plugin install kubecost",
+		"finfocus plugin install kubecost",
 		"kubecost@v1.0.0",
 		"--force",
 		"--no-save",
@@ -149,7 +149,7 @@ func TestPluginInstallCmd_Examples(t *testing.T) {
 
 func TestPluginInstallCmd_URLSecurityWarning(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	tmpDir := t.TempDir()
@@ -173,7 +173,7 @@ func TestPluginInstallCmd_URLSecurityWarning(t *testing.T) {
 
 func TestPluginInstallCmd_RegistryPluginNotFound(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	tmpDir := t.TempDir()
@@ -198,7 +198,7 @@ func TestPluginInstallCmd_RegistryPluginNotFound(t *testing.T) {
 
 func TestPluginInstallCmd_VersionSpecified(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	tmpDir := t.TempDir()

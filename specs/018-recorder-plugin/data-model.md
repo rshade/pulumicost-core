@@ -11,8 +11,8 @@ Runtime configuration loaded from environment variables.
 
 | Field | Type | Source | Default | Description |
 |-------|------|--------|---------|-------------|
-| OutputDir | string | `PULUMICOST_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
-| MockResponse | bool | `PULUMICOST_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
+| OutputDir | string | `FINFOCUS_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
+| MockResponse | bool | `FINFOCUS_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
 
 **Validation Rules**:
 
@@ -136,9 +136,9 @@ RecorderPlugin
 └── ... (one file per request)
 ```
 
-## Protocol Buffer Types (from pulumicost-spec)
+## Protocol Buffer Types (from finfocus-spec)
 
-The plugin uses these types from `github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`:
+The plugin uses these types from `github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1`:
 
 ### Input Types
 

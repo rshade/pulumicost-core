@@ -61,14 +61,14 @@ The correlation context propagated through the request lifecycle.
 |-------|------|----------|-------------|
 | `trace_id` | string | Yes | ULID or externally-injected identifier |
 
-**Context Key:** `pulumicost.trace_id` (typed context key, not string)
+**Context Key:** `finfocus.trace_id` (typed context key, not string)
 
 **Propagation:**
 
-1. Generated at CLI entry point (`cmd/pulumicost/main.go`)
+1. Generated at CLI entry point (`cmd/finfocus/main.go`)
 2. Stored in `context.Context` via `context.WithValue()`
 3. Extracted by TracingHook for automatic injection into log events
-4. Propagated to plugins via gRPC metadata key `x-pulumicost-trace-id`
+4. Propagated to plugins via gRPC metadata key `x-finfocus-trace-id`
 
 **State Transitions:** None (immutable once created)
 
@@ -103,9 +103,9 @@ logging:
 
 | Variable | Overrides |
 |----------|-----------|
-| `PULUMICOST_LOG_LEVEL` | logging.level |
-| `PULUMICOST_LOG_FORMAT` | logging.format |
-| `PULUMICOST_TRACE_ID` | Injects external trace ID |
+| `FINFOCUS_LOG_LEVEL` | logging.level |
+| `FINFOCUS_LOG_FORMAT` | logging.format |
+| `FINFOCUS_TRACE_ID` | Injects external trace ID |
 
 ---
 
@@ -154,7 +154,7 @@ logging:
 │   trace_id)     │     │   trace_id)     │
 └────────┬────────┘     └─────────────────┘
          │
-         │ gRPC call with x-pulumicost-trace-id
+         │ gRPC call with x-finfocus-trace-id
          ▼
 ┌─────────────────┐
 │   PluginHost    │
@@ -162,7 +162,7 @@ logging:
 │   trace_id)     │
 └────────┬────────┘
          │
-         │ metadata: x-pulumicost-trace-id
+         │ metadata: x-finfocus-trace-id
          ▼
 ┌─────────────────┐
 │     Plugin      │
@@ -186,4 +186,4 @@ Standard component names for the `component` field:
 | `ingest` | internal/ingest | Pulumi plan parsing |
 | `spec` | internal/spec | Local pricing spec loading |
 | `config` | internal/config | Configuration management |
-| `main` | cmd/pulumicost | Entry point and initialization |
+| `main` | cmd/finfocus | Entry point and initialization |

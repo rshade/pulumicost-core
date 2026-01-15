@@ -110,7 +110,7 @@ validates before running tests.
 ```go
 // Add version to outgoing context
 ctx = metadata.AppendToOutgoingContext(ctx,
-    "x-pulumicost-protocol-version", "1.0")
+    "x-finfocus-protocol-version", "1.0")
 
 // Name() response includes version info
 nameResp, err := client.Name(ctx, &proto.Empty{})
@@ -123,7 +123,7 @@ if nameResp.ProtocolVersion != expectedVersion {
 **Alternatives Considered**:
 
 - **Dedicated Version RPC**: Cleaner separation but requires
-  protocol change in pulumicost-spec
+  protocol change in finfocus-spec
 - **HTTP/2 ALPN**: Works for TLS connections but we use plaintext
   for local plugins
 

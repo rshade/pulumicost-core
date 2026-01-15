@@ -15,8 +15,8 @@ import (
 
 // TestE2E_ProjectedCost tests the projected cost workflow using the compiled binary.
 func TestE2E_ProjectedCost(t *testing.T) {
-	binary := findPulumicostBinary()
-	require.NotEmpty(t, binary, "pulumicost binary not found")
+	binary := findFinFocusBinary()
+	require.NotEmpty(t, binary, "finfocus binary not found")
 
 	// Use fixture plan
 	planPath, err := filepath.Abs("../fixtures/plans/aws/simple.json")

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // TestConcurrentInstall_SamePlugin tests that concurrent installations of the same plugin
@@ -58,7 +58,7 @@ func TestConcurrentInstall_SamePlugin(t *testing.T) {
 			}
 
 			// Use github.com URL format for proper parsing
-			specifier := "github.com/example/pulumicost-plugin-test"
+			specifier := "github.com/example/finfocus-plugin-test"
 			_, err := installer.Install(specifier, opts, nil)
 			if err != nil {
 				errors <- err
@@ -132,7 +132,7 @@ func TestConcurrentInstall_DifferentPlugins(t *testing.T) {
 				PluginDir: pluginDir,
 			}
 
-			specifier := "github.com/example/pulumicost-plugin-" + name
+			specifier := "github.com/example/finfocus-plugin-" + name
 			_, err := installer.Install(specifier, opts, nil)
 			results <- struct {
 				name string
@@ -203,7 +203,7 @@ func TestConcurrentUpdateAndInstall(t *testing.T) {
 			NoSave:    true,
 			PluginDir: pluginDir,
 		}
-		specifier := "github.com/example/pulumicost-plugin-new"
+		specifier := "github.com/example/finfocus-plugin-new"
 		_, err := installer.Install(specifier, opts, nil)
 		installErr <- err
 	}()

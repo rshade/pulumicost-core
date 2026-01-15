@@ -1,16 +1,16 @@
 ---
 layout: default
 title: Plugin Registry Submission
-description: How to add your plugin to the PulumiCost registry
+description: How to add your plugin to the FinFocus registry
 ---
 
-This guide explains how to submit your plugin to the PulumiCost plugin registry.
+This guide explains how to submit your plugin to the FinFocus plugin registry.
 
 ## Prerequisites
 
 Before submitting, ensure your plugin:
 
-1. **Implements the PulumiCost plugin protocol** - Uses gRPC with the pulumicost-spec protobuf definitions
+1. **Implements the FinFocus plugin protocol** - Uses gRPC with the finfocus-spec protobuf definitions
 2. **Has GitHub releases** - Uses GoReleaser or similar to create releases with platform-specific binaries
 3. **Follows naming conventions** - Binary naming must match GoReleaser v2 format
 
@@ -76,15 +76,15 @@ Add your plugin to `internal/registry/registry.json`:
 | `supported_providers` | Cloud providers supported (aws, gcp, azure, kubernetes)             |
 | `capabilities`        | Features: "projected" (cost estimates), "actual" (historical costs) |
 | `security_level`      | Trust level (see below)                                             |
-| `min_spec_version`    | Minimum pulumicost-spec version required                            |
+| `min_spec_version`    | Minimum finfocus-spec version required                              |
 
 ### Security Levels
 
-| Level          | Description                                       |
-| -------------- | ------------------------------------------------- |
-| `official`     | Maintained by the PulumiCost team, fully reviewed |
-| `community`    | Community-maintained, basic review completed      |
-| `experimental` | New or untested, use with caution                 |
+| Level          | Description                                     |
+| -------------- | ----------------------------------------------- |
+| `official`     | Maintained by the FinFocus team, fully reviewed |
+| `community`    | Community-maintained, basic review completed    |
+| `experimental` | New or untested, use with caution               |
 
 ## Submission Process
 
@@ -103,16 +103,16 @@ Test that your plugin installs correctly:
 
 ```bash
 # Test direct URL installation
-pulumicost plugin install github.com/your-org/your-plugin
+finfocus plugin install github.com/your-org/your-plugin
 
 # Verify it works
-pulumicost plugin list
-pulumicost plugin validate
+finfocus plugin list
+finfocus plugin validate
 ```
 
 ### 3. Submit Pull Request
 
-1. Fork the `pulumicost-core` repository
+1. Fork the `finfocus` repository
 2. Add your plugin entry to `internal/registry/registry.json`
 3. Submit a pull request with:
    - Plugin entry in registry.json
@@ -121,7 +121,7 @@ pulumicost plugin validate
 
 ### 4. Review Process
 
-The PulumiCost team will:
+The FinFocus team will:
 
 1. Verify the plugin builds and installs correctly
 2. Review basic security considerations
@@ -181,5 +181,5 @@ Reference these existing plugins:
 
 ## Questions?
 
-- Open an issue on the [pulumicost-core repository](https://github.com/rshade/pulumicost-core/issues)
+- Open an issue on the [finfocus repository](https://github.com/rshade/finfocus/issues)
 - Check existing plugins for implementation examples

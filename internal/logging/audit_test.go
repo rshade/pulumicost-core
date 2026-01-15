@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,11 +1,11 @@
 ---
 layout: default
 title: Vantage Plugin Cost Mapping
-description: How Vantage costs map to PulumiCost resources, tag transformation, and data processing details
+description: How Vantage costs map to FinFocus resources, tag transformation, and data processing details
 ---
 
 This document explains how cost data from Vantage is transformed and mapped to
-PulumiCost's internal schema, including tag normalization, provider mapping,
+FinFocus's internal schema, including tag normalization, provider mapping,
 and aggregation behavior.
 
 ## Table of Contents
@@ -24,7 +24,7 @@ and aggregation behavior.
 ## Overview
 
 The Vantage plugin acts as an adapter between Vantage's REST API and
-PulumiCost's internal data model. It performs several transformation steps:
+FinFocus's internal data model. It performs several transformation steps:
 
 ```text
 Vantage API Response
@@ -37,16 +37,16 @@ Vantage API Response
         ↓
    Map to FOCUS 1.2 Schema
         ↓
-   Convert to PulumiCost Resource Descriptor
+   Convert to FinFocus Resource Descriptor
         ↓
-PulumiCost Cost Record
+FinFocus Cost Record
 ```
 
 ### Key Transformations
 
 - **Tag Normalization**: Convert tag keys to lowercase kebab-case
 - **Provider Extraction**: Infer provider from resource type or service name
-- **Cost Type Mapping**: Map Vantage metrics to PulumiCost cost types
+- **Cost Type Mapping**: Map Vantage metrics to FinFocus cost types
 - **Date Handling**: UTC timezone normalization
 - **Currency Handling**: Default to USD (configurable in future)
 
@@ -74,15 +74,15 @@ Example Vantage API response:
   "cost": 45.67,
   "usage": 730.0,
   "unit": "hrs",
-  "amortized_cost": 42.30,
-  "taxes": 0.50,
-  "credits": 0.00
+  "amortized_cost": 42.3,
+  "taxes": 0.5,
+  "credits": 0.0
 }
 ```
 
-### PulumiCost Internal Format
+### FinFocus Internal Format
 
-Mapped to PulumiCost schema:
+Mapped to FinFocus schema:
 
 ```json
 {
@@ -102,7 +102,7 @@ Mapped to PulumiCost schema:
     }
   },
   "cost": {
-    "projected": 0.00,
+    "projected": 0.0,
     "actual": 45.67,
     "currency": "USD",
     "period": "2024-01-15T00:00:00Z"
@@ -110,29 +110,29 @@ Mapped to PulumiCost schema:
   "metrics": {
     "usage": 730.0,
     "unit": "hrs",
-    "amortized_cost": 42.30,
-    "taxes": 0.50,
-    "credits": 0.00
+    "amortized_cost": 42.3,
+    "taxes": 0.5,
+    "credits": 0.0
   }
 }
 ```
 
 ### Field Mapping
 
-| Vantage Field | PulumiCost Field | Transformation |
-|---|---|---|
-| `date` | `cost.period` | Parse to RFC3339 UTC |
-| `provider` | `resource.provider` | Lowercase |
-| `service` | `resource.properties.service` | Lowercase |
-| `account` | `resource.properties.account` | Pass-through |
-| `region` | `resource.properties.region` | Pass-through |
-| `resource_id` | `resource.name` | Pass-through |
-| `tags` | `resource.tags` | Normalize keys (kebab-case) |
-| `cost` | `cost.actual` | Parse as float |
-| `usage` | `metrics.usage` | Parse as float |
-| `amortized_cost` | `metrics.amortized_cost` | Parse as float |
-| `taxes` | `metrics.taxes` | Parse as float |
-| `credits` | `metrics.credits` | Parse as float |
+| Vantage Field    | FinFocus Field                | Transformation              |
+| ---------------- | ----------------------------- | --------------------------- |
+| `date`           | `cost.period`                 | Parse to RFC3339 UTC        |
+| `provider`       | `resource.provider`           | Lowercase                   |
+| `service`        | `resource.properties.service` | Lowercase                   |
+| `account`        | `resource.properties.account` | Pass-through                |
+| `region`         | `resource.properties.region`  | Pass-through                |
+| `resource_id`    | `resource.name`               | Pass-through                |
+| `tags`           | `resource.tags`               | Normalize keys (kebab-case) |
+| `cost`           | `cost.actual`                 | Parse as float              |
+| `usage`          | `metrics.usage`               | Parse as float              |
+| `amortized_cost` | `metrics.amortized_cost`      | Parse as float              |
+| `taxes`          | `metrics.taxes`               | Parse as float              |
+| `credits`        | `metrics.credits`             | Parse as float              |
 
 ---
 
@@ -176,23 +176,23 @@ kubernetes:apps:Pod    → kubernetes
 
 Fallback to service-based mapping:
 
-| Service | Provider |
-|---|---|
-| `ec2`, `s3`, `rds`, `lambda` | AWS |
-| `compute`, `storage`, `bigquery` | GCP |
-| `virtualmachines`, `storageaccounts` | Azure |
-| `pods`, `deployments`, `services` | Kubernetes |
+| Service                              | Provider   |
+| ------------------------------------ | ---------- |
+| `ec2`, `s3`, `rds`, `lambda`         | AWS        |
+| `compute`, `storage`, `bigquery`     | GCP        |
+| `virtualmachines`, `storageaccounts` | Azure      |
+| `pods`, `deployments`, `services`    | Kubernetes |
 
 ### Provider Normalization
 
 Vantage may return different provider identifiers:
 
-| Vantage Value | Normalized Value |
-|---|---|
-| `aws`, `AWS`, `amazon` | `aws` |
-| `gcp`, `GCP`, `google`, `google-cloud` | `gcp` |
-| `azure`, `Azure`, `azurerm` | `azure` |
-| `kubernetes`, `k8s` | `kubernetes` |
+| Vantage Value                          | Normalized Value |
+| -------------------------------------- | ---------------- |
+| `aws`, `AWS`, `amazon`                 | `aws`            |
+| `gcp`, `GCP`, `google`, `google-cloud` | `gcp`            |
+| `azure`, `Azure`, `azurerm`            | `azure`          |
+| `kubernetes`, `k8s`                    | `kubernetes`     |
 
 ---
 
@@ -220,9 +220,9 @@ Apply `tag_prefix_filters` if configured:
 ```yaml
 params:
   tag_prefix_filters:
-    - "user:"
-    - "kubernetes.io/"
-    - "cost-center"
+    - 'user:'
+    - 'kubernetes.io/'
+    - 'cost-center'
 ```
 
 **Input Tags:**
@@ -267,12 +267,12 @@ Original tags preserved in `labels_raw`:
 
 ### Tag Transformation Examples
 
-| Original Vantage Tag | Normalized Key | Filtered? | Notes |
-|---|---|---|---|
-| `CostCenter=eng` | `cost-center=eng` | No | No prefix filter |
-| `user:Team=platform` | `user:team=platform` | No | Prefix preserved |
-| `kubernetes.io/app=api` | `kubernetes.io/app=api` | No | Special chars |
-| `pod-uid=abc123` | `pod-uid=abc123` | Yes | High cardinality |
+| Original Vantage Tag    | Normalized Key          | Filtered? | Notes            |
+| ----------------------- | ----------------------- | --------- | ---------------- |
+| `CostCenter=eng`        | `cost-center=eng`       | No        | No prefix filter |
+| `user:Team=platform`    | `user:team=platform`    | No        | Prefix preserved |
+| `kubernetes.io/app=api` | `kubernetes.io/app=api` | No        | Special chars    |
+| `pod-uid=abc123`        | `pod-uid=abc123`        | Yes       | High cardinality |
 
 ---
 
@@ -295,9 +295,9 @@ params:
 
 ```json
 [
-  {"provider": "aws", "service": "ec2", "cost": 100.00, "date": "2024-01-15"},
-  {"provider": "aws", "service": "s3", "cost": 50.00, "date": "2024-01-15"},
-  {"provider": "gcp", "service": "compute", "cost": 75.00, "date": "2024-01-15"}
+  { "provider": "aws", "service": "ec2", "cost": 100.0, "date": "2024-01-15" },
+  { "provider": "aws", "service": "s3", "cost": 50.0, "date": "2024-01-15" },
+  { "provider": "gcp", "service": "compute", "cost": 75.0, "date": "2024-01-15" }
 ]
 ```
 
@@ -315,8 +315,8 @@ params:
 
 ```json
 [
-  {"provider": "aws", "service": "ec2", "resource_id": "i-abc123", "cost": 45.00},
-  {"provider": "aws", "service": "ec2", "resource_id": "i-def456", "cost": 55.00}
+  { "provider": "aws", "service": "ec2", "resource_id": "i-abc123", "cost": 45.0 },
+  { "provider": "aws", "service": "ec2", "resource_id": "i-def456", "cost": 55.0 }
 ]
 ```
 
@@ -350,12 +350,12 @@ Multiple metrics aggregated per record:
   "date": "2024-01-15",
   "provider": "aws",
   "service": "ec2",
-  "cost": 100.00,
-  "amortized_cost": 95.00,
+  "cost": 100.0,
+  "amortized_cost": 95.0,
   "usage": 2400.0,
   "unit": "hrs",
-  "taxes": 1.50,
-  "credits": 0.00
+  "taxes": 1.5,
+  "credits": 0.0
 }
 ```
 
@@ -367,12 +367,12 @@ Multiple metrics aggregated per record:
 
 Vantage cost data has inherent latency:
 
-| Cloud Provider | Typical Lag | Notes |
-|---|---|---|
-| **AWS** | 12-24 hours | Can take up to 48h for final reconciliation |
-| **GCP** | 24-48 hours | BigQuery billing export lag |
-| **Azure** | 24-48 hours | Usage API lag |
-| **Kubernetes** | Near real-time | Via Kubecost integration |
+| Cloud Provider | Typical Lag    | Notes                                       |
+| -------------- | -------------- | ------------------------------------------- |
+| **AWS**        | 12-24 hours    | Can take up to 48h for final reconciliation |
+| **GCP**        | 24-48 hours    | BigQuery billing export lag                 |
+| **Azure**      | 24-48 hours    | Usage API lag                               |
+| **Kubernetes** | Near real-time | Via Kubecost integration                    |
 
 ### Late Posting Window
 
@@ -390,19 +390,19 @@ Day 3: Final cost data (reconciliation complete)
 ```yaml
 # Captures D-3 to D-1 data
 params:
-  start_date: null  # Automatic: today - 3 days
-  end_date: null    # Automatic: today - 1 day
+  start_date: null # Automatic: today - 3 days
+  end_date: null # Automatic: today - 1 day
 ```
 
 ### Update Frequency
 
 Recommended sync schedule:
 
-| Sync Type | Frequency | Purpose |
-|---|---|---|
+| Sync Type       | Frequency        | Purpose                                 |
+| --------------- | ---------------- | --------------------------------------- |
 | **Incremental** | Daily (2 AM UTC) | Capture previous day costs (D-3 to D-1) |
-| **Backfill** | Weekly | Re-sync previous week for corrections |
-| **Full Sync** | Monthly | Complete historical data refresh |
+| **Backfill**    | Weekly           | Re-sync previous week for corrections   |
+| **Full Sync**   | Monthly          | Complete historical data refresh        |
 
 ### Idempotency
 
@@ -451,18 +451,18 @@ The plugin generates FOCUS 1.2 compliant cost records:
 
 ### FOCUS Field Mapping
 
-| FOCUS Field | Vantage Source | Transformation |
-|---|---|---|
-| `BillingPeriodStart` | `date` | Parse to UTC date |
-| `BillingPeriodEnd` | `date` | Parse to UTC date |
-| `ChargeCategory` | `metric type` | Map: cost→Usage, taxes→Tax |
-| `Provider` | `provider` | Normalize |
-| `BilledCost` | `cost` | Parse float |
-| `EffectiveCost` | `amortized_cost` | Parse float |
-| `ResourceId` | `resource_id` | Pass-through |
-| `ServiceName` | `service` | Pass-through |
-| `Region` | `region` | Pass-through |
-| `Tags` | `tags` | Normalize and filter |
+| FOCUS Field          | Vantage Source   | Transformation             |
+| -------------------- | ---------------- | -------------------------- |
+| `BillingPeriodStart` | `date`           | Parse to UTC date          |
+| `BillingPeriodEnd`   | `date`           | Parse to UTC date          |
+| `ChargeCategory`     | `metric type`    | Map: cost→Usage, taxes→Tax |
+| `Provider`           | `provider`       | Normalize                  |
+| `BilledCost`         | `cost`           | Parse float                |
+| `EffectiveCost`      | `amortized_cost` | Parse float                |
+| `ResourceId`         | `resource_id`    | Pass-through               |
+| `ServiceName`        | `service`        | Pass-through               |
+| `Region`             | `region`         | Pass-through               |
+| `Tags`               | `tags`           | Normalize and filter       |
 
 ---
 
@@ -490,7 +490,7 @@ The plugin generates FOCUS 1.2 compliant cost records:
 }
 ```
 
-**PulumiCost Mapping:**
+**FinFocus Mapping:**
 
 ```json
 {
@@ -509,7 +509,7 @@ The plugin generates FOCUS 1.2 compliant cost records:
     }
   },
   "cost": {
-    "projected": 0.00,
+    "projected": 0.0,
     "actual": 45.67,
     "currency": "USD",
     "period": "2024-01-15T00:00:00Z"
@@ -549,12 +549,12 @@ The plugin generates FOCUS 1.2 compliant cost records:
 ```yaml
 params:
   tag_prefix_filters:
-    - "kubernetes.io/"
-    - "user:"
-    - "cost-center"
+    - 'kubernetes.io/'
+    - 'user:'
+    - 'cost-center'
 ```
 
-**PulumiCost Mapping:**
+**FinFocus Mapping:**
 
 ```json
 {
@@ -573,7 +573,7 @@ params:
     }
   },
   "cost": {
-    "projected": 0.00,
+    "projected": 0.0,
     "actual": 12.34,
     "currency": "USD",
     "period": "2024-01-15T00:00:00Z"
@@ -593,24 +593,24 @@ params:
 
 ```json
 [
-  {"provider": "aws", "service": "ec2", "cost": 100.00, "date": "2024-01-15"},
-  {"provider": "aws", "service": "s3", "cost": 50.00, "date": "2024-01-15"},
-  {"provider": "gcp", "service": "compute", "cost": 75.00, "date": "2024-01-15"},
-  {"provider": "azure", "service": "vm", "cost": 80.00, "date": "2024-01-15"}
+  { "provider": "aws", "service": "ec2", "cost": 100.0, "date": "2024-01-15" },
+  { "provider": "aws", "service": "s3", "cost": 50.0, "date": "2024-01-15" },
+  { "provider": "gcp", "service": "compute", "cost": 75.0, "date": "2024-01-15" },
+  { "provider": "azure", "service": "vm", "cost": 80.0, "date": "2024-01-15" }
 ]
 ```
 
-**PulumiCost Aggregated Cost:**
+**FinFocus Aggregated Cost:**
 
 ```json
 {
-  "total_cost": 305.00,
+  "total_cost": 305.0,
   "currency": "USD",
   "period": "2024-01-15T00:00:00Z",
   "breakdown": [
-    {"provider": "aws", "cost": 150.00},
-    {"provider": "gcp", "cost": 75.00},
-    {"provider": "azure", "cost": 80.00}
+    { "provider": "aws", "cost": 150.0 },
+    { "provider": "gcp", "cost": 75.0 },
+    { "provider": "azure", "cost": 80.0 }
   ]
 }
 ```

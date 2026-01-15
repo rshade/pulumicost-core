@@ -1,15 +1,15 @@
 ---
 layout: default
 title: User Guide
-description: Complete guide for end users - install, configure, and use PulumiCost
+description: Complete guide for end users - install, configure, and use FinFocus
 ---
 
-This guide is for anyone who wants to **use PulumiCost** to see costs for their Pulumi
+This guide is for anyone who wants to **use FinFocus** to see costs for their Pulumi
 infrastructure.
 
 ## Table of Contents
 
-1. [What is PulumiCost?](#what-is-pulumicost)
+1. [What is FinFocus?](#what-is-finfocus)
 2. [Installation](#installation)
 3. [Quick Start](#quick-start)
 4. [Cost Types](#cost-types)
@@ -23,9 +23,9 @@ infrastructure.
 
 ---
 
-## What is PulumiCost?
+## What is FinFocus?
 
-PulumiCost is a command-line tool that calculates cloud infrastructure costs from your Pulumi infrastructure definitions.
+FinFocus is a command-line tool that calculates cloud infrastructure costs from your Pulumi infrastructure definitions.
 
 **Key Features:**
 
@@ -53,17 +53,17 @@ Coming soon - prebuilt binaries for Linux, macOS, and Windows.
 ### Option 2: Build from Source
 
 ```bash
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 make build
-./bin/pulumicost --help
+./bin/finfocus --help
 ```
 
 ### Verify Installation
 
 ```bash
-pulumicost --version
-pulumicost --help
+finfocus --version
+finfocus --help
 ```
 
 ---
@@ -80,7 +80,7 @@ pulumi preview --json > plan.json
 ### 2. View Projected Costs
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Output:**
@@ -99,7 +99,7 @@ Total: $7.50 USD
 Requires plugin configuration. See [Configuration](#configuration).
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2024-01-01
+finfocus cost actual --pulumi-json plan.json --from 2024-01-01
 ```
 
 ---
@@ -119,7 +119,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2024-01-01
 **Command:**
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 ### Actual Costs
@@ -135,7 +135,7 @@ pulumicost cost projected --pulumi-json plan.json
 **Command:**
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2024-01-01 --to 2024-01-31
+finfocus cost actual --pulumi-json plan.json --from 2024-01-01 --to 2024-01-31
 ```
 
 **Note:** Requires plugin setup (Vantage, Kubecost, etc.)
@@ -144,9 +144,9 @@ pulumicost cost actual --pulumi-json plan.json --from 2024-01-01 --to 2024-01-31
 
 ## Zero-Click Cost Estimation (Analyzer)
 
-PulumiCost can integrate directly with the Pulumi CLI as an Analyzer, providing instant
+FinFocus can integrate directly with the Pulumi CLI as an Analyzer, providing instant
 cost estimates during `pulumi preview`. This eliminates the need for a separate
-`pulumicost` command to see projected costs.
+`finfocus` command to see projected costs.
 
 For detailed setup instructions, refer to the
 [Analyzer Setup Guide](../getting-started/analyzer-setup.md).
@@ -155,7 +155,7 @@ For detailed setup instructions, refer to the
 
 ### Cross-Provider Aggregation
 
-PulumiCost supports aggregating costs across multiple cloud providers and services, allowing
+FinFocus supports aggregating costs across multiple cloud providers and services, allowing
 you to get a holistic view of your infrastructure spending. This feature is particularly
 powerful when combining actual cost data from various plugins.
 
@@ -164,7 +164,7 @@ powerful when combining actual cost data from various plugins.
 View daily cost trends across all configured providers for a specific period:
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31 --group-by daily
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31 --group-by daily
 ```
 
 ### Monthly Comparison
@@ -172,12 +172,12 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 Generate a monthly cost comparison. You can output this as JSON for further processing:
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by monthly --output json
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by monthly --output json
 ```
 
 ## Sustainability Metrics
 
-PulumiCost now supports sustainability metrics, allowing you to estimate the carbon footprint of your infrastructure.
+FinFocus now supports sustainability metrics, allowing you to estimate the carbon footprint of your infrastructure.
 
 ### Carbon Footprint
 
@@ -196,7 +196,7 @@ You can adjust the assumed utilization rate for sustainability calculations usin
 `--utilization` flag. The default is 1.0 (100%).
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --utilization 0.8
+finfocus cost projected --pulumi-json plan.json --utilization 0.8
 ```
 
 ---
@@ -210,7 +210,7 @@ pulumicost cost projected --pulumi-json plan.json --utilization 0.8
 pulumi preview --json > plan.json
 
 # Check projected costs
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Review output and make decisions
 ```
@@ -220,14 +220,14 @@ pulumicost cost projected --pulumi-json plan.json
 ```bash
 # Try one configuration
 pulumi preview --json > config1.json
-pulumicost cost projected --pulumi-json config1.json
+finfocus cost projected --pulumi-json config1.json
 
 # Switch configuration
 # ... modify Pulumi code ...
 
 # Try another configuration
 pulumi preview --json > config2.json
-pulumicost cost projected --pulumi-json config2.json
+finfocus cost projected --pulumi-json config2.json
 
 # Compare outputs
 ```
@@ -236,32 +236,32 @@ pulumicost cost projected --pulumi-json config2.json
 
 ```bash
 # View last 7 days
-pulumicost cost actual --from 2024-01-24
+finfocus cost actual --from 2024-01-24
 
 # View last month
-pulumicost cost actual --from 2024-01-01 --to 2024-01-31
+finfocus cost actual --from 2024-01-01 --to 2024-01-31
 
 # View by day
-pulumicost cost actual --from 2024-01-01 --to 2024-01-31 --group-by daily
+finfocus cost actual --from 2024-01-01 --to 2024-01-31 --group-by daily
 ```
 
 ### 4. Find Expensive Resources
 
 ```bash
 # Sort by cost (output shows highest first)
-pulumicost cost projected --pulumi-json plan.json --output json | jq '.resources | sort_by(.estimatedCost) | reverse'
+finfocus cost projected --pulumi-json plan.json --output json | jq '.resources | sort_by(.estimatedCost) | reverse'
 
 # Or filter to specific resource type
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:rds*"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:rds*"
 ```
 
 ### 5. Cost by Environment
 
 ```bash
 # Assuming resources are tagged with 'env' tag
-pulumicost cost actual --filter "tag:env=prod" --from 2024-01-01
+finfocus cost actual --filter "tag:env=prod" --from 2024-01-01
 
-pulumicost cost actual --filter "tag:env=dev" --from 2024-01-01
+finfocus cost actual --filter "tag:env=dev" --from 2024-01-01
 ```
 
 ---
@@ -281,7 +281,7 @@ Vantage provides unified cost data from multiple cloud providers.
 **Commands:**
 
 ```bash
-pulumicost cost actual --from 2024-01-01 --to 2024-01-31
+finfocus cost actual --from 2024-01-01 --to 2024-01-31
 ```
 
 ### Using Local Pricing Specs
@@ -290,9 +290,9 @@ Use local YAML files for cost estimates without external services.
 
 **Setup:**
 
-1. Create YAML spec file: `~/.pulumicost/specs/my-specs.yaml`
+1. Create YAML spec file: `~/.finfocus/specs/my-specs.yaml`
 2. Add resource pricing definitions
-3. PulumiCost automatically uses them
+3. FinFocus automatically uses them
 
 **Example spec file:**
 
@@ -316,7 +316,7 @@ resources:
 ### Table (Default)
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Output:**
@@ -330,7 +330,7 @@ aws:s3/bucket:Bucket          aws:s3:Bucket     $0.00     USD
 ### JSON
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output json
+finfocus cost projected --pulumi-json plan.json --output json
 ```
 
 **Output:**
@@ -356,7 +356,7 @@ pulumicost cost projected --pulumi-json plan.json --output json
 Useful for streaming and pipeline processing.
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output ndjson
+finfocus cost projected --pulumi-json plan.json --output ndjson
 ```
 
 **Output:**
@@ -374,39 +374,39 @@ pulumicost cost projected --pulumi-json plan.json --output ndjson
 
 ```bash
 # EC2 instances only
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2*"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2*"
 
 # RDS databases
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:rds*"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:rds*"
 ```
 
 ### Filtering by Tags
 
 ```bash
 # Production resources
-pulumicost cost actual --filter "tag:env=prod" --from 2024-01-01
+finfocus cost actual --filter "tag:env=prod" --from 2024-01-01
 
 # Team resources
-pulumicost cost actual --filter "tag:team=platform" --from 2024-01-01
+finfocus cost actual --filter "tag:team=platform" --from 2024-01-01
 
 # Multiple conditions
-pulumicost cost actual --filter "tag:env=prod AND tag:team=platform" --from 2024-01-01
+finfocus cost actual --filter "tag:env=prod AND tag:team=platform" --from 2024-01-01
 ```
 
 ### Grouping by Dimension
 
 ```bash
 # By provider (AWS, Azure, GCP)
-pulumicost cost actual --group-by provider --from 2024-01-01
+finfocus cost actual --group-by provider --from 2024-01-01
 
 # By resource type
-pulumicost cost actual --group-by type --from 2024-01-01
+finfocus cost actual --group-by type --from 2024-01-01
 
 # By date (daily breakdown)
-pulumicost cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
+finfocus cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
 
 # By tag
-pulumicost cost actual --group-by "tag:env" --from 2024-01-01
+finfocus cost actual --group-by "tag:env" --from 2024-01-01
 ```
 
 ---
@@ -415,11 +415,11 @@ pulumicost cost actual --group-by "tag:env" --from 2024-01-01
 
 ### Using Debug Mode
 
-PulumiCost includes a `--debug` flag that enables verbose logging to help troubleshoot issues:
+FinFocus includes a `--debug` flag that enables verbose logging to help troubleshoot issues:
 
 ```bash
 # Enable debug output for any command
-pulumicost cost projected --debug --pulumi-json plan.json
+finfocus cost projected --debug --pulumi-json plan.json
 
 # Debug output shows:
 # - Command start/stop with duration
@@ -446,17 +446,17 @@ Configure logging behavior via environment variables:
 
 ```bash
 # Set log level (trace, debug, info, warn, error)
-export PULUMICOST_LOG_LEVEL=debug
+export FINFOCUS_LOG_LEVEL=debug
 
 # Set log format (json, text, console)
-export PULUMICOST_LOG_FORMAT=json
+export FINFOCUS_LOG_FORMAT=json
 
 # Inject external trace ID for correlation with other systems
-export PULUMICOST_TRACE_ID=my-pipeline-trace-12345
+export FINFOCUS_TRACE_ID=my-pipeline-trace-12345
 
 # Example: Debug with JSON format for log aggregation
-PULUMICOST_LOG_LEVEL=debug PULUMICOST_LOG_FORMAT=json \
-  pulumicost cost projected --pulumi-json plan.json 2> debug.log
+FINFOCUS_LOG_LEVEL=debug FINFOCUS_LOG_FORMAT=json \
+  finfocus cost projected --pulumi-json plan.json 2> debug.log
 ```
 
 ### Configuration Precedence
@@ -464,8 +464,8 @@ PULUMICOST_LOG_LEVEL=debug PULUMICOST_LOG_FORMAT=json \
 Log settings are applied in this order (highest priority first):
 
 1. **CLI flags** (`--debug`)
-2. **Environment variables** (`PULUMICOST_LOG_LEVEL`)
-3. **Config file** (`~/.pulumicost/config.yaml`)
+2. **Environment variables** (`FINFOCUS_LOG_LEVEL`)
+3. **Config file** (`~/.finfocus/config.yaml`)
 4. **Defaults** (info level, text format)
 
 ### Trace ID for Debugging
@@ -475,7 +475,7 @@ This helps correlate log entries for a single operation:
 
 ```bash
 # Use external trace ID for pipeline correlation
-PULUMICOST_TRACE_ID=jenkins-build-123 pulumicost cost projected --debug --pulumi-json plan.json
+FINFOCUS_TRACE_ID=jenkins-build-123 finfocus cost projected --debug --pulumi-json plan.json
 
 # All logs will include: trace_id=jenkins-build-123
 ```
@@ -484,11 +484,11 @@ PULUMICOST_TRACE_ID=jenkins-build-123 pulumicost cost projected --debug --pulumi
 
 ## Logging Configuration
 
-PulumiCost provides comprehensive logging capabilities for debugging, monitoring, and auditing.
+FinFocus provides comprehensive logging capabilities for debugging, monitoring, and auditing.
 
 ### Configuration File
 
-Create or edit `~/.pulumicost/config.yaml` to configure logging:
+Create or edit `~/.finfocus/config.yaml` to configure logging:
 
 ```yaml
 logging:
@@ -499,12 +499,12 @@ logging:
   format: json
 
   # Log to file (optional - defaults to stderr)
-  file: /var/log/pulumicost/pulumicost.log
+  file: /var/log/finfocus/finfocus.log
 
   # Audit logging for compliance (optional)
   audit:
     enabled: true
-    file: /var/log/pulumicost/audit.log
+    file: /var/log/finfocus/audit.log
 ```
 
 ### Log Output Locations
@@ -516,11 +516,11 @@ logging:
 
 **File Logging:**
 
-When file logging is configured, PulumiCost displays the log location at startup:
+When file logging is configured, FinFocus displays the log location at startup:
 
 ```bash
-$ pulumicost cost projected --pulumi-json plan.json
-Logging to: /var/log/pulumicost/pulumicost.log
+$ finfocus cost projected --pulumi-json plan.json
+Logging to: /var/log/finfocus/finfocus.log
 COST SUMMARY
 ============
 ...
@@ -528,13 +528,13 @@ COST SUMMARY
 
 **Fallback Behavior:**
 
-If the configured log file cannot be written (permissions, disk full), PulumiCost:
+If the configured log file cannot be written (permissions, disk full), FinFocus:
 
 1. Falls back to stderr
 2. Displays a warning with the reason
 
 ```bash
-$ pulumicost cost projected --pulumi-json plan.json
+$ finfocus cost projected --pulumi-json plan.json
 Warning: Could not write to log file, falling back to stderr (permission denied)
 COST SUMMARY
 ============
@@ -551,7 +551,7 @@ Audit logging tracks all cost queries for compliance and analysis.
 logging:
   audit:
     enabled: true
-    file: /var/log/pulumicost/audit.log
+    file: /var/log/finfocus/audit.log
 ```
 
 **Audit Log Entry Example:**
@@ -590,13 +590,13 @@ logging:
 
 ### Log Rotation
 
-PulumiCost does not perform log rotation internally. Use external tools:
+FinFocus does not perform log rotation internally. Use external tools:
 
 **Linux (logrotate):**
 
 ```text
-# /etc/logrotate.d/pulumicost
-/var/log/pulumicost/*.log {
+# /etc/logrotate.d/finfocus
+/var/log/finfocus/*.log {
     daily
     rotate 7
     compress
@@ -611,7 +611,7 @@ PulumiCost does not perform log rotation internally. Use external tools:
 If running as a service, logs go to journald automatically:
 
 ```bash
-journalctl -u pulumicost --since today
+journalctl -u finfocus --since today
 ```
 
 ---
@@ -647,10 +647,10 @@ journalctl -u pulumicost --since today
 
 ```bash
 # List installed plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Validate installations
-pulumicost plugin validate
+finfocus plugin validate
 
 # See plugin setup guide for your cost source
 # - Vantage: docs/plugins/vantage/setup.md
@@ -660,7 +660,7 @@ pulumicost plugin validate
 
 - **FAQ:** [Frequently Asked Questions](../support/faq.md)
 - **Troubleshooting:** [Detailed Troubleshooting Guide](../support/troubleshooting.md)
-- **Report Issue:** [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
+- **Report Issue:** [GitHub Issues](https://github.com/rshade/finfocus/issues)
 
 ---
 

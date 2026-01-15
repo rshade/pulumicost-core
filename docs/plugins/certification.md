@@ -1,6 +1,6 @@
 # Plugin Certification
 
-Certification ensures that a Pulumicost plugin is fully compatible with the
+Certification ensures that a FinFocus plugin is fully compatible with the
 core engine and meets quality standards.
 
 ## Certification Process
@@ -11,10 +11,10 @@ core engine and meets quality standards.
 
 ## Running Certification
 
-Use the `pulumicost plugin certify` command:
+Use the `finfocus plugin certify` command:
 
 ```bash
-pulumicost plugin certify ./path/to/plugin
+finfocus plugin certify ./path/to/plugin
 ```
 
 ## Report

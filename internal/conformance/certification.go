@@ -54,7 +54,7 @@ func (r *CertificationReport) GenerateMarkdown() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("# Pulumicost Plugin Certification\n\n")
+	sb.WriteString("# FinFocus Plugin Certification\n\n")
 	sb.WriteString(fmt.Sprintf("**Plugin**: %s\n", r.PluginName))
 	sb.WriteString(fmt.Sprintf("**Version**: %s\n", r.PluginVersion))
 	sb.WriteString(fmt.Sprintf("**Status**: %s\n", status))

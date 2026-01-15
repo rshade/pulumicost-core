@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,21 +26,21 @@ func TestNew_DefaultConfiguration(t *testing.T) {
 	assert.NotEmpty(t, cfg.SpecDir)
 }
 
-// TestNew_CreatesConfigInHomeDirectory tests that config path is in ~/.pulumicost/.
+// TestNew_CreatesConfigInHomeDirectory tests that config path is in ~/.finfocus/.
 func TestNew_CreatesConfigInHomeDirectory(t *testing.T) {
 	homeDir := setupTestHome(t)
 
 	cfg := config.New()
 
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	assert.Contains(t, cfg.PluginDir, pulumicostDir)
-	assert.Contains(t, cfg.SpecDir, pulumicostDir)
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	assert.Contains(t, cfg.PluginDir, finfocusDir)
+	assert.Contains(t, cfg.SpecDir, finfocusDir)
 }
 
 // TestLoad_ValidConfigFile tests loading a valid YAML configuration file.
 func TestLoad_ValidConfigFile(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	// Create config file
 	configContent := `output:
@@ -55,9 +55,9 @@ plugins:
     region: us-west-2
     profile: production
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(configContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(configContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -88,7 +88,7 @@ func TestLoad_NonExistentFile(t *testing.T) {
 // TestLoad_CorruptedYAML tests error handling for malformed YAML.
 func TestLoad_CorruptedYAML(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	// Create corrupted YAML file
 	corruptedContent := `output:
@@ -97,9 +97,9 @@ func TestLoad_CorruptedYAML(t *testing.T) {
 logging:
   level: debug
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(corruptedContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(corruptedContent), 0600)
 	require.NoError(t, err)
 
 	// Should use defaults for corrupted fields, but keep valid fields
@@ -113,11 +113,11 @@ logging:
 // TestLoad_EmptyConfigFile tests loading an empty configuration file.
 func TestLoad_EmptyConfigFile(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(""), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(""), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -130,16 +130,16 @@ func TestLoad_EmptyConfigFile(t *testing.T) {
 // TestLoad_PartialConfiguration tests loading a partial config with some defaults.
 func TestLoad_PartialConfiguration(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	// Only specify output settings, omit logging and plugins
 	partialContent := `output:
   default_format: ndjson
   precision: 6
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(partialContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(partialContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -156,7 +156,7 @@ func TestLoad_PartialConfiguration(t *testing.T) {
 // TestSave_CreatesDirectory tests that Save creates the config directory if it doesn't exist.
 func TestSave_CreatesDirectory(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	cfg := config.New()
 	cfg.Output.DefaultFormat = "json"
@@ -164,15 +164,15 @@ func TestSave_CreatesDirectory(t *testing.T) {
 	err := cfg.Save()
 
 	require.NoError(t, err)
-	_, err = os.Stat(pulumicostDir)
+	_, err = os.Stat(finfocusDir)
 	assert.NoError(t, err, "Directory should be created")
 }
 
 // TestSave_CreatesFile tests that Save creates a config file with correct permissions.
 func TestSave_CreatesFile(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	configPath := filepath.Join(pulumicostDir, "config.yaml")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	configPath := filepath.Join(finfocusDir, "config.yaml")
 
 	cfg := config.New()
 	cfg.Output.DefaultFormat = "json"
@@ -218,7 +218,7 @@ func TestSaveLoad_RoundTrip(t *testing.T) {
 // TestLoad_ComplexPluginConfiguration tests loading nested plugin configurations.
 func TestLoad_ComplexPluginConfiguration(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	complexContent := `plugins:
   aws:
@@ -233,9 +233,9 @@ func TestLoad_ComplexPluginConfiguration(t *testing.T) {
     api_key: test-key
     base_url: https://api.vantage.sh
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(complexContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(complexContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -255,8 +255,8 @@ func TestLoad_ComplexPluginConfiguration(t *testing.T) {
 // TestLoad_LoggingOutputsConfiguration tests loading multiple logging outputs.
 func TestLoad_LoggingOutputsConfiguration(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	logDir := filepath.Join(pulumicostDir, "logs")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	logDir := filepath.Join(finfocusDir, "logs")
 
 	loggingContent := `logging:
   level: debug
@@ -272,9 +272,9 @@ func TestLoad_LoggingOutputsConfiguration(t *testing.T) {
       max_size_mb: 100
       max_files: 5
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(loggingContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(loggingContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -300,8 +300,8 @@ func TestLoad_LoggingOutputsConfiguration(t *testing.T) {
 // TestLoad_MixedConfiguration tests loading a complete configuration with all sections.
 func TestLoad_MixedConfiguration(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	logDir := filepath.Join(pulumicostDir, "logs")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	logDir := filepath.Join(finfocusDir, "logs")
 
 	fullContent := `output:
   default_format: json
@@ -309,7 +309,7 @@ func TestLoad_MixedConfiguration(t *testing.T) {
 logging:
   level: warn
   format: json
-  file: ` + filepath.Join(logDir, "pulumicost.log") + `
+  file: ` + filepath.Join(logDir, "finfocus.log") + `
   outputs:
     - type: console
       level: error
@@ -319,9 +319,9 @@ plugins:
   gcp:
     project_id: my-project
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(fullContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(fullContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()
@@ -344,16 +344,16 @@ plugins:
 // TestLoad_WithUnicodeContent tests loading config with Unicode characters.
 func TestLoad_WithUnicodeContent(t *testing.T) {
 	homeDir := setupTestHome(t)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
 
 	unicodeContent := `plugins:
   test:
     description: "日本語 テスト 🚀"
     author: "Café ☕"
 `
-	err := os.MkdirAll(pulumicostDir, 0700)
+	err := os.MkdirAll(finfocusDir, 0700)
 	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join(pulumicostDir, "config.yaml"), []byte(unicodeContent), 0600)
+	err = os.WriteFile(filepath.Join(finfocusDir, "config.yaml"), []byte(unicodeContent), 0600)
 	require.NoError(t, err)
 
 	cfg := config.New()

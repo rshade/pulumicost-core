@@ -7,14 +7,14 @@
 
 Implement a comprehensive plugin conformance testing framework and optional E2E
 testing infrastructure to ensure reliable plugin ecosystem. The conformance
-suite will validate that plugins correctly implement the PulumiCost gRPC
+suite will validate that plugins correctly implement the FinFocus gRPC
 protocol, while E2E tests will verify cost data accuracy against real cloud
 provider APIs.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25
-**Primary Dependencies**: google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1
+**Primary Dependencies**: google.golang.org/grpc v1.77.0, github.com/rshade/finfocus-spec v0.4.1, github.com/stretchr/testify v1.11.1
 **Storage**: N/A (test framework, no persistent storage)
 **Testing**: Go testing with testify assertions, table-driven tests
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
@@ -27,7 +27,7 @@ provider APIs.
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: This feature validates plugin compliance,
   not core functionality. Conformance suite tests plugins via gRPC protocol.
@@ -40,7 +40,7 @@ Verify compliance with PulumiCost Core Constitution:
 - [x] **Protocol Stability**: Conformance tests ensure protocol compliance.
   Version checking (FR-008a) prevents mismatches.
 - [x] **Quality Gates**: Standard CI checks apply. 80% coverage minimum.
-- [x] **Multi-Repo Coordination**: Depends on pulumicost-spec for protocol
+- [x] **Multi-Repo Coordination**: Depends on finfocus-spec for protocol
   definitions. No cross-repo changes required for initial implementation.
 
 **Violations Requiring Justification**: None

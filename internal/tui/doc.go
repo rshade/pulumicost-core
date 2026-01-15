@@ -1,5 +1,5 @@
 // Package tui provides a shared set of terminal user interface (TUI) components
-// and utilities for consistent CLI command styling across the PulumiCost codebase.
+// and utilities for consistent CLI command styling across the FinFocus codebase.
 //
 // This package offers:
 //
@@ -13,7 +13,7 @@
 //
 // Import the package and use components for consistent CLI output:
 //
-//	import "github.com/rshade/pulumicost-core/internal/tui"
+//	import "github.com/rshade/finfocus/internal/tui"
 //
 //	// Detect output mode
 //	mode := tui.DetectOutputMode(forceColor, noColor, plain)

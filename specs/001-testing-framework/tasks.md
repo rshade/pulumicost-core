@@ -3,7 +3,7 @@
 **Feature**: Testing Framework and Strategy  
 **Branch**: `001-testing-framework`  
 **Spec**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md)  
-**GitHub Issue**: [#9](https://github.com/rshade/pulumicost-core/issues/9)
+**GitHub Issue**: [#9](https://github.com/rshade/finfocus/issues/9)
 
 ## Task Organization
 

@@ -12,7 +12,7 @@ Implement error aggregation for `GetProjectedCost` and `GetActualCost` in the pr
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: gRPC, zerolog (new), pulumicost-spec proto SDK
+**Primary Dependencies**: gRPC, zerolog (new), finfocus-spec proto SDK
 **Storage**: N/A (in-memory error aggregation)
 **Testing**: go test with race detection, 80% coverage minimum
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
@@ -25,7 +25,7 @@ Implement error aggregation for `GetProjectedCost` and `GetActualCost` in the pr
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Yes - this is orchestration logic in core that handles plugin errors
 - [x] **Test-Driven Development**: Yes - comprehensive tests planned (FR testing, edge cases, error truncation)

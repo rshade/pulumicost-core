@@ -1,10 +1,10 @@
 {
-  "name": "pulumicost-core-docs",
+  "name": "finfocus",
   "version": "0.1.0",
-  "description": "Documentation tooling and build scripts for PulumiCost Core",
+  "description": "Documentation tooling and build scripts for FinFocus",
   "private": true,
   "scripts": {
-    "docs:lint": "markdownlint-cli2 --config docs/.markdownlintrc.json 'docs/**/*.md' --ignore 'docs/_site/**'",
+    "docs:lint": "markdownlint-cli2 --config docs/.markdownlint-cli2.jsonc 'docs/**/*.md' --ignore 'docs/_site/**'",
     "docs:format": "prettier --write 'docs/**/*.md'",
     "docs:check-format": "prettier --check 'docs/**/*.md'",
     "docs:link-check": "node scripts/check-links.js",
@@ -21,10 +21,11 @@
     "node": ">=18.0.0"
   },
   "keywords": [
-    "pulumi",
+    "finops",
+    "focus",
     "cost",
     "documentation"
   ],
-  "author": "PulumiCost Community",
+  "author": "FinFocus Community",
   "license": "Apache-2.0"
 }

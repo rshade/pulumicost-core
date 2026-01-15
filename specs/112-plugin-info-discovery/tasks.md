@@ -30,7 +30,7 @@
 **Purpose**: Add new dependencies and ensure spec version is accessible
 
 - [x] T001 Add `github.com/Masterminds/semver/v3` dependency via `go get github.com/Masterminds/semver/v3` and run `go mod tidy`
-- [x] T002 Verify `pluginsdk.SpecVersion` constant exists in pulumicost-spec v0.4.14 (read-only check)
+- [x] T002 Verify `pluginsdk.SpecVersion` constant exists in finfocus-spec v0.4.14 (read-only check)
 
 ---
 
@@ -46,7 +46,7 @@
 - [x] T006 Implement `DryRun` wrapper method in `internal/proto/adapter.go` on `grpcAdapter` struct to call the underlying gRPC client
 - [x] T007 [P] Define internal `PluginMetadata` struct in `internal/proto/types.go` with fields: Name, Version, SpecVersion, SupportedProviders, Metadata
 - [x] T008 [P] Define internal `FieldMapping` struct in `internal/proto/types.go` with fields: FieldName, Status, Condition, ExpectedType
-- [x] T009 [P] Add `--skip-version-check` global flag in `cmd/pulumicost/root.go` with persistent flag binding
+- [x] T009 [P] Add `--skip-version-check` global flag in `cmd/finfocus/root.go` with persistent flag binding
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -84,7 +84,7 @@
 
 **Goal**: Provide `plugin inspect` command to discover FOCUS field mappings via DryRun RPC
 
-**Independent Test**: Run `pulumicost plugin inspect aws-public aws:ec2/instance:Instance` and verify field mapping table is displayed
+**Independent Test**: Run `finfocus plugin inspect aws-public aws:ec2/instance:Instance` and verify field mapping table is displayed
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
@@ -94,7 +94,7 @@
 
 ### Implementation for User Story 2
 
-- [x] T023 [US2] Create new `plugin_inspect.go` file in `internal/cli/` with Cobra command definition: `pulumicost plugin inspect <plugin-name> <resource-type>`
+- [x] T023 [US2] Create new `plugin_inspect.go` file in `internal/cli/` with Cobra command definition: `finfocus plugin inspect <plugin-name> <resource-type>`
 - [x] T024 [US2] Add `--json` flag to inspect command in `internal/cli/plugin_inspect.go` for machine-readable output
 - [x] T025 [US2] Add `--version` flag to inspect command in `internal/cli/plugin_inspect.go` for specifying plugin version
 - [x] T026 [US2] Implement plugin discovery logic in `internal/cli/plugin_inspect.go` to find and launch plugin by name (reuse registry.FindPlugin)
@@ -112,7 +112,7 @@
 
 **Goal**: Enhance `plugin list` command to display version and spec version metadata
 
-**Independent Test**: Run `pulumicost plugin list` and verify VERSION and SPEC columns appear for all plugins
+**Independent Test**: Run `finfocus plugin list` and verify VERSION and SPEC columns appear for all plugins
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 

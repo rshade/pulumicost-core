@@ -21,14 +21,14 @@ type InstalledPluginsConfig struct {
 }
 
 // pluginsConfigPath returns the full path to the plugins configuration file at
-// $HOME/.pulumicost/config.yaml. It returns an error if the current user's home
+// $HOME/.finfocus/config.yaml. It returns an error if the current user's home
 // directory cannot be determined.
 func pluginsConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return filepath.Join(homeDir, ".pulumicost", "config.yaml"), nil
+	return filepath.Join(homeDir, ".finfocus", "config.yaml"), nil
 }
 
 // LoadInstalledPlugins loads the list of installed plugins from the config file.
@@ -55,7 +55,7 @@ func LoadInstalledPlugins() ([]InstalledPlugin, error) {
 	return cfg.InstalledPlugins, nil
 }
 
-// SaveInstalledPlugins saves the provided list of installed plugins into the user's PulumiCost config.
+// SaveInstalledPlugins saves the provided list of installed plugins into the user's FinFocus config.
 // It ensures the config directory exists, preserves other top-level config keys, updates the
 // `installed_plugins` entry, and performs an atomic write to the config file.
 // The `plugins` parameter is the full list of plugins to persist.
@@ -202,7 +202,7 @@ func GetMissingPlugins() ([]InstalledPlugin, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
-	pluginsDir := filepath.Join(homeDir, ".pulumicost", "plugins")
+	pluginsDir := filepath.Join(homeDir, ".finfocus", "plugins")
 
 	var missing []InstalledPlugin
 	for _, p := range plugins {

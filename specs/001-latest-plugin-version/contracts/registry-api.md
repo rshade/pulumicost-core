@@ -19,7 +19,7 @@ func (r *Registry) ListLatestPlugins() ([]PluginInfo, []string, error)
 - `error`: Filesystem errors (e.g., permission denied).
 
 **Behavior**:
-1. Scans `~/.pulumicost/plugins/`.
+1. Scans `~/.finfocus/plugins/`.
 2. Groups by plugin name.
 3. Parses versions using SemVer.
 4. Selects highest version.

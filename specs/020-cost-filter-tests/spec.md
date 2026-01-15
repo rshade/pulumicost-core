@@ -29,7 +29,7 @@ As a DevOps engineer, I want to filter projected cost outputs by resource type o
 
 **Why this priority**: The `--filter` flag is critical for usability in large stacks, and `cost projected` is the primary command for pre-deployment checks.
 
-**Independent Test**: Can be tested by running `pulumicost cost projected` against a known plan with mixed resources and verifying the output contains only the requested types.
+**Independent Test**: Can be tested by running `finfocus cost projected` against a known plan with mixed resources and verifying the output contains only the requested types.
 
 **Acceptance Scenarios**:
 

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,9 +15,9 @@ import (
 // TestCLIIntegration tests the full CLI workflow with realistic scenarios.
 func TestCLIIntegration(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
-	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
-	t.Setenv("PULUMICOST_HOME", t.TempDir())
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
+	// Set FINFOCUS_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("FINFOCUS_HOME", t.TempDir())
 	// Create a temporary directory for test files
 	tmpDir := t.TempDir()
 
@@ -187,9 +187,9 @@ func TestCLIIntegration(t *testing.T) {
 // TestErrorHandlingEdgeCases tests various error conditions and edge cases.
 func TestErrorHandlingEdgeCases(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
-	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
-	t.Setenv("PULUMICOST_HOME", t.TempDir())
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
+	// Set FINFOCUS_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("FINFOCUS_HOME", t.TempDir())
 	tests := []struct {
 		name        string
 		args        []string
@@ -286,7 +286,7 @@ func TestErrorHandlingEdgeCases(t *testing.T) {
 // TestDateParsingEdgeCases tests edge cases in date parsing.
 func TestDateParsingEdgeCases(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		fromDate    string
@@ -365,9 +365,9 @@ func TestDateParsingEdgeCases(t *testing.T) {
 // TestOutputFormats tests different output format validation.
 func TestOutputFormats(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
-	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
-	t.Setenv("PULUMICOST_HOME", t.TempDir())
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
+	// Set FINFOCUS_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("FINFOCUS_HOME", t.TempDir())
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 
@@ -433,9 +433,9 @@ func TestOutputFormats(t *testing.T) {
 // TestFlagCombinations tests various flag combinations.
 func TestFlagCombinations(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
-	// Set PULUMICOST_HOME to a temp directory to avoid loading local plugins
-	t.Setenv("PULUMICOST_HOME", t.TempDir())
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
+	// Set FINFOCUS_HOME to a temp directory to avoid loading local plugins
+	t.Setenv("FINFOCUS_HOME", t.TempDir())
 	// Create a temporary plan file
 	tmpDir := t.TempDir()
 

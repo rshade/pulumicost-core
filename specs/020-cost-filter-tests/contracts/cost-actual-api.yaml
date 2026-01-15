@@ -1,14 +1,14 @@
 # CLI Contract: cost actual Command
 
 **Version**: 1.0.0
-**Command**: `pulumicost cost actual`
+**Command**: `finfocus cost actual`
 **Purpose**: Fetch actual historical costs with optional tag-based filtering
 
 ## Interface
 
 ### Command Signature
 ```bash
-pulumicost cost actual [flags]
+finfocus cost actual [flags]
 ```
 
 ### Flags

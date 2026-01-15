@@ -11,7 +11,7 @@ Represents a single sustainability measurement (e.g., Carbon Footprint).
 ```go
 type ImpactMetric struct {
     // Kind distinguishes the type of metric.
-    // Maps to pulumicost-spec MetricKind.
+    // Maps to finfocus-spec MetricKind.
     Kind string `json:"kind"` 
 
     // Value is the numeric magnitude.

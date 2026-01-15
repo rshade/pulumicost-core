@@ -7,17 +7,17 @@
 
 ### RQ-1: Upstream Enum Values Availability
 
-**Question**: Are all 11 action types available in the current pulumicost-spec
+**Question**: Are all 11 action types available in the current finfocus-spec
 dependency?
 
-**Finding**: Yes. pulumicost-spec v0.4.11 (current dependency) includes all 11
+**Finding**: Yes. finfocus-spec v0.4.11 (current dependency) includes all 11
 `RecommendationActionType` values via the `AllRecommendationActionTypes()`
-helper function in `sdk/go/proto/pulumicost/v1/action_types.go`.
+helper function in `sdk/go/proto/finfocus/v1/action_types.go`.
 
 **Evidence**:
 
 ```go
-// From pulumicost-spec v0.4.11 action_types.go
+// From finfocus-spec v0.4.11 action_types.go
 var allRecommendationActionTypes = []RecommendationActionType{
     RecommendationActionType_RECOMMENDATION_ACTION_TYPE_UNSPECIFIED,
     RecommendationActionType_RECOMMENDATION_ACTION_TYPE_RIGHTSIZE,
@@ -39,7 +39,7 @@ var allRecommendationActionTypes = []RecommendationActionType{
 
 ### RQ-2: Current Recommendation Struct in Core
 
-**Question**: How does pulumicost-core currently represent recommendations?
+**Question**: How does finfocus-core currently represent recommendations?
 
 **Finding**: The `internal/proto/adapter.go` defines a `Recommendation` struct
 with an `ActionType string` field. This is a string representation, not a typed
@@ -137,7 +137,7 @@ function returns `false` for unknown values.
 
 ### RQ-6: Existing Recommendations Infrastructure
 
-**Question**: What recommendation infrastructure already exists in pulumicost-core?
+**Question**: What recommendation infrastructure already exists in finfocus-core?
 
 **Finding**: Substantial infrastructure exists for fetching and processing
 recommendations from plugins. The CLI command just needs to wire this together.

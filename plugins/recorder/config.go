@@ -21,8 +21,8 @@ type Config struct {
 
 // Environment variable names for configuration.
 const (
-	EnvOutputDir    = "PULUMICOST_RECORDER_OUTPUT_DIR"
-	EnvMockResponse = "PULUMICOST_RECORDER_MOCK_RESPONSE"
+	EnvOutputDir    = "FINFOCUS_RECORDER_OUTPUT_DIR"
+	EnvMockResponse = "FINFOCUS_RECORDER_MOCK_RESPONSE"
 )
 
 // Default configuration values.

@@ -21,7 +21,7 @@ include recommendations. The analyzer must:
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: github.com/rshade/pulumicost-spec v0.4.10 (pluginsdk,
+**Primary Dependencies**: github.com/rshade/finfocus-spec v0.4.10 (pluginsdk,
 protobuf types), github.com/pulumi/pulumi/sdk/v3 (Analyzer protocol)
 **Storage**: N/A (display-only feature)
 **Testing**: go test with testify, E2E tests in test/e2e/
@@ -35,7 +35,7 @@ protobuf types), github.com/pulumi/pulumi/sdk/v3 (Analyzer protocol)
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: Feature displays data from plugins; no
   direct provider integration

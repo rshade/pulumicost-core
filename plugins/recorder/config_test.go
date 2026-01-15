@@ -126,8 +126,8 @@ func TestParseBool(t *testing.T) {
 
 func TestConfigConstants(t *testing.T) {
 	// Verify constants are defined correctly
-	require.Equal(t, "PULUMICOST_RECORDER_OUTPUT_DIR", EnvOutputDir)
-	require.Equal(t, "PULUMICOST_RECORDER_MOCK_RESPONSE", EnvMockResponse)
+	require.Equal(t, "FINFOCUS_RECORDER_OUTPUT_DIR", EnvOutputDir)
+	require.Equal(t, "FINFOCUS_RECORDER_MOCK_RESPONSE", EnvMockResponse)
 	require.Equal(t, "./recorded_data", DefaultOutputDir)
 	require.Equal(t, false, DefaultMockResponse)
 }

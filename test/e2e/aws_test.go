@@ -14,7 +14,7 @@ import (
 )
 
 func TestE2E_AWS_ProjectedCost(t *testing.T) {
-	binary := findPulumicostBinary()
+	binary := findFinFocusBinary()
 	require.NotEmpty(t, binary)
 
 	planPath, err := filepath.Abs("../fixtures/plans/aws/simple.json")

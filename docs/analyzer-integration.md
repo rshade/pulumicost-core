@@ -1,10 +1,10 @@
 ---
 title: Pulumi Analyzer Integration
-description: Technical details of the PulumiCost analyzer gRPC integration
+description: Technical details of the FinFocus analyzer gRPC integration
 layout: default
 ---
 
-PulumiCost integrates with Pulumi's analyzer framework to provide real-time cost
+FinFocus integrates with Pulumi's analyzer framework to provide real-time cost
 estimates during `pulumi preview` operations.
 
 ## Architecture
@@ -28,10 +28,10 @@ The analyzer is invoked automatically by Pulumi during preview. It:
 ### Binary Naming Convention
 
 Pulumi looks for `pulumi-analyzer-policy-<runtime>` on PATH or in the specified policy pack directory. Since we use
-`runtime: pulumicost` in `PulumiPolicy.yaml`, the binary must be named:
+`runtime: finfocus` in `PulumiPolicy.yaml`, the binary must be named:
 
 ```text
-pulumi-analyzer-policy-pulumicost
+pulumi-analyzer-policy-finfocus
 ```
 
 ### Handshake Protocol
@@ -49,15 +49,15 @@ When Pulumi starts the analyzer:
 
 The analyzer implements these Pulumi Analyzer gRPC methods:
 
-| Method           | Purpose                                      |
-| ---------------- | -------------------------------------------- |
-| `Handshake`      | Acknowledge connection from Pulumi engine    |
-| `GetAnalyzerInfo`| Return analyzer metadata and policy info     |
-| `GetPluginInfo`  | Return plugin version                        |
-| `ConfigureStack` | Receive stack context before analysis        |
-| `Analyze`        | Analyze single resource, return diagnostics  |
-| `AnalyzeStack`   | Called at end, return summary diagnostic     |
-| `Cancel`         | Handle graceful shutdown                     |
+| Method            | Purpose                                     |
+| ----------------- | ------------------------------------------- |
+| `Handshake`       | Acknowledge connection from Pulumi engine   |
+| `GetAnalyzerInfo` | Return analyzer metadata and policy info    |
+| `GetPluginInfo`   | Return plugin version                       |
+| `ConfigureStack`  | Receive stack context before analysis       |
+| `Analyze`         | Analyze single resource, return diagnostics |
+| `AnalyzeStack`    | Called at end, return summary diagnostic    |
+| `Cancel`          | Handle graceful shutdown                    |
 
 ### Diagnostic Workflow
 

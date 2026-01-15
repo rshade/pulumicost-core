@@ -180,7 +180,7 @@ func TestReport_WriteJUnit(t *testing.T) {
 
 	// Check testsuites element
 	assert.Contains(t, output, "<testsuites")
-	assert.Contains(t, output, "name=\"pulumicost-conformance\"")
+	assert.Contains(t, output, "name=\"finfocus-conformance\"")
 	assert.Contains(t, output, "tests=\"4\"")
 	assert.Contains(t, output, "failures=\"1\"")
 	assert.Contains(t, output, "skipped=\"1\"")

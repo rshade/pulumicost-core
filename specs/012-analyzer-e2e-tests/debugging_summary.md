@@ -12,7 +12,7 @@ guidance, see:
 
 The analyzer integration works with these requirements:
 
-1. **Binary naming**: `pulumi-analyzer-policy-pulumicost`
+1. **Binary naming**: `pulumi-analyzer-policy-finfocus`
 2. **PulumiPolicy.yaml**: Required in policy pack directory
 3. **--policy-pack flag**: Required to activate the analyzer
 4. **PATH**: Binary must be on PATH or in policy pack directory
@@ -57,10 +57,10 @@ Where `<runtime>` comes from PulumiPolicy.yaml.
 ```bash
 # Setup
 mkdir -p /tmp/policy-pack
-cp bin/pulumicost /tmp/policy-pack/pulumi-analyzer-policy-pulumicost
+cp bin/finfocus /tmp/policy-pack/pulumi-analyzer-policy-finfocus
 cat > /tmp/policy-pack/PulumiPolicy.yaml << 'EOF'
-runtime: pulumicost
-name: pulumicost
+runtime: finfocus
+name: finfocus
 version: 0.0.0-dev
 EOF
 export PATH="/tmp/policy-pack:$PATH"
@@ -73,9 +73,9 @@ Output confirmed:
 
 ```text
 Policies:
-    pulumicost@v0.0.0-dev (local: /tmp/policy-pack)
+    finfocus@v0.0.0-dev (local: /tmp/policy-pack)
         - [advisory] cost-estimate (aws:ec2/instance:Instance: test-instance)
-          Estimated Monthly Cost: $7.59 USD (source: pulumicost-plugin-aws-public)
+          Estimated Monthly Cost: $7.59 USD (source: finfocus-plugin-aws-public)
         - [advisory] stack-cost-summary (pulumi:pulumi:Stack: ...)
           Total Estimated Monthly Cost: $7.59 USD (1 resources analyzed)
 ```

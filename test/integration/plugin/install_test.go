@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // TestPluginInstall_FromRegistry tests installing a plugin via mock registry [US2][T015].
@@ -40,7 +40,7 @@ func TestPluginInstall_FromRegistry(t *testing.T) {
 	}
 
 	// Use github.com/owner/repo format - the BaseURL redirect handles the actual request
-	specifier := "github.com/example/pulumicost-plugin-test"
+	specifier := "github.com/example/finfocus-plugin-test"
 	result, err := installer.Install(specifier, opts, nil)
 
 	require.NoError(t, err)
@@ -89,7 +89,7 @@ func TestPluginInstall_SpecificVersion(t *testing.T) {
 	}
 
 	// Install specific version v1.5.0 (not latest)
-	specifier := "github.com/example/pulumicost-plugin-versioned@v1.5.0"
+	specifier := "github.com/example/finfocus-plugin-versioned@v1.5.0"
 	result, err := installer.Install(specifier, opts, nil)
 
 	require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestPluginInstall_FromURL(t *testing.T) {
 	}
 
 	// Install from direct URL format
-	specifier := "github.com/custom-org/pulumicost-plugin-url-plugin"
+	specifier := "github.com/custom-org/finfocus-plugin-url-plugin"
 
 	var progressMessages []string
 	progress := func(msg string) {
@@ -164,7 +164,7 @@ func TestPluginInstall_Force(t *testing.T) {
 	client.BaseURL = server.URL
 	installer := registry.NewInstallerWithClient(client, pluginDir)
 
-	specifier := "github.com/example/pulumicost-plugin-force-plugin"
+	specifier := "github.com/example/finfocus-plugin-force-plugin"
 
 	// First install
 	opts := registry.InstallOptions{
@@ -210,7 +210,7 @@ func TestPluginInstall_NoSave(t *testing.T) {
 	client.BaseURL = server.URL
 	installer := registry.NewInstallerWithClient(client, pluginDir)
 
-	specifier := "github.com/example/pulumicost-plugin-nosave"
+	specifier := "github.com/example/finfocus-plugin-nosave"
 
 	// Install with NoSave option
 	opts := registry.InstallOptions{
@@ -252,7 +252,7 @@ func TestPluginInstall_DownloadFailure(t *testing.T) {
 		PluginDir: pluginDir,
 	}
 
-	specifier := "github.com/example/pulumicost-plugin-fail-download"
+	specifier := "github.com/example/finfocus-plugin-fail-download"
 	_, err := installer.Install(specifier, opts, nil)
 
 	assert.Error(t, err, "should fail when download fails")
@@ -282,7 +282,7 @@ func TestPluginInstall_MetadataFailure(t *testing.T) {
 		PluginDir: pluginDir,
 	}
 
-	specifier := "github.com/example/pulumicost-plugin-fail-metadata"
+	specifier := "github.com/example/finfocus-plugin-fail-metadata"
 	_, err := installer.Install(specifier, opts, nil)
 
 	assert.Error(t, err, "should fail when metadata fetch fails")
@@ -312,7 +312,7 @@ func TestPluginInstall_NonExistentPlugin(t *testing.T) {
 	}
 
 	// Try to install a plugin that doesn't exist in the mock registry
-	specifier := "github.com/example/pulumicost-plugin-nonexistent"
+	specifier := "github.com/example/finfocus-plugin-nonexistent"
 	_, err := installer.Install(specifier, opts, nil)
 
 	assert.Error(t, err, "should fail for non-existent plugin")
@@ -341,7 +341,7 @@ func TestPluginInstall_ProgressCallback(t *testing.T) {
 		PluginDir: pluginDir,
 	}
 
-	specifier := "github.com/example/pulumicost-plugin-progress-test"
+	specifier := "github.com/example/finfocus-plugin-progress-test"
 
 	var messages []string
 	progress := func(msg string) {

@@ -42,7 +42,7 @@ at enterprise scale (1K, 10K, 100K resources).
 
 ```bash
 # Run all benchmarks
-PULUMICOST_LOG_LEVEL=error go test ./test/benchmarks/... -bench=. -benchmem
+FINFOCUS_LOG_LEVEL=error go test ./test/benchmarks/... -bench=. -benchmem
 
 # Run specific scale benchmarks
 go test ./test/benchmarks/... -bench='1K|10K|100K' -benchmem

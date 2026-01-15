@@ -1,10 +1,10 @@
 ---
 layout: default
 title: Developer Guide
-description: Complete guide for engineers - extend PulumiCost and build plugins
+description: Complete guide for engineers - extend FinFocus and build plugins
 ---
 
-This guide is for **engineers and developers** who want to extend PulumiCost by
+This guide is for **engineers and developers** who want to extend FinFocus by
 building plugins or contributing to the core project.
 
 ## Table of Contents
@@ -33,8 +33,8 @@ building plugins or contributing to the core project.
 
 ```bash
 # Clone repository
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 
 # Build
 make build
@@ -43,7 +43,7 @@ make build
 make test
 
 # Run
-./bin/pulumicost --help
+./bin/finfocus --help
 ```
 
 ---
@@ -89,21 +89,21 @@ make test
 
 ### Key Packages
 
-| Package | Purpose |
-| --- | --- |
-| `internal/cli` | Command-line interface (Cobra) |
-| `internal/engine` | Core cost calculation logic |
-| `internal/ingest` | Pulumi plan parsing |
-| `internal/pluginhost` | Plugin gRPC communication |
-| `internal/registry` | Plugin discovery |
-| `internal/spec` | Local pricing specifications |
-| `internal/analyzer` | Pulumi Analyzer gRPC server |
-| `pkg/pluginsdk` | Plugin SDK for developers |
+| Package               | Purpose                        |
+| --------------------- | ------------------------------ |
+| `internal/cli`        | Command-line interface (Cobra) |
+| `internal/engine`     | Core cost calculation logic    |
+| `internal/ingest`     | Pulumi plan parsing            |
+| `internal/pluginhost` | Plugin gRPC communication      |
+| `internal/registry`   | Plugin discovery               |
+| `internal/spec`       | Local pricing specifications   |
+| `internal/analyzer`   | Pulumi Analyzer gRPC server    |
+| `pkg/pluginsdk`       | Plugin SDK for developers      |
 
 ### Pulumi Analyzer Integration (Developer Perspective)
 
 The `internal/analyzer` package implements the Pulumi Analyzer gRPC protocol, allowing
-PulumiCost to act as a "zero-click" cost analysis tool during `pulumi preview`.
+FinFocus to act as a "zero-click" cost analysis tool during `pulumi preview`.
 
 Developers extending or debugging the Analyzer should be aware of:
 
@@ -130,7 +130,7 @@ go mod download
 make build
 
 # Run with example plan
-./bin/pulumicost cost projected \
+./bin/finfocus cost projected \
   --pulumi-json examples/plans/aws-simple-plan.json
 
 # Run tests
@@ -150,7 +150,7 @@ cd ..
 
 # Serve docs locally
 make docs-serve
-# Visit http://localhost:4000/pulumicost-core/
+# Visit http://localhost:4000/finfocus/
 
 # Lint docs
 make docs-lint
@@ -181,9 +181,9 @@ Create a new plugin project:
 
 ```bash
 cd ../
-mkdir pulumicost-plugin-myservice
-cd pulumicost-plugin-myservice
-go mod init github.com/yourname/pulumicost-plugin-myservice
+mkdir finfocus-plugin-myservice
+cd finfocus-plugin-myservice
+go mod init github.com/yourname/finfocus-plugin-myservice
 ```
 
 ### Minimal Plugin
@@ -195,7 +195,7 @@ import (
     "context"
     "log"
 
-    pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+    pb "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 type MyPlugin struct{}
@@ -242,7 +242,7 @@ The Vantage plugin is a complete reference implementation:
 
 ```bash
 # See implementation at
-cat ../pulumicost-plugin-vantage/main.go
+cat ../finfocus-plugin-vantage/main.go
 ```
 
 ---
@@ -297,7 +297,7 @@ func (e *Engine) GetActualCost(ctx context.Context,
 
 ### Logging Patterns
 
-PulumiCost uses zerolog for structured logging with distributed tracing. Follow these patterns:
+FinFocus uses zerolog for structured logging with distributed tracing. Follow these patterns:
 
 **Getting a Logger:**
 
@@ -488,10 +488,10 @@ For testing with real plugins:
 
 ```bash
 # Ensure plugins are installed
-./bin/pulumicost plugin list
+./bin/finfocus plugin list
 
 # Test with example plan
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 ```
 
 ### Plugin Certification
@@ -499,13 +499,13 @@ For testing with real plugins:
 Before releasing a plugin, run the certification suite to ensure full protocol compliance:
 
 ```bash
-pulumicost plugin certify ./path/to/your-plugin
+finfocus plugin certify ./path/to/your-plugin
 ```
 
 #### Analyzer Integration Testing
 
 Testing the Analyzer involves running `pulumi preview` against a Pulumi project
-configured to use the `pulumicost analyzer serve` command.
+configured to use the `finfocus analyzer serve` command.
 
 ```bash
 # Example: Configure your Pulumi.yaml as described in the Analyzer Setup guide.
@@ -517,27 +517,27 @@ pulumi preview
 Verify the output for cost diagnostics. For detailed debugging, enable verbose logging:
 
 ```bash
-PULUMICOST_LOG_LEVEL=debug pulumi preview
+FINFOCUS_LOG_LEVEL=debug pulumi preview
 ```
 
 #### Cross-Provider Aggregation Testing
 
-Test cross-provider aggregation by running `pulumicost cost actual` with `--group-by daily`
+Test cross-provider aggregation by running `finfocus cost actual` with `--group-by daily`
 or `--group-by monthly` on a Pulumi plan that includes resources from multiple providers.
 
 ```bash
 # Example: Daily aggregation
-pulumicost cost actual --pulumi-json examples/plans/multi-provider-plan.json \
+finfocus cost actual --pulumi-json examples/plans/multi-provider-plan.json \
   --from 2024-01-01 --to 2024-01-31 --group-by daily
 
 # Example: Monthly aggregation with JSON output
-pulumicost cost actual --pulumi-json examples/plans/multi-provider-plan.json \
+finfocus cost actual --pulumi-json examples/plans/multi-provider-plan.json \
   --from 2024-01-01 --group-by monthly --output json
 ```
 
 ### Fuzz Testing
 
-PulumiCost uses Go's native fuzzing (Go 1.25+) for parser resilience testing:
+FinFocus uses Go's native fuzzing (Go 1.25+) for parser resilience testing:
 
 ```bash
 # JSON parser fuzzing
@@ -552,10 +552,10 @@ go test -fuzz=FuzzPulumiPlanParse$ -fuzztime=30s ./internal/ingest
 
 **Fuzz test files:**
 
-| Location                        | Purpose                      |
-| ------------------------------- | ---------------------------- |
-| `internal/ingest/fuzz_test.go`  | JSON parser fuzz tests       |
-| `internal/spec/fuzz_test.go`    | YAML spec fuzz tests         |
+| Location                       | Purpose                |
+| ------------------------------ | ---------------------- |
+| `internal/ingest/fuzz_test.go` | JSON parser fuzz tests |
+| `internal/spec/fuzz_test.go`   | YAML spec fuzz tests   |
 
 **Adding seed corpus:**
 
@@ -585,25 +585,25 @@ go test -bench=BenchmarkScale1K -benchtime=10x -benchmem ./test/benchmarks/...
 
 **Benchmark test files:**
 
-| Location                              | Purpose                    |
-| ------------------------------------- | -------------------------- |
-| `test/benchmarks/scale_test.go`       | Scale tests (1K-100K)      |
-| `test/benchmarks/generator/`          | Synthetic data generator   |
+| Location                        | Purpose                  |
+| ------------------------------- | ------------------------ |
+| `test/benchmarks/scale_test.go` | Scale tests (1K-100K)    |
+| `test/benchmarks/generator/`    | Synthetic data generator |
 
 **Performance targets:**
 
-| Scale    | Target Time  | Actual (baseline) |
-| -------- | ------------ | ----------------- |
-| 1K       | < 1 second   | ~13ms             |
-| 10K      | < 30 seconds | ~167ms            |
-| 100K     | < 5 minutes  | ~2.3s             |
+| Scale | Target Time  | Actual (baseline) |
+| ----- | ------------ | ----------------- |
+| 1K    | < 1 second   | ~13ms             |
+| 10K   | < 30 seconds | ~167ms            |
+| 100K  | < 5 minutes  | ~2.3s             |
 
 ### Synthetic Data Generator
 
 The benchmark generator creates realistic infrastructure plans:
 
 ```go
-import "github.com/rshade/pulumicost-core/test/benchmarks/generator"
+import "github.com/rshade/finfocus/test/benchmarks/generator"
 
 // Use preset configurations
 plan, err := generator.GeneratePlan(generator.PresetSmall)   // 1K resources
@@ -647,15 +647,15 @@ git push origin v0.1.0
 
 ### Plugin Installation
 
-Users install plugins to: `~/.pulumicost/plugins/<name>/<version>/`
+Users install plugins to: `~/.finfocus/plugins/<name>/<version>/`
 
 **Structure:**
 
 ```text
-~/.pulumicost/plugins/
+~/.finfocus/plugins/
 ├── myplugin/
 │   └── 0.1.0/
-│       ├── pulumicost-myplugin    # Plugin binary
+│       ├── finfocus-myplugin    # Plugin binary
 │       └── plugin.manifest.json    # Metadata
 ```
 
@@ -668,8 +668,8 @@ COPY . .
 RUN make build
 
 FROM alpine:latest
-COPY --from=builder /app/bin/pulumicost /usr/local/bin/
-ENTRYPOINT ["pulumicost"]
+COPY --from=builder /app/bin/finfocus /usr/local/bin/
+ENTRYPOINT ["finfocus"]
 ```
 
 ---

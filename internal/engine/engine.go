@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/proto"
 )
 
 const (
@@ -37,7 +37,7 @@ const (
 	// defaultConcurrencyMultiplier is the default multiplier for NumCPU to determine worker count.
 	defaultConcurrencyMultiplier = 2
 	// envConcurrencyMultiplier is the environment variable to override the default multiplier.
-	envConcurrencyMultiplier = "PULUMICOST_CONCURRENCY_MULTIPLIER"
+	envConcurrencyMultiplier = "FINFOCUS_CONCURRENCY_MULTIPLIER"
 )
 
 // ContextKey is a custom type for context keys to avoid collisions.

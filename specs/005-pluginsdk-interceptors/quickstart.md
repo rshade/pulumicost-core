@@ -6,12 +6,12 @@
 ## Overview
 
 This guide shows plugin developers how to register custom gRPC interceptors
-when serving a PulumiCost plugin.
+when serving a FinFocus plugin.
 
 ## Prerequisites
 
 - Go 1.25.5+
-- `github.com/rshade/pulumicost-spec/sdk/go/pluginsdk` v0.2.0+
+- `github.com/rshade/finfocus-spec/sdk/go/pluginsdk` v0.2.0+
 
 ## Basic Usage
 
@@ -25,7 +25,7 @@ package main
 
 import (
     "context"
-    "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+    "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func main() {
@@ -53,7 +53,7 @@ package main
 import (
     "context"
     "google.golang.org/grpc"
-    "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+    "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func main() {

@@ -1,10 +1,10 @@
 ---
 layout: default
 title: Installation Guide
-description: Detailed installation instructions for PulumiCost
+description: Detailed installation instructions for FinFocus
 ---
 
-Detailed steps to install PulumiCost on your system.
+Detailed steps to install FinFocus on your system.
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ Detailed steps to install PulumiCost on your system.
 **Step 1: Clone the repository**
 
 ```bash
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 ```
 
 **Step 2: Build**
@@ -30,7 +30,7 @@ cd pulumicost-core
 make build
 ```
 
-Binary will be created at: `bin/pulumicost`
+Binary will be created at: `bin/finfocus`
 
 **Step 3: Add to PATH (optional)**
 
@@ -39,14 +39,14 @@ Binary will be created at: `bin/pulumicost`
 export PATH="$PWD/bin:$PATH"
 
 # Or copy to system path
-sudo cp bin/pulumicost /usr/local/bin/
+sudo cp bin/finfocus /usr/local/bin/
 ```
 
 **Step 4: Verify**
 
 ```bash
-pulumicost --version
-pulumicost --help
+finfocus --version
+finfocus --help
 ```
 
 ### Option 2: Download Prebuilt Binary (Coming Soon)
@@ -55,29 +55,29 @@ Prebuilt binaries for Linux, macOS, and Windows will be available in GitHub rele
 
 ```bash
 # Download
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-arm64 -o pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-arm64 -o finfocus
 
 # Make executable
-chmod +x pulumicost
+chmod +x finfocus
 
 # Move to PATH
-sudo mv pulumicost /usr/local/bin/
+sudo mv finfocus /usr/local/bin/
 ```
 
 ### Option 3: Docker
 
 ```bash
-docker run ghcr.io/rshade/pulumicost:latest cost projected --help
+docker run ghcr.io/rshade/finfocus:latest cost projected --help
 ```
 
 ## Verification
 
 ```bash
 # Check version
-pulumicost --version
+finfocus --version
 
 # Test with example plan
-pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 ```
 
 ## Next Steps

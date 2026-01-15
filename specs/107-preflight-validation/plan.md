@@ -5,12 +5,12 @@
 
 ## Summary
 
-Integrate `pluginsdk.ValidateProjectedCostRequest()` and `pluginsdk.ValidateActualCostRequest()` from pulumicost-spec v0.4.11+ for pre-flight request validation in `internal/proto/adapter.go`. This catches malformed requests before gRPC calls to plugins, providing actionable error messages and reducing plugin round-trip latency for invalid requests.
+Integrate `pluginsdk.ValidateProjectedCostRequest()` and `pluginsdk.ValidateActualCostRequest()` from finfocus-spec v0.4.11+ for pre-flight request validation in `internal/proto/adapter.go`. This catches malformed requests before gRPC calls to plugins, providing actionable error messages and reducing plugin round-trip latency for invalid requests.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: github.com/rshade/pulumicost-spec/sdk/go/pluginsdk v0.4.11+, zerolog v1.34.0
+**Primary Dependencies**: github.com/rshade/finfocus-spec/sdk/go/pluginsdk v0.4.11+, zerolog v1.34.0
 **Storage**: N/A (validation is stateless)
 **Testing**: go test with table-driven tests, mock clients
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
@@ -23,7 +23,7 @@ Integrate `pluginsdk.ValidateProjectedCostRequest()` and `pluginsdk.ValidateActu
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic in Core that uses shared pluginsdk validation - not a provider integration
 - [x] **Test-Driven Development**: Unit tests planned for all validation integration points (80%+ coverage target)

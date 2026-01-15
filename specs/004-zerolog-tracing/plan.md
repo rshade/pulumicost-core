@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement comprehensive structured logging using zerolog v1.34.0 throughout pulumicost-core,
+Implement comprehensive structured logging using zerolog v1.34.0 throughout finfocus-core,
 replacing the existing unused slog-based implementation. The feature enables full request tracing
 from CLI entry through plugin responses via trace ID propagation in gRPC metadata, with
 configurable log levels, JSON/console output formats, and a `--debug` CLI flag.
@@ -26,7 +26,7 @@ configurable log levels, JSON/console output formats, and a `--debug` CLI flag.
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic (logging infrastructure), not a
       cost data source. Plugins receive trace IDs via gRPC metadata but implement their own logging.
@@ -41,7 +41,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Protocol Stability**: No protocol buffer changes required. Trace ID propagation uses
       standard gRPC metadata (not proto definitions).
 - [x] **Quality Gates**: All CI checks will pass (tests, lint, security, formatting, docs).
-- [x] **Multi-Repo Coordination**: pulumicost-spec provides SDK logging utilities (issue #75).
+- [x] **Multi-Repo Coordination**: finfocus-spec provides SDK logging utilities (issue #75).
       Core implementation is independent; plugins adopt separately.
 
 **Violations Requiring Justification**: None
@@ -90,7 +90,7 @@ internal/
     └── config.go        # Modify: Extend LoggingConfig for zerolog
 
 cmd/
-└── pulumicost/
+└── finfocus/
     └── main.go          # Modify: Initialize logger at startup
 
 test/

@@ -1,8 +1,8 @@
 // Package conformance provides a comprehensive testing framework for validating
-// plugin protocol compliance with the PulumiCost gRPC protocol.
+// plugin protocol compliance with the FinFocus gRPC protocol.
 //
 // The conformance suite enables plugin developers to verify their implementations
-// against the protocol requirements defined in the pulumicost-spec repository.
+// against the protocol requirements defined in the finfocus-spec repository.
 // It supports both TCP and stdio communication modes and provides detailed
 // reporting in multiple formats (table, JSON, JUnit XML).
 //
@@ -19,7 +19,7 @@
 //
 // Basic usage via CLI:
 //
-//	pulumicost plugin conformance ./my-plugin-binary
+//	finfocus plugin conformance ./my-plugin-binary
 //
 // Programmatic usage:
 //

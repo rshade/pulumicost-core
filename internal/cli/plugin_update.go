@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // NewPluginUpdateCmd returns a Cobra command that updates an installed plugin to the latest or a specified version.
@@ -37,13 +37,13 @@ func NewPluginUpdateCmd() *cobra.Command {
 
 The plugin must already be installed. Use 'plugin install' to install new plugins.`,
 		Example: `  # Update to latest version
-  pulumicost plugin update kubecost
+  finfocus plugin update kubecost
 
   # Update to specific version
-  pulumicost plugin update kubecost --version v2.0.0
+  finfocus plugin update kubecost --version v2.0.0
 
   # Check what would be updated without making changes
-  pulumicost plugin update kubecost --dry-run`,
+  finfocus plugin update kubecost --dry-run`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]

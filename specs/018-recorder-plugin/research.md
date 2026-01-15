@@ -136,7 +136,7 @@ func (m *Mocker) CreateProjectedCostResponse() *pb.GetProjectedCostResponse {
 
 **Decision**: Use standard `os.Getenv` with defaults, parse booleans case-insensitively, log configuration at startup.
 
-**Rationale**: Consistent with Core patterns (PULUMICOST_* prefix). Simple, no external config library needed.
+**Rationale**: Consistent with Core patterns (FINFOCUS_* prefix). Simple, no external config library needed.
 
 **Pattern**:
 
@@ -152,11 +152,11 @@ func LoadConfig() *Config {
         MockResponse: false,
     }
 
-    if dir := os.Getenv("PULUMICOST_RECORDER_OUTPUT_DIR"); dir != "" {
+    if dir := os.Getenv("FINFOCUS_RECORDER_OUTPUT_DIR"); dir != "" {
         cfg.OutputDir = dir
     }
 
-    if mock := os.Getenv("PULUMICOST_RECORDER_MOCK_RESPONSE"); mock != "" {
+    if mock := os.Getenv("FINFOCUS_RECORDER_MOCK_RESPONSE"); mock != "" {
         cfg.MockResponse = strings.EqualFold(mock, "true") || mock == "1"
     }
 
@@ -226,13 +226,13 @@ func main() {
   "name": "recorder",
   "version": "0.1.0",
   "description": "Reference plugin that records all gRPC requests and optionally returns mock responses",
-  "author": "PulumiCost Team",
+  "author": "FinFocus Team",
   "supported_providers": ["*"],
   "protocols": ["grpc"],
-  "binary": "pulumicost-plugin-recorder",
+  "binary": "finfocus-plugin-recorder",
   "metadata": {
-    "repository": "https://github.com/rshade/pulumicost-core",
-    "docs": "https://github.com/rshade/pulumicost-core/tree/main/plugins/recorder",
+    "repository": "https://github.com/rshade/finfocus",
+    "docs": "https://github.com/rshade/finfocus/tree/main/plugins/recorder",
     "reference_implementation": true
   }
 }
@@ -247,7 +247,7 @@ func main() {
 
 **Research Task**: Best practices for adding plugin build target to Makefile.
 
-**Decision**: Add `build-recorder` target that builds to `bin/pulumicost-plugin-recorder`, include in CI workflow.
+**Decision**: Add `build-recorder` target that builds to `bin/finfocus-plugin-recorder`, include in CI workflow.
 
 **Rationale**: Consistent with existing build patterns, cross-platform via GOOS/GOARCH.
 
@@ -256,7 +256,7 @@ func main() {
 ```makefile
 .PHONY: build-recorder
 build-recorder:
-	go build -o bin/pulumicost-plugin-recorder ./plugins/recorder
+	go build -o bin/finfocus-plugin-recorder ./plugins/recorder
 
 .PHONY: build-all
 build-all: build build-recorder
@@ -275,7 +275,7 @@ All research topics resolved. No blocking unknowns remain. Key decisions:
 2. **Serialization**: protojson with indentation
 3. **Unique IDs**: ULID for time-ordered, collision-free filenames
 4. **Mock Values**: Log-scale random in realistic ranges
-5. **Config**: Environment variables with PULUMICOST_RECORDER_* prefix
+5. **Config**: Environment variables with FINFOCUS_RECORDER_* prefix
 6. **Shutdown**: Context cancellation with signal handling
 7. **Manifest**: JSON format with reference implementation metadata
 8. **Build**: Makefile target `build-recorder`

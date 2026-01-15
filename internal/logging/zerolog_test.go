@@ -298,11 +298,11 @@ func TestSafeStr_AllowsNonSensitiveValues(t *testing.T) {
 	assert.NotContains(t, output, "[REDACTED]")
 }
 
-// T056: Unit test for PULUMICOST_TRACE_ID environment variable override.
+// T056: Unit test for FINFOCUS_TRACE_ID environment variable override.
 func TestGetOrGenerateTraceID_UsesEnvVar(t *testing.T) {
 	// Set env var
-	os.Setenv("PULUMICOST_TRACE_ID", "env-trace-id")
-	defer os.Unsetenv("PULUMICOST_TRACE_ID")
+	os.Setenv("FINFOCUS_TRACE_ID", "env-trace-id")
+	defer os.Unsetenv("FINFOCUS_TRACE_ID")
 
 	ctx := context.Background()
 	traceID := GetOrGenerateTraceID(ctx)
@@ -313,8 +313,8 @@ func TestGetOrGenerateTraceID_UsesEnvVar(t *testing.T) {
 // T057: Unit test for external trace ID appearing in all log entries.
 func TestExternalTraceID_AppearsInLogEntries(t *testing.T) {
 	// Set external trace ID via environment
-	os.Setenv("PULUMICOST_TRACE_ID", "external-trace-12345")
-	defer os.Unsetenv("PULUMICOST_TRACE_ID")
+	os.Setenv("FINFOCUS_TRACE_ID", "external-trace-12345")
+	defer os.Unsetenv("FINFOCUS_TRACE_ID")
 
 	var buf bytes.Buffer
 	cfg := LoggingConfig{
@@ -351,7 +351,7 @@ func TestExternalTraceID_AppearsInLogEntries(t *testing.T) {
 
 func TestGetOrGenerateTraceID_UsesContextIfNoEnv(t *testing.T) {
 	// Ensure env var is not set
-	os.Unsetenv("PULUMICOST_TRACE_ID")
+	os.Unsetenv("FINFOCUS_TRACE_ID")
 
 	ctx := ContextWithTraceID(context.Background(), "context-trace-id")
 	traceID := GetOrGenerateTraceID(ctx)
@@ -361,7 +361,7 @@ func TestGetOrGenerateTraceID_UsesContextIfNoEnv(t *testing.T) {
 
 func TestGetOrGenerateTraceID_GeneratesNewIfNone(t *testing.T) {
 	// Ensure env var is not set
-	os.Unsetenv("PULUMICOST_TRACE_ID")
+	os.Unsetenv("FINFOCUS_TRACE_ID")
 
 	ctx := context.Background()
 	traceID := GetOrGenerateTraceID(ctx)

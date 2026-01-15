@@ -1,10 +1,10 @@
 ---
 layout: default
 title: 5-Minute Quickstart
-description: Get started with PulumiCost in 5 minutes
+description: Get started with FinFocus in 5 minutes
 ---
 
-Get PulumiCost running and see your first cost estimate in just 5 minutes.
+Get FinFocus running and see your first cost estimate in just 5 minutes.
 
 ## Prerequisites
 
@@ -17,8 +17,8 @@ Get PulumiCost running and see your first cost estimate in just 5 minutes.
 ### Option A: From source (recommended)
 
 ```bash
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 make build
 export PATH="$PWD/bin:$PATH"
 ```
@@ -27,14 +27,14 @@ export PATH="$PWD/bin:$PATH"
 
 ```bash
 # Download latest release
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
 ```
 
 **Verify installation:**
 
 ```bash
-pulumicost --version
+finfocus --version
 ```
 
 ## Step 2: Export Pulumi Plan (1 minute)
@@ -44,16 +44,16 @@ pulumicost --version
 cd your-pulumi-project
 
 # Or use the example project
-cd /path/to/pulumicost-core/examples
+cd /path/to/finfocus/examples
 
 # Export plan to JSON
 pulumi preview --json > plan.json
 ```
 
-## Step 3: Run PulumiCost (1 minute)
+## Step 3: Run FinFocus (1 minute)
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Output:**
@@ -70,7 +70,7 @@ Total: $7.50 USD
 ## Step 4: Try JSON Output (1 minute)
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output json | jq .
+finfocus cost projected --pulumi-json plan.json --output json | jq .
 ```
 
 **Output:**
@@ -78,13 +78,13 @@ pulumicost cost projected --pulumi-json plan.json --output json | jq .
 ```json
 {
   "summary": {
-    "totalMonthly": 7.50,
+    "totalMonthly": 7.5,
     "currency": "USD"
   },
   "resources": [
     {
       "type": "aws:ec2:Instance",
-      "estimatedCost": 7.50,
+      "estimatedCost": 7.5,
       "currency": "USD"
     }
   ]
@@ -95,10 +95,10 @@ pulumicost cost projected --pulumi-json plan.json --output json | jq .
 
 ```bash
 # Show only EC2 resources
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2*"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2*"
 
 # Show only database resources
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:rds*"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:rds*"
 ```
 
 ---
@@ -113,4 +113,4 @@ pulumicost cost projected --pulumi-json plan.json --filter "type=aws:rds*"
 
 ---
 
-**Congratulations!** You've just run PulumiCost! 🎉
+**Congratulations!** You've just run FinFocus! 🎉

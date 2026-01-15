@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 const unknownProvider = "unknown"

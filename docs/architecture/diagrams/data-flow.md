@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Data Flow Diagram
-description: Sequence diagram showing how data flows from Pulumi through PulumiCost to plugins and external APIs
+description: Sequence diagram showing how data flows from Pulumi through FinFocus to plugins and external APIs
 ---
 
 This diagram shows the complete data flow from Pulumi plan generation through
@@ -11,7 +11,7 @@ cost calculation and output rendering.
 sequenceDiagram
     actor User
     participant Pulumi as Pulumi CLI
-    participant CLI as PulumiCost CLI
+    participant CLI as FinFocus CLI
     participant Engine as Engine
     participant Ingest as Ingest
     participant Registry as Registry
@@ -22,7 +22,7 @@ sequenceDiagram
     User->>Pulumi: pulumi preview --json > plan.json
     Pulumi-->>User: plan.json
 
-    User->>CLI: pulumicost cost projected<br/>--pulumi-json plan.json
+    User->>CLI: finfocus cost projected<br/>--pulumi-json plan.json
     activate CLI
 
     CLI->>Engine: CalculateProjectedCost(planPath)
@@ -38,7 +38,7 @@ sequenceDiagram
 
     Engine->>Registry: DiscoverPlugins()
     activate Registry
-    Registry->>Registry: Scan ~/.pulumicost/plugins/
+    Registry->>Registry: Scan ~/.finfocus/plugins/
     Registry->>Registry: Validate manifests
     Registry-->>Engine: []PluginMetadata
     deactivate Registry
@@ -86,7 +86,7 @@ which outputs resource definitions to a JSON file.
 
 ### 2. CLI Invocation
 
-User invokes PulumiCost CLI with the plan file. The CLI parses command-line
+User invokes FinFocus CLI with the plan file. The CLI parses command-line
 arguments and routes the request to the appropriate Engine method.
 
 ### 3. Resource Ingestion
@@ -98,7 +98,7 @@ type, SKU, region, and tags.
 ### 4. Plugin Discovery
 
 The Engine queries the Registry to discover available cost source plugins by
-scanning the plugin directory structure (`~/.pulumicost/plugins/`).
+scanning the plugin directory structure (`~/.finfocus/plugins/`).
 
 ### 5. Plugin Connection
 
@@ -166,7 +166,7 @@ graph LR
 ## Fallback Strategy
 
 When plugins are unavailable or don't support a resource type, the Engine
-falls back to local YAML pricing specifications in `~/.pulumicost/specs/`.
+falls back to local YAML pricing specifications in `~/.finfocus/specs/`.
 If no spec is found, a placeholder cost is returned to ensure the system
 always produces output.
 

@@ -6,7 +6,7 @@ description: Common issues and solutions
 
 ## Installation Issues
 
-**"pulumicost: command not found"**
+**"finfocus: command not found"**
 
 Solution:
 
@@ -18,7 +18,7 @@ make build
 export PATH="$PWD/bin:$PATH"
 
 # Or verify installation
-ls -la bin/pulumicost
+ls -la bin/finfocus
 ```
 
 **"make: command not found"**
@@ -52,8 +52,8 @@ Solution:
 
 ```bash
 # Check plugins
-pulumicost plugin list
-pulumicost plugin validate
+finfocus plugin list
+finfocus plugin validate
 
 # See plugin documentation
 # docs/plugins/vantage/setup.md
@@ -65,10 +65,10 @@ Solution:
 
 ```bash
 # Use YYYY-MM-DD
-pulumicost cost actual --from 2024-01-01
+finfocus cost actual --from 2024-01-01
 
 # Or RFC3339
-pulumicost cost actual --from 2024-01-01T00:00:00Z
+finfocus cost actual --from 2024-01-01T00:00:00Z
 ```
 
 **"Filter not working"**
@@ -77,10 +77,10 @@ Solution:
 
 ```bash
 # Check filter syntax
-pulumicost cost actual --filter "tag:env=prod"
+finfocus cost actual --filter "tag:env=prod"
 
 # Multiple conditions
-pulumicost cost actual --filter "tag:env=prod AND tag:team=platform"
+finfocus cost actual --filter "tag:env=prod AND tag:team=platform"
 ```
 
 ## Plugin Issues
@@ -89,11 +89,11 @@ pulumicost cost actual --filter "tag:env=prod AND tag:team=platform"
 
 ```bash
 # Debug plugin
-pulumicost plugin validate
+finfocus plugin validate
 
 # Check plugin binary
-ls -la ~/.pulumicost/plugins/*/*/
-chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
+ls -la ~/.finfocus/plugins/*/*/
+chmod +x ~/.finfocus/plugins/*/*/finfocus-*
 ```
 
 **"Plugin timeout"**
@@ -114,7 +114,7 @@ Solution:
 echo $VANTAGE_API_KEY  # For Vantage
 
 # Or check config
-cat ~/.pulumicost/config.yaml
+cat ~/.finfocus/config.yaml
 ```
 
 ## Performance Issues
@@ -125,10 +125,10 @@ Solution:
 
 ```bash
 # Filter to smaller dataset
-pulumicost cost actual --from 2024-01-31 --to 2024-01-31
+finfocus cost actual --from 2024-01-31 --to 2024-01-31
 
 # Use NDJSON for large output
-pulumicost cost actual --output ndjson
+finfocus cost actual --output ndjson
 ```
 
 **"Plugin is timing out"**
@@ -160,11 +160,11 @@ Solution:
 
 ```bash
 # Fix permissions
-chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
+chmod +x ~/.finfocus/plugins/*/*/finfocus-*
 
 # Or rebuild
 make build
-chmod +x bin/pulumicost
+chmod +x bin/finfocus
 ```
 
 ## Configuration Issues
@@ -178,7 +178,7 @@ Solution:
 # See: docs/plugins/vantage/setup.md
 
 # Or use local specs
-mkdir -p ~/.pulumicost/specs
+mkdir -p ~/.finfocus/specs
 # Add YAML spec files
 ```
 
@@ -188,7 +188,7 @@ Solution:
 
 ```bash
 # Ensure specs have currency
-cat ~/.pulumicost/specs/*.yaml | grep -i currency
+cat ~/.finfocus/specs/*.yaml | grep -i currency
 
 # See spec documentation
 # docs/deployment/configuration.md
@@ -199,15 +199,13 @@ cat ~/.pulumicost/specs/*.yaml | grep -i currency
 1. **Check logs:**
 
    ```bash
-   pulumicost cost actual --debug
+   finfocus cost actual --debug
    ```
 
 2. **Read relevant guide:**
-
    - [User Guide](../guides/user-guide.md)
    - [Plugin Documentation](../plugins/)
    - [Configuration Guide](../deployment/configuration.md)
 
 3. **Report issue:**
-
-   - [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
+   - [GitHub Issues](https://github.com/rshade/finfocus/issues)

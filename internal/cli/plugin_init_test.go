@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/spf13/cobra"
 )
 
 func TestPluginInitCommand(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginInitCmd()
 
 	if cmd.Use != "init <plugin-name>" {
@@ -25,7 +25,7 @@ func TestPluginInitCommand(t *testing.T) {
 
 func TestPluginInitValidation(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	testCases := []struct {
 		name      string
 		args      []string
@@ -104,7 +104,7 @@ func TestPluginInitValidation(t *testing.T) {
 
 func TestPluginInitProjectGeneration(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tmpDir := t.TempDir()
 
 	opts := &cli.PluginInitOptions{
@@ -171,7 +171,7 @@ func TestPluginInitProjectGeneration(t *testing.T) {
 
 func TestPluginInitForceOverwrite(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tmpDir := t.TempDir()
 	projectDir := filepath.Join(tmpDir, "test-plugin")
 
@@ -211,7 +211,7 @@ func TestPluginInitForceOverwrite(t *testing.T) {
 
 func TestIsValidPluginName(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	testCases := []struct {
 		name     string
 		input    string

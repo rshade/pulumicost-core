@@ -19,7 +19,7 @@
 
 ### User Story 1 - Plugin Developer Validates Implementation (Priority: P1)
 
-As a plugin developer, I want to run a conformance test suite against my plugin implementation so that I can verify my plugin correctly implements the PulumiCost protocol before releasing it.
+As a plugin developer, I want to run a conformance test suite against my plugin implementation so that I can verify my plugin correctly implements the FinFocus protocol before releasing it.
 
 **Why this priority**: This is the foundation of plugin reliability. Without contract validation, plugin developers have no way to verify their implementation is correct, leading to runtime failures and poor user experience.
 
@@ -27,7 +27,7 @@ As a plugin developer, I want to run a conformance test suite against my plugin 
 
 **Acceptance Scenarios**:
 
-1. **Given** a plugin binary implementing the PulumiCost protocol, **When** I run the conformance test suite, **Then** I receive a pass/fail report for each protocol requirement
+1. **Given** a plugin binary implementing the FinFocus protocol, **When** I run the conformance test suite, **Then** I receive a pass/fail report for each protocol requirement
 2. **Given** a plugin that violates the protocol (e.g., wrong response format), **When** I run the conformance suite, **Then** I receive specific error messages indicating which protocol requirements failed
 3. **Given** a plugin binary, **When** I run the conformance suite with verbose output, **Then** I can see detailed request/response logs for debugging purposes
 
@@ -35,7 +35,7 @@ As a plugin developer, I want to run a conformance test suite against my plugin 
 
 ### User Story 2 - Core Developer Ensures Protocol Stability (Priority: P2)
 
-As a core developer maintaining the PulumiCost plugin protocol, I want automated tests that verify protocol changes don't break existing plugins so that I can evolve the protocol safely.
+As a core developer maintaining the FinFocus plugin protocol, I want automated tests that verify protocol changes don't break existing plugins so that I can evolve the protocol safely.
 
 **Why this priority**: Protocol stability is critical for the plugin ecosystem. Breaking changes without detection would cause widespread plugin failures and erode developer trust.
 
@@ -67,7 +67,7 @@ As a QA engineer, I want to run end-to-end tests against real cloud provider cos
 
 ### User Story 4 - Enterprise Admin Certifies Plugin Compatibility (Priority: P4)
 
-As an enterprise administrator, I want to verify that a third-party plugin is certified compatible with my PulumiCost installation so that I can confidently deploy it in production.
+As an enterprise administrator, I want to verify that a third-party plugin is certified compatible with my FinFocus installation so that I can confidently deploy it in production.
 
 **Why this priority**: Enterprise customers need assurance that plugins meet quality standards before deployment. This is important but depends on P1 (conformance suite) being complete.
 
@@ -76,7 +76,7 @@ As an enterprise administrator, I want to verify that a third-party plugin is ce
 **Acceptance Scenarios**:
 
 1. **Given** a third-party plugin, **When** I run the certification command, **Then** I receive a certification report indicating compatibility status
-2. **Given** a plugin that passes certification, **When** I deploy it, **Then** it integrates correctly with my PulumiCost installation
+2. **Given** a plugin that passes certification, **When** I deploy it, **Then** it integrates correctly with my FinFocus installation
 3. **Given** a plugin with certification issues, **When** I view the report, **Then** I understand what issues need to be resolved
 
 ---
@@ -136,7 +136,7 @@ As an enterprise administrator, I want to verify that a third-party plugin is ce
 ### Measurable Outcomes
 
 - **SC-001**: Plugin developers can validate their implementation against the conformance suite in under 5 minutes
-- **SC-002**: 100% of protocol requirements documented in pulumicost-spec are covered by conformance tests
+- **SC-002**: 100% of protocol requirements documented in finfocus-spec are covered by conformance tests
 - **SC-003**: Conformance test failures provide actionable feedback within 30 seconds of test start
 - **SC-004**: E2E tests validate cost accuracy within 5% tolerance of actual cloud provider billing
 - **SC-005**: Zero third-party plugins pass certification without meeting all protocol requirements
@@ -144,7 +144,7 @@ As an enterprise administrator, I want to verify that a third-party plugin is ce
 
 ## Assumptions
 
-- Plugin developers have access to the pulumicost-spec protocol definitions
+- Plugin developers have access to the finfocus-spec protocol definitions
 - Test AWS/Azure/GCP accounts will have cost limits configured to prevent unexpected charges
 - E2E tests will be run manually or on a quarterly schedule (not in standard CI)
 - The conformance suite will initially focus on AWS plugins, with Azure and GCP support added later
@@ -154,7 +154,7 @@ As an enterprise administrator, I want to verify that a third-party plugin is ce
 
 ## Dependencies
 
-- pulumicost-spec repository must have complete protocol buffer definitions
+- finfocus-spec repository must have complete protocol buffer definitions
 - internal/pluginhost package provides plugin communication infrastructure
 - test/mocks/plugin provides reference implementation for comparison
 - Test cloud accounts must be provisioned and configured

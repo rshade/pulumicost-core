@@ -1,6 +1,6 @@
 # Analyzer Integration Testing Notes
 
-This document tracks what we've learned about integrating the pulumicost analyzer
+This document tracks what we've learned about integrating the finfocus analyzer
 with Pulumi.
 
 ## Current Status: WORKING
@@ -11,14 +11,14 @@ The analyzer integration is fully functional as of 2025-12-09.
 
 ### Required Files
 
-1. **Binary**: `pulumi-analyzer-policy-pulumicost` (copy of pulumicost binary)
+1. **Binary**: `pulumi-analyzer-policy-finfocus` (copy of finfocus binary)
 2. **Config**: `PulumiPolicy.yaml`
 
 ### PulumiPolicy.yaml Contents
 
 ```yaml
-runtime: pulumicost
-name: pulumicost
+runtime: finfocus
+name: finfocus
 version: 0.0.0-dev
 ```
 
@@ -29,13 +29,13 @@ version: 0.0.0-dev
 mkdir -p /path/to/policy-pack
 
 # Copy binary with correct name
-cp bin/pulumicost /path/to/policy-pack/pulumi-analyzer-policy-pulumicost
-chmod +x /path/to/policy-pack/pulumi-analyzer-policy-pulumicost
+cp bin/finfocus /path/to/policy-pack/pulumi-analyzer-policy-finfocus
+chmod +x /path/to/policy-pack/pulumi-analyzer-policy-finfocus
 
 # Create PulumiPolicy.yaml
 cat > /path/to/policy-pack/PulumiPolicy.yaml << 'EOF'
-runtime: pulumicost
-name: pulumicost
+runtime: finfocus
+name: finfocus
 version: 0.0.0-dev
 EOF
 
@@ -48,27 +48,27 @@ pulumi preview --policy-pack /path/to/policy-pack
 
 ### Test Session: 2025-12-09
 
-**Binary Location**: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-core/bin/pulumicost`
+**Binary Location**: `/mnt/c/GitHub/go/src/github.com/rshade/finfocus/bin/finfocus`
 
-**Test Project**: `/mnt/c/GitHub/go/src/github.com/rshade/pulumicost-core/test/e2e/projects/analyzer`
+**Test Project**: `/mnt/c/GitHub/go/src/github.com/rshade/finfocus/test/e2e/projects/analyzer`
 
 #### Test 1: Binary Name Detection
 
-- **Method**: Run binary named `pulumi-analyzer-policy-pulumicost`
-- **Command**: `/tmp/pulumi-analyzer-policy-pulumicost`
+- **Method**: Run binary named `pulumi-analyzer-policy-finfocus`
+- **Command**: `/tmp/pulumi-analyzer-policy-finfocus`
 - **Expected**: Print port to stdout
 - **Result**: SUCCESS - Port `41331` printed to stdout
 
 #### Test 2: Full Pulumi Integration (no AWS creds)
 
 - **Method**: `pulumi preview --policy-pack`
-- **Command**: `pulumi preview --policy-pack /tmp/pulumicost-policy-test`
+- **Command**: `pulumi preview --policy-pack /tmp/finfocus-policy-test`
 - **Expected**: Analyzer loads and returns diagnostics
 - **Result**: SUCCESS - Diagnostics for internal types shown:
 
 ```text
 Policies:
-    pulumicost@v0.0.0-dev (local: /tmp/pulumicost-policy-test)
+    finfocus@v0.0.0-dev (local: /tmp/finfocus-policy-test)
         - [advisory] cost-estimate (pulumi:providers:aws: default)
           Internal Pulumi resource (no cloud cost)
         - [advisory] cost-estimate (pulumi:pulumi:Stack: ...)
@@ -82,7 +82,7 @@ Policies:
 
 ```bash
 eval "$(aws configure export-credentials --format env)"
-pulumi preview --policy-pack /tmp/pulumicost-policy-test
+pulumi preview --policy-pack /tmp/finfocus-policy-test
 ```
 
 - **Expected**: Cost estimates for EC2 instance
@@ -90,13 +90,13 @@ pulumi preview --policy-pack /tmp/pulumicost-policy-test
 
 ```text
 Policies:
-    pulumicost@v0.0.0-dev (local: /tmp/pulumicost-policy-test)
+    finfocus@v0.0.0-dev (local: /tmp/finfocus-policy-test)
         - [advisory] cost-estimate (pulumi:providers:aws: default)
           Internal Pulumi resource (no cloud cost)
         - [advisory] cost-estimate (pulumi:pulumi:Stack: ...)
           Internal Pulumi resource (no cloud cost)
         - [advisory] cost-estimate (aws:ec2/instance:Instance: test-instance)
-          Estimated Monthly Cost: $7.59 USD (source: pulumicost-plugin-aws-public)
+          Estimated Monthly Cost: $7.59 USD (source: finfocus-plugin-aws-public)
         - [advisory] stack-cost-summary (pulumi:pulumi:Stack: ...)
           Total Estimated Monthly Cost: $7.59 USD (1 resources analyzed)
 ```
@@ -114,10 +114,10 @@ Policies:
 
 ```bash
 mkdir -p /tmp/policy-pack
-cp bin/pulumicost /tmp/policy-pack/pulumi-analyzer-policy-pulumicost
+cp bin/finfocus /tmp/policy-pack/pulumi-analyzer-policy-finfocus
 cat > /tmp/policy-pack/PulumiPolicy.yaml << 'EOF'
-runtime: pulumicost
-name: pulumicost
+runtime: finfocus
+name: finfocus
 version: 0.0.0-dev
 EOF
 export PATH="/tmp/policy-pack:$PATH"

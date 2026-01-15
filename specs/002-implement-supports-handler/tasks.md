@@ -24,7 +24,7 @@
 
 **Purpose**: Validate environment and dependencies
 
-- [x] T001 Verify pulumicost-spec v0.1.0 dependency includes Supports proto definitions in go.mod
+- [x] T001 Verify finfocus-spec v0.1.0 dependency includes Supports proto definitions in go.mod
 - [x] T002 Review existing pkg/pluginsdk/sdk.go to understand Server struct and Plugin interface patterns
 
 **Checkpoint**: Environment validated and codebase patterns understood
@@ -98,7 +98,7 @@
 - [x] T018 [P] Run make lint and fix any linting issues in pkg/pluginsdk/sdk.go
 - [x] T019 [P] Run make test and verify all tests pass with minimum 80% coverage for pkg/pluginsdk
 - [x] T020 [P] Add godoc comments for SupportsProvider interface and Supports method in pkg/pluginsdk/sdk.go
-- [x] T021 Verify SC-005: Performance test that 99% of Supports queries complete within 50ms - **DEFERRED** to [#162](https://github.com/rshade/pulumicost-core/issues/162)
+- [x] T021 Verify SC-005: Performance test that 99% of Supports queries complete within 50ms - **DEFERRED** to [#162](https://github.com/rshade/finfocus/issues/162)
 - [x] T022 [P] Update docs/plugins/plugin-development.md with SupportsProvider interface documentation
 
 ---

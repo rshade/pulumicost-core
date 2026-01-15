@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func TestProcessLauncher_AllocatePort(t *testing.T) {
@@ -720,7 +720,7 @@ func TestProcessLauncher_DoubleRelease(t *testing.T) {
 func TestProcessLauncher_EnvironmentVariableConstants(t *testing.T) {
 	// Verify that pluginsdk.EnvPort matches the expected canonical value.
 	// This ensures we haven't accidentally drifted from the spec.
-	expectedEnvPort := "PULUMICOST_PLUGIN_PORT"
+	expectedEnvPort := "FINFOCUS_PLUGIN_PORT"
 	if pluginsdk.EnvPort != expectedEnvPort {
 		t.Errorf(
 			"pluginsdk.EnvPort changed: expected %q, got %q",
@@ -747,7 +747,7 @@ func TestGetPluginBindTimeout(t *testing.T) {
 
 // TestProcessLauncher_StartPluginEnvironment verifies that startPlugin sets the correct
 // environment variables for plugin communication using pluginsdk constants.
-// After issue #232: PORT should NOT be set, only PULUMICOST_PLUGIN_PORT.
+// After issue #232: PORT should NOT be set, only FINFOCUS_PLUGIN_PORT.
 func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping environment test in short mode")
@@ -771,7 +771,7 @@ func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
 	}
 
 	// Create the command manually to capture output (startPlugin sets Stdout to os.Stderr)
-	// Issue #232: Only set PULUMICOST_PLUGIN_PORT, NOT PORT
+	// Issue #232: Only set FINFOCUS_PLUGIN_PORT, NOT PORT
 	cmd := exec.CommandContext(ctx, script, fmt.Sprintf("--port=%d", port))
 	cmd.Env = append(os.Environ(),
 		// PORT is intentionally NOT set (issue #232)
@@ -822,7 +822,7 @@ func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
 				stdoutStr, stderrStr)
 		}
 
-		// Validate that stdout contains PULUMICOST_PLUGIN_PORT
+		// Validate that stdout contains FINFOCUS_PLUGIN_PORT
 		expectedPortStr := strconv.Itoa(port)
 		expectedEnvLine := fmt.Sprintf("%s=%s", pluginsdk.EnvPort, expectedPortStr)
 
@@ -833,8 +833,8 @@ func TestProcessLauncher_StartPluginEnvironment(t *testing.T) {
 
 		// Issue #232: Verify PORT is NOT set by core
 		// The script outputs "PORT=xxx (WARNING: ...)" if PORT is inherited from user environment
-		// We check for the exact line "PORT=" at the start of a line (not as substring of PULUMICOST_PLUGIN_PORT)
-		// Note: We need to check for standalone "PORT=" not as part of "PULUMICOST_PLUGIN_PORT="
+		// We check for the exact line "PORT=" at the start of a line (not as substring of FINFOCUS_PLUGIN_PORT)
+		// Note: We need to check for standalone "PORT=" not as part of "FINFOCUS_PLUGIN_PORT="
 		for _, line := range strings.Split(stdoutStr, "\n") {
 			if strings.HasPrefix(line, "PORT=") && !strings.Contains(line, "WARNING") {
 				t.Errorf(
@@ -930,7 +930,7 @@ func TestProcessLauncher_GuidanceLoggingOnBindFailure(t *testing.T) {
 }
 
 // createEnvCheckingScript creates a script that verifies environment variables are set correctly.
-// After issue #232, PORT should NOT be set by core - only PULUMICOST_PLUGIN_PORT is set.
+// After issue #232, PORT should NOT be set by core - only FINFOCUS_PLUGIN_PORT is set.
 func createEnvCheckingScript(t *testing.T) string {
 	t.Helper()
 
@@ -947,7 +947,7 @@ if (-not $envPort) {
 
 # PORT should NOT be set by core (issue #232)
 # Note: PORT might be inherited from user's environment, so we only check
-# that core didn't explicitly set it to match PULUMICOST_PLUGIN_PORT
+# that core didn't explicitly set it to match FINFOCUS_PLUGIN_PORT
 # The test sets up a clean environment, so if PORT is set here, it's a bug
 
 # Output the environment variables for validation
@@ -972,7 +972,7 @@ if [ -z "$%s" ]; then
 fi
 
 # PORT should NOT be set by core (issue #232)
-# Core only sets PULUMICOST_PLUGIN_PORT, not PORT
+# Core only sets FINFOCUS_PLUGIN_PORT, not PORT
 # Note: PORT might be inherited from user's environment, but core should not set it
 
 # Output the environment variables for validation

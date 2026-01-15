@@ -70,18 +70,16 @@ func GetPluginConfiguration(pluginName string) (map[string]interface{}, error) {
 	return cfg.GetPluginConfig(pluginName)
 }
 
-// EnsureConfigDir ensures the pulumicost configuration directory exists.
+// EnsureConfigDir ensures the finfocus configuration directory exists.
 func EnsureConfigDir() error {
-	homeDir, err := os.UserHomeDir()
+	dir, err := GetConfigDir()
 	if err != nil {
-		return fmt.Errorf("failed to get user home directory: %w", err)
+		return err
 	}
-
-	configDir := filepath.Join(homeDir, ".pulumicost")
-	return os.MkdirAll(configDir, 0700)
+	return os.MkdirAll(dir, 0700)
 }
 
-// EnsureLogDir ensures the directory for the configured PulumiCost log file exists.
+// EnsureLogDir ensures the directory for the configured FinFocus log file exists.
 // It reads the global configuration and, if a log file is configured, creates its
 // parent directory with permission 0700. If no log file is configured, it does nothing.
 // It returns any error encountered while creating the directory.
@@ -97,17 +95,20 @@ func EnsureLogDir() error {
 	return nil
 }
 
-// GetConfigDir returns the path to the pulumicost configuration directory.
-// It yields "<home>/.pulumicost" or an error if the user's home directory cannot be determined.
+// GetConfigDir returns the path to the finfocus configuration directory.
 func GetConfigDir() (string, error) {
+	if ffHome := os.Getenv("FINFOCUS_HOME"); ffHome != "" {
+		return ffHome, nil
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
-	return filepath.Join(homeDir, ".pulumicost"), nil
+	return filepath.Join(homeDir, ".finfocus"), nil
 }
 
-// GetPluginDir returns the path to the plugins subdirectory under the user's configuration directory (for example, ~/.pulumicost/plugins).
+// GetPluginDir returns the path to the plugins subdirectory under the user's configuration directory (for example, ~/.finfocus/plugins).
 // It returns an error if the base configuration directory cannot be determined.
 func GetPluginDir() (string, error) {
 	configDir, err := GetConfigDir()
@@ -118,7 +119,7 @@ func GetPluginDir() (string, error) {
 }
 
 // GetSpecDir returns the path to the specs directory under the user's config directory
-// (typically ~/.pulumicost/specs). It returns an error if the base config directory
+// (typically ~/.finfocus/specs). It returns an error if the base config directory
 // cannot be determined.
 func GetSpecDir() (string, error) {
 	configDir, err := GetConfigDir()

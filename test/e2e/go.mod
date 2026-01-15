@@ -1,4 +1,4 @@
-module github.com/rshade/pulumicost-core/test/e2e
+module github.com/rshade/finfocus/test/e2e
 
 go 1.25.5
 

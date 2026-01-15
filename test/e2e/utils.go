@@ -55,13 +55,13 @@ func GenerateStackName(prefix string) string {
 	return fmt.Sprintf("%s-%s", prefix, id.String())
 }
 
-// findPulumicostBinary locates the pulumicost binary.
-func findPulumicostBinary() string {
+// findFinFocusBinary locates the finfocus binary.
+func findFinFocusBinary() string {
 	// Check common locations
 	locations := []string{
-		os.Getenv("PULUMICOST_BINARY"), // Environment override
-		"../../bin/pulumicost",         // From test/e2e relative to repo root
-		"../../../bin/pulumicost",      // Alternative
+		os.Getenv("FINFOCUS_BINARY"), // Environment override
+		"../../bin/finfocus",         // From test/e2e relative to repo root
+		"../../../bin/finfocus",      // Alternative
 	}
 
 	for _, loc := range locations {
@@ -78,7 +78,7 @@ func findPulumicostBinary() string {
 	}
 
 	// Try PATH
-	if path, err := exec.LookPath("pulumicost"); err == nil {
+	if path, err := exec.LookPath("finfocus"); err == nil {
 		return path
 	}
 

@@ -20,12 +20,12 @@ As a user, I want to install a well-known plugin by name so I can quickly add co
 
 **Why this priority**: This is the core value proposition - simplifying plugin installation from a single command. Without this, users must manually download and place binaries.
 
-**Independent Test**: Can be fully tested by running `pulumicost plugin install kubecost` and verifying the plugin binary exists in the correct directory and is executable.
+**Independent Test**: Can be fully tested by running `finfocus plugin install kubecost` and verifying the plugin binary exists in the correct directory and is executable.
 
 **Acceptance Scenarios**:
 
-1. **Given** the registry contains a "kubecost" plugin, **When** user runs `pulumicost plugin install kubecost`, **Then** the latest version is downloaded, extracted to `~/.pulumicost/plugins/kubecost/<version>/`, and marked executable
-2. **Given** the registry contains a "kubecost" plugin with version v1.0.0, **When** user runs `pulumicost plugin install kubecost@v1.0.0`, **Then** that specific version is installed
+1. **Given** the registry contains a "kubecost" plugin, **When** user runs `finfocus plugin install kubecost`, **Then** the latest version is downloaded, extracted to `~/.finfocus/plugins/kubecost/<version>/`, and marked executable
+2. **Given** the registry contains a "kubecost" plugin with version v1.0.0, **When** user runs `finfocus plugin install kubecost@v1.0.0`, **Then** that specific version is installed
 3. **Given** a plugin is already installed, **When** user runs install without --force, **Then** system reports plugin already exists and skips installation
 4. **Given** a plugin is already installed, **When** user runs install with --force, **Then** system reinstalls the plugin
 
@@ -37,29 +37,29 @@ As a user, I want to install a plugin from a GitHub URL so I can use third-party
 
 **Why this priority**: Enables ecosystem growth beyond official plugins and supports private/internal plugins for organizations.
 
-**Independent Test**: Can be tested by running `pulumicost plugin install github.com/owner/repo` and verifying the plugin is installed.
+**Independent Test**: Can be tested by running `finfocus plugin install github.com/owner/repo` and verifying the plugin is installed.
 
 **Acceptance Scenarios**:
 
-1. **Given** a valid GitHub repository with releases, **When** user runs `pulumicost plugin install github.com/owner/repo`, **Then** the latest release is downloaded and installed
-2. **Given** a valid GitHub repository, **When** user runs `pulumicost plugin install github.com/owner/repo@v2.0.0`, **Then** that specific version is installed
+1. **Given** a valid GitHub repository with releases, **When** user runs `finfocus plugin install github.com/owner/repo`, **Then** the latest release is downloaded and installed
+2. **Given** a valid GitHub repository, **When** user runs `finfocus plugin install github.com/owner/repo@v2.0.0`, **Then** that specific version is installed
 3. **Given** a GitHub repository without releases, **When** user attempts to install, **Then** system displays a clear error message
 
 ---
 
 ### User Story 3 - Config Persistence and Auto-Install (Priority: P3)
 
-As a user, I want installed plugins saved to my config so teammates get the same plugins when they run PulumiCost.
+As a user, I want installed plugins saved to my config so teammates get the same plugins when they run FinFocus.
 
 **Why this priority**: Enables reproducible environments across teams and machines, critical for CI/CD and collaboration.
 
-**Independent Test**: Can be tested by installing a plugin, checking config.yaml for the entry, then deleting the plugin and running pulumicost to verify auto-install.
+**Independent Test**: Can be tested by installing a plugin, checking config.yaml for the entry, then deleting the plugin and running finfocus to verify auto-install.
 
 **Acceptance Scenarios**:
 
-1. **Given** user installs a plugin, **When** installation completes, **Then** plugin entry is added to `~/.pulumicost/config.yaml`
+1. **Given** user installs a plugin, **When** installation completes, **Then** plugin entry is added to `~/.finfocus/config.yaml`
 2. **Given** user installs with --no-save flag, **When** installation completes, **Then** plugin is NOT added to config
-3. **Given** config.yaml lists a plugin that is not installed, **When** pulumicost starts, **Then** missing plugin is automatically downloaded and installed
+3. **Given** config.yaml lists a plugin that is not installed, **When** finfocus starts, **Then** missing plugin is automatically downloaded and installed
 4. **Given** config.yaml specifies a version, **When** auto-install runs, **Then** exactly that version is installed
 
 ---
@@ -74,8 +74,8 @@ As a user, I want to update plugins to latest versions easily so I can get bug f
 
 **Acceptance Scenarios**:
 
-1. **Given** kubecost v1.0.0 is installed and v2.0.0 exists, **When** user runs `pulumicost plugin update kubecost`, **Then** v2.0.0 is installed
-2. **Given** multiple plugins are installed, **When** user runs `pulumicost plugin update --all`, **Then** all plugins are updated to latest
+1. **Given** kubecost v1.0.0 is installed and v2.0.0 exists, **When** user runs `finfocus plugin update kubecost`, **Then** v2.0.0 is installed
+2. **Given** multiple plugins are installed, **When** user runs `finfocus plugin update --all`, **Then** all plugins are updated to latest
 3. **Given** --dry-run flag is used, **When** update runs, **Then** system shows what would be updated without making changes
 
 ---
@@ -90,8 +90,8 @@ As a user, I want to remove plugins I no longer need to clean up my environment.
 
 **Acceptance Scenarios**:
 
-1. **Given** kubecost is installed, **When** user runs `pulumicost plugin remove kubecost`, **Then** plugin directory is deleted and entry removed from config
-2. **Given** multiple versions installed, **When** user runs `pulumicost plugin remove kubecost --all-versions`, **Then** all versions are removed
+1. **Given** kubecost is installed, **When** user runs `finfocus plugin remove kubecost`, **Then** plugin directory is deleted and entry removed from config
+2. **Given** multiple versions installed, **When** user runs `finfocus plugin remove kubecost --all-versions`, **Then** all versions are removed
 3. **Given** --keep-config flag is used, **When** remove runs, **Then** files are deleted but config entry remains
 
 ---
@@ -199,7 +199,7 @@ As a user, I want to remove plugins I no longer need to clean up my environment.
 - Plugin releases are published as GitHub Releases with downloadable assets
 - Plugins contain a `plugin.manifest.json` with metadata and dependency information
 - The registry.json is embedded in the binary and updated with new releases
-- Users have write access to `~/.pulumicost/` directory
+- Users have write access to `~/.finfocus/` directory
 - GitHub API is accessible (directly or via proxy)
 - Default rate limit of 60 requests/hour for unauthenticated users is acceptable for typical usage
 

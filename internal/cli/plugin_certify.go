@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/conformance"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/conformance"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -46,13 +46,13 @@ A plugin is certified if:
 - All context/timeout tests pass
 - All performance tests pass`,
 		Example: `  # Basic certification
-  pulumicost plugin certify ./plugins/aws-cost
+  finfocus plugin certify ./plugins/aws-cost
 
   # Save report to custom file
-  pulumicost plugin certify --output certification-report.md ./plugins/aws-cost
+  finfocus plugin certify --output certification-report.md ./plugins/aws-cost
 
   # Use stdio mode
-  pulumicost plugin certify --mode stdio ./plugins/aws-cost`,
+  finfocus plugin certify --mode stdio ./plugins/aws-cost`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPluginCertifyCmd(cmd, args[0], outputFile, mode, timeout)

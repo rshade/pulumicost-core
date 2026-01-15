@@ -1,6 +1,6 @@
 // Package logging provides structured logging with distributed tracing support.
 //
-// PulumiCost uses zerolog for high-performance structured logging with
+// FinFocus uses zerolog for high-performance structured logging with
 // automatic trace ID propagation through contexts.
 //
 // # Log Levels
@@ -28,6 +28,6 @@
 //
 // Logging can be configured via:
 //   - CLI flags (--debug)
-//   - Environment variables (PULUMICOST_LOG_LEVEL, PULUMICOST_LOG_FORMAT)
-//   - Config file (~/.pulumicost/config.yaml)
+//   - Environment variables (FINFOCUS_LOG_LEVEL, FINFOCUS_LOG_FORMAT)
+//   - Config file (~/.finfocus/config.yaml)
 package logging

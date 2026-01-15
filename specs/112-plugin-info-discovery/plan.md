@@ -5,12 +5,12 @@
 
 ## Summary
 
-This feature implements the consumer-side requirements for `GetPluginInfo` and `DryRun` RPCs in `pulumicost-core`. It includes updating the plugin host to verify version compatibility during initialization, enhancing the `plugin list` command to display metadata, and adding a new `plugin inspect` command for capability discovery.
+This feature implements the consumer-side requirements for `GetPluginInfo` and `DryRun` RPCs in `finfocus-core`. It includes updating the plugin host to verify version compatibility during initialization, enhancing the `plugin list` command to display metadata, and adding a new `plugin inspect` command for capability discovery.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: github.com/rshade/pulumicost-spec v0.4.14, github.com/Masterminds/semver/v3
+**Primary Dependencies**: github.com/rshade/finfocus-spec v0.4.14, github.com/Masterminds/semver/v3
 **Storage**: N/A (Stateless CLI)
 **Testing**: go test, testify
 **Target Platform**: Linux, macOS, Windows
@@ -23,7 +23,7 @@ This feature implements the consumer-side requirements for `GetPluginInfo` and `
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Feature adds orchestration logic for gRPC plugins.
 - [x] **Test-Driven Development**: Tests planned before implementation.
@@ -32,7 +32,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Protocol Stability**: Uses Spec v0.4.14; maintains backward compatibility for legacy plugins.
 - [x] **Implementation Completeness**: Full implementation of RPC calls and validation planned.
 - [x] **Quality Gates**: CI checks mandatory.
-- [x] **Multi-Repo Coordination**: Dependencies on pulumicost-spec documented.
+- [x] **Multi-Repo Coordination**: Dependencies on finfocus-spec documented.
 
 **Violations Requiring Justification**: None.
 
@@ -53,7 +53,7 @@ specs/112-plugin-info-discovery/
 ### Source Code (repository root)
 
 ```text
-cmd/pulumicost/
+cmd/finfocus/
 └── root.go              # Global flags
 
 internal/cli/

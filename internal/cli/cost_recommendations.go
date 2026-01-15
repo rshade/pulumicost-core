@@ -11,11 +11,11 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/proto"
-	"github.com/rshade/pulumicost-core/internal/tui"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/proto"
+	"github.com/rshade/finfocus/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -67,25 +67,25 @@ Valid action types for filtering:
   RIGHTSIZE, TERMINATE, PURCHASE_COMMITMENT, ADJUST_REQUESTS, MODIFY,
   DELETE_UNUSED, MIGRATE, CONSOLIDATE, SCHEDULE, REFACTOR, OTHER`,
 		Example: `  # Get all cost optimization recommendations (shows top 5 by savings)
-  pulumicost cost recommendations --pulumi-json plan.json
+  finfocus cost recommendations --pulumi-json plan.json
 
   # Show all recommendations with full details
-  pulumicost cost recommendations --pulumi-json plan.json --verbose
+  finfocus cost recommendations --pulumi-json plan.json --verbose
 
   # Output recommendations as JSON (includes summary section)
-  pulumicost cost recommendations --pulumi-json plan.json --output json
+  finfocus cost recommendations --pulumi-json plan.json --output json
 
   # Output as newline-delimited JSON (first line is summary)
-  pulumicost cost recommendations --pulumi-json plan.json --output ndjson
+  finfocus cost recommendations --pulumi-json plan.json --output ndjson
 
   # Filter recommendations by action type
-  pulumicost cost recommendations --pulumi-json plan.json --filter "action=MIGRATE"
+  finfocus cost recommendations --pulumi-json plan.json --filter "action=MIGRATE"
 
   # Filter by multiple action types (comma-separated)
-  pulumicost cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE,TERMINATE"
+  finfocus cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE,TERMINATE"
 
   # Use a specific adapter plugin
-  pulumicost cost recommendations --pulumi-json plan.json --adapter kubecost`,
+  finfocus cost recommendations --pulumi-json plan.json --adapter kubecost`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return executeCostRecommendations(cmd, params)
 		},

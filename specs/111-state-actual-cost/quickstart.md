@@ -11,7 +11,7 @@ cloud billing API access.
 
 ## Prerequisites
 
-- PulumiCost CLI installed
+- FinFocus CLI installed
 - A Pulumi stack deployed with Pulumi CLI v3.60.0+ (for timestamp support)
 - Exported state file from `pulumi stack export`
 
@@ -28,7 +28,7 @@ pulumi stack export > state.json
 
 ```bash
 # Calculate costs since deployment
-pulumicost cost actual --pulumi-state state.json
+finfocus cost actual --pulumi-state state.json
 ```
 
 The command will:
@@ -54,7 +54,7 @@ TOTAL                                              $1,252.71
 Use `--estimate-confidence` to see how reliable each cost estimate is:
 
 ```bash
-pulumicost cost actual --pulumi-state state.json --estimate-confidence
+finfocus cost actual --pulumi-state state.json --estimate-confidence
 ```
 
 ### Confidence Levels
@@ -85,7 +85,7 @@ actually created in the cloud.
 Override auto-detection with explicit dates:
 
 ```bash
-pulumicost cost actual --pulumi-state state.json \
+finfocus cost actual --pulumi-state state.json \
     --from 2025-01-01 --to 2025-01-31
 ```
 
@@ -94,7 +94,7 @@ pulumicost cost actual --pulumi-state state.json \
 Get structured output for automation:
 
 ```bash
-pulumicost cost actual --pulumi-state state.json --output json
+finfocus cost actual --pulumi-state state.json --output json
 ```
 
 ```json
@@ -121,7 +121,7 @@ pulumicost cost actual --pulumi-state state.json --output json
 See costs grouped by day:
 
 ```bash
-pulumicost cost actual --pulumi-state state.json --group-by daily
+finfocus cost actual --pulumi-state state.json --group-by daily
 ```
 
 ### Multi-Provider Stacks
@@ -129,7 +129,7 @@ pulumicost cost actual --pulumi-state state.json --group-by daily
 For stacks with AWS, Azure, and GCP resources:
 
 ```bash
-pulumicost cost actual --pulumi-state state.json --group-by provider
+finfocus cost actual --pulumi-state state.json --group-by provider
 ```
 
 ## Edge Cases
@@ -157,7 +157,7 @@ If `--pulumi-state` is not provided, the command behaves exactly as before:
 
 ```bash
 # Original behavior - requires billing API access via plugin
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01
 ```
 
 ## Troubleshooting

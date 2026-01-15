@@ -21,9 +21,9 @@ type PluginManager struct {
 
 // NewPluginManager creates a new PluginManager.
 func NewPluginManager(t *testing.T) *PluginManager {
-	binaryPath := findPulumicostBinaryForPlugin()
+	binaryPath := findFinFocusBinaryForPlugin()
 	if binaryPath == "" {
-		t.Fatal("pulumicost binary not found - run 'make build' first")
+		t.Fatal("finfocus binary not found - run 'make build' first")
 	}
 	return &PluginManager{
 		T:          t,
@@ -31,9 +31,9 @@ func NewPluginManager(t *testing.T) *PluginManager {
 	}
 }
 
-// findPulumicostBinaryForPlugin locates the pulumicost binary for plugin operations.
-func findPulumicostBinaryForPlugin() string {
-	return findPulumicostBinary()
+// findFinFocusBinaryForPlugin locates the finfocus binary for plugin operations.
+func findFinFocusBinaryForPlugin() string {
+	return findFinFocusBinary()
 }
 
 // InstallPlugin installs a plugin by name (e.g., "aws-public").

@@ -42,7 +42,7 @@ recent changes focusing on:
    - Code comment clarity and necessity
    - README and architecture documentation
 
-6. **PulumiCost-Specific Requirements**
+6. **FinFocus-Specific Requirements**
    - Cross-repo consistency (spec, core, plugin alignment)
    - Plugin protocol implementation correctness
    - Cost calculation logic accuracy
@@ -71,7 +71,7 @@ provide detailed, actionable feedback with file:line references.
 ## Phase 2: Fix Identified Issues
 
 After the golang-code-reviewer agent completes, use the
-**pulumicost-senior-engineer** agent to systematically fix ALL identified
+**finfocus-senior-engineer** agent to systematically fix ALL identified
 issues using this protocol:
 
 ### 🚨 EXECUTION PROTOCOL
@@ -153,5 +153,5 @@ For each issue:
 - **Complete Resolution**: ALL issues fixed
 - **Never Broken**: Codebase must NEVER be left in a broken state (failing tests/lint)
 
-**Task**: Launch the pulumicost-senior-engineer agent to systematically fix
+**Task**: Launch the finfocus-senior-engineer agent to systematically fix
 all issues identified in Phase 1.

@@ -98,8 +98,8 @@ jobs:
           AWS_E2E_REGION: us-east-1
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE || 'e2e-test-passphrase' }}
           E2E_TIMEOUT_MINS: '60'
-          PULUMICOST_LOG_LEVEL: debug
-          PULUMICOST_LOG_FORMAT: console
+          FINFOCUS_LOG_LEVEL: debug
+          FINFOCUS_LOG_FORMAT: console
         run: |
           echo "Running integration tests (including nightly-only tests)..."
           go test -v -timeout 50m -tags nightly ./test/integration/...
@@ -141,7 +141,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_E2E_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Build pulumicost binary
+      - name: Build finfocus binary
         run: make build
 
       - name: Run E2E tests
@@ -150,9 +150,9 @@ jobs:
           E2E_REGION: us-east-1
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE || 'e2e-test-passphrase' }}
           E2E_TIMEOUT_MINS: '60'
-          PULUMICOST_LOG_LEVEL: debug
-          PULUMICOST_LOG_FORMAT: console
-          PULUMICOST_BINARY: ${{ github.workspace }}/bin/pulumicost
+          FINFOCUS_LOG_LEVEL: debug
+          FINFOCUS_LOG_FORMAT: console
+          FINFOCUS_BINARY: ${{ github.workspace }}/bin/finfocus
         run: |
           cd test/e2e
           go test -v -tags e2e -timeout 100m ./...
@@ -194,7 +194,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_E2E_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Build pulumicost binary
+      - name: Build finfocus binary
         run: make build
 
       - name: Run Analyzer E2E tests
@@ -202,9 +202,9 @@ jobs:
           AWS_REGION: us-east-1
           E2E_REGION: us-east-1
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE || 'e2e-test-passphrase' }}
-          PULUMICOST_LOG_LEVEL: debug
-          PULUMICOST_LOG_FORMAT: console
-          PULUMICOST_BINARY: ${{ github.workspace }}/bin/pulumicost
+          FINFOCUS_LOG_LEVEL: debug
+          FINFOCUS_LOG_FORMAT: console
+          FINFOCUS_BINARY: ${{ github.workspace }}/bin/finfocus
         run: |
           cd test/e2e
           go test -v -tags e2e -timeout 20m -run "TestAnalyzer" ./...
@@ -321,20 +321,20 @@ jobs:
           COMMIT=$(git rev-parse HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          BINARY_NAME="pulumicost"
+          BINARY_NAME="finfocus"
           if [ "${GOOS}" = "windows" ]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
 
           mkdir -p dist
-          go build -ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=${VERSION}' -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}'" -o dist/${BINARY_NAME} ./cmd/pulumicost
+          go build -ldflags "-X 'github.com/rshade/finfocus/pkg/version.version=${VERSION}' -X 'github.com/rshade/finfocus/pkg/version.gitCommit=${COMMIT}' -X 'github.com/rshade/finfocus/pkg/version.buildDate=${BUILD_DATE}'" -o dist/${BINARY_NAME} ./cmd/finfocus
 
       - name: Verify binary
         shell: bash
         run: |
           if [ "${{ matrix.goos }}" = "linux" ] || [ "${{ matrix.goos }}" = "darwin" ]; then
-            chmod +x dist/pulumicost
-            ./dist/pulumicost --version || true
+            chmod +x dist/finfocus
+            ./dist/finfocus --version || true
           fi
 
   # Benchmarks (Linux only)

@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewPluginValidateCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -59,7 +59,7 @@ func TestNewPluginValidateCmd(t *testing.T) {
 
 func TestPluginValidateCmdFlags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginValidateCmd()
 
 	// Check plugin flag
@@ -72,7 +72,7 @@ func TestPluginValidateCmdFlags(t *testing.T) {
 
 func TestPluginValidateCmdHelp(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewPluginValidateCmd()
 	cmd.SetOut(&buf)
@@ -90,20 +90,20 @@ func TestPluginValidateCmdHelp(t *testing.T) {
 
 func TestPluginValidateCmdExamples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewPluginValidateCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
-	assert.Contains(t, cmd.Example, "pulumicost plugin validate")
-	assert.Contains(t, cmd.Example, "pulumicost plugin validate --plugin aws-plugin")
+	assert.Contains(t, cmd.Example, "finfocus plugin validate")
+	assert.Contains(t, cmd.Example, "finfocus plugin validate --plugin aws-plugin")
 	assert.Contains(t, cmd.Example, "Validate a specific plugin")
 	assert.Contains(t, cmd.Example, "kubecost")
 }
 
 func TestValidatePlugin(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 

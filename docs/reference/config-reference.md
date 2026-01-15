@@ -1,11 +1,11 @@
 ---
 title: Configuration Reference
-description: Configuration options for Pulumicost Core
+description: Configuration options for FinFocus Core
 layout: default
 ---
 
-Pulumicost is configured via a configuration file (default:
-`~/.pulumicost/config.yaml`) and environment variables.
+FinFocus is configured via a configuration file (default:
+`~/.finfocus/config.yaml`) and environment variables.
 
 ## File Format
 
@@ -13,14 +13,14 @@ The configuration file is in YAML format.
 
 ```yaml
 output:
-  default_format: table  # table, json, ndjson
+  default_format: table # table, json, ndjson
   precision: 2
 
 logging:
-  level: info  # debug, info, warn, error
+  level: info # debug, info, warn, error
 
 plugins:
-  dir: ~/.pulumicost/plugins
+  dir: ~/.finfocus/plugins
 ```
 
 ## Sections

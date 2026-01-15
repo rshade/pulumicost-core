@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Vantage Plugin Authentication
-description: API key management and security best practices for the PulumiCost Vantage plugin
+description: API key management and security best practices for the FinFocus Vantage plugin
 ---
 
 This guide explains how to securely configure authentication for the Vantage
@@ -62,7 +62,7 @@ environment variables or configuration files.
 1. Go to **Cost Reports** in Vantage console
 2. Select the report you want to use
 3. Click **API Access** → **Generate Token**
-4. Name the token (e.g., `pulumicost-production`)
+4. Name the token (e.g., `finfocus-production`)
 5. Copy the generated token (starts with `cr_`)
 6. Store securely (you won't be able to see it again)
 
@@ -70,7 +70,7 @@ environment variables or configuration files.
 
 1. Go to **Settings** → **API Tokens**
 2. Click **Generate New Token**
-3. Name the token (e.g., `pulumicost-workspace`)
+3. Name the token (e.g., `finfocus-workspace`)
 4. Select permissions: **Read-only cost access**
 5. Copy the generated token (starts with `ws_`)
 6. Store securely
@@ -81,10 +81,10 @@ Test the token has correct permissions:
 
 ```bash
 # Set token
-export PULUMICOST_VANTAGE_TOKEN="your_token_here"
+export FINFOCUS_VANTAGE_TOKEN="your_token_here"
 
 # Test API access
-curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
   https://api.vantage.sh/costs
 
 # Expected: 200 OK or 400 (bad request params)
@@ -104,17 +104,17 @@ version: 0.1
 source: vantage
 
 credentials:
-  token: ${PULUMICOST_VANTAGE_TOKEN}  # Reference env var
+  token: ${FINFOCUS_VANTAGE_TOKEN} # Reference env var
 
 params:
-  cost_report_token: "cr_abc123def456"
-  granularity: "day"
+  cost_report_token: 'cr_abc123def456'
+  granularity: 'day'
 ```
 
 Set the environment variable:
 
 ```bash
-export PULUMICOST_VANTAGE_TOKEN="your_actual_token_value"
+export FINFOCUS_VANTAGE_TOKEN="your_actual_token_value"
 ```
 
 ### Method 2: Direct Configuration (Development Only)
@@ -127,11 +127,11 @@ version: 0.1
 source: vantage
 
 credentials:
-  token: "vantage_token_value_here"  # Direct value (NOT RECOMMENDED)
+  token: 'vantage_token_value_here' # Direct value (NOT RECOMMENDED)
 
 params:
-  cost_report_token: "cr_abc123def456"
-  granularity: "day"
+  cost_report_token: 'cr_abc123def456'
+  granularity: 'day'
 ```
 
 ### Method 3: Multiple Environment Variables
@@ -143,19 +143,19 @@ version: 0.1
 source: vantage
 
 credentials:
-  token: ${PULUMICOST_VANTAGE_TOKEN}
+  token: ${FINFOCUS_VANTAGE_TOKEN}
 
 params:
   # Use env var for cost report token too
-  cost_report_token: ${PULUMICOST_VANTAGE_COST_REPORT_TOKEN}
-  granularity: "day"
+  cost_report_token: ${FINFOCUS_VANTAGE_COST_REPORT_TOKEN}
+  granularity: 'day'
 ```
 
 Set both variables:
 
 ```bash
-export PULUMICOST_VANTAGE_TOKEN="vantage_api_token"
-export PULUMICOST_VANTAGE_COST_REPORT_TOKEN="cr_abc123def456"
+export FINFOCUS_VANTAGE_TOKEN="vantage_api_token"
+export FINFOCUS_VANTAGE_COST_REPORT_TOKEN="cr_abc123def456"
 ```
 
 ---
@@ -166,44 +166,44 @@ export PULUMICOST_VANTAGE_COST_REPORT_TOKEN="cr_abc123def456"
 
 The plugin supports these environment variables:
 
-| Variable | Purpose | Format | Example |
-|---|---|---|---|
-| `PULUMICOST_VANTAGE_TOKEN` | Main API token | String | `vantage_3f4g...` |
-| `PULUMICOST_VANTAGE_COST_REPORT_TOKEN` | Cost Report | `cr_*` | `cr_abc123` |
-| `PULUMICOST_VANTAGE_WORKSPACE_TOKEN` | Workspace | `ws_*` | `ws_xyz789` |
+| Variable                             | Purpose        | Format | Example           |
+| ------------------------------------ | -------------- | ------ | ----------------- |
+| `FINFOCUS_VANTAGE_TOKEN`             | Main API token | String | `vantage_3f4g...` |
+| `FINFOCUS_VANTAGE_COST_REPORT_TOKEN` | Cost Report    | `cr_*` | `cr_abc123`       |
+| `FINFOCUS_VANTAGE_WORKSPACE_TOKEN`   | Workspace      | `ws_*` | `ws_xyz789`       |
 
 ### Setting Environment Variables
 
 **Bash/Zsh:**
 
 ```bash
-export PULUMICOST_VANTAGE_TOKEN="your_token"
+export FINFOCUS_VANTAGE_TOKEN="your_token"
 
 # Persist in shell profile
-echo 'export PULUMICOST_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
+echo 'export FINFOCUS_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
 **Fish Shell:**
 
 ```fish
-set -Ux PULUMICOST_VANTAGE_TOKEN "your_token"
+set -Ux FINFOCUS_VANTAGE_TOKEN "your_token"
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-$env:PULUMICOST_VANTAGE_TOKEN="your_token"
+$env:FINFOCUS_VANTAGE_TOKEN="your_token"
 
 # Persist for user
-[Environment]::SetEnvironmentVariable("PULUMICOST_VANTAGE_TOKEN", "your_token", "User")
+[Environment]::SetEnvironmentVariable("FINFOCUS_VANTAGE_TOKEN", "your_token", "User")
 ```
 
 ### Verifying Environment Variables
 
 ```bash
 # Check if set
-echo $PULUMICOST_VANTAGE_TOKEN
+echo $FINFOCUS_VANTAGE_TOKEN
 
 # Should output your token (not empty)
 # If empty, token not set
@@ -220,17 +220,17 @@ Store Vantage tokens in AWS Secrets Manager:
 ```bash
 # Store secret
 aws secretsmanager create-secret \
-  --name pulumicost/vantage/token \
+  --name finfocus/vantage/token \
   --secret-string "your_vantage_token"
 
 # Retrieve and use
-export PULUMICOST_VANTAGE_TOKEN=$(aws secretsmanager get-secret-value \
-  --secret-id pulumicost/vantage/token \
+export FINFOCUS_VANTAGE_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id finfocus/vantage/token \
   --query SecretString \
   --output text)
 
 # Run plugin
-pulumicost-vantage pull --config config.yaml
+finfocus-vantage pull --config config.yaml
 ```
 
 ### HashiCorp Vault
@@ -239,13 +239,13 @@ Store tokens in Vault:
 
 ```bash
 # Store secret
-vault kv put secret/pulumicost/vantage token="your_vantage_token"
+vault kv put secret/finfocus/vantage token="your_vantage_token"
 
 # Retrieve and use
-export PULUMICOST_VANTAGE_TOKEN=$(vault kv get -field=token secret/pulumicost/vantage)
+export FINFOCUS_VANTAGE_TOKEN=$(vault kv get -field=token secret/finfocus/vantage)
 
 # Run plugin
-pulumicost-vantage pull --config config.yaml
+finfocus-vantage pull --config config.yaml
 ```
 
 ### Kubernetes Secrets
@@ -256,12 +256,12 @@ Store as Kubernetes secret for containerized deployments:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: pulumicost-vantage
+  name: finfocus-vantage
   namespace: default
 type: Opaque
 stringData:
-  token: "your_vantage_token"
-  cost_report_token: "cr_abc123def456"
+  token: 'your_vantage_token'
+  cost_report_token: 'cr_abc123def456'
 ```
 
 Reference in pod:
@@ -270,27 +270,27 @@ Reference in pod:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: pulumicost-vantage-sync
+  name: finfocus-vantage-sync
 spec:
-  schedule: "0 2 * * *"
+  schedule: '0 2 * * *'
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: vantage-sync
-            image: pulumicost-vantage:latest
-            env:
-            - name: PULUMICOST_VANTAGE_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: pulumicost-vantage
-                  key: token
-            - name: PULUMICOST_VANTAGE_COST_REPORT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: pulumicost-vantage
-                  key: cost_report_token
+            - name: vantage-sync
+              image: finfocus-vantage:latest
+              env:
+                - name: FINFOCUS_VANTAGE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: finfocus-vantage
+                      key: token
+                - name: FINFOCUS_VANTAGE_COST_REPORT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: finfocus-vantage
+                      key: cost_report_token
 ```
 
 ### Docker Secrets
@@ -303,10 +303,10 @@ echo "your_vantage_token" | docker secret create vantage_token -
 
 # Use in service
 docker service create \
-  --name pulumicost-vantage \
+  --name finfocus-vantage \
   --secret vantage_token \
-  --env PULUMICOST_VANTAGE_TOKEN_FILE=/run/secrets/vantage_token \
-  pulumicost-vantage:latest
+  --env FINFOCUS_VANTAGE_TOKEN_FILE=/run/secrets/vantage_token \
+  finfocus-vantage:latest
 ```
 
 ---
@@ -336,11 +336,11 @@ docker service create \
 
 ```yaml
 credentials:
-  token: ${PULUMICOST_VANTAGE_TOKEN}
+  token: ${FINFOCUS_VANTAGE_TOKEN}
 
 params:
-  cost_report_token: "cr_abc123def456"  # Preferred
-  granularity: "day"
+  cost_report_token: 'cr_abc123def456' # Preferred
+  granularity: 'day'
 ```
 
 ### Workspace Token (Fallback)
@@ -365,11 +365,11 @@ params:
 
 ```yaml
 credentials:
-  token: ${PULUMICOST_VANTAGE_TOKEN}
+  token: ${FINFOCUS_VANTAGE_TOKEN}
 
 params:
-  workspace_token: "ws_xyz789ghi012"  # Fallback
-  granularity: "day"
+  workspace_token: 'ws_xyz789ghi012' # Fallback
+  granularity: 'day'
 ```
 
 ---
@@ -381,32 +381,27 @@ params:
 1. **Use Environment Variables**
 
    ```bash
-   export PULUMICOST_VANTAGE_TOKEN="your_token"
+   export FINFOCUS_VANTAGE_TOKEN="your_token"
    ```
 
 2. **Prefer Cost Report Tokens**
-
    - Narrowest scope principle
    - Better security posture
 
 3. **Rotate Tokens Regularly**
-
    - Every 90 days recommended
    - Immediately upon suspected compromise
 
 4. **Use Secrets Management Systems**
-
    - AWS Secrets Manager
    - HashiCorp Vault
    - Kubernetes Secrets
 
 5. **Restrict Token Permissions**
-
    - Read-only cost access
    - No write or admin permissions
 
 6. **Monitor Token Usage**
-
    - Review API access logs
    - Alert on suspicious patterns
    - Track token activity
@@ -415,13 +410,13 @@ params:
 
    ```bash
    # Production
-   export PULUMICOST_VANTAGE_TOKEN="$PROD_TOKEN"
+   export FINFOCUS_VANTAGE_TOKEN="$PROD_TOKEN"
 
    # Staging
-   export PULUMICOST_VANTAGE_TOKEN="$STAGING_TOKEN"
+   export FINFOCUS_VANTAGE_TOKEN="$STAGING_TOKEN"
 
    # Development
-   export PULUMICOST_VANTAGE_TOKEN="$DEV_TOKEN"
+   export FINFOCUS_VANTAGE_TOKEN="$DEV_TOKEN"
    ```
 
 ### Don'ts ❌
@@ -431,7 +426,7 @@ params:
    ```yaml
    # BAD - Don't do this
    credentials:
-     token: "vantage_actual_token_value"
+     token: 'vantage_actual_token_value'
    ```
 
 2. **Never Commit Tokens to Git**
@@ -447,22 +442,19 @@ params:
 
    ```bash
    # BAD - Tokens may leak in logs
-   echo "Token: $PULUMICOST_VANTAGE_TOKEN"
+   echo "Token: $FINFOCUS_VANTAGE_TOKEN"
    ```
 
 4. **Never Share Tokens via Email/Chat**
-
    - Use secrets management systems
    - Share securely via 1Password/LastPass
    - Generate new token for recipient
 
 5. **Never Use Workspace Tokens When Cost Report Available**
-
    - Prefer narrower scope
    - Better security and performance
 
 6. **Never Reuse Tokens Across Environments**
-
    - Separate tokens for dev/staging/prod
    - Limits blast radius of compromise
 
@@ -485,21 +477,21 @@ params:
 1. Log into Vantage console
 2. Navigate to **Settings** → **API Tokens**
 3. Generate new token with same permissions
-4. Name it with rotation date (e.g., `pulumicost-2024-Q1`)
+4. Name it with rotation date (e.g., `finfocus-2024-Q1`)
 
 #### Step 2: Update Secrets Management
 
 ```bash
 # AWS Secrets Manager
 aws secretsmanager update-secret \
-  --secret-id pulumicost/vantage/token \
+  --secret-id finfocus/vantage/token \
   --secret-string "new_token_value"
 
 # HashiCorp Vault
-vault kv put secret/pulumicost/vantage token="new_token_value"
+vault kv put secret/finfocus/vantage token="new_token_value"
 
 # Kubernetes
-kubectl create secret generic pulumicost-vantage \
+kubectl create secret generic finfocus-vantage \
   --from-literal=token="new_token_value" \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
@@ -508,8 +500,8 @@ kubectl create secret generic pulumicost-vantage \
 
 ```bash
 # Test new token
-export PULUMICOST_VANTAGE_TOKEN="new_token_value"
-curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+export FINFOCUS_VANTAGE_TOKEN="new_token_value"
+curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
   https://api.vantage.sh/costs
 
 # Expected: 200 OK
@@ -519,10 +511,10 @@ curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
 
 ```bash
 # Restart services using the token
-systemctl restart pulumicost-vantage
+systemctl restart finfocus-vantage
 
 # Or for Kubernetes
-kubectl rollout restart deployment/pulumicost-vantage
+kubectl rollout restart deployment/finfocus-vantage
 ```
 
 #### Step 5: Revoke Old Token
@@ -537,10 +529,10 @@ kubectl rollout restart deployment/pulumicost-vantage
 
 ```bash
 # Check logs for auth errors
-journalctl -u pulumicost-vantage -n 50
+journalctl -u finfocus-vantage -n 50
 
 # Or for Kubernetes
-kubectl logs -l app=pulumicost-vantage --tail=50
+kubectl logs -l app=finfocus-vantage --tail=50
 ```
 
 ### Emergency Rotation
@@ -578,13 +570,13 @@ Failed to authenticate with Vantage API
 1. Verify token is set:
 
    ```bash
-   echo $PULUMICOST_VANTAGE_TOKEN
+   echo $FINFOCUS_VANTAGE_TOKEN
    ```
 
 2. Test token validity:
 
    ```bash
-   curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+   curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
      https://api.vantage.sh/costs
    ```
 
@@ -617,7 +609,7 @@ Insufficient permissions to access cost data
 **Symptoms:**
 
 ```text
-Error: PULUMICOST_VANTAGE_TOKEN environment variable not set
+Error: FINFOCUS_VANTAGE_TOKEN environment variable not set
 ```
 
 **Solutions:**
@@ -625,19 +617,19 @@ Error: PULUMICOST_VANTAGE_TOKEN environment variable not set
 1. Set environment variable:
 
    ```bash
-   export PULUMICOST_VANTAGE_TOKEN="your_token"
+   export FINFOCUS_VANTAGE_TOKEN="your_token"
    ```
 
 2. Verify it's set:
 
    ```bash
-   echo $PULUMICOST_VANTAGE_TOKEN
+   echo $FINFOCUS_VANTAGE_TOKEN
    ```
 
 3. Ensure it persists across sessions:
 
    ```bash
-   echo 'export PULUMICOST_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
+   echo 'export FINFOCUS_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
    source ~/.bashrc
    ```
 
@@ -661,16 +653,16 @@ Error: Invalid token format
 
    ```bash
    # Cost Report Token should start with cr_
-   echo $PULUMICOST_VANTAGE_TOKEN | grep "^cr_"
+   echo $FINFOCUS_VANTAGE_TOKEN | grep "^cr_"
 
    # Workspace Token should start with ws_
-   echo $PULUMICOST_VANTAGE_TOKEN | grep "^ws_"
+   echo $FINFOCUS_VANTAGE_TOKEN | grep "^ws_"
    ```
 
 2. Ensure no whitespace:
 
    ```bash
-   export PULUMICOST_VANTAGE_TOKEN=$(echo "your_token" | tr -d '[:space:]')
+   export FINFOCUS_VANTAGE_TOKEN=$(echo "your_token" | tr -d '[:space:]')
    ```
 
 ---

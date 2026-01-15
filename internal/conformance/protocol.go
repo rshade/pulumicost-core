@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 // testNameReturnsIdentifier verifies that the plugin's Name RPC returns a non-empty identifier.

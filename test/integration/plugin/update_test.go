@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // setupPluginWithConfig installs a mock plugin and adds it to config.
 // This is needed because Update requires the plugin to be in config.
-// The configDir should be the HOME directory (config is stored at ~/.pulumicost/config.yaml).
+// The configDir should be the HOME directory (config is stored at ~/.finfocus/config.yaml).
 //
 //nolint:unparam // version parameter is intentionally consistent in test setup
 func setupPluginWithConfig(t *testing.T, pluginDir, homeDir, name, version, repoURL string) {
@@ -26,11 +26,11 @@ func setupPluginWithConfig(t *testing.T, pluginDir, homeDir, name, version, repo
 
 	// Create config directory and file with plugin entry
 	// The config package expects "installed_plugins" key at root level
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	require.NoError(t, os.MkdirAll(pulumicostDir, 0755))
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	require.NoError(t, os.MkdirAll(finfocusDir, 0755))
 
-	configPath := filepath.Join(pulumicostDir, "config.yaml")
-	configContent := `# PulumiCost Configuration
+	configPath := filepath.Join(finfocusDir, "config.yaml")
+	configContent := `# FinFocus Configuration
 installed_plugins:
   - name: ` + name + `
     url: ` + repoURL + `
@@ -55,7 +55,7 @@ func TestPluginUpdate_ToLatest(t *testing.T) {
 	t.Setenv("HOME", homeDir)
 
 	// Pre-install v1.0.0 with config
-	repoURL := "github.com/example/pulumicost-plugin-updatable"
+	repoURL := "github.com/example/finfocus-plugin-updatable"
 	setupPluginWithConfig(t, pluginDir, homeDir, "updatable", "v1.0.0", repoURL)
 
 	// Create installer with mock client
@@ -102,7 +102,7 @@ func TestPluginUpdate_SpecificVersion(t *testing.T) {
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 
-	repoURL := "github.com/example/pulumicost-plugin-specific-update"
+	repoURL := "github.com/example/finfocus-plugin-specific-update"
 	setupPluginWithConfig(t, pluginDir, homeDir, "specific-update", "v1.0.0", repoURL)
 
 	client := registry.NewGitHubClient()
@@ -143,7 +143,7 @@ func TestPluginUpdate_DryRun(t *testing.T) {
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 
-	repoURL := "github.com/example/pulumicost-plugin-dryrun-test"
+	repoURL := "github.com/example/finfocus-plugin-dryrun-test"
 	setupPluginWithConfig(t, pluginDir, homeDir, "dryrun-test", "v1.0.0", repoURL)
 
 	client := registry.NewGitHubClient()
@@ -200,7 +200,7 @@ func TestPluginUpdate_AlreadyUpToDate(t *testing.T) {
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 
-	repoURL := "github.com/example/pulumicost-plugin-uptodate"
+	repoURL := "github.com/example/finfocus-plugin-uptodate"
 	setupPluginWithConfig(t, pluginDir, homeDir, "uptodate", "v1.0.0", repoURL)
 
 	client := registry.NewGitHubClient()
@@ -234,9 +234,9 @@ func TestPluginUpdate_NonExistent(t *testing.T) {
 	t.Setenv("HOME", homeDir)
 
 	// Create an empty config file (no plugins installed)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	require.NoError(t, os.MkdirAll(pulumicostDir, 0755))
-	configPath := filepath.Join(pulumicostDir, "config.yaml")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	require.NoError(t, os.MkdirAll(finfocusDir, 0755))
+	configPath := filepath.Join(finfocusDir, "config.yaml")
 	require.NoError(t, os.WriteFile(configPath, []byte("# Empty config\n"), 0644))
 
 	client := registry.NewGitHubClient()
@@ -267,7 +267,7 @@ func TestPluginUpdate_ProgressCallback(t *testing.T) {
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 
-	repoURL := "github.com/example/pulumicost-plugin-progress-update"
+	repoURL := "github.com/example/finfocus-plugin-progress-update"
 	setupPluginWithConfig(t, pluginDir, homeDir, "progress-update", "v1.0.0", repoURL)
 
 	client := registry.NewGitHubClient()
@@ -303,7 +303,7 @@ func TestPluginUpdate_RemovesOldVersion(t *testing.T) {
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 
-	repoURL := "github.com/example/pulumicost-plugin-remove-old"
+	repoURL := "github.com/example/finfocus-plugin-remove-old"
 	setupPluginWithConfig(t, pluginDir, homeDir, "remove-old", "v1.0.0", repoURL)
 
 	// Verify old version exists before update

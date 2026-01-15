@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/proto"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/proto"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"google.golang.org/grpc"
 )
 

@@ -9,7 +9,7 @@
 The package is part of the internal codebase. Import it in your CLI commands:
 
 ```go
-import "github.com/pulumi/pulumicost/internal/tui"
+import "github.com/pulumi/finfocus/internal/tui"
 ```
 
 ## Basic Usage

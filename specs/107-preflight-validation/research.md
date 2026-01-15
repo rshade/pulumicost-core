@@ -7,7 +7,7 @@
 
 ### pluginsdk Validation Functions
 
-**Decision**: Use `pluginsdk.ValidateProjectedCostRequest()` and `pluginsdk.ValidateActualCostRequest()` from pulumicost-spec v0.4.11+.
+**Decision**: Use `pluginsdk.ValidateProjectedCostRequest()` and `pluginsdk.ValidateActualCostRequest()` from finfocus-spec v0.4.11+.
 
 **Rationale**:
 
@@ -63,10 +63,10 @@
 
 ```go
 // Current import (for mapping)
-import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
+import "github.com/rshade/finfocus-spec/sdk/go/pluginsdk/mapping"
 
 // New import needed (for validation)
-import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+import "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 ```
 
 Both imports can coexist since `mapping` is a subpackage.

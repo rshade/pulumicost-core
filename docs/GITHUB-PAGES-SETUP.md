@@ -1,10 +1,10 @@
 # GitHub Pages Setup Guide
 
-This document explains how to set up GitHub Pages for PulumiCost documentation.
+This document explains how to set up GitHub Pages for FinFocus documentation.
 
 ## Overview
 
-PulumiCost documentation is deployed to GitHub Pages from the `docs/` directory using Jekyll.
+FinFocus documentation is deployed to GitHub Pages from the `docs/` directory using Jekyll.
 This guide shows how to configure the repository for automatic deployment.
 
 ## Prerequisites
@@ -41,7 +41,7 @@ If using a custom domain:
 1. Create a `docs/CNAME` file with your domain:
 
    ```text
-   docs.pulumicost.com
+   docs.finfocus.com
    ```
 
 2. Configure domain in **Settings** → **Pages**:
@@ -58,8 +58,8 @@ After push to main:
 2. Look for "Build & Deploy Documentation" workflow
 3. Verify workflow completes successfully
 4. Visit GitHub Pages URL:
-   - Default: `https://rshade.github.io/pulumicost-core/`
-   - Custom domain: `https://docs.pulumicost.com/`
+   - Default: `https://rshade.github.io/finfocus/`
+   - Custom domain: `https://docs.finfocus.com/`
 
 ---
 
@@ -70,7 +70,7 @@ After push to main:
 **Check workflow permissions:**
 
 ```bash
-gh api repos/rshade/pulumicost-core/actions/permissions
+gh api repos/rshade/finfocus/actions/permissions
 ```
 
 ### Build Fails
@@ -120,7 +120,7 @@ bundle exec jekyll build
 View all deployments:
 
 ```bash
-gh deployment list --repo rshade/pulumicost-core
+gh deployment list --repo rshade/finfocus
 ```
 
 ### View Site Analytics
@@ -148,7 +148,7 @@ git push origin main
 
 ### Key Files
 
-- **docs/_config.yml** - Jekyll configuration
+- **docs/\_config.yml** - Jekyll configuration
 - **docs/Gemfile** - Ruby dependencies
 - **docs/.markdownlintrc.json** - Markdown linting
 - **.github/workflows/docs-build-deploy.yml** - Deployment workflow

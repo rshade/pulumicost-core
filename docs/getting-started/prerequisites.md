@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Prerequisites
-description: System requirements and dependencies for PulumiCost
+description: System requirements and dependencies for FinFocus
 ---
 
 ## System Requirements
@@ -23,7 +23,7 @@ description: System requirements and dependencies for PulumiCost
 
 ### Pulumi CLI
 
-PulumiCost works with existing Pulumi projects.
+FinFocus works with existing Pulumi projects.
 
 ```bash
 # Check if installed
@@ -105,7 +105,7 @@ Requires plugin credentials:
 **"Permission denied" on binary**
 
 ```bash
-chmod +x pulumicost
+chmod +x finfocus
 ```
 
 **"No space left on device"**

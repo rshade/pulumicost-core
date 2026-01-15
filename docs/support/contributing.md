@@ -1,10 +1,10 @@
 ---
-title: Contributing to PulumiCost Core
-description: Contributing guidelines for PulumiCost Core
+title: Contributing to FinFocus Core
+description: Contributing guidelines for FinFocus Core
 layout: default
 ---
 
-Thank you for your interest in contributing to PulumiCost Core! This document
+Thank you for your interest in contributing to FinFocus Core! This document
 provides guidelines and instructions for contributing code, documentation, and
 feedback.
 
@@ -23,9 +23,9 @@ feedback.
 
 This project is licensed under the **Apache License 2.0**.
 
-By contributing to PulumiCost Core, you agree that your contributions will be
+By contributing to FinFocus Core, you agree that your contributions will be
 licensed under the same terms. See the
-[LICENSE](https://github.com/rshade/pulumicost-core/blob/main/LICENSE) file for
+[LICENSE](https://github.com/rshade/finfocus/blob/main/LICENSE) file for
 the full license text.
 
 ## Contribution Types
@@ -96,8 +96,8 @@ npm install -g markdownlint-cli@0.45.0
 
 ```bash
 # Clone the repository
-git clone https://github.com/rshade/pulumicost-core.git
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus.git
+cd finfocus
 
 # Download dependencies
 go mod download
@@ -106,7 +106,7 @@ go mod download
 make build
 
 # Verify the build
-./bin/pulumicost --help
+./bin/finfocus --help
 ```
 
 ### Make Targets Reference
@@ -117,7 +117,7 @@ Run `make help` for a complete list. All available targets:
 
 | Target           | Description                                         |
 | ---------------- | --------------------------------------------------- |
-| `make build`     | Build the `pulumicost` binary to `bin/pulumicost`   |
+| `make build`     | Build the `finfocus` binary to `bin/finfocus`       |
 | `make test`      | Run all unit tests                                  |
 | `make test-race` | Run tests with Go race detector enabled             |
 | `make lint`      | Run Go linters (golangci-lint) and Markdown linters |
@@ -235,7 +235,7 @@ All specifications, plans, and templates are stored in the `.specify/` directory
 **Important**: All feature work must follow these core principles and quality gates:
 
 1. **Statelessness**: Core must remain stateless - no persistent storage in-core
-2. **Plugin Protocol First**: Changes to functionality require spec updates in pulumicost-spec
+2. **Plugin Protocol First**: Changes to functionality require spec updates in finfocus-spec
 3. **Test Coverage**: Minimum 80% overall, 95% for critical paths
 4. **Documentation**: Exported symbols require docstrings
 5. **Code Quality**: Must pass golangci-lint, go vet, and gofmt checks
@@ -298,7 +298,7 @@ For detailed testing instructions, see the [Testing Guide](../testing/guide.md).
 
 ### Running Fuzz Tests
 
-PulumiCost uses Go's native fuzzing (Go 1.25+) to test parser resilience:
+FinFocus uses Go's native fuzzing (Go 1.25+) to test parser resilience:
 
 ```bash
 # Run JSON parser fuzz test (30 seconds)
@@ -332,7 +332,7 @@ interesting inputs discovered during fuzzing to these directories.
 
 ### Running Benchmarks
 
-PulumiCost includes performance benchmarks for scalability testing:
+FinFocus includes performance benchmarks for scalability testing:
 
 ```bash
 # Run all benchmarks
@@ -442,20 +442,20 @@ analysis workflow:
 
 ## Project Architecture
 
-PulumiCost operates as a three-repository ecosystem:
+FinFocus operates as a three-repository ecosystem:
 
-| Repository                  | Purpose                                     |
-| --------------------------- | ------------------------------------------- |
-| [pulumicost-core][core]     | CLI tool, plugin host, orchestration engine |
-| [pulumicost-spec][spec]     | Protocol buffer definitions, SDK generation |
-| [pulumicost-plugin][plugin] | Plugin implementations (Kubecost, Vantage)  |
+| Repository                | Purpose                                     |
+| ------------------------- | ------------------------------------------- |
+| [finfocus][core]     | CLI tool, plugin host, orchestration engine |
+| [finfocus-spec][spec]     | Protocol buffer definitions, SDK generation |
+| [finfocus-plugin][plugin] | Plugin implementations (Kubecost, Vantage)  |
 
-[core]: https://github.com/rshade/pulumicost-core
-[spec]: https://github.com/rshade/pulumicost-spec
-[plugin]: https://github.com/rshade/pulumicost-plugin
+[core]: https://github.com/rshade/finfocus
+[spec]: https://github.com/rshade/finfocus-spec
+[plugin]: https://github.com/rshade/finfocus-plugin
 
 Cross-repository changes require coordination. All changes to the plugin protocol
-must be proposed in the pulumicost-spec repository first, then synchronized to
+must be proposed in the finfocus-spec repository first, then synchronized to
 core and plugin implementations.
 
 ## Getting Help
@@ -478,4 +478,4 @@ all experience levels and backgrounds.
 
 ---
 
-Thank you for contributing to PulumiCost Core!
+Thank you for contributing to FinFocus Core!

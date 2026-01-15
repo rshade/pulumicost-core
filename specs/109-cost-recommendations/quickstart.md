@@ -33,13 +33,13 @@ make test
 
 ```bash
 # Basic recommendations (current behavior)
-./bin/pulumicost cost recommendations --pulumi-json examples/plans/aws-simple-plan.json
+./bin/finfocus cost recommendations --pulumi-json examples/plans/aws-simple-plan.json
 
 # With action type filter
-./bin/pulumicost cost recommendations --pulumi-json examples/plans/aws-simple-plan.json --filter "action=RIGHTSIZE"
+./bin/finfocus cost recommendations --pulumi-json examples/plans/aws-simple-plan.json --filter "action=RIGHTSIZE"
 
 # JSON output
-./bin/pulumicost cost recommendations --pulumi-json examples/plans/aws-simple-plan.json --output json
+./bin/finfocus cost recommendations --pulumi-json examples/plans/aws-simple-plan.json --output json
 ```
 
 ## Development Workflow
@@ -66,10 +66,10 @@ cmd.Flags().BoolVar(&params.verbose, "verbose", false, "Show all recommendations
 
 ```bash
 # Summary mode (default - top 5)
-./bin/pulumicost cost recommendations --pulumi-json plan.json
+./bin/finfocus cost recommendations --pulumi-json plan.json
 
 # Verbose mode (all recommendations)
-./bin/pulumicost cost recommendations --pulumi-json plan.json --verbose
+./bin/finfocus cost recommendations --pulumi-json plan.json --verbose
 ```
 
 ### Phase 2: TUI Model
@@ -85,7 +85,7 @@ import (
     "github.com/charmbracelet/bubbles/table"
     "github.com/charmbracelet/bubbles/textinput"
     tea "github.com/charmbracelet/bubbletea"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
 )
 
 type RecommendationsViewModel struct {
@@ -125,7 +125,7 @@ package tui
 
 import (
     "github.com/charmbracelet/bubbles/table"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
 )
 
 func NewRecommendationsTable(recs []engine.Recommendation, height int) table.Model {
@@ -184,13 +184,13 @@ go tool cover -html=coverage.out
 
 ```bash
 # Interactive mode (in TTY)
-./bin/pulumicost cost recommendations --pulumi-json plan.json
+./bin/finfocus cost recommendations --pulumi-json plan.json
 
 # Plain mode (bypass TTY)
-./bin/pulumicost cost recommendations --pulumi-json plan.json --plain
+./bin/finfocus cost recommendations --pulumi-json plan.json --plain
 
 # Pipe to check plain text works
-./bin/pulumicost cost recommendations --pulumi-json plan.json | cat
+./bin/finfocus cost recommendations --pulumi-json plan.json | cat
 ```
 
 ## Key Patterns to Follow
@@ -198,7 +198,7 @@ go tool cover -html=coverage.out
 ### 1. Reuse Existing Styles
 
 ```go
-import "github.com/rshade/pulumicost-core/internal/tui"
+import "github.com/rshade/finfocus/internal/tui"
 
 // Use existing styles
 tui.HeaderStyle.Render("RECOMMENDATIONS")
@@ -246,7 +246,7 @@ tui.RenderLoading(loading)
 
 ```bash
 # Force styled output (no interactivity)
-./bin/pulumicost cost recommendations --pulumi-json plan.json --no-color
+./bin/finfocus cost recommendations --pulumi-json plan.json --no-color
 
 # Check if running in TTY
 tty

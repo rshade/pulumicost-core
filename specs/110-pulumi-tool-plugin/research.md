@@ -26,19 +26,19 @@ Pulumi uses `PULUMI_HOME` as its primary override for the configuration director
 
 **Decision**:
 Precedence Order:
-1. `PULUMI_HOME/pulumicost/` (if `PULUMI_HOME` is set)
-2. `XDG_CONFIG_HOME/pulumicost/` (if `PULUMICOST_HOME` not set, standard Linux fallback)
-3. `~/.pulumicost` (Legacy/Default fallback)
+1. `PULUMI_HOME/finfocus/` (if `PULUMI_HOME` is set)
+2. `XDG_CONFIG_HOME/finfocus/` (if `FINFOCUS_HOME` not set, standard Linux fallback)
+3. `~/.finfocus` (Legacy/Default fallback)
 
 **Rationale**:
 This fulfills the requirement to be a "good citizen" in the Pulumi ecosystem (Scenario 3) while maintaining backward compatibility and standard Linux behavior when running standalone.
 
 ## Alternatives Considered
 
-- **Strict Pulumi Only**: Ignoring XDG entirely. Rejected because `pulumicost` is still a standalone tool and should behave like one when not acting as a plugin.
-- **Hidden Config (`.pulumicost`) inside `PULUMI_HOME`**: Rejected in favor of non-hidden `pulumicost` folder inside `PULUMI_HOME` as that directory is already a "config/state" root, so hiding files inside it is unnecessary (similar to how `~/.config/appname` is not hidden).
+- **Strict Pulumi Only**: Ignoring XDG entirely. Rejected because `finfocus` is still a standalone tool and should behave like one when not acting as a plugin.
+- **Hidden Config (`.finfocus`) inside `PULUMI_HOME`**: Rejected in favor of non-hidden `finfocus` folder inside `PULUMI_HOME` as that directory is already a "config/state" root, so hiding files inside it is unnecessary (similar to how `~/.config/appname` is not hidden).
 
 ## Implementation Details
 
 - **Binary Name Detection**: `filepath.Base(os.Args[0])` matches `pulumi-tool-cost` (ignoring case/extension).
-- **Env Var**: `PULUMICOST_PLUGIN_MODE=true` forces the behavior.
+- **Env Var**: `FINFOCUS_PLUGIN_MODE=true` forces the behavior.

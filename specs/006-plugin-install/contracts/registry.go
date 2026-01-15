@@ -25,7 +25,7 @@ type Installer interface {
 type InstallOptions struct {
 	Force     bool   // Reinstall even if version exists
 	NoSave    bool   // Don't add to config file
-	PluginDir string // Custom plugin directory (default: ~/.pulumicost/plugins)
+	PluginDir string // Custom plugin directory (default: ~/.finfocus/plugins)
 }
 
 // UpdateOptions configures plugin update behavior.

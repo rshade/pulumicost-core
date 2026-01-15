@@ -5,7 +5,7 @@ description: Common code patterns and real-world plugin implementations
 ---
 
 This document provides common code patterns, real-world examples, and best
-practices for PulumiCost plugin development based on actual plugin
+practices for FinFocus plugin development based on actual plugin
 implementations.
 
 ## Table of Contents
@@ -516,7 +516,7 @@ func LoadCredentials(pluginName string) (*Credentials, error) {
         return nil, fmt.Errorf("getting home dir: %w", err)
     }
 
-    configPath := filepath.Join(homeDir, ".pulumicost", "config.yaml")
+    configPath := filepath.Join(homeDir, ".finfocus", "config.yaml")
     data, err := os.ReadFile(configPath)
     if err != nil {
         return nil, fmt.Errorf("reading config: %w", err)
@@ -847,8 +847,8 @@ import (
     "context"
     "errors"
 
-    "github.com/rshade/pulumicost-core/pkg/pluginsdk"
-    pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+    "github.com/rshade/finfocus/pkg/pluginsdk"
+    pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 type AWSPlugin struct {

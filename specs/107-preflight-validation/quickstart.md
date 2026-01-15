@@ -12,7 +12,7 @@ Pre-flight validation catches malformed requests before they reach plugins, prov
 ### Before (without pre-flight validation)
 
 ```bash
-$ pulumicost cost projected --pulumi-json plan.json
+$ finfocus cost projected --pulumi-json plan.json
 
 # Generic error from plugin (after waiting for gRPC call)
 ERROR: rpc error: code = InvalidArgument desc = invalid request
@@ -21,7 +21,7 @@ ERROR: rpc error: code = InvalidArgument desc = invalid request
 ### After (with pre-flight validation)
 
 ```bash
-$ pulumicost cost projected --pulumi-json plan.json
+$ finfocus cost projected --pulumi-json plan.json
 
 # Clear validation error with guidance (no plugin call made)
 VALIDATION: SKU is empty: use mapping.ExtractAWSSKU() or mapping.ExtractSKU() to extract from resource properties
@@ -76,7 +76,7 @@ const db = new aws.rds.Instance("my-db", {
 ```bash
 # Option 1: Environment variable
 export AWS_REGION=us-east-1
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Option 2: Ensure Pulumi plan includes availabilityZone
 ```
@@ -89,10 +89,10 @@ pulumicost cost projected --pulumi-json plan.json
 
 ```bash
 # Wrong
-pulumicost cost actual --start 2025-01-15 --end 2025-01-01
+finfocus cost actual --start 2025-01-15 --end 2025-01-01
 
 # Correct
-pulumicost cost actual --start 2025-01-01 --end 2025-01-15
+finfocus cost actual --start 2025-01-01 --end 2025-01-15
 ```
 
 ## Debug Logging
@@ -100,7 +100,7 @@ pulumicost cost actual --start 2025-01-01 --end 2025-01-15
 Enable debug logging to see validation failures with full context:
 
 ```bash
-$ pulumicost cost projected --debug --pulumi-json plan.json
+$ finfocus cost projected --debug --pulumi-json plan.json
 
 # Log output includes:
 # {"level":"warn","resource_type":"aws:ec2:Instance","error":"SKU is empty...","trace_id":"...","message":"pre-flight validation failed"}
@@ -137,7 +137,7 @@ cat > test-plan.json << 'EOF'
 EOF
 
 # Run with validation
-pulumicost cost projected --pulumi-json test-plan.json
+finfocus cost projected --pulumi-json test-plan.json
 
 # Expected: VALIDATION error for missing instanceType (SKU)
 ```

@@ -1,6 +1,6 @@
 # Integration Tests
 
-This directory contains integration tests for PulumiCost Core, verifying cross-component communication and end-to-end workflows.
+This directory contains integration tests for FinFocus Core, verifying cross-component communication and end-to-end workflows.
 
 ## Test Organization
 

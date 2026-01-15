@@ -1,11 +1,11 @@
 ---
 layout: default
 title: Vantage Plugin Troubleshooting
-description: Common issues, solutions, and support paths for the PulumiCost Vantage plugin
+description: Common issues, solutions, and support paths for the FinFocus Vantage plugin
 ---
 
 This guide helps diagnose and resolve common issues with the Vantage plugin
-for PulumiCost.
+for FinFocus.
 
 ## Table of Contents
 
@@ -41,14 +41,14 @@ Failed to authenticate with Vantage API
 1. Verify token is set:
 
    ```bash
-   echo $PULUMICOST_VANTAGE_TOKEN
+   echo $FINFOCUS_VANTAGE_TOKEN
    # Should output your token (not empty)
    ```
 
 2. Test token validity:
 
    ```bash
-   curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+   curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
      https://api.vantage.sh/costs
    # Expected: 200 OK or 400 (bad params), NOT 401
    ```
@@ -57,7 +57,7 @@ Failed to authenticate with Vantage API
    - Log into Vantage console
    - Navigate to **Settings** → **API Tokens**
    - Generate new token
-   - Update `PULUMICOST_VANTAGE_TOKEN` environment variable
+   - Update `FINFOCUS_VANTAGE_TOKEN` environment variable
 
 4. Verify token permissions:
    - Token must have **read-only cost access**
@@ -106,20 +106,20 @@ Error: config file not found at: config.yaml
 1. Verify file exists:
 
    ```bash
-   ls -la ~/.pulumicost/plugins/vantage/config.yaml
+   ls -la ~/.finfocus/plugins/vantage/config.yaml
    ```
 
 2. Check file path:
 
    ```bash
-   pulumicost-vantage pull --config /full/path/to/config.yaml
+   finfocus-vantage pull --config /full/path/to/config.yaml
    ```
 
 3. Create configuration if missing:
 
    ```bash
-   mkdir -p ~/.pulumicost/plugins/vantage
-   cp config.example.yaml ~/.pulumicost/plugins/vantage/config.yaml
+   mkdir -p ~/.finfocus/plugins/vantage
+   cp config.example.yaml ~/.finfocus/plugins/vantage/config.yaml
    ```
 
 ---
@@ -138,19 +138,19 @@ YAML syntax error at line 10
 1. Validate YAML syntax:
 
    ```bash
-   yamllint ~/.pulumicost/plugins/vantage/config.yaml
+   yamllint ~/.finfocus/plugins/vantage/config.yaml
    ```
 
 2. Check required fields:
 
    ```yaml
-   version: 0.1          # Required
-   source: vantage       # Required
+   version: 0.1 # Required
+   source: vantage # Required
    credentials:
-     token: ${...}       # Required
+     token: ${...} # Required
    params:
-     cost_report_token: "cr_..."  # Required
-     granularity: "day"           # Required
+     cost_report_token: 'cr_...' # Required
+     granularity: 'day' # Required
    ```
 
 3. Common YAML mistakes:
@@ -166,7 +166,7 @@ YAML syntax error at line 10
 **Symptoms:**
 
 ```text
-Error: PULUMICOST_VANTAGE_TOKEN environment variable not set
+Error: FINFOCUS_VANTAGE_TOKEN environment variable not set
 ```
 
 **Solutions:**
@@ -174,19 +174,19 @@ Error: PULUMICOST_VANTAGE_TOKEN environment variable not set
 1. Set environment variable:
 
    ```bash
-   export PULUMICOST_VANTAGE_TOKEN="your_token"
+   export FINFOCUS_VANTAGE_TOKEN="your_token"
    ```
 
 2. Verify it's set:
 
    ```bash
-   echo $PULUMICOST_VANTAGE_TOKEN
+   echo $FINFOCUS_VANTAGE_TOKEN
    ```
 
 3. Persist across sessions:
 
    ```bash
-   echo 'export PULUMICOST_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
+   echo 'export FINFOCUS_VANTAGE_TOKEN="your_token"' >> ~/.bashrc
    source ~/.bashrc
    ```
 
@@ -217,7 +217,7 @@ No cost records found for specified date range
 
    ```yaml
    params:
-     cost_report_token: "cr_valid_token_here"
+     cost_report_token: 'cr_valid_token_here'
    ```
 
 3. Ensure Cost Report has data for selected providers
@@ -273,7 +273,7 @@ The plugin automatically retries 429 responses with exponential backoff:
 
    ```yaml
    params:
-     page_size: 10000        # Larger pages = fewer requests
+     page_size: 10000 # Larger pages = fewer requests
    ```
 
 4. Reduce data dimensionality:
@@ -316,10 +316,10 @@ The plugin automatically retries 429 responses with exponential backoff:
    ```yaml
    params:
      metrics:
-       - cost           # Available for all
-       - usage          # Available for all
+       - cost # Available for all
+       - usage # Available for all
        - amortized_cost # AWS, GCP, Azure only
-       - taxes          # AWS, Azure only
+       - taxes # AWS, Azure only
    ```
 
 3. Check tag configuration:
@@ -327,7 +327,7 @@ The plugin automatically retries 429 responses with exponential backoff:
    ```yaml
    params:
      group_bys:
-       - tags           # Must be present for tags
+       - tags # Must be present for tags
    ```
 
 4. Review Vantage console for data availability
@@ -350,7 +350,7 @@ The plugin automatically retries 429 responses with exponential backoff:
 
    ```yaml
    params:
-     page_size: 10000     # Max: 10,000
+     page_size: 10000 # Max: 10,000
    ```
 
 2. Reduce dimensions:
@@ -367,7 +367,7 @@ The plugin automatically retries 429 responses with exponential backoff:
 
    ```yaml
    params:
-     granularity: "month"
+     granularity: 'month'
    ```
 
 4. Chunk large imports:
@@ -375,7 +375,7 @@ The plugin automatically retries 429 responses with exponential backoff:
    ```bash
    # Import monthly instead of yearly
    for m in {01..12}; do
-     pulumicost-vantage pull \
+     finfocus-vantage pull \
        --config config.yaml \
        --start-date "2024-$m-01" \
        --end-date "2024-$m-31"
@@ -387,8 +387,8 @@ The plugin automatically retries 429 responses with exponential backoff:
    ```yaml
    params:
      tag_prefix_filters:
-       - "user:"
-       - "cost-center:"
+       - 'user:'
+       - 'cost-center:'
    ```
 
 ---
@@ -407,7 +407,7 @@ The plugin automatically retries 429 responses with exponential backoff:
 
    ```yaml
    params:
-     page_size: 1000      # Conservative (vs 5000 default)
+     page_size: 1000 # Conservative (vs 5000 default)
    ```
 
 2. Reduce dimensions:
@@ -423,21 +423,21 @@ The plugin automatically retries 429 responses with exponential backoff:
 3. Monitor resources:
 
    ```bash
-   watch -n 1 'ps aux | grep pulumicost-vantage'
+   watch -n 1 'ps aux | grep finfocus-vantage'
    ```
 
 4. Use monthly granularity:
 
    ```yaml
    params:
-     granularity: "month"
+     granularity: 'month'
    ```
 
 ---
 
 ## Plugin Integration Issues
 
-### Issue: Plugin Not Recognized by PulumiCost
+### Issue: Plugin Not Recognized by FinFocus
 
 **Symptoms:**
 
@@ -450,26 +450,26 @@ Error: plugin 'vantage' not found
 1. Verify plugin installation:
 
    ```bash
-   pulumicost plugin list
+   finfocus plugin list
    # Should show: vantage v0.1.0
    ```
 
 2. Check plugin directory:
 
    ```bash
-   ls -la ~/.pulumicost/plugins/vantage/
+   ls -la ~/.finfocus/plugins/vantage/
    ```
 
 3. Reinstall plugin:
 
    ```bash
-   pulumicost plugin install vantage
+   finfocus plugin install vantage
    ```
 
 4. Verify binary executable:
 
    ```bash
-   chmod +x ~/.pulumicost/plugins/vantage/pulumicost-vantage
+   chmod +x ~/.finfocus/plugins/vantage/finfocus-vantage
    ```
 
 ---
@@ -495,20 +495,20 @@ Failed to communicate with vantage plugin
 1. Test plugin directly:
 
    ```bash
-   ~/.pulumicost/plugins/vantage/pulumicost-vantage --version
+   ~/.finfocus/plugins/vantage/finfocus-vantage --version
    ```
 
 2. Check plugin logs:
 
    ```bash
-   pulumicost cost actual --plugin vantage --debug
+   finfocus cost actual --plugin vantage --debug
    ```
 
 3. Restart plugin host:
 
    ```bash
-   pkill -f pulumicost
-   pulumicost cost actual --plugin vantage
+   pkill -f finfocus
+   finfocus cost actual --plugin vantage
    ```
 
 4. Reinstall plugin if corrupted
@@ -537,15 +537,15 @@ Failed to communicate with vantage plugin
 
    ```yaml
    params:
-     start_date: "2024-01-01"
-     end_date: "2024-01-31"
+     start_date: '2024-01-01'
+     end_date: '2024-01-31'
    ```
 
 2. Check granularity:
 
    ```yaml
    params:
-     granularity: "day"  # Must match Vantage console view
+     granularity: 'day' # Must match Vantage console view
    ```
 
 3. Verify filters match:
@@ -603,7 +603,7 @@ Use `YYYY-MM-DD` format:
 
 ```yaml
 params:
-  start_date: "2024-01-01"  # Correct
+  start_date: '2024-01-01' # Correct
   # start_date: "01/01/2024"  # WRONG
 ```
 
@@ -620,8 +620,8 @@ Use tag prefix filters:
 ```yaml
 params:
   tag_prefix_filters:
-    - "user:"
-    - "cost-center:"
+    - 'user:'
+    - 'cost-center:'
     # Limit high-cardinality tags
 ```
 
@@ -636,24 +636,24 @@ params:
 export VANTAGE_DEBUG=1
 
 # Run plugin
-pulumicost cost actual --plugin vantage --start-date 2024-01-01
+finfocus cost actual --plugin vantage --start-date 2024-01-01
 ```
 
 ### Check Plugin Status
 
 ```bash
 # List installed plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Validate plugin
-pulumicost plugin validate vantage
+finfocus plugin validate vantage
 ```
 
 ### Test API Connectivity
 
 ```bash
 # Test Vantage API directly
-curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
+curl -H "Authorization: Bearer $FINFOCUS_VANTAGE_TOKEN" \
   https://api.vantage.sh/costs
 ```
 
@@ -661,10 +661,10 @@ curl -H "Authorization: Bearer $PULUMICOST_VANTAGE_TOKEN" \
 
 ```bash
 # Validate YAML
-yamllint ~/.pulumicost/plugins/vantage/config.yaml
+yamllint ~/.finfocus/plugins/vantage/config.yaml
 
 # Test configuration loading
-pulumicost-vantage pull --config config.yaml --dry-run
+finfocus-vantage pull --config config.yaml --dry-run
 ```
 
 ---
@@ -684,10 +684,10 @@ pulumicost-vantage pull --config config.yaml --dry-run
    - [Vantage Support](https://support.vantage.sh/)
    - [Vantage Status Page](https://status.vantage.sh/)
 
-3. **PulumiCost Resources**
-   - [PulumiCost Documentation](../../README.md)
+3. **FinFocus Resources**
+   - [FinFocus Documentation](../../README.md)
    - [Plugin Development Guide](../plugin-development.md)
-   - [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
+   - [GitHub Issues](https://github.com/rshade/finfocus/issues)
 
 ### Support Channels
 
@@ -702,8 +702,8 @@ pulumicost-vantage pull --config config.yaml --dry-run
   - Email: <support@vantage.sh>
   - Portal: <https://support.vantage.sh/>
 
-- **PulumiCost Support**: For plugin integration issues
-  - GitHub Issues: <https://github.com/rshade/pulumicost-core/issues>
+- **FinFocus Support**: For plugin integration issues
+  - GitHub Issues: <https://github.com/rshade/finfocus/issues>
 
 ### Reporting Issues
 
@@ -722,26 +722,26 @@ When reporting issues, include:
    version: 0.1
    source: vantage
    params:
-     cost_report_token: "cr_REDACTED"
-     granularity: "day"
+     cost_report_token: 'cr_REDACTED'
+     granularity: 'day'
    ```
 
 3. **Steps to Reproduce**:
 
    ```bash
-   1. Set environment: export PULUMICOST_VANTAGE_TOKEN="..."
-   2. Run command: pulumicost cost actual --plugin vantage
+   1. Set environment: export FINFOCUS_VANTAGE_TOKEN="..."
+   2. Run command: finfocus cost actual --plugin vantage
    3. Observe error: ...
    ```
 
 4. **Debug Logs** (redact tokens):
 
    ```bash
-   VANTAGE_DEBUG=1 pulumicost cost actual --plugin vantage 2>&1 | \
+   VANTAGE_DEBUG=1 finfocus cost actual --plugin vantage 2>&1 | \
      sed 's/Bearer .*/Bearer REDACTED/' > debug.log
    ```
 
 5. **Environment Information**:
-   - Plugin version: `pulumicost-vantage --version`
-   - PulumiCost version: `pulumicost --version`
+   - Plugin version: `finfocus-vantage --version`
+   - FinFocus version: `finfocus --version`
    - OS: `uname -a`

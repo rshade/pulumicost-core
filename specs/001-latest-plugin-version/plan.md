@@ -11,7 +11,7 @@ The system will implement logic to automatically select the latest version of in
 
 **Language/Version**: Go 1.25.5
 **Primary Dependencies**: `github.com/Masterminds/semver/v3`
-**Storage**: Filesystem (`~/.pulumicost/plugins/`)
+**Storage**: Filesystem (`~/.finfocus/plugins/`)
 **Testing**: Go `testing` package (Unit tests in `internal/registry`)
 **Target Platform**: Linux, macOS, Windows
 **Project Type**: CLI / Library (internal package)
@@ -23,7 +23,7 @@ The system will implement logic to automatically select the latest version of in
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Orchestration logic (Registry) supporting plugins.
 - [x] **Test-Driven Development**: Tests planned (Retroactive TDD for existing logic).

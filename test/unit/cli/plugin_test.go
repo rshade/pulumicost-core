@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ import (
 // TestPluginListCmd_NoPlugins tests listing with no plugins installed.
 func TestPluginListCmd_NoPlugins(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Set HOME to temp directory to ensure no plugins are found
 	t.Setenv("HOME", t.TempDir())
 
@@ -35,10 +35,10 @@ func TestPluginListCmd_NoPlugins(t *testing.T) {
 // TestPluginListCmd_WithPlugins tests listing with mock plugins.
 func TestPluginListCmd_WithPlugins(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Create temporary plugin directory structure
 	tempDir := t.TempDir()
-	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
+	pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
 
 	// Create mock plugin directories
 	kubecostDir := filepath.Join(pluginDir, "kubecost", "v0.1.0")
@@ -46,7 +46,7 @@ func TestPluginListCmd_WithPlugins(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create mock plugin binary
-	pluginBinary := filepath.Join(kubecostDir, "pulumicost-plugin-kubecost")
+	pluginBinary := filepath.Join(kubecostDir, "finfocus-plugin-kubecost")
 	err = os.WriteFile(pluginBinary, []byte("#!/bin/sh\necho test"), 0755)
 	require.NoError(t, err)
 
@@ -69,7 +69,7 @@ func TestPluginListCmd_WithPlugins(t *testing.T) {
 // TestPluginValidateCmd_NoPlugins tests validation with no plugins.
 func TestPluginValidateCmd_NoPlugins(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Set HOME to temp directory to ensure no plugins are found
 	t.Setenv("HOME", t.TempDir())
 
@@ -90,16 +90,16 @@ func TestPluginValidateCmd_NoPlugins(t *testing.T) {
 // TestPluginValidateCmd_ValidPlugin tests validation with valid plugin.
 func TestPluginValidateCmd_ValidPlugin(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
-	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
+	pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
 	kubecostDir := filepath.Join(pluginDir, "kubecost", "v0.1.0")
 	err := os.MkdirAll(kubecostDir, 0755)
 	require.NoError(t, err)
 
 	// Create valid executable
-	pluginBinary := filepath.Join(kubecostDir, "pulumicost-plugin-kubecost")
+	pluginBinary := filepath.Join(kubecostDir, "finfocus-plugin-kubecost")
 	err = os.WriteFile(pluginBinary, []byte("#!/bin/sh\necho test"), 0755)
 	require.NoError(t, err)
 
@@ -122,16 +122,16 @@ func TestPluginValidateCmd_ValidPlugin(t *testing.T) {
 // TestPluginValidateCmd_NonExecutable tests validation skips non-executable files.
 func TestPluginValidateCmd_NonExecutable(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
-	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
+	pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
 	testDir := filepath.Join(pluginDir, "test-plugin", "v0.1.0")
 	err := os.MkdirAll(testDir, 0755)
 	require.NoError(t, err)
 
 	// Create non-executable file (no execute permissions)
-	pluginBinary := filepath.Join(testDir, "pulumicost-plugin-test")
+	pluginBinary := filepath.Join(testDir, "finfocus-plugin-test")
 	err = os.WriteFile(pluginBinary, []byte("#!/bin/sh\necho test"), 0644) // 0644 = not executable
 	require.NoError(t, err)
 
@@ -154,16 +154,16 @@ func TestPluginValidateCmd_NonExecutable(t *testing.T) {
 // TestPluginListCmd_VerboseOutput tests verbose output for plugin list.
 func TestPluginListCmd_VerboseOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// Create temporary plugin directory
 	tempDir := t.TempDir()
-	pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
+	pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
 	kubecostDir := filepath.Join(pluginDir, "kubecost", "v0.1.0")
 	err := os.MkdirAll(kubecostDir, 0755)
 	require.NoError(t, err)
 
 	// Create plugin binary
-	pluginBinary := filepath.Join(kubecostDir, "pulumicost-plugin-kubecost")
+	pluginBinary := filepath.Join(kubecostDir, "finfocus-plugin-kubecost")
 	err = os.WriteFile(pluginBinary, []byte("#!/bin/sh\necho test"), 0755)
 	require.NoError(t, err)
 

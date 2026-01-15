@@ -3,14 +3,14 @@
 **Feature Branch**: `001-testing-framework`
 **Created**: 2025-11-06
 **Status**: Draft
-**Input**: User description: "Testing Framework and Strategy - Establish comprehensive testing framework and strategy for all components of the PulumiCost system"
-**GitHub Issue**: [#9](https://github.com/rshade/pulumicost-core/issues/9)
+**Input**: User description: "Testing Framework and Strategy - Establish comprehensive testing framework and strategy for all components of the FinFocus system"
+**GitHub Issue**: [#9](https://github.com/rshade/finfocus/issues/9)
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Unit Testing Foundation (Priority: P1)
 
-As a PulumiCost developer, I need a comprehensive unit testing framework so that I can verify individual component logic in isolation and catch regressions early in development.
+As a FinFocus developer, I need a comprehensive unit testing framework so that I can verify individual component logic in isolation and catch regressions early in development.
 
 **Why this priority**: Unit tests are the foundation of test coverage. They provide fast feedback during development and are essential for achieving the 80% coverage requirement defined in the constitution. Without this foundation, developers cannot verify their code works correctly before integration.
 
@@ -26,7 +26,7 @@ As a PulumiCost developer, I need a comprehensive unit testing framework so that
 
 ### User Story 2 - Integration Testing (Priority: P2)
 
-As a PulumiCost developer, I need integration testing capabilities so that I can verify cross-component communication and plugin interactions work correctly before deploying changes.
+As a FinFocus developer, I need integration testing capabilities so that I can verify cross-component communication and plugin interactions work correctly before deploying changes.
 
 **Why this priority**: After unit tests prove individual components work, integration tests verify they work together correctly. This is critical for plugin communication (gRPC), CLI command execution, and data flow between components. Integration tests catch issues that unit tests miss.
 
@@ -42,7 +42,7 @@ As a PulumiCost developer, I need integration testing capabilities so that I can
 
 ### User Story 3 - End-to-End Testing (Priority: P3)
 
-As a PulumiCost quality engineer, I need end-to-end testing with real Pulumi plans so that I can verify complete workflows function correctly in production-like scenarios.
+As a FinFocus quality engineer, I need end-to-end testing with real Pulumi plans so that I can verify complete workflows function correctly in production-like scenarios.
 
 **Why this priority**: E2E tests provide the highest confidence that the system works correctly for users, but they are slower and more complex to maintain. They are lower priority than unit and integration tests because those provide faster feedback during development.
 
@@ -58,7 +58,7 @@ As a PulumiCost quality engineer, I need end-to-end testing with real Pulumi pla
 
 ### User Story 4 - Mock Plugin Infrastructure (Priority: P2)
 
-As a PulumiCost developer, I need configurable mock plugins so that I can test plugin communication and error scenarios without depending on external services.
+As a FinFocus developer, I need configurable mock plugins so that I can test plugin communication and error scenarios without depending on external services.
 
 **Why this priority**: Mock plugins are critical for both unit and integration testing. They enable testing plugin failure scenarios, performance testing, and development without actual cloud provider plugins. This enables the P2 integration tests and must be available early.
 
@@ -74,7 +74,7 @@ As a PulumiCost developer, I need configurable mock plugins so that I can test p
 
 ### User Story 5 - Test Fixtures and Data (Priority: P3)
 
-As a PulumiCost developer, I need comprehensive test fixtures (Pulumi plans, mock responses, configs) so that I can write consistent tests across the codebase without manually creating test data.
+As a FinFocus developer, I need comprehensive test fixtures (Pulumi plans, mock responses, configs) so that I can write consistent tests across the codebase without manually creating test data.
 
 **Why this priority**: Test fixtures improve test maintainability and consistency, but tests can be written with inline data initially. Fixtures become more important as the test suite grows and duplication becomes a maintenance burden.
 
@@ -90,7 +90,7 @@ As a PulumiCost developer, I need comprehensive test fixtures (Pulumi plans, moc
 
 ### User Story 6 - CI/CD Test Automation (Priority: P1)
 
-As a PulumiCost maintainer, I need automated test execution in CI/CD so that all tests run on every commit and pull requests are blocked if tests fail or coverage drops below thresholds.
+As a FinFocus maintainer, I need automated test execution in CI/CD so that all tests run on every commit and pull requests are blocked if tests fail or coverage drops below thresholds.
 
 **Why this priority**: Automated testing in CI is critical for maintaining code quality and preventing regressions. This must be in place early (P1) to enforce the constitution's TDD requirements and prevent bad code from being merged.
 

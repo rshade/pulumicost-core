@@ -11,7 +11,7 @@
 
 **Findings**:
 
-The current implementation in `pulumicost-spec/sdk/go/pluginsdk/sdk.go`:
+The current implementation in `finfocus-spec/sdk/go/pluginsdk/sdk.go`:
 
 - `ServeConfig` has 4 fields: Plugin, Port, Registry, Logger
 - `Serve()` hardcodes `TracingUnaryServerInterceptor()` in `grpc.NewServer()`

@@ -1,4 +1,4 @@
-// Package benchmarks_test provides performance benchmarks for the pulumicost engine.
+// Package benchmarks_test provides performance benchmarks for the finfocus engine.
 package benchmarks_test
 
 import (
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 // BenchmarkEngine_GetProjectedCost_Single benchmarks the performance of GetProjectedCost

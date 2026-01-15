@@ -13,7 +13,7 @@ layout: default
 
 ### 2. E2E Tests Failing on Binary Lookup
 
-**Cause**: `pulumicost` binary not found.
+**Cause**: `finfocus` binary not found.
 **Fix**: Run `make build` before running E2E tests.
 
 ### 3. Benchmark Variability

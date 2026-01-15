@@ -21,14 +21,14 @@ As a Pulumi user, I want to easily find documentation on how to set up and use t
 
 ### User Story 2 - Accurate CLI Reference (Priority: P1)
 
-As a DevOps engineer, I want a complete reference of all `pulumicost` CLI commands, including plugin management, so that I can automate installation and updates.
+As a DevOps engineer, I want a complete reference of all `finfocus` CLI commands, including plugin management, so that I can automate installation and updates.
 
 **Why this priority**: Users cannot effectively manage plugins or script the tool if commands are undocumented.
 
-**Independent Test**: Verify every command in `pulumicost --help` has a corresponding entry in `docs/reference/cli-commands.md`.
+**Independent Test**: Verify every command in `finfocus --help` has a corresponding entry in `docs/reference/cli-commands.md`.
 
 **Acceptance Scenarios**:
-1. **Given** a user wants to install a plugin, **When** they check the CLI reference, **Then** they find `pulumicost plugin install` documented with examples.
+1. **Given** a user wants to install a plugin, **When** they check the CLI reference, **Then** they find `finfocus plugin install` documented with examples.
 
 ### User Story 3 - AI Agent Context Awareness (Priority: P1)
 
@@ -73,7 +73,7 @@ As a user debugging an issue, I want to verify my configuration and understand e
 - **FR-001**: System MUST include `docs/architecture/analyzer.md` detailing the Analyzer architecture, configuration, and protocol.
 - **FR-002**: System MUST include `docs/reference/config-reference.md` defining the schema for `config.yaml` (output, logging, plugins).
 - **FR-003**: System MUST include `docs/reference/error-codes.md` listing Engine and CLI errors with solutions.
-- **FR-004**: System MUST include `docs/reference/environment-variables.md` listing all `PULUMICOST_*` variables.
+- **FR-004**: System MUST include `docs/reference/environment-variables.md` listing all `FINFOCUS_*` variables.
 - **FR-005**: System MUST include `docs/getting-started/analyzer-setup.md` (or equivalent section) for setting up the analyzer.
 - **FR-006**: System MUST include `docs/deployment/cicd-integration.md` (basic version).
 

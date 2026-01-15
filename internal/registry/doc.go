@@ -1,14 +1,14 @@
 // Package registry handles plugin discovery and lifecycle management.
 //
 // The registry scans for installed plugins in the standard location
-// (~/.pulumicost/plugins/) and manages their metadata and availability.
+// (~/.finfocus/plugins/) and manages their metadata and availability.
 //
 // # Plugin Directory Structure
 //
 // Plugins are organized as:
 //
-//	~/.pulumicost/plugins/<name>/<version>/
-//	├── pulumicost-plugin-<name>     # Plugin binary
+//	~/.finfocus/plugins/<name>/<version>/
+//	├── finfocus-plugin-<name>     # Plugin binary
 //	└── plugin.manifest.json         # Optional manifest
 //
 // # Discovery Process

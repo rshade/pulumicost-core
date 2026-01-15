@@ -3,20 +3,20 @@
 **Feature Branch**: `108-action-type-enum`
 **Created**: 2025-12-29
 **Status**: Draft
-**Input**: "Support extended RecommendationActionType enum from pulumicost-spec"
+**Input**: "Support extended RecommendationActionType enum from finfocus-spec"
 **GitHub Issue**: #298
 
 ## Overview
 
-Update pulumicost-core components to recognize and properly handle the 5 new
+Update finfocus-core components to recognize and properly handle the 5 new
 `RecommendationActionType` enum values (MIGRATE, CONSOLIDATE, SCHEDULE,
-REFACTOR, OTHER) that were added to pulumicost-spec v0.4.9.
+REFACTOR, OTHER) that were added to finfocus-spec v0.4.9.
 
 ## Context
 
-The pulumicost-spec v0.4.9 release (2025-12-18) extended the
+The finfocus-spec v0.4.9 release (2025-12-18) extended the
 `RecommendationActionType` enum from 6 to 11 values via PR #173. The current
-pulumicost-core (v0.4.11) already has this dependency but internal components
+finfocus-core (v0.4.11) already has this dependency but internal components
 (filter parser, TUI display, CLI help text) only recognize the original 6 types:
 
 **Original Types (already supported)**:
@@ -54,11 +54,11 @@ action type values and verifying only matching recommendations are displayed.
 **Acceptance Scenarios**:
 
 1. **Given** a set of recommendations including MIGRATE and RIGHTSIZE types,
-   **When** I run `pulumicost cost recommendations --filter "action=MIGRATE"`,
+   **When** I run `finfocus cost recommendations --filter "action=MIGRATE"`,
    **Then** only MIGRATE recommendations are shown.
 
 2. **Given** a set of recommendations with various action types,
-   **When** I run `pulumicost cost recommendations --filter "action=SCHEDULE,REFACTOR"`,
+   **When** I run `finfocus cost recommendations --filter "action=SCHEDULE,REFACTOR"`,
    **Then** only SCHEDULE and REFACTOR recommendations are shown.
 
 3. **Given** a filter with the value "action=INVALID_TYPE",
@@ -139,16 +139,16 @@ plan JSON and verifying recommendations are fetched from plugins and displayed.
 **Acceptance Scenarios**:
 
 1. **Given** a Pulumi plan JSON and an installed cost plugin,
-   **When** I run `pulumicost cost recommendations --pulumi-json plan.json`,
+   **When** I run `finfocus cost recommendations --pulumi-json plan.json`,
    **Then** I see a table of recommendations with ID, ActionType, Description,
    ResourceID, and EstimatedSavings columns.
 
 2. **Given** a Pulumi plan JSON with resources that have recommendations,
-   **When** I run `pulumicost cost recommendations --output json`,
+   **When** I run `finfocus cost recommendations --output json`,
    **Then** I receive valid JSON with all recommendation fields.
 
 3. **Given** no installed plugins that support recommendations,
-   **When** I run `pulumicost cost recommendations --pulumi-json plan.json`,
+   **When** I run `finfocus cost recommendations --pulumi-json plan.json`,
    **Then** I see an informative message that no recommendations are available.
 
 4. **Given** a plan with multiple resources,
@@ -237,5 +237,5 @@ plan JSON and verifying recommendations are fetched from plugins and displayed.
 
 - TUI components follow existing label/styling patterns in `internal/tui/`.
 
-- The pulumicost-spec v0.4.9+ dependency (already at v0.4.11) includes the
+- The finfocus-spec v0.4.9+ dependency (already at v0.4.11) includes the
   extended enum values in generated Go code.

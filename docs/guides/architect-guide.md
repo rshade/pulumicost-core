@@ -4,7 +4,7 @@ title: Architect Guide
 description: System design and integration guide for software architects
 ---
 
-This guide is for **software architects** who need to design and integrate PulumiCost into their infrastructure.
+This guide is for **software architects** who need to design and integrate FinFocus into their infrastructure.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ This guide is for **software architects** who need to design and integrate Pulum
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│                        PulumiCost CLI                         │
+│                        FinFocus CLI                         │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │              Command Interface (Cobra)                  │ │
 │  │  • cost projected  • cost actual                        │ │
@@ -163,7 +163,7 @@ Date Range ───────────────────────
 ```bash
 # Pull request workflow
 pulumi preview --json > plan.json
-pulumicost cost projected --pulumi-json plan.json \
+finfocus cost projected --pulumi-json plan.json \
   --output json | jq '.summary.totalMonthly'
 
 # If cost > threshold, comment on PR
@@ -175,7 +175,7 @@ pulumicost cost projected --pulumi-json plan.json \
 
 ```bash
 # Daily cost check (cron job)
-pulumicost cost actual --group-by daily \
+finfocus cost actual --group-by daily \
   --output json > cost_report.json
 
 # Alert if cost > budget
@@ -188,11 +188,11 @@ pulumicost cost actual --group-by daily \
 
 ```bash
 # Cost by team
-pulumicost cost actual --filter "tag:team=platform" \
+finfocus cost actual --filter "tag:team=platform" \
   --group-by "tag:project"
 
 # Cost by environment
-pulumicost cost actual --filter "tag:env=prod" \
+finfocus cost actual --filter "tag:env=prod" \
   --group-by provider
 ```
 
@@ -215,14 +215,14 @@ pulumicost cost actual --filter "tag:env=prod" \
 
 ```bash
 # Use IAM role (recommended)
-export AWS_ROLE_ARN="arn:aws:iam::123456789:role/pulumicost"
+export AWS_ROLE_ARN="arn:aws:iam::123456789:role/finfocus"
 
 # Or use temporary credentials
 export AWS_ACCESS_KEY_ID="temporary-key"
 export AWS_SECRET_ACCESS_KEY="temporary-secret"
 export AWS_SESSION_TOKEN="session-token"
 
-pulumicost cost actual --from 2024-01-01
+finfocus cost actual --from 2024-01-01
 ```
 
 ### Plugin Security
@@ -291,7 +291,7 @@ pulumicost cost actual --from 2024-01-01
 ### Local Installation
 
 ```bash
-# User installs PulumiCost binary
+# User installs FinFocus binary
 # Runs from workstation for ad-hoc cost checks
 # No infrastructure required
 ```
@@ -325,8 +325,8 @@ pulumicost cost actual --from 2024-01-01
 
 ```dockerfile
 FROM alpine:latest
-COPY pulumicost /usr/local/bin/
-ENTRYPOINT ["pulumicost"]
+COPY finfocus /usr/local/bin/
+ENTRYPOINT ["finfocus"]
 ```
 
 **Pros:** Portable, easy deployment
@@ -377,13 +377,13 @@ ENTRYPOINT ["pulumicost"]
 
 ## Design Trade-offs
 
-| Decision | Pros | Cons |
-|----------|------|------|
-| **Plugin architecture** | Language-agnostic, isolated | Complexity, gRPC overhead |
-| **Local fallback** | Works offline, no dependencies | Limited functionality |
-| **gRPC protocol** | Efficient, strongly typed | Learning curve, binary format |
-| **Process isolation** | Security, stability | Performance overhead |
-| **Flexible grouping** | Powerful, flexible | Complex implementation |
+| Decision                | Pros                           | Cons                          |
+| ----------------------- | ------------------------------ | ----------------------------- |
+| **Plugin architecture** | Language-agnostic, isolated    | Complexity, gRPC overhead     |
+| **Local fallback**      | Works offline, no dependencies | Limited functionality         |
+| **gRPC protocol**       | Efficient, strongly typed      | Learning curve, binary format |
+| **Process isolation**   | Security, stability            | Performance overhead          |
+| **Flexible grouping**   | Powerful, flexible             | Complex implementation        |
 
 ---
 

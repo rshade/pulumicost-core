@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,7 @@ func setupTestConfig(t *testing.T) (string, func()) {
 
 func TestConfigInitCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	testHome, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -37,7 +37,7 @@ func TestConfigInitCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that config file was created
-	configPath := filepath.Join(testHome, ".pulumicost", "config.yaml")
+	configPath := filepath.Join(testHome, ".finfocus", "config.yaml")
 	_, err = os.Stat(configPath)
 	assert.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestConfigInitCmd(t *testing.T) {
 
 func TestConfigInitCmdForce(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -76,7 +76,7 @@ func TestConfigInitCmdForce(t *testing.T) {
 
 func TestConfigSetCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -100,7 +100,7 @@ func TestConfigSetCmd(t *testing.T) {
 
 func TestConfigSetCmdErrors(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -124,7 +124,7 @@ func TestConfigSetCmdErrors(t *testing.T) {
 
 func TestConfigGetCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -155,7 +155,7 @@ func TestConfigGetCmd(t *testing.T) {
 
 func TestConfigGetCmdErrors(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -183,7 +183,7 @@ func TestConfigGetCmdErrors(t *testing.T) {
 
 func TestConfigListCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -223,7 +223,7 @@ func TestConfigListCmd(t *testing.T) {
 
 func TestConfigListCmdErrors(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -245,7 +245,7 @@ func TestConfigListCmdErrors(t *testing.T) {
 
 func TestConfigValidateCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -278,7 +278,7 @@ func TestConfigValidateCmd(t *testing.T) {
 
 func TestConfigValidateCmdErrors(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -303,7 +303,7 @@ func TestConfigValidateCmdErrors(t *testing.T) {
 
 func TestConfigCommandsIntegration(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -361,7 +361,7 @@ func TestConfigCommandsIntegration(t *testing.T) {
 
 func TestConfigCmdWrongArgs(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -380,7 +380,7 @@ func TestConfigCmdWrongArgs(t *testing.T) {
 
 func TestConfigGetCmdMapOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 
@@ -417,7 +417,7 @@ func TestConfigGetCmdMapOutput(t *testing.T) {
 
 func TestConfigGetCmdIntOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	_, cleanup := setupTestConfig(t)
 	defer cleanup()
 

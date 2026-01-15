@@ -1,6 +1,6 @@
 # Developer Setup Guide
 
-This guide helps developers set up their local environment to work on PulumiCost documentation.
+This guide helps developers set up their local environment to work on FinFocus documentation.
 
 ## Prerequisites
 
@@ -14,8 +14,8 @@ This guide helps developers set up their local environment to work on PulumiCost
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 ```
 
 ### 2. Install Documentation Tools
@@ -55,7 +55,7 @@ make docs-serve
 
 ### Local Preview
 
-Serve documentation locally on http://localhost:4000/pulumicost-core/:
+Serve documentation locally on http://localhost:4000/finfocus/:
 
 ```bash
 make docs-serve
@@ -332,7 +332,7 @@ npm run docs:format
 
 - Test all code examples
 - Verify all links work
-- Preview on http://localhost:4000/pulumicost-core/
+- Preview on http://localhost:4000/finfocus/
 
 ### Frontmatter
 
@@ -373,7 +373,7 @@ git commit -m "msg"         # Commit
 - **Markdown issues**: Check [CommonMark spec](https://spec.commonmark.org/)
 - **Jekyll issues**: See [Jekyll docs](https://jekyllrb.com/docs/)
 - **Google Style**: Check [Google Developer Style Guide](https://developers.google.com/style)
-- **Questions**: Open [GitHub Discussion](https://github.com/rshade/pulumicost-core/discussions)
+- **Questions**: Open [GitHub Discussion](https://github.com/rshade/finfocus/discussions)
 
 ---
 

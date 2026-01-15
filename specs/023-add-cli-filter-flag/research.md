@@ -6,7 +6,7 @@
 
 ## Decision: Add `--filter` Flag to `cost actual` Command
 
-I will add the `--filter` flag to the `pulumicost cost actual` command in `internal/cli/cost_actual.go` to match the behavior of `pulumicost cost projected`.
+I will add the `--filter` flag to the `finfocus cost actual` command in `internal/cli/cost_actual.go` to match the behavior of `finfocus cost projected`.
 
 ### Rationale
 

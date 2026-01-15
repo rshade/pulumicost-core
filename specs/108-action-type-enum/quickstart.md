@@ -15,26 +15,26 @@ display, and JSON output.
 
 ```bash
 # Get all cost optimization recommendations for resources in a Pulumi plan
-pulumicost cost recommendations --pulumi-json plan.json
+finfocus cost recommendations --pulumi-json plan.json
 
 # Output recommendations as JSON
-pulumicost cost recommendations --pulumi-json plan.json --output json
+finfocus cost recommendations --pulumi-json plan.json --output json
 
 # Use a specific adapter/plugin
-pulumicost cost recommendations --pulumi-json plan.json --adapter kubecost
+finfocus cost recommendations --pulumi-json plan.json --adapter kubecost
 ```
 
 ### Filtering by Action Type
 
 ```bash
 # Filter recommendations by a single action type
-pulumicost cost recommendations --pulumi-json plan.json --filter "action=MIGRATE"
+finfocus cost recommendations --pulumi-json plan.json --filter "action=MIGRATE"
 
 # Filter by multiple action types (comma-separated)
-pulumicost cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE,TERMINATE"
+finfocus cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE,TERMINATE"
 
 # Case-insensitive matching works
-pulumicost cost recommendations --pulumi-json plan.json --filter "action=migrate,consolidate"
+finfocus cost recommendations --pulumi-json plan.json --filter "action=migrate,consolidate"
 ```
 
 ### Available Action Types for Filtering
@@ -92,7 +92,7 @@ JSON output preserves the canonical enum string names:
 Invalid action type filter values produce helpful error messages:
 
 ```bash
-$ pulumicost cost recommendations --pulumi-json plan.json --filter "action=INVALID"
+$ finfocus cost recommendations --pulumi-json plan.json --filter "action=INVALID"
 Error: invalid action type "INVALID". Valid types: RIGHTSIZE, TERMINATE,
 PURCHASE_COMMITMENT, ADJUST_REQUESTS, MODIFY, DELETE_UNUSED, MIGRATE,
 CONSOLIDATE, SCHEDULE, REFACTOR, OTHER
@@ -103,7 +103,7 @@ CONSOLIDATE, SCHEDULE, REFACTOR, OTHER
 ### Using Action Type Utilities
 
 ```go
-import "github.com/rshade/pulumicost-core/internal/proto"
+import "github.com/rshade/finfocus/internal/proto"
 
 // Get display label for TUI
 label := proto.ActionTypeLabel(pbc.RecommendationActionType_RECOMMENDATION_ACTION_TYPE_MIGRATE)

@@ -372,7 +372,7 @@ func TestValidation_PluginConfigurations(t *testing.T) {
 func TestValidation_MalformedConfigFile(t *testing.T) {
 	t.Run("invalid YAML syntax", func(t *testing.T) {
 		stubHome(t)
-		configDir := filepath.Join(os.Getenv("HOME"), ".pulumicost")
+		configDir := filepath.Join(os.Getenv("HOME"), ".finfocus")
 		err := os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 
@@ -388,7 +388,7 @@ func TestValidation_MalformedConfigFile(t *testing.T) {
 
 	t.Run("invalid YAML types", func(t *testing.T) {
 		stubHome(t)
-		configDir := filepath.Join(os.Getenv("HOME"), ".pulumicost")
+		configDir := filepath.Join(os.Getenv("HOME"), ".finfocus")
 		err := os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 
@@ -404,7 +404,7 @@ func TestValidation_MalformedConfigFile(t *testing.T) {
 
 	t.Run("empty config file is valid", func(t *testing.T) {
 		stubHome(t)
-		configDir := filepath.Join(os.Getenv("HOME"), ".pulumicost")
+		configDir := filepath.Join(os.Getenv("HOME"), ".finfocus")
 		err := os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 

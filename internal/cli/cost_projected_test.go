@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewCostProjectedCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -73,7 +73,7 @@ func TestNewCostProjectedCmd(t *testing.T) {
 
 func TestCostProjectedCmdFlags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewCostProjectedCmd()
 
 	// Check required flags
@@ -104,7 +104,7 @@ func TestCostProjectedCmdFlags(t *testing.T) {
 
 func TestCostProjectedCmdHelp(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewCostProjectedCmd()
 	cmd.SetOut(&buf)
@@ -134,12 +134,12 @@ func TestCostProjectedCmdHelp(t *testing.T) {
 
 func TestCostProjectedCmdExamples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewCostProjectedCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
-	assert.Contains(t, cmd.Example, "pulumicost cost projected --pulumi-json plan.json")
+	assert.Contains(t, cmd.Example, "finfocus cost projected --pulumi-json plan.json")
 	assert.Contains(t, cmd.Example, "--filter \"type=aws:ec2/instance\"")
 	assert.Contains(t, cmd.Example, "--output json")
 	assert.Contains(t, cmd.Example, "--adapter aws-plugin")
@@ -148,7 +148,7 @@ func TestCostProjectedCmdExamples(t *testing.T) {
 
 func TestCostProjectedCmdErrorSummaryDisplay(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	// This test verifies that the CLI correctly displays error summary after table output
 	// when there are errors during cost calculation.
 	//

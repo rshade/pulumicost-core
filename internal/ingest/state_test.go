@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/ingest"
+	"github.com/rshade/finfocus/internal/ingest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,7 +79,7 @@ const stateWithoutTimestamps = `{
 }`
 
 func TestLoadStackExport(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name          string
@@ -154,7 +154,7 @@ func TestLoadStackExport(t *testing.T) {
 }
 
 func TestLoadStackExport_FileNotFound(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	_, err := ingest.LoadStackExport("/nonexistent/path/state.json")
 	require.Error(t, err)
@@ -162,7 +162,7 @@ func TestLoadStackExport_FileNotFound(t *testing.T) {
 }
 
 func TestGetCustomResources(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tmpDir := t.TempDir()
 	statePath := filepath.Join(tmpDir, "state.json")
@@ -187,7 +187,7 @@ func TestGetCustomResources(t *testing.T) {
 }
 
 func TestMapStateResource(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	created := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	modified := time.Date(2024, 6, 20, 14, 22, 0, 0, time.UTC)
@@ -298,7 +298,7 @@ func TestMapStateResource(t *testing.T) {
 }
 
 func TestMapStateResources(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tmpDir := t.TempDir()
 	statePath := filepath.Join(tmpDir, "state.json")
@@ -339,7 +339,7 @@ func TestMapStateResources(t *testing.T) {
 }
 
 func TestGetResourceByURN(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tmpDir := t.TempDir()
 	statePath := filepath.Join(tmpDir, "state.json")
@@ -380,7 +380,7 @@ func TestGetResourceByURN(t *testing.T) {
 }
 
 func TestLoadStackExportWithContext(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tmpDir := t.TempDir()
 	statePath := filepath.Join(tmpDir, "state.json")
@@ -395,7 +395,7 @@ func TestLoadStackExportWithContext(t *testing.T) {
 }
 
 func TestGetCustomResourcesWithContext(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tmpDir := t.TempDir()
 	statePath := filepath.Join(tmpDir, "state.json")

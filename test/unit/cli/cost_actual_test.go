@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +39,7 @@ func getShortDateRange() (string, string) {
 // TestCostActualCmd_Success tests basic actual cost retrieval.
 func TestCostActualCmd_Success(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	resources := []map[string]interface{}{
 		{
@@ -79,7 +79,7 @@ func TestCostActualCmd_Success(t *testing.T) {
 // TestCostActualCmd_MissingStartDate tests error for missing start date.
 func TestCostActualCmd_MissingStartDate(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	resources := []map[string]interface{}{
 		{
@@ -111,7 +111,7 @@ func TestCostActualCmd_MissingStartDate(t *testing.T) {
 // TestCostActualCmd_DefaultEndDate tests default end date handling.
 func TestCostActualCmd_DefaultEndDate(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -148,7 +148,7 @@ func TestCostActualCmd_DefaultEndDate(t *testing.T) {
 // TestCostActualCmd_InvalidDateFormat tests error for invalid date format.
 func TestCostActualCmd_InvalidDateFormat(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -179,7 +179,7 @@ func TestCostActualCmd_InvalidDateFormat(t *testing.T) {
 // TestCostActualCmd_RFC3339DateFormat tests RFC3339 date format support.
 func TestCostActualCmd_RFC3339DateFormat(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -214,7 +214,7 @@ func TestCostActualCmd_RFC3339DateFormat(t *testing.T) {
 // TestCostActualCmd_GroupByResource tests resource-level grouping.
 func TestCostActualCmd_GroupByResource(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -254,7 +254,7 @@ func TestCostActualCmd_GroupByResource(t *testing.T) {
 // TestCostActualCmd_GroupByType tests type-level grouping.
 func TestCostActualCmd_GroupByType(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -294,7 +294,7 @@ func TestCostActualCmd_GroupByType(t *testing.T) {
 // TestCostActualCmd_GroupByProvider tests provider-level grouping.
 func TestCostActualCmd_GroupByProvider(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -334,7 +334,7 @@ func TestCostActualCmd_GroupByProvider(t *testing.T) {
 // TestCostActualCmd_GroupByDaily tests daily grouping.
 func TestCostActualCmd_GroupByDaily(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -368,7 +368,7 @@ func TestCostActualCmd_GroupByDaily(t *testing.T) {
 // TestCostActualCmd_TableOutput tests table format output.
 func TestCostActualCmd_TableOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -401,7 +401,7 @@ func TestCostActualCmd_TableOutput(t *testing.T) {
 // TestCostActualCmd_NDJSONOutput tests NDJSON format output.
 func TestCostActualCmd_NDJSONOutput(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",
@@ -438,7 +438,7 @@ func TestCostActualCmd_NDJSONOutput(t *testing.T) {
 // TestCostActualCmd_AdapterFilter tests adapter-specific filtering.
 func TestCostActualCmd_AdapterFilter(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	resources := []map[string]interface{}{
 		{
 			"type": "aws:ec2/instance:Instance",

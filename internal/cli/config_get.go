@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,25 +13,25 @@ func NewConfigGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a configuration value",
-		Long: `Gets a configuration value using dot notation from ~/.pulumicost/config.yaml.
+		Long: `Gets a configuration value using dot notation from ~/.finfocus/config.yaml.
 
-Note: Sensitive values should be stored as environment variables (e.g., PULUMICOST_PLUGIN_AWS_SECRET_KEY)
+Note: Sensitive values should be stored as environment variables (e.g., FINFOCUS_PLUGIN_AWS_SECRET_KEY)
 and will not appear in configuration files.`,
 		Example: `  # Get output format
-  pulumicost config get output.default_format
+  finfocus config get output.default_format
 
   # Get output precision
-  pulumicost config get output.precision
+  finfocus config get output.precision
 
   # Get plugin configuration
-  pulumicost config get plugins.aws.region
-  pulumicost config get plugins.aws
+  finfocus config get plugins.aws.region
+  finfocus config get plugins.aws
 
   # Get all plugins
-  pulumicost config get plugins
+  finfocus config get plugins
 
   # Get logging level
-  pulumicost config get logging.level`,
+  finfocus config get logging.level`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]

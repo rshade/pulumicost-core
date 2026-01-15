@@ -4,8 +4,8 @@ version: 2
 
 # Build customization
 builds:
-  - main: ./cmd/pulumicost
-    binary: pulumicost
+  - main: ./cmd/finfocus
+    binary: finfocus
     goos:
       - linux
       - darwin
@@ -14,9 +14,9 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -X 'github.com/rshade/pulumicost-core/pkg/version.version={{.Version}}'
-      - -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit={{.Commit}}'
-      - -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate={{.Date}}'
+      - -X 'github.com/rshade/finfocus/pkg/version.version={{.Version}}'
+      - -X 'github.com/rshade/finfocus/pkg/version.gitCommit={{.Commit}}'
+      - -X 'github.com/rshade/finfocus/pkg/version.buildDate={{.Date}}'
     env:
       - CGO_ENABLED=0
 
@@ -51,7 +51,7 @@ changelog:
 release:
   github:
     owner: rshade
-    name: pulumicost-core
+    name: finfocus
   draft: false
   prerelease: auto
   mode: append

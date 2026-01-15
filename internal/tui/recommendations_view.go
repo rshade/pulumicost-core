@@ -3,7 +3,7 @@ package tui
 import (
 	"fmt"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 // Display constants for recommendations.

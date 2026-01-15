@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 // actionTypeLabels maps RecommendationActionType enum values to human-readable labels.

@@ -1,6 +1,6 @@
 # Architecture Diagrams
 
-Visual representation of PulumiCost architecture and data flow.
+Visual representation of FinFocus architecture and data flow.
 
 ## Diagrams
 
@@ -9,7 +9,7 @@ Visual representation of PulumiCost architecture and data flow.
 - **[Plugin Lifecycle](plugin-lifecycle.md)** - Plugin discovery, startup, and shutdown
 - **[Cost Calculation Flow](cost-calculation-flow.md)** - Cost calculation pipeline
 - **[Integration Example](integration-example.md)** - End-to-end Pulumi →
-  PulumiCost → Vantage
+  FinFocus → Vantage
 
 ---
 

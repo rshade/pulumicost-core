@@ -49,12 +49,12 @@ There is a small window between releasing the port and the plugin binding to it.
 
 The `pluginhost` package manages environment variables passed to plugins:
 
--   `PULUMICOST_PLUGIN_PORT`: (Required) The port the plugin should listen on.
+-   `FINFOCUS_PLUGIN_PORT`: (Required) The port the plugin should listen on.
 -   `PORT`: **REMOVED** (Deprecated). Core no longer sets this variable to avoid conflicts with cloud environment variables (e.g., Cloud Run).
--   `PULUMICOST_LOG_LEVEL`: Propagated from core configuration.
--   `PULUMICOST_TRACE_ID`: Propagated for distributed tracing.
+-   `FINFOCUS_LOG_LEVEL`: Propagated from core configuration.
+-   `FINFOCUS_TRACE_ID`: Propagated for distributed tracing.
 
-**Note**: Plugins should prefer the `--port` flag over environment variables, but `PULUMICOST_PLUGIN_PORT` is provided for backward compatibility and ease of development.
+**Note**: Plugins should prefer the `--port` flag over environment variables, but `FINFOCUS_PLUGIN_PORT` is provided for backward compatibility and ease of development.
 
 ## Testing
 
@@ -78,6 +78,6 @@ The `pluginhost` package manages environment variables passed to plugins:
 
 ## Recent Changes
 
--   **Remove PORT Env Var**: The `PORT` environment variable is no longer set by `ProcessLauncher`. Plugins must use `--port` flag or `PULUMICOST_PLUGIN_PORT` env var.
+-   **Remove PORT Env Var**: The `PORT` environment variable is no longer set by `ProcessLauncher`. Plugins must use `--port` flag or `FINFOCUS_PLUGIN_PORT` env var.
 -   **Guidance Logging**: Added helpful log messages when plugins fail to bind, suggesting `--port` flag support.
 -   **Debug Logging**: Added debug logs if `PORT` is detected in the user's environment (to indicate it's being ignored/shadowed).

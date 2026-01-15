@@ -2,7 +2,7 @@
 
 **Audience**: Plugin developers, core maintainers  
 **Time**: 15 minutes  
-**Prerequisites**: pulumicost-spec v0.4.5+ with pluginsdk/env.go
+**Prerequisites**: finfocus-spec v0.4.5+ with pluginsdk/env.go
 
 ## Overview
 
@@ -10,10 +10,10 @@ This guide shows how to migrate from hardcoded environment variable strings to t
 
 ## Step 1: Update Dependencies
 
-Ensure your go.mod includes the latest pulumicost-spec:
+Ensure your go.mod includes the latest finfocus-spec:
 
 ```bash
-go get github.com/rshade/pulumicost-spec/sdk/go/pluginsdk@latest
+go get github.com/rshade/finfocus-spec/sdk/go/pluginsdk@latest
 ```
 
 ## Step 2: Import pluginsdk
@@ -22,7 +22,7 @@ Add the import to your Go files:
 
 ```go
 import (
-    "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+    "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 ```
 
@@ -33,7 +33,7 @@ import (
 ```go
 cmd.Env = append(os.Environ(),
     fmt.Sprintf("PORT=%d", port),
-    fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+    fmt.Sprintf("FINFOCUS_PLUGIN_PORT=%d", port),
 )
 ```
 
@@ -64,7 +64,7 @@ func getPort() int {
 
 ```go
 func getPort() int {
-    return pluginsdk.GetPort() // Handles PULUMICOST_PLUGIN_PORT first, then PORT
+    return pluginsdk.GetPort() // Handles FINFOCUS_PLUGIN_PORT first, then PORT
 }
 ```
 
@@ -126,7 +126,7 @@ func configurePlugin() {
 
 ### Plugin Won't Start
 
-- Check that core is setting both `PULUMICOST_PLUGIN_PORT` and `PORT`
+- Check that core is setting both `FINFOCUS_PLUGIN_PORT` and `PORT`
 - Verify plugin is using `pluginsdk.GetPort()` not `os.Getenv("PORT")`
 
 ### Tests Failing
@@ -136,7 +136,7 @@ func configurePlugin() {
 
 ### Import Errors
 
-- Verify pulumicost-spec version is v0.4.5 or later
+- Verify finfocus-spec version is v0.4.5 or later
 - Run `go mod tidy` to update dependencies
 
 ## Next Steps

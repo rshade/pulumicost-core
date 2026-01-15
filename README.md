@@ -1,13 +1,13 @@
-# PulumiCost Core
+# FinFocus
 
-[![CI](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml/badge.svg)](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-61%25-yellow)](https://github.com/rshade/pulumicost-core/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rshade/pulumicost-core)](https://goreportcard.com/report/github.com/rshade/pulumicost-core)
+[![CI](https://github.com/rshade/finfocus/actions/workflows/ci.yml/badge.svg)](https://github.com/rshade/finfocus/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-61%25-yellow)](https://github.com/rshade/finfocus/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rshade/finfocus)](https://goreportcard.com/report/github.com/rshade/finfocus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Cloud cost analysis for Pulumi infrastructure** - Calculate projected and actual infrastructure costs without modifying your Pulumi programs.
 
-PulumiCost Core is a CLI tool that analyzes Pulumi infrastructure definitions to provide accurate cost estimates and historical cost tracking through a flexible plugin-based architecture.
+FinFocus Core is a CLI tool that analyzes Pulumi infrastructure definitions to provide accurate cost estimates and historical cost tracking through a flexible plugin-based architecture.
 
 ## Key Features
 
@@ -29,14 +29,14 @@ Download the latest release or build from source:
 
 ```bash
 # Download latest release (coming soon)
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
 
 # Or build from source
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 make build
-./bin/pulumicost --help
+./bin/finfocus --help
 ```
 
 ### 2. Generate Pulumi Plan
@@ -53,17 +53,17 @@ pulumi preview --json > plan.json
 **Projected Costs** - Estimate costs before deployment:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 ```
 
 **Actual Costs** (FUTURE) - View historical spending (requires plugins):
 
 ```bash
 # Last 7 days
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+finfocus cost actual --pulumi-json plan.json --from 2025-01-07
 
 # Specific date range
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 ```
 
 ## Example Output
@@ -71,7 +71,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 ### Projected Cost Analysis
 
 ```bash
-$ pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+$ finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 
 RESOURCE                          ADAPTER     MONTHLY   CURRENCY  NOTES
 aws:ec2/instance:Instance         aws-spec    $7.50     USD       t3.micro Linux on-demand
@@ -82,7 +82,7 @@ aws:rds/instance:Instance        none        $0.00     USD       No pricing info
 ### Actual Cost Analysis (FUTURE)
 
 ```bash
-$ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type --output json
+$ finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type --output json
 {
   "summary": {
     "totalMonthly": 45.67,
@@ -106,11 +106,11 @@ $ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by ty
 
 ### Plugin Architecture
 
-PulumiCost uses plugins to fetch cost data from various sources:
+FinFocus uses plugins to fetch cost data from various sources:
 
 - **Cost Plugins**: Query cloud provider APIs (Kubecost, Vantage, AWS Cost Explorer, etc.)
 - **Spec Files**: Local YAML/JSON pricing specifications as fallback
-- **Plugin Discovery**: Automatic detection from `~/.pulumicost/plugins/`
+- **Plugin Discovery**: Automatic detection from `~/.finfocus/plugins/`
 
 ## Advanced Usage
 
@@ -118,52 +118,52 @@ PulumiCost uses plugins to fetch cost data from various sources:
 
 ```bash
 # Filter by resource type
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
 
 # Filter by tag (FUTURE)
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
 ```
 
 ### Cost Aggregation (FUTURE)
 
 ```bash
 # Group by provider
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
 
 # Group by resource type
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
 
 # Group by date for time series
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
 ```
 
 ### Output Formats
 
 ```bash
 # Table format (default)
-pulumicost cost projected --pulumi-json plan.json --output table
+finfocus cost projected --pulumi-json plan.json --output table
 
 # JSON for API integration
-pulumicost cost projected --pulumi-json plan.json --output json
+finfocus cost projected --pulumi-json plan.json --output json
 
 # NDJSON for streaming/pipeline processing
-pulumicost cost projected --pulumi-json plan.json --output ndjson
+finfocus cost projected --pulumi-json plan.json --output ndjson
 ```
 
 ## Configuration
 
 ### Basic Configuration (FUTURE)
 
-PulumiCost can be configured using a YAML file at `~/.pulumicost/config.yaml`:
+FinFocus can be configured using a YAML file at `~/.finfocus/config.yaml`:
 
 ```bash
 # Initialize default configuration
-pulumicost config init
+finfocus config init
 
 # Set configuration values
-pulumicost config set output.default_format json
-pulumicost config set output.precision 4
-pulumicost config set plugins.aws.region us-west-2
+finfocus config set output.default_format json
+finfocus config set output.precision 4
+finfocus config set plugins.aws.region us-west-2
 ```
 
 ### Environment Variables for Secrets
@@ -172,31 +172,31 @@ For sensitive values like API keys and credentials, use environment variables in
 
 ```bash
 # AWS credentials
-export PULUMICOST_PLUGIN_AWS_ACCESS_KEY_ID="your-access-key"
-export PULUMICOST_PLUGIN_AWS_SECRET_ACCESS_KEY="your-secret-key"
+export FINFOCUS_PLUGIN_AWS_ACCESS_KEY_ID="your-access-key"
+export FINFOCUS_PLUGIN_AWS_SECRET_ACCESS_KEY="your-secret-key"
 
 # Azure credentials
-export PULUMICOST_PLUGIN_AZURE_CLIENT_ID="your-client-id"
-export PULUMICOST_PLUGIN_AZURE_CLIENT_SECRET="your-client-secret"
+export FINFOCUS_PLUGIN_AZURE_CLIENT_ID="your-client-id"
+export FINFOCUS_PLUGIN_AZURE_CLIENT_SECRET="your-client-secret"
 
 # Kubecost API
-export PULUMICOST_PLUGIN_KUBECOST_API_KEY="your-api-key"
+export FINFOCUS_PLUGIN_KUBECOST_API_KEY="your-api-key"
 
 # Vantage API
-export PULUMICOST_PLUGIN_VANTAGE_API_TOKEN="your-token"
+export FINFOCUS_PLUGIN_VANTAGE_API_TOKEN="your-token"
 ```
 
-Environment variables override configuration file values and are the recommended way to handle sensitive data. The naming convention is: `PULUMICOST_PLUGIN_<PLUGIN_NAME>_<KEY_NAME>` in uppercase.
+Environment variables override configuration file values and are the recommended way to handle sensitive data. The naming convention is: `FINFOCUS_PLUGIN_<PLUGIN_NAME>_<KEY_NAME>` in uppercase.
 
 ### Configuration Management Commands (FUTURE)
 
 ```bash
 # View configuration
-pulumicost config get output.default_format
-pulumicost config list
+finfocus config get output.default_format
+finfocus config list
 
 # Validate configuration
-pulumicost config validate
+finfocus config validate
 ```
 
 ## Plugin Management
@@ -204,65 +204,65 @@ pulumicost config validate
 ### List Available Plugins
 
 ```bash
-pulumicost plugin list
+finfocus plugin list
 ```
 
 ### Inspect Plugin Capabilities
 
 ```bash
-pulumicost plugin inspect <plugin> <resource-type>
+finfocus plugin inspect <plugin> <resource-type>
 ```
 
 ### Install Plugin
 
 ```bash
-pulumicost plugin install <plugin>
+finfocus plugin install <plugin>
 ```
 
 ### Update Plugin
 
 ```bash
-pulumicost plugin update <plugin>
+finfocus plugin update <plugin>
 ```
 
 ### Remove Plugin
 
 ```bash
-pulumicost plugin remove <plugin>
+finfocus plugin remove <plugin>
 ```
 
 ### Validate Plugin Installation
 
 ```bash
-pulumicost plugin validate
+finfocus plugin validate
 ```
 
 ### Certify Plugin
 
 ```bash
-pulumicost plugin certify <plugin>
+finfocus plugin certify <plugin>
 ```
 
 ### Plugin Directory Structure
 
 ```
-~/.pulumicost/plugins/
+~/.finfocus/plugins/
 ├── kubecost/
 │   └── 1.0.0/
-│       └── pulumicost-kubecost
+│       └── finfocus-kubecost
 ├── vantage/
 │   └── 1.0.0/
-│       └── pulumicost-vantage
+│       └── finfocus-vantage
 ├── aws-plugin/
 │   └── 0.1.0/
-│       └── pulumicost-aws
+│       └── finfocus-aws
 ```
 
 ## Documentation
 
 Complete documentation is available in the [docs/](docs/) directory with guides for every audience:
 
-- **👤 End Users**: [User Guide](docs/guides/user-guide.md) - How to install and use PulumiCost
+- **👤 End Users**: [User Guide](docs/guides/user-guide.md) - How to install and use FinFocus
 - **🛠️ Engineers**: [Developer Guide](docs/guides/developer-guide.md) - How to extend and contribute
 - **🏗️ Architects**: [Architect Guide](docs/guides/architect-guide.md) - System design and integration
 - **💼 Business/CEO**: [Business Value](docs/guides/business-value.md) - ROI and competitive advantage
@@ -287,11 +287,11 @@ Complete documentation is available in the [docs/](docs/) directory with guides 
 
 ## Architecture
 
-PulumiCost Core is designed as a plugin-agnostic orchestrator:
+FinFocus Core is designed as a plugin-agnostic orchestrator:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Pulumi JSON   │    │  PulumiCost     │    │    Plugins      │
+│   Pulumi JSON   │    │  FinFocus     │    │    Plugins      │
 │     Output      │───▶│     Core        │───▶│  (Kubecost,     │
 │                 │    │                 │    │   Vantage, ...) │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
@@ -305,7 +305,7 @@ PulumiCost Core is designed as a plugin-agnostic orchestrator:
 
 ## Nightly Failure Analysis
 
-Pulumicost includes an automated workflow for analyzing nightly build failures. If a nightly build fails, an issue labeled `nightly-failure` is created. This triggers a workflow that:
+FinFocus includes an automated workflow for analyzing nightly build failures. If a nightly build fails, an issue labeled `nightly-failure` is created. This triggers a workflow that:
 
 1.  Retrieves build logs.
 2.  Analyzes the failure using an LLM (via OpenCode).
@@ -327,9 +327,9 @@ Apache-2.0 - See [LICENSE](LICENSE) for details.
 
 ## Related Projects
 
-- [pulumicost-spec](https://github.com/rshade/pulumicost-spec) - Protocol definitions and schemas
-- [pulumicost-plugin-kubecost](https://github.com/rshade/pulumicost-plugin-kubecost) - Kubecost integration plugin
-- [pulumicost-plugin-vantage](https://github.com/rshade/pulumicost-plugin-vantage) - Vantage cost intelligence plugin
+- [finfocus-spec](https://github.com/rshade/finfocus-spec) - Protocol definitions and schemas
+- [finfocus-plugin-kubecost](https://github.com/rshade/finfocus-plugin-kubecost) - Kubecost integration plugin
+- [finfocus-plugin-vantage](https://github.com/rshade/finfocus-plugin-vantage) - Vantage cost intelligence plugin
 
 ---
 

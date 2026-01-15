@@ -2,7 +2,7 @@
 
 **Branch**: `005-pluginsdk-interceptors` | **Date**: 2025-11-28 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/005-pluginsdk-interceptors/spec.md`
-**Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
+**Target Repository**: finfocus-spec (sdk/go/pluginsdk)
 
 ## Summary
 
@@ -28,7 +28,7 @@ as the first in the chain.
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: Feature enhances plugin SDK, not core
 - [x] **Test-Driven Development**: Tests planned for interceptor chaining and nil handling
@@ -36,7 +36,7 @@ Verify compliance with PulumiCost Core Constitution:
 - [x] **Documentation as Code**: Quickstart example and godoc updates planned
 - [x] **Protocol Stability**: No protocol buffer changes (struct field only)
 - [x] **Quality Gates**: make lint + make test required
-- [x] **Multi-Repo Coordination**: Change in pulumicost-spec only; core consumes via go.mod
+- [x] **Multi-Repo Coordination**: Change in finfocus-spec only; core consumes via go.mod
 
 **Violations Requiring Justification**: None
 
@@ -54,7 +54,7 @@ specs/005-pluginsdk-interceptors/
 └── tasks.md             # Phase 2 output (/speckit.tasks command)
 ```
 
-### Source Code (pulumicost-spec repository)
+### Source Code (finfocus-spec repository)
 
 ```text
 sdk/go/pluginsdk/

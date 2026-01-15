@@ -34,6 +34,6 @@
 
 - Specification is complete and ready for `/speckit.clarify` or `/speckit.plan`
 - The GitHub issue #216 provided comprehensive UX design and implementation tasks which informed this specification
-- Dependencies (#222 TUI package, pulumicost-spec#122 GetRecommendations RPC) are already implemented
+- Dependencies (#222 TUI package, finfocus-spec#122 GetRecommendations RPC) are already implemented
 - Existing `cost_recommendations.go` provides a foundation to enhance rather than build from scratch
 - Out-of-scope items (category/priority/savings filtering) can be added in future iterations

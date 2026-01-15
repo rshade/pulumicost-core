@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/logging"
 )
 
 // Property keys for Pulumi metadata injected into ResourceDescriptor.Properties.

@@ -7,7 +7,7 @@
 
 ## Summary
 
-Implement an End-to-End (E2E) testing framework for PulumiCost using the Pulumi Automation API. This framework will programmatically deploy AWS resources (e.g., T3 micro instances), run cost calculations, and validate that:
+Implement an End-to-End (E2E) testing framework for FinFocus using the Pulumi Automation API. This framework will programmatically deploy AWS resources (e.g., T3 micro instances), run cost calculations, and validate that:
 
 1. Projected costs match AWS list prices within ±5%.
 2. Actual costs are proportional to runtime duration.
@@ -35,13 +35,13 @@ Implement an End-to-End (E2E) testing framework for PulumiCost using the Pulumi 
 
 1. Create a real Pulumi YAML project directory with `Pulumi.yaml` (containing resources)
 2. Run `pulumi preview --json > preview.json` via CLI
-3. Pass the preview file to `pulumicost cost projected --pulumi-json preview.json`
+3. Pass the preview file to `finfocus cost projected --pulumi-json preview.json`
 
 **Why YAML instead of Go?**
 
 - ⚡ **4x faster**: YAML tests complete in ~2.5 min vs 10+ min with Go
 - 📦 **No dependencies**: No `go mod tidy` or SDK downloads needed
-- 🎯 **Same output**: `pulumicost` only needs the preview JSON - doesn't care what language generated it
+- 🎯 **Same output**: `finfocus` only needs the preview JSON - doesn't care what language generated it
 
 **Rejected Approaches:**
 
@@ -57,13 +57,13 @@ This ensures tests validate the actual user experience efficiently.
 **E2E tests validate the complete cost calculation chain in two modes:**
 
 1. **No Plugin Mode** (validates CLI parsing)
-   - Run `pulumicost cost projected` without plugins installed
+   - Run `finfocus cost projected` without plugins installed
    - Validates CLI correctly parses preview JSON and outputs $0.00
    - This is important to ensure CLI works even without plugins
 
 2. **Full Chain Mode** (validates actual cost calculations)
-   - Install `aws-public` plugin via `pulumicost plugin install aws-public`
-   - Run `pulumicost cost projected` with the plugin
+   - Install `aws-public` plugin via `finfocus plugin install aws-public`
+   - Run `finfocus cost projected` with the plugin
    - Validate cost output matches expected AWS pricing (~$7.59/month for t3.micro)
    - Optionally cleanup plugin after test
 
@@ -71,13 +71,13 @@ This ensures tests validate the actual user experience efficiently.
 
 ```bash
 # Install plugin programmatically in test setup
-pulumicost plugin install aws-public
+finfocus plugin install aws-public
 
 # Verify installation
-pulumicost plugin list
+finfocus plugin list
 
 # Optional cleanup after test
-pulumicost plugin remove aws-public
+finfocus plugin remove aws-public
 ```
 
 **Test Structure:**
@@ -89,7 +89,7 @@ pulumicost plugin remove aws-public
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Is this feature implemented as a plugin or orchestration logic? (Orchestration/Testing)
 - [x] **Test-Driven Development**: Are tests planned before implementation? (80% minimum coverage)
@@ -122,7 +122,7 @@ test/e2e/
 ├── projects/            # Real Pulumi project directories (user workflow)
 │   └── ec2/
 │       └── Pulumi.yaml  # Project definition (YAML runtime, no Go compilation)
-├── main_test.go         # Test harness (SetupProject, RunPulumicost, Teardown)
+├── main_test.go         # Test harness (SetupProject, RunFinFocus, Teardown)
 ├── e2e_white_box_test.go # White-box tests (importing packages)
 ├── e2e_black_box_test.go # Black-box tests (CLI binary)
 ├── cleanup.go           # Resource cleanup helpers

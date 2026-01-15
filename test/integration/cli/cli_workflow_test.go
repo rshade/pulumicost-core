@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/test/integration/helpers"
+	"github.com/rshade/finfocus/test/integration/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -136,7 +136,7 @@ func TestCLIWorkflow_Help(t *testing.T) {
 
 	// Test root help
 	output := h.ExecuteOrFail("--help")
-	h.AssertContains(output, "pulumicost")
+	h.AssertContains(output, "finfocus")
 	h.AssertContains(output, "cost")
 	h.AssertContains(output, "plugin")
 

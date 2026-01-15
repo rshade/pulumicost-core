@@ -33,5 +33,5 @@
 
 - All checklist items pass validation
 - Spec is ready for `/speckit.clarify` or `/speckit.plan`
-- External dependencies on pulumicost-plugin-aws-public issues #24 and #26 are documented
+- External dependencies on finfocus-plugin-aws-public issues #24 and #26 are documented
 - Out of scope items clearly delineated to prevent scope creep

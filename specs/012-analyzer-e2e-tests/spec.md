@@ -9,7 +9,7 @@
 
 ### User Story 1 - Verify Analyzer Handshake Protocol (Priority: P1)
 
-As a PulumiCost maintainer, I need to verify that the analyzer plugin successfully completes the handshake protocol with the Pulumi CLI, ensuring the gRPC server starts, prints the port number to stdout correctly, and establishes connection with the Pulumi engine.
+As a FinFocus maintainer, I need to verify that the analyzer plugin successfully completes the handshake protocol with the Pulumi CLI, ensuring the gRPC server starts, prints the port number to stdout correctly, and establishes connection with the Pulumi engine.
 
 **Why this priority**: The handshake is the foundation of all analyzer functionality. If handshake fails, no cost diagnostics can be delivered. This must work before any other feature can be validated.
 
@@ -17,7 +17,7 @@ As a PulumiCost maintainer, I need to verify that the analyzer plugin successful
 
 **Acceptance Scenarios**:
 
-1. **Given** a Pulumi project configured with the PulumiCost analyzer, **When** `pulumi preview` is executed, **Then** the analyzer server should start and complete the handshake without errors.
+1. **Given** a Pulumi project configured with the FinFocus analyzer, **When** `pulumi preview` is executed, **Then** the analyzer server should start and complete the handshake without errors.
 2. **Given** the analyzer is starting, **When** the Pulumi engine connects, **Then** the server should print only the port number to stdout (no other text).
 3. **Given** the analyzer is running, **When** the preview completes, **Then** the analyzer should gracefully shut down.
 
@@ -25,7 +25,7 @@ As a PulumiCost maintainer, I need to verify that the analyzer plugin successful
 
 ### User Story 2 - Verify Cost Diagnostics in Preview Output (Priority: P1)
 
-As a PulumiCost user running `pulumi preview`, I need to see cost estimation diagnostics in the preview output for each resource being created, so I can understand the cost implications before deploying.
+As a FinFocus user running `pulumi preview`, I need to see cost estimation diagnostics in the preview output for each resource being created, so I can understand the cost implications before deploying.
 
 **Why this priority**: This is the core value proposition of the analyzer - showing costs during preview. Without visible diagnostics, the feature provides no user benefit.
 
@@ -41,7 +41,7 @@ As a PulumiCost user running `pulumi preview`, I need to see cost estimation dia
 
 ### User Story 3 - Verify Stack Cost Summary (Priority: P2)
 
-As a PulumiCost user, I need to see a total estimated monthly cost summary for the entire stack at the end of the preview, so I can quickly understand overall cost impact.
+As a FinFocus user, I need to see a total estimated monthly cost summary for the entire stack at the end of the preview, so I can quickly understand overall cost impact.
 
 **Why this priority**: Summary provides aggregate value after individual diagnostics. Important but not critical for basic functionality validation.
 
@@ -56,7 +56,7 @@ As a PulumiCost user, I need to see a total estimated monthly cost summary for t
 
 ### User Story 4 - Verify Graceful Degradation (Priority: P2)
 
-As a PulumiCost maintainer, I need the analyzer to handle errors gracefully without blocking or failing the Pulumi preview, ensuring cost calculation issues never prevent infrastructure deployment.
+As a FinFocus maintainer, I need the analyzer to handle errors gracefully without blocking or failing the Pulumi preview, ensuring cost calculation issues never prevent infrastructure deployment.
 
 **Why this priority**: Important for production reliability but secondary to core functionality verification.
 
@@ -97,7 +97,7 @@ As a CI/CD pipeline maintainer, I need the E2E tests to run reliably in CI witho
 
 ### Functional Requirements
 
-- **FR-001**: System MUST build the `pulumicost` binary before running E2E tests using the existing TestMain pattern.
+- **FR-001**: System MUST build the `finfocus` binary before running E2E tests using the existing TestMain pattern.
 - **FR-002**: System MUST create test Pulumi projects as fixtures with predictable resources for validation.
 - **FR-003**: System MUST use `pulumi login --local` to avoid cloud backend dependencies.
 - **FR-004**: System MUST configure the analyzer plugin in test project's `Pulumi.yaml` using the `analyzers` configuration.
@@ -113,7 +113,7 @@ As a CI/CD pipeline maintainer, I need the E2E tests to run reliably in CI witho
 ### Key Entities
 
 - **Test Fixture Project**: A minimal Pulumi project (YAML-based) with predictable resources for testing. Contains `Pulumi.yaml` with analyzer configuration and resource definitions.
-- **Analyzer Configuration**: The `analyzers` section in `Pulumi.yaml` pointing to the built `pulumicost` binary with path and version.
+- **Analyzer Configuration**: The `analyzers` section in `Pulumi.yaml` pointing to the built `finfocus` binary with path and version.
 - **Diagnostic Output**: The cost estimation messages that appear in `pulumi preview` output, including per-resource costs and status.
 - **Stack Summary**: The aggregate cost summary diagnostic at the end of preview showing total monthly cost.
 
@@ -133,7 +133,7 @@ As a CI/CD pipeline maintainer, I need the E2E tests to run reliably in CI witho
 
 - Pulumi CLI v3.x or later is available in CI environment (already installed per `nightly.yml`).
 - YAML-based Pulumi projects are used for test fixtures to avoid additional language runtime dependencies.
-- The `pulumicost` binary is built before tests run (existing TestMain pattern).
+- The `finfocus` binary is built before tests run (existing TestMain pattern).
 - Real AWS resources (t3.micro EC2) are used to validate actual cost accuracy.
 - AWS credentials are configured in both local environment and `nightly.yml`.
 - The `aws-public` plugin is installed using existing `PluginManager` infrastructure.
@@ -145,7 +145,7 @@ As a CI/CD pipeline maintainer, I need the E2E tests to run reliably in CI witho
 
 - Pulumi CLI must be installed in CI environment (already configured in `nightly.yml`).
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) in CI environment.
-- Built `pulumicost` binary with analyzer functionality.
+- Built `finfocus` binary with analyzer functionality.
 - `aws-public` plugin for accurate pricing data.
 - Existing E2E test framework in `test/e2e/`.
 - Go 1.25.5+ for test execution.

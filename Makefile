@@ -1,4 +1,4 @@
-BINARY=pulumicost
+BINARY=finfocus
 VERSION?=$(shell git describe --tags --always --dirty)
 COMMIT=$(shell git rev-parse HEAD)
 BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -9,9 +9,9 @@ MARKDOWNLINT?=markdownlint
 MARKDOWNLINT_FILES?=AGENTS.md
 ACTIONLINT?=$(HOME)/go/bin/actionlint
 
-LDFLAGS=-ldflags "-X 'github.com/rshade/pulumicost-core/pkg/version.version=$(VERSION)' \
-                  -X 'github.com/rshade/pulumicost-core/pkg/version.gitCommit=$(COMMIT)' \
-                  -X 'github.com/rshade/pulumicost-core/pkg/version.buildDate=$(BUILD_DATE)'"
+LDFLAGS=-ldflags "-X 'github.com/rshade/finfocus/pkg/version.version=$(VERSION)' \
+                  -X 'github.com/rshade/finfocus/pkg/version.gitCommit=$(COMMIT)' \
+                  -X 'github.com/rshade/finfocus/pkg/version.buildDate=$(BUILD_DATE)'"
 
 .PHONY: all build build-recorder build-plugin install-recorder build-all test test-unit test-race test-integration test-e2e test-all lint lint-actions validate clean run dev inspect help docs-lint docs-sync docs-serve docs-build docs-validate
 
@@ -20,31 +20,31 @@ all: build build-plugin
 build-recorder:
 	@echo "Building recorder plugin..."
 	@mkdir -p bin
-	go build $(LDFLAGS) -o bin/pulumicost-plugin-recorder ./plugins/recorder/cmd
+	go build $(LDFLAGS) -o bin/finfocus-plugin-recorder ./plugins/recorder/cmd
 
 build-plugin:
 	@echo "Building Pulumi tool plugin..."
 	@mkdir -p bin
-	go build $(LDFLAGS) -o bin/pulumi-tool-cost ./cmd/pulumicost
+	go build $(LDFLAGS) -o bin/pulumi-tool-finfocus ./cmd/finfocus
 
 RECORDER_VERSION=0.1.0
-RECORDER_INSTALL_DIR=$(HOME)/.pulumicost/plugins/recorder/$(RECORDER_VERSION)
+RECORDER_INSTALL_DIR=$(HOME)/.finfocus/plugins/recorder/$(RECORDER_VERSION)
 
 install-recorder: build-recorder
 	@echo "Installing recorder plugin to $(RECORDER_INSTALL_DIR)..."
 	@mkdir -p $(RECORDER_INSTALL_DIR)
-	cp bin/pulumicost-plugin-recorder $(RECORDER_INSTALL_DIR)/
+	cp bin/finfocus-plugin-recorder $(RECORDER_INSTALL_DIR)/
 	cp plugins/recorder/plugin.manifest.json $(RECORDER_INSTALL_DIR)/
 	chmod 644 $(RECORDER_INSTALL_DIR)/plugin.manifest.json
 	@echo "Recorder plugin installed successfully."
-	@echo "Verify with: pulumicost plugin list"
+	@echo "Verify with: finfocus plugin list"
 
 build-all: build build-recorder build-plugin
 
 build:
 	@echo "Building $(BINARY)..."
 	@mkdir -p bin
-	go build $(LDFLAGS) -o bin/$(BINARY) ./cmd/pulumicost
+	go build $(LDFLAGS) -o bin/$(BINARY) ./cmd/finfocus
 
 # Default test target - runs unit tests only (fast, for CI and local dev)
 # Note: ./test/unit/... excluded as some tests are environment-dependent
@@ -145,7 +145,7 @@ docs-sync:
 	@echo "Documentation synced."
 
 docs-serve: docs-sync
-	@echo "Serving documentation locally at http://localhost:4000/pulumicost-core"
+	@echo "Serving documentation locally at http://localhost:4000/finfocus"
 	@cd docs && bundle install > /dev/null 2>&1 || true
 	@cd docs && bundle exec jekyll serve --host 0.0.0.0
 
@@ -170,7 +170,7 @@ help:
 	@echo "  build            - Build the binary"
 	@echo "  build-recorder   - Build the recorder plugin"
 	@echo "  build-plugin     - Build Pulumi tool plugin (pulumi-tool-cost)"
-	@echo "  install-recorder - Build and install recorder plugin to ~/.pulumicost/plugins/"
+	@echo "  install-recorder - Build and install recorder plugin to ~/.finfocus/plugins/"
 	@echo "  build-all        - Build binary and all plugins"
 	@echo "  test             - Run unit tests (fast, default)"
 	@echo "  test-unit        - Run unit tests only"

@@ -8,7 +8,7 @@
 
 ### 1. Pulumi Analyzer Plugin Configuration Strategy
 
-**Context**: We need to configure Pulumi to use the locally-built `pulumicost` binary as an analyzer plugin during `pulumi preview`.
+**Context**: We need to configure Pulumi to use the locally-built `finfocus` binary as an analyzer plugin during `pulumi preview`.
 
 **Decision**: Use the `plugins.analyzers` section in `Pulumi.yaml` to reference the local binary path.
 
@@ -22,14 +22,14 @@
 **Configuration Format**:
 
 ```yaml
-name: pulumicost-analyzer-e2e
+name: finfocus-analyzer-e2e
 runtime: yaml
 description: E2E test project for analyzer plugin validation
 
 plugins:
   analyzers:
-    - name: pulumicost
-      path: /absolute/path/to/bin/pulumicost
+    - name: finfocus
+      path: /absolute/path/to/bin/finfocus
       version: 0.0.0-dev
 ```
 
@@ -55,14 +55,14 @@ plugins:
 **Test Project Structure**:
 
 ```yaml
-name: pulumicost-analyzer-e2e
+name: finfocus-analyzer-e2e
 runtime: yaml
 description: E2E test for analyzer plugin with real AWS resources
 
 plugins:
   analyzers:
-    - name: pulumicost
-      path: ${PULUMICOST_BINARY}
+    - name: finfocus
+      path: ${FINFOCUS_BINARY}
 
 resources:
   # Real EC2 instance for accurate cost validation
@@ -123,7 +123,7 @@ variables:
 "Total Estimated Monthly Cost: $"
 
 # Policy pack attribution
-"pulumicost"
+"finfocus"
 
 # Graceful degradation message
 "Unable to estimate cost" or "No pricing information available"

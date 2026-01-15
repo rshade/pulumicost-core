@@ -1,11 +1,11 @@
-# Quickstart: PulumiCost Analyzer Plugin
+# Quickstart: FinFocus Analyzer Plugin
 
 **Feature**: 009-analyzer-plugin
 **Date**: 2025-12-05
 
 ## Overview
 
-The PulumiCost Analyzer enables **zero-click cost estimation** directly within `pulumi preview`. After installation, cost estimates appear automatically for every resource in your stack.
+The FinFocus Analyzer enables **zero-click cost estimation** directly within `pulumi preview`. After installation, cost estimates appear automatically for every resource in your stack.
 
 ```text
 Previewing update (dev):
@@ -14,10 +14,10 @@ Previewing update (dev):
  +   └─ aws:ec2:Instance  webserver    create
 
 Diagnostics:
-  pulumicost:
+  finfocus:
     INFO: Estimated Monthly Cost: $8.45 USD (source: local-spec)
 
-  pulumicost:stack-cost-summary:
+  finfocus:stack-cost-summary:
     INFO: Total Estimated Monthly Cost: $8.45 USD (1 resources analyzed)
 ```
 
@@ -34,22 +34,22 @@ Diagnostics:
 ```bash
 # Download the latest release
 curl -L -o pulumi-analyzer-cost.tar.gz \
-    https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m).tar.gz
+    https://github.com/rshade/finfocus/releases/latest/download/finfocus-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m).tar.gz
 
 # Extract and install
 tar -xzf pulumi-analyzer-cost.tar.gz
-VERSION=$(./pulumicost version 2>&1 | grep -oP 'v[\d.]+' || echo "v0.1.0")
+VERSION=$(./finfocus version 2>&1 | grep -oP 'v[\d.]+' || echo "v0.1.0")
 PLUGIN_DIR=~/.pulumi/plugins/analyzer-cost-${VERSION}
 mkdir -p "$PLUGIN_DIR"
-mv pulumicost "$PLUGIN_DIR/pulumi-analyzer-cost"
+mv finfocus "$PLUGIN_DIR/pulumi-analyzer-cost"
 ```
 
 ### Option 2: Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/rshade/pulumicost-core.git
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus.git
+cd finfocus-core
 
 # Build the binary
 make build
@@ -58,7 +58,7 @@ make build
 VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "v0.1.0")
 PLUGIN_DIR=~/.pulumi/plugins/analyzer-cost-${VERSION}
 mkdir -p "$PLUGIN_DIR"
-cp bin/pulumicost "$PLUGIN_DIR/pulumi-analyzer-cost"
+cp bin/finfocus "$PLUGIN_DIR/pulumi-analyzer-cost"
 ```
 
 ### Verify Installation
@@ -88,9 +88,9 @@ analyzers:
   - cost
 ```
 
-### Optional: PulumiCost Configuration
+### Optional: FinFocus Configuration
 
-Create `~/.pulumicost/config.yaml` for advanced settings:
+Create `~/.finfocus/config.yaml` for advanced settings:
 
 ```yaml
 # Analyzer settings
@@ -115,9 +115,9 @@ output:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PULUMICOST_LOG_LEVEL` | Logging level | `info` |
-| `PULUMICOST_LOG_FORMAT` | Log format (text/json) | `text` |
-| `PULUMICOST_CONFIG` | Config file path | `~/.pulumicost/config.yaml` |
+| `FINFOCUS_LOG_LEVEL` | Logging level | `info` |
+| `FINFOCUS_LOG_FORMAT` | Log format (text/json) | `text` |
+| `FINFOCUS_CONFIG` | Config file path | `~/.finfocus/config.yaml` |
 
 ## Usage
 
@@ -136,7 +136,7 @@ Cost estimates appear in the diagnostics section for each resource.
 For troubleshooting:
 
 ```bash
-PULUMICOST_LOG_LEVEL=debug pulumi preview 2>&1 | tee preview.log
+FINFOCUS_LOG_LEVEL=debug pulumi preview 2>&1 | tee preview.log
 ```
 
 ### Supported Resources
@@ -165,19 +165,19 @@ Previewing update (dev):
  +   └─ aws:s3:Bucket         assets        create
 
 Diagnostics:
-  pulumicost:cost-estimate (webserver):
+  finfocus:cost-estimate (webserver):
     INFO: Estimated Monthly Cost: $8.45 USD (source: local-spec)
          Instance type: t3.micro
 
-  pulumicost:cost-estimate (database):
+  finfocus:cost-estimate (database):
     INFO: Estimated Monthly Cost: $25.00 USD (source: local-spec)
          Instance class: db.t3.micro
 
-  pulumicost:cost-estimate (assets):
+  finfocus:cost-estimate (assets):
     INFO: Estimated Monthly Cost: $0.50 USD (source: local-spec)
          Storage class: Standard
 
-  pulumicost:stack-cost-summary:
+  finfocus:stack-cost-summary:
     INFO: Total Estimated Monthly Cost: $33.95 USD (3 resources analyzed)
 ```
 
@@ -214,8 +214,8 @@ This is normal for resources without pricing data. The analyzer continues with o
 To add custom pricing specs:
 
 ```bash
-mkdir -p ~/.pulumicost/specs
-cat > ~/.pulumicost/specs/aws-myservice-default.yaml << EOF
+mkdir -p ~/.finfocus/specs
+cat > ~/.finfocus/specs/aws-myservice-default.yaml << EOF
 name: aws-myservice-default
 provider: aws
 service: myservice
@@ -233,7 +233,7 @@ If preview hangs or times out:
 2. Reduce stack size or increase timeout:
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 analyzer:
   timeout:
     total: 120s
@@ -244,13 +244,13 @@ analyzer:
 Enable debug logging to diagnose issues:
 
 ```bash
-PULUMICOST_LOG_LEVEL=debug pulumi preview 2>debug.log
+FINFOCUS_LOG_LEVEL=debug pulumi preview 2>debug.log
 ```
 
 Logs go to stderr (required by Pulumi plugin protocol).
 
 ## Next Steps
 
-- **[Developer Guide](../../docs/guides/developer-guide.md)**: Extend PulumiCost with custom plugins
+- **[Developer Guide](../../docs/guides/developer-guide.md)**: Extend FinFocus with custom plugins
 - **[Architecture Guide](../../docs/guides/architect-guide.md)**: Understand the plugin architecture
 - **[CLI Reference](../../docs/reference/cli.md)**: Full CLI documentation

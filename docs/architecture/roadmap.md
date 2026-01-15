@@ -1,15 +1,15 @@
 ---
 title: Product Roadmap & Quarterly Priorities
-description: Strategic roadmap for pulumicost-core evolution with milestones, vision, and cross-repository dependencies
+description: Strategic roadmap for finfocus evolution with milestones, vision, and cross-repository dependencies
 layout: default
 ---
 
 <!-- markdownlint-disable MD025 -->
 
-## pulumicost-core Strategic Roadmap
+## finfocus Strategic Roadmap
 
 This roadmap maps 1:1 with tracked work in GitHub Issues. It outlines the
-evolution of `pulumicost-core` while strictly adhering to the technical
+evolution of `finfocus` while strictly adhering to the technical
 guardrails in `CONTEXT.md`.
 
 ## Past Milestones (Done)
@@ -28,81 +28,81 @@ guardrails in `CONTEXT.md`.
   - [x] Core Analyzer implementation (#245, #229)
   - [x] E2E testing with Pulumi Automation API (#177, #238)
   - [x] Comprehensive E2E tests for Analyzer integration
-        ([#228](https://github.com/rshade/pulumicost-core/issues/228))
+        ([#228](https://github.com/rshade/finfocus/issues/228))
   - [ ] Cross-Repository Integration Test Workflow
-        ([#236](https://github.com/rshade/pulumicost-core/issues/236))
+        ([#236](https://github.com/rshade/finfocus/issues/236))
   - [x] Add recommendations to analyzer diagnostics
-        ([#321](https://github.com/rshade/pulumicost-core/issues/321))
+        ([#321](https://github.com/rshade/finfocus/issues/321))
 - [ ] **Developer Experience & Tooling**
   - [ ] Update Plugin Generator Templates (includes gRPC reflection)
-        ([#248](https://github.com/rshade/pulumicost-core/issues/248))
+        ([#248](https://github.com/rshade/finfocus/issues/248))
   - [ ] Dynamic Data Recording via Integration Plans
-        ([#275](https://github.com/rshade/pulumicost-core/issues/275))
+        ([#275](https://github.com/rshade/finfocus/issues/275))
 - [ ] **Enhanced Visualization**
   - [x] Shared TUI package with Bubble Tea (#222, #258)
   - [ ] Upgrade cost commands to enhanced TUI
-        ([#218](https://github.com/rshade/pulumicost-core/issues/218))
+        ([#218](https://github.com/rshade/finfocus/issues/218))
 
 ## Near-Term Vision (v0.3.0 - Intelligence & Sustainability)
 
 - [ ] **Budgeting & Cost Controls**
   - [ ] Budget health calculation & threshold alerting
-        ([#267](https://github.com/rshade/pulumicost-core/issues/267))
+        ([#267](https://github.com/rshade/finfocus/issues/267))
   - [ ] Provider filtering & summary aggregation for Budgets
-        ([#263](https://github.com/rshade/pulumicost-core/issues/263))
+        ([#263](https://github.com/rshade/finfocus/issues/263))
   - [ ] Flexible budget scoping (per-provider, per-resource)
-        ([#221](https://github.com/rshade/pulumicost-core/issues/221))
+        ([#221](https://github.com/rshade/finfocus/issues/221))
   - [ ] Budget status display in CLI
-        ([#217](https://github.com/rshade/pulumicost-core/issues/217))
+        ([#217](https://github.com/rshade/finfocus/issues/217))
 - [ ] **Sustainability (GreenOps)**
   - [x] Integrate Sustainability Metrics into Engine & TUI
-        ([#302](https://github.com/rshade/pulumicost-core/issues/302))
+        ([#302](https://github.com/rshade/finfocus/issues/302))
   - [ ] GreenOps Impact Equivalencies
-        ([#303](https://github.com/rshade/pulumicost-core/issues/303))
+        ([#303](https://github.com/rshade/finfocus/issues/303))
 - [ ] **Actionable Insights**
   - [ ] Recommendations command for FinOps optimization
-        ([#216](https://github.com/rshade/pulumicost-core/issues/216))
+        ([#216](https://github.com/rshade/finfocus/issues/216))
   - [ ] Support extended RecommendationActionType enum
-        ([#298](https://github.com/rshade/pulumicost-core/issues/298))
+        ([#298](https://github.com/rshade/finfocus/issues/298))
   - [ ] Add --estimate-confidence flag for actual cost transparency
-        ([#333](https://github.com/rshade/pulumicost-core/issues/333))
+        ([#333](https://github.com/rshade/finfocus/issues/333))
 - [ ] **Forecasting & Projections ("Cost Time Machine")**
-      ([#364](https://github.com/rshade/pulumicost-core/issues/364))
+      ([#364](https://github.com/rshade/finfocus/issues/364))
   - [ ] Projection Math Engine (Linear/Exponential extrapolation)
   - [ ] TUI: ASCII Line Chart visualization for 6-12 month forecasts
   - _Cross-Repo:_ Requires `GrowthType`/`GrowthRate` in
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+    [finfocus-spec](https://github.com/rshade/finfocus-spec)
 - [ ] **Governance Overrides ("YOLO Mode")**
-      ([#365](https://github.com/rshade/pulumicost-core/issues/365))
+      ([#365](https://github.com/rshade/finfocus/issues/365))
   - [ ] CLI: Implement `--yolo` / `--force` flag to bypass budget gates
   - [ ] UX: "Warning Mode" UI styles for bypassed runs
   - _Cross-Repo:_ Requires `BypassReason` in
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+    [finfocus-spec](https://github.com/rshade/finfocus-spec)
 - [ ] **Contextual Profiles ("Dev Mode")**
-      ([#368](https://github.com/rshade/pulumicost-core/issues/368))
+      ([#368](https://github.com/rshade/finfocus/issues/368))
   - [ ] CLI: Implement `--profile` flag (e.g., `dev`, `prod`) to pass hints
         to plugins
-  - [ ] Configuration: Allow default profile definition in `pulumicost.yaml`
+  - [ ] Configuration: Allow default profile definition in `finfocus.yaml`
   - _Cross-Repo:_ Requires `UsageProfile` enum in
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+    [finfocus-spec](https://github.com/rshade/finfocus-spec)
 
 ## Stability & Maintenance
 
 - [x] **Quality Gates**
   - [x] Improve CLI package coverage to 75% (achieved 74.5%)
-        ([#269](https://github.com/rshade/pulumicost-core/issues/269))
+        ([#269](https://github.com/rshade/finfocus/issues/269))
   - [x] Integration Test Suite for Plugin Communication
-        ([#235](https://github.com/rshade/pulumicost-core/issues/235))
+        ([#235](https://github.com/rshade/finfocus/issues/235))
 - [ ] **Performance & Scale**
   - [ ] Pagination for large datasets
-        ([#225](https://github.com/rshade/pulumicost-core/issues/225))
+        ([#225](https://github.com/rshade/finfocus/issues/225))
   - [ ] Plugin installer: remove old versions during install
-        ([#237](https://github.com/rshade/pulumicost-core/issues/237))
+        ([#237](https://github.com/rshade/finfocus/issues/237))
 - [ ] **CI/CD & Automation**
   - [ ] Harden Nightly Analysis Workflow
-        ([#325](https://github.com/rshade/pulumicost-core/issues/325))
+        ([#325](https://github.com/rshade/finfocus/issues/325))
   - [ ] Automated nightly failure analysis with OpenCode
-        ([#271](https://github.com/rshade/pulumicost-core/issues/271))
+        ([#271](https://github.com/rshade/finfocus/issues/271))
 
 ## Icebox / Backlog
 
@@ -111,21 +111,21 @@ guardrails in `CONTEXT.md`.
       requires external service integration to maintain core statelessness_
 - [ ] Vantage Plugin Integration (#103) - _Deprioritized_
 - [ ] **Dependency Visualization ("Blast Radius")**
-      ([#366](https://github.com/rshade/pulumicost-core/issues/366))
+      ([#366](https://github.com/rshade/finfocus/issues/366))
   - [ ] TUI: Interactive Dependency Tree view (consuming Lineage Metadata)
   - _Cross-Repo:_ Consumes `CostAllocationLineage`/`ParentResourceID` from
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+    [finfocus-spec](https://github.com/rshade/finfocus-spec)
 - [ ] **Spot Market Advisor**
-      ([#367](https://github.com/rshade/pulumicost-core/issues/367))
+      ([#367](https://github.com/rshade/finfocus/issues/367))
   - [ ] TUI: Highlight Spot savings in Cyan; show Risk Icon
   - [ ] Display "Savings vs On-Demand" percentage
   - _Cross-Repo:_ Requires `PricingTier`/`SpotRisk` enums in
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec); CE plugin
+    [finfocus-spec](https://github.com/rshade/finfocus-spec); CE plugin
     implements `DescribeSpotPriceHistory`
 - [ ] **Mixed-Currency Aggregation Strategy (MCP Alignment)**
   - _Objective_: Implement core-level grouping for multi-currency stacks to
-    support the [pulumicost-mcp Mixed-Currency
-    Research](https://github.com/rshade/pulumicost-mcp/blob/main/ROADMAP.md#1-mixed-currency-aggregation-strategy).
+    support the [finfocus-mcp Mixed-Currency
+    Research](https://github.com/rshade/finfocus-mcp/blob/main/ROADMAP.md#1-mixed-currency-aggregation-strategy).
   - _Technical Approach_: Enhance `CostResult` aggregation logic to preserve
     currency codes and provide structured groupings for downstream consumers
     (CLI, TUI, MCP).
@@ -169,10 +169,10 @@ guardrails in `CONTEXT.md`.
     in-memory property change by receiving and displaying a new `CostResult`
     from the plugin.
 - [ ] **OpenCost Compatibility Mapping**
-  - _Objective_: Integrate `pulumicost` with the broader FinOps ecosystem by
+  - _Objective_: Integrate `finfocus` with the broader FinOps ecosystem by
     supporting standardized data exchange formats.
   - _Technical Approach_: Create a transformation layer that maps the
-    `pulumicost.CostResult` struct to the JSON schema defined by the
+    `finfocus.CostResult` struct to the JSON schema defined by the
     [OpenCost Specification](https://www.opencost.io/).
   - _Anti-Guess Boundary_: The core MUST NOT attempt to synthesize missing
     OpenCost fields (e.g., Kubernetes metadata); if the data is not present
@@ -201,5 +201,5 @@ guardrails in `CONTEXT.md`.
 2. **Feature Bloom**: Issue #141 (Distributed calculation) seems out of scope
    for a "Lightweight Orchestrator." Should this be closed as "Will Not Do"?
 3. **Budget Health**: Feature #267 assumes thresholds are stored in
-   `~/.pulumicost/config.yaml`. Does this local config-driven approach
+   `~/.finfocus/config.yaml`. Does this local config-driven approach
    satisfy our "transient to the process" mandate?

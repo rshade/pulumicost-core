@@ -6,7 +6,7 @@
 
 ## Technical Context
 
-**Objective**: Update `pulumicost-core` to ingest, aggregate, and display sustainability metrics (specifically Carbon Footprint) from plugins.
+**Objective**: Update `finfocus-core` to ingest, aggregate, and display sustainability metrics (specifically Carbon Footprint) from plugins.
 
 **Architecture**:
 - **Source**: Plugins return `ImpactMetrics` in `GetProjectedCostResponse` (Protobuf).
@@ -47,7 +47,7 @@
 - Add unit tests for struct serialization.
 
 ### Step 2: Proto Adapter (Ingest)
-- Update `internal/proto/adapter.go` to map `pulumicost_v1.ImpactMetric` to `engine.ImpactMetric`.
+- Update `internal/proto/adapter.go` to map `finfocus_v1.ImpactMetric` to `engine.ImpactMetric`.
 - Unit test: Mock plugin response -> `ToCostResult` -> Verify fields.
 
 ### Step 3: Aggregation Logic (Engine)

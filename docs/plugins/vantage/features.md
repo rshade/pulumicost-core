@@ -1,11 +1,11 @@
 ---
 layout: default
 title: Vantage Plugin Features
-description: Supported cloud providers, cost types, limitations, and roadmap for the PulumiCost Vantage plugin
+description: Supported cloud providers, cost types, limitations, and roadmap for the FinFocus Vantage plugin
 ---
 
 This document describes the features, capabilities, and limitations of the
-Vantage plugin for PulumiCost.
+Vantage plugin for FinFocus.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Vantage plugin for PulumiCost.
 ## Overview
 
 The Vantage plugin is a read-only adapter that fetches normalized cost and
-usage data from Vantage's REST API and maps it to PulumiCost's internal
+usage data from Vantage's REST API and maps it to FinFocus's internal
 schema with FinOps FOCUS 1.2 compatibility.
 
 ### Key Capabilities
@@ -45,25 +45,25 @@ through Vantage's aggregation API:
 
 ### Fully Supported
 
-| Provider | Support Level | Notes |
-|---|---|---|
-| **AWS** | Full | All services, RI/SP, data transfer |
-| **Google Cloud (GCP)** | Full | All services, committed use discounts |
-| **Microsoft Azure** | Full | All services, reservations |
-| **Kubernetes** | Full | Via Vantage's Kubernetes integration |
-| **Snowflake** | Full | Compute and storage costs |
-| **Databricks** | Full | Workspace and cluster costs |
-| **MongoDB Atlas** | Full | Cluster and data transfer costs |
-| **Datadog** | Full | Monitoring and APM costs |
-| **Confluent Cloud** | Full | Kafka cluster costs |
-| **Fastly** | Full | CDN and compute costs |
+| Provider               | Support Level | Notes                                 |
+| ---------------------- | ------------- | ------------------------------------- |
+| **AWS**                | Full          | All services, RI/SP, data transfer    |
+| **Google Cloud (GCP)** | Full          | All services, committed use discounts |
+| **Microsoft Azure**    | Full          | All services, reservations            |
+| **Kubernetes**         | Full          | Via Vantage's Kubernetes integration  |
+| **Snowflake**          | Full          | Compute and storage costs             |
+| **Databricks**         | Full          | Workspace and cluster costs           |
+| **MongoDB Atlas**      | Full          | Cluster and data transfer costs       |
+| **Datadog**            | Full          | Monitoring and APM costs              |
+| **Confluent Cloud**    | Full          | Kafka cluster costs                   |
+| **Fastly**             | Full          | CDN and compute costs                 |
 
 ### Partial Support
 
-| Provider | Support Level | Limitations |
-|---|---|---|
-| **Oracle Cloud** | Partial | Limited service coverage |
-| **Alibaba Cloud** | Partial | Core services only |
+| Provider          | Support Level | Limitations              |
+| ----------------- | ------------- | ------------------------ |
+| **Oracle Cloud**  | Partial       | Limited service coverage |
+| **Alibaba Cloud** | Partial       | Core services only       |
 
 ### Provider Detection
 
@@ -84,15 +84,15 @@ kubernetes:apps:Pod    → Provider: Kubernetes
 
 The plugin supports multiple cost metric types:
 
-| Metric | Description | Availability |
-|---|---|---|
-| **cost** | Net cost after discounts, before taxes | All providers |
-| **amortized_cost** | Amortized including RI/SP allocation | AWS, GCP, Azure |
-| **usage** | Usage quantity in native units | All providers |
-| **effective_unit_price** | Computed per-unit cost | All providers |
-| **taxes** | Tax amounts | AWS, Azure |
-| **credits** | Free tier, promotional credits | AWS, GCP, Azure |
-| **refunds** | Refund amounts | AWS, Azure |
+| Metric                   | Description                            | Availability    |
+| ------------------------ | -------------------------------------- | --------------- |
+| **cost**                 | Net cost after discounts, before taxes | All providers   |
+| **amortized_cost**       | Amortized including RI/SP allocation   | AWS, GCP, Azure |
+| **usage**                | Usage quantity in native units         | All providers   |
+| **effective_unit_price** | Computed per-unit cost                 | All providers   |
+| **taxes**                | Tax amounts                            | AWS, Azure      |
+| **credits**              | Free tier, promotional credits         | AWS, GCP, Azure |
+| **refunds**              | Refund amounts                         | AWS, Azure      |
 
 ### Cost Dimensions
 
@@ -121,21 +121,21 @@ Fetch actual historical costs from Vantage:
 
 ```bash
 # Daily costs for date range
-pulumicost cost actual \
+finfocus cost actual \
   --plugin vantage \
   --start-date 2024-01-01 \
   --end-date 2024-01-31 \
   --granularity day
 
 # Group by service
-pulumicost cost actual \
+finfocus cost actual \
   --plugin vantage \
   --start-date 2024-01-01 \
   --end-date 2024-01-31 \
   --group-by service
 
 # Filter by tags
-pulumicost cost actual \
+finfocus cost actual \
   --plugin vantage \
   --filter "tag:environment=production" \
   --start-date 2024-01-01 \
@@ -148,7 +148,7 @@ Retrieve forecast snapshots:
 
 ```bash
 # Get forecast data
-pulumicost-vantage forecast \
+finfocus-vantage forecast \
   --config config.yaml \
   --out forecast.json
 ```
@@ -159,10 +159,10 @@ Daily sync with bookmark tracking:
 
 ```bash
 # Incremental sync (captures D-3 to D-1 for late postings)
-pulumicost-vantage pull --config config.yaml
+finfocus-vantage pull --config config.yaml
 
 # Backfill historical data
-pulumicost-vantage backfill --config config.yaml --months 12
+finfocus-vantage backfill --config config.yaml --months 12
 ```
 
 ### Tag Filtering
@@ -172,9 +172,9 @@ Filter by specific tag prefixes:
 ```yaml
 params:
   tag_prefix_filters:
-    - "user:"
-    - "kubernetes.io/"
-    - "cost-center:"
+    - 'user:'
+    - 'kubernetes.io/'
+    - 'cost-center:'
 ```
 
 ### Output Formats
@@ -226,7 +226,7 @@ params:
 - **Description**: Plugin retrieves cost data but doesn't provide
   recommendations
 - **Impact**: Optimization analysis must be done separately
-- **Workaround**: Use PulumiCost analyzers or Vantage console for
+- **Workaround**: Use FinFocus analyzers or Vantage console for
   recommendations
 
 #### 7. Provider Metric Availability
@@ -255,7 +255,7 @@ params:
 #### Q1 2025
 
 - 🔄 **Cost Anomaly Detection**: Automatic identification of cost spikes
-- 🔄 **Budget Alerts Integration**: Sync Vantage budgets with PulumiCost
+- 🔄 **Budget Alerts Integration**: Sync Vantage budgets with FinFocus
 - 🔄 **Enhanced Tag Management**: Advanced tag normalization rules
 
 #### Q2 2025
@@ -275,7 +275,7 @@ params:
 
 - Enhanced Kubernetes cost allocation
 - Multi-region cost aggregation with currency conversion
-- Integration with PulumiCost policy engine
+- Integration with FinFocus policy engine
 - Advanced filtering with VQL (Vantage Query Language) support
 
 ---
@@ -286,15 +286,15 @@ params:
 
 **Plugin Version:** v0.1.0
 **Vantage API Version:** v1
-**PulumiCost Protocol:** v0.1.0
+**FinFocus Protocol:** v0.1.0
 **FOCUS Spec:** 1.2
 
 ### Compatibility Matrix
 
-| Plugin Version | Vantage API | PulumiCost Core | FOCUS Spec |
-|---|---|---|---|
-| v0.1.0 | v1 | v0.1.0+ | 1.2 |
-| v0.2.0 (planned) | v1 | v0.2.0+ | 1.2 |
+| Plugin Version   | Vantage API | FinFocus Core | FOCUS Spec |
+| ---------------- | ----------- | ------------- | ---------- |
+| v0.1.0           | v1          | v0.1.0+       | 1.2        |
+| v0.2.0 (planned) | v1          | v0.2.0+       | 1.2        |
 
 ### Breaking Changes
 
@@ -370,14 +370,14 @@ Future breaking changes will be announced with:
 
 ### Vantage Plugin vs. Other Plugins
 
-| Feature | Vantage | Kubecost | AWS Cost Explorer |
-|---|---|---|---|
-| **Multi-Cloud** | ✅ Full | ❌ K8s only | ❌ AWS only |
-| **FOCUS Compliance** | ✅ Yes | ⚠️ Partial | ❌ No |
-| **Tag Filtering** | ✅ Advanced | ✅ Basic | ✅ Basic |
-| **Forecasting** | ✅ Snapshot | ❌ No | ✅ ML-based |
-| **Real-Time** | ❌ 12-48h lag | ✅ Near real-time | ❌ 24h lag |
-| **Optimization** | ❌ No | ✅ Yes | ✅ Yes |
+| Feature              | Vantage       | Kubecost          | AWS Cost Explorer |
+| :------------------- | :------------ | :---------------- | :---------------- |
+| **Multi-Cloud**      | ✅ Full       | ❌ K8s only       | ❌ AWS only       |
+| **FOCUS Compliance** | ✅ Yes        | ⚠️ Partial        | ❌ No             |
+| **Tag Filtering**    | ✅ Advanced   | ✅ Basic          | ✅ Basic          |
+| **Forecasting**      | ✅ Snapshot   | ❌ No             | ✅ ML-based       |
+| **Real-Time**        | ❌ 12-48h lag | ✅ Near real-time | ❌ 24h lag        |
+| **Optimization**     | ❌ No         | ✅ Yes            | ✅ Yes            |
 
 ---
 

@@ -1,4 +1,4 @@
-// Package version provides build version and metadata information for pulumicost.
+// Package version provides build version and metadata information for finfocus.
 // Version information is embedded at build time via ldflags from the CI/CD pipeline.
 package version
 

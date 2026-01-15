@@ -1,6 +1,6 @@
 //go:build nightly
 
-// Package e2e_test provides end-to-end tests for the pulumicost CLI workflows.
+// Package e2e_test provides end-to-end tests for the finfocus CLI workflows.
 package e2e_test
 
 import (
@@ -25,7 +25,7 @@ var testTempDir string    //nolint:gochecknoglobals // Required for TestMain cle
 func TestMain(m *testing.M) {
 	// Build the binary once for all tests
 	var err error
-	testBinaryPath, testTempDir, err = buildPulumicostBinary()
+	testBinaryPath, testTempDir, err = buildFinFocusBinary()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to build binary: %v\n", err)
 		os.Exit(1)
@@ -42,19 +42,19 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// buildPulumicostBinary builds the pulumicost binary from source
+// buildFinFocusBinary builds the finfocus binary from source
 // for testing purposes, returning the path to the compiled executable and
 // the temporary directory (for cleanup).
-func buildPulumicostBinary() (string, string, error) {
+func buildFinFocusBinary() (string, string, error) {
 	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "pulumicost-e2e-*")
+	tempDir, err := os.MkdirTemp("", "finfocus-e2e-*")
 	if err != nil {
 		return "", "", fmt.Errorf("creating temp dir: %w", err)
 	}
 
-	binaryName := "pulumicost"
+	binaryName := "finfocus"
 	if runtime.GOOS == "windows" {
-		binaryName = "pulumicost.exe"
+		binaryName = "finfocus.exe"
 	}
 	binaryPath := filepath.Join(tempDir, binaryName)
 
@@ -69,7 +69,7 @@ func buildPulumicostBinary() (string, string, error) {
 		return "", "", fmt.Errorf("resolving project root: %w", err)
 	}
 
-	cmd := exec.CommandContext(ctx, "go", "build", "-o", binaryPath, "./cmd/pulumicost")
+	cmd := exec.CommandContext(ctx, "go", "build", "-o", binaryPath, "./cmd/finfocus")
 	cmd.Dir = projectRoot
 
 	output, err := cmd.CombinedOutput()

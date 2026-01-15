@@ -9,7 +9,7 @@ The primary unknown was the exact location and implementation pattern for the gR
 ### Source Code Analysis
 
 - **File**: `pkg/pluginsdk/sdk.go`
-- **Dependencies**: `go.mod` confirms the project uses `github.com/rshade/pulumicost-spec/sdk/go` for its protobuf definitions (`pbc`).
+- **Dependencies**: `go.mod` confirms the project uses `github.com/rshade/finfocus-spec/sdk/go` for its protobuf definitions (`pbc`).
 - **Key Function**: `func Serve(ctx context.Context, config ServeConfig) error` is the entry point for starting a plugin server.
 - **Implementation Pattern**:
     1.  The `Serve` function instantiates a standard `grpc.NewServer()`.

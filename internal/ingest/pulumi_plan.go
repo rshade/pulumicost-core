@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 )
 
 const (

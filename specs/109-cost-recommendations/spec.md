@@ -14,11 +14,11 @@ A DevOps engineer wants to quickly see the most impactful cost optimization reco
 
 **Why this priority**: This is the most common use case - users need quick visibility into the biggest cost-saving opportunities without information overload. The summary view provides immediate value.
 
-**Independent Test**: Can be fully tested by running `pulumicost cost recommendations --pulumi-json plan.json` and verifying the output shows a summary section followed by top 5 recommendations sorted by savings descending.
+**Independent Test**: Can be fully tested by running `finfocus cost recommendations --pulumi-json plan.json` and verifying the output shows a summary section followed by top 5 recommendations sorted by savings descending.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Pulumi plan with 15 resources and plugins returning 20 recommendations, **When** the user runs `pulumicost cost recommendations --pulumi-json plan.json`, **Then** they see a summary showing total recommendations count, total potential savings, and the top 5 recommendations sorted by estimated savings (highest first).
+1. **Given** a Pulumi plan with 15 resources and plugins returning 20 recommendations, **When** the user runs `finfocus cost recommendations --pulumi-json plan.json`, **Then** they see a summary showing total recommendations count, total potential savings, and the top 5 recommendations sorted by estimated savings (highest first).
 
 2. **Given** a Pulumi plan with 2 resources and plugins returning 3 recommendations, **When** the user runs the recommendations command, **Then** they see all 3 recommendations (since fewer than 5) without a "more recommendations" message.
 
@@ -32,11 +32,11 @@ A platform engineer reviewing infrastructure costs needs to see all recommendati
 
 **Why this priority**: Detailed information is essential for decision-making but secondary to getting a quick overview. Users will use this after the summary identifies areas of interest.
 
-**Independent Test**: Can be fully tested by running `pulumicost cost recommendations --pulumi-json plan.json --verbose` and verifying all recommendations display with full details.
+**Independent Test**: Can be fully tested by running `finfocus cost recommendations --pulumi-json plan.json --verbose` and verifying all recommendations display with full details.
 
 **Acceptance Scenarios**:
 
-1. **Given** plugins return 10 recommendations, **When** the user runs `pulumicost cost recommendations --pulumi-json plan.json --verbose`, **Then** all 10 recommendations display with resource ID, action type, description, estimated savings, and source plugin.
+1. **Given** plugins return 10 recommendations, **When** the user runs `finfocus cost recommendations --pulumi-json plan.json --verbose`, **Then** all 10 recommendations display with resource ID, action type, description, estimated savings, and source plugin.
 
 2. **Given** a recommendation with detailed description text, **When** displayed in verbose mode, **Then** the full description is shown without truncation.
 
@@ -48,7 +48,7 @@ A FinOps practitioner wants to focus only on rightsizing opportunities across th
 
 **Why this priority**: Filtering enables focused analysis and is essential for teams with specific optimization workflows (e.g., rightsizing campaigns).
 
-**Independent Test**: Can be fully tested by running `pulumicost cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE"` and verifying only RIGHTSIZE recommendations appear.
+**Independent Test**: Can be fully tested by running `finfocus cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE"` and verifying only RIGHTSIZE recommendations appear.
 
 **Acceptance Scenarios**:
 
@@ -62,7 +62,7 @@ A FinOps practitioner wants to focus only on rightsizing opportunities across th
 
 ### User Story 4 - Interactive Exploration of Recommendations (Priority: P3)
 
-A cloud architect using PulumiCost interactively in their terminal wants to navigate through recommendations using keyboard controls, view details of specific recommendations, and filter dynamically without re-running the command.
+A cloud architect using FinFocus interactively in their terminal wants to navigate through recommendations using keyboard controls, view details of specific recommendations, and filter dynamically without re-running the command.
 
 **Why this priority**: Interactive TUI enhances user experience for terminal users but requires more implementation complexity and is additive to the core functionality.
 
@@ -88,7 +88,7 @@ A DevOps team wants to integrate recommendations into their CI/CD pipeline to tr
 
 **Why this priority**: JSON output enables integration with external tools and dashboards, which is critical for enterprise adoption.
 
-**Independent Test**: Can be fully tested by running `pulumicost cost recommendations --pulumi-json plan.json --output json` and validating the JSON structure.
+**Independent Test**: Can be fully tested by running `finfocus cost recommendations --pulumi-json plan.json --output json` and validating the JSON structure.
 
 **Acceptance Scenarios**:
 
@@ -165,7 +165,7 @@ A user with multiple plugins installed wants to see which plugins are being quer
 ## Assumptions
 
 - The `internal/tui` package (#222) provides necessary components (spinner, table, styles).
-- The `GetRecommendations` RPC is available in pulumicost-spec (rshade/pulumicost-spec#122).
+- The `GetRecommendations` RPC is available in finfocus-spec (rshade/finfocus-spec#122).
 - Plugins return recommendations with consistent structure (resource ID, type, description, savings, currency).
 - The existing engine.Recommendation struct remains unchanged.
 - Standard terminal dimensions of 80x24 characters minimum are assumed for interactive mode.
@@ -173,7 +173,7 @@ A user with multiple plugins installed wants to see which plugins are being quer
 ## Dependencies
 
 - **Prerequisite**: #222 - Shared TUI package (already implemented in `internal/tui/`)
-- **Prerequisite**: rshade/pulumicost-spec#122 - GetRecommendations RPC (already implemented)
+- **Prerequisite**: rshade/finfocus-spec#122 - GetRecommendations RPC (already implemented)
 - **Existing**: `cost_recommendations.go` - Basic command structure already exists
 
 ## Scope Boundaries

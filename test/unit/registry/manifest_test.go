@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestLoadManifest_ValidManifest(t *testing.T) {
 		Name:        "aws-plugin",
 		Version:     "v1.0.0",
 		Description: "AWS cost calculation plugin",
-		Author:      "PulumiCost Team",
+		Author:      "FinFocus Team",
 		Providers:   []string{"aws"},
 		Metadata: map[string]string{
 			"supportedRegions": "us-east-1,us-west-2",
@@ -33,7 +33,7 @@ func TestLoadManifest_ValidManifest(t *testing.T) {
 	assert.Equal(t, "aws-plugin", manifest.Name)
 	assert.Equal(t, "v1.0.0", manifest.Version)
 	assert.Equal(t, "AWS cost calculation plugin", manifest.Description)
-	assert.Equal(t, "PulumiCost Team", manifest.Author)
+	assert.Equal(t, "FinFocus Team", manifest.Author)
 	assert.Equal(t, []string{"aws"}, manifest.Providers)
 	assert.Equal(t, "us-east-1,us-west-2", manifest.Metadata["supportedRegions"])
 }

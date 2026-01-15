@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document defines the contract for mapping Pulumi's `pulumirpc.AnalyzerResource` to PulumiCost's `engine.ResourceDescriptor`. The mapping must be lossless for cost-relevant fields while handling edge cases gracefully.
+This document defines the contract for mapping Pulumi's `pulumirpc.AnalyzerResource` to FinFocus's `engine.ResourceDescriptor`. The mapping must be lossless for cost-relevant fields while handling edge cases gracefully.
 
 ## Interface Definition
 
@@ -15,7 +15,7 @@ package analyzer
 
 import (
     "github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
 )
 
 // ResourceMapper defines the interface for resource mapping.

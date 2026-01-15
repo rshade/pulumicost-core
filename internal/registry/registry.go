@@ -8,9 +8,9 @@ import (
 	"runtime"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/pluginhost"
 )
 
 // Registry manages plugin discovery and lifecycle operations.
@@ -140,6 +140,35 @@ func (r *Registry) findBinary(dir string) string {
 		return ""
 	}
 
+	// Try to find by name patterns first
+	pluginName := filepath.Base(filepath.Dir(dir))
+	patterns := []string{
+		"finfocus-plugin-" + pluginName,
+		pluginName,
+	}
+
+	// Add legacy pattern if enabled
+	if os.Getenv("FINFOCUS_LOG_LEGACY") == "1" {
+		patterns = append(patterns, "pulumicost-plugin-"+pluginName)
+	}
+
+	for _, pattern := range patterns {
+		path := filepath.Join(dir, pattern)
+		if runtime.GOOS == osWindows {
+			path += extExe
+		}
+		if info, statErr := os.Stat(path); statErr == nil && !info.IsDir() {
+			if runtime.GOOS != osWindows {
+				if info.Mode()&0111 != 0 {
+					return path
+				}
+			} else {
+				return path
+			}
+		}
+	}
+
+	// Fallback: search for ANY executable in the directory
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue

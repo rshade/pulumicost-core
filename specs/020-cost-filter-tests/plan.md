@@ -31,7 +31,7 @@ Implement comprehensive integration tests for the `--filter` flag across `cost p
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic testing existing CLI/engine functionality - no plugin changes required
 - [x] **Test-Driven Development**: Tests are the primary deliverable, implementing missing integration test coverage for existing functionality (80% minimum coverage targeted)
@@ -39,7 +39,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: Test implementation includes documentation through code comments and test naming (no separate docs needed for internal tests)
 - [x] **Protocol Stability**: No protocol changes - testing existing functionality
 - [x] **Quality Gates**: Implementation will follow `make lint` and `make test` requirements (SC-002, linting protocol)
-- [x] **Multi-Repo Coordination**: No cross-repo dependencies - all work within pulumicost-core
+- [x] **Multi-Repo Coordination**: No cross-repo dependencies - all work within finfocus-core
 
 **Violations Requiring Justification**: (Fill only if any principle is violated)
 

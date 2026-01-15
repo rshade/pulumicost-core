@@ -23,7 +23,7 @@ Implement an automated workflow that triggers on `nightly-failure` issues, retri
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: N/A (CI/CD Infrastructure)
 - [x] **Test-Driven Development**: Logic scripts will be TDD'd; Workflow behavior verified via integration tests.

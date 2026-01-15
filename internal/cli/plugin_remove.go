@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // NewPluginRemoveCmd returns a Cobra command configured to remove an installed plugin.
@@ -28,13 +28,13 @@ func NewPluginRemoveCmd() *cobra.Command {
 
 This will delete the plugin files and remove it from the configuration.`,
 		Example: `  # Remove a plugin
-  pulumicost plugin remove kubecost
+  finfocus plugin remove kubecost
 
   # Remove but keep in config (for reinstalling later)
-  pulumicost plugin remove kubecost --keep-config
+  finfocus plugin remove kubecost --keep-config
 
   # Using alias
-  pulumicost plugin uninstall kubecost`,
+  finfocus plugin uninstall kubecost`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]

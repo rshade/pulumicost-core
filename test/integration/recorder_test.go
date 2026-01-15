@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestRecorderPlugin_Integration(t *testing.T) {
 	// Locate the plugin binary
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(filepath.Dir(filename), "../..")
-	binPath := filepath.Join(projectRoot, "bin", "pulumicost-plugin-recorder")
+	binPath := filepath.Join(projectRoot, "bin", "finfocus-plugin-recorder")
 
 	if runtime.GOOS == "windows" {
 		binPath += ".exe"
@@ -39,8 +39,8 @@ func TestRecorderPlugin_Integration(t *testing.T) {
 
 	// Configure environment variables for the plugin process
 	// Using t.Setenv ensures automatic cleanup and isolation
-	t.Setenv("PULUMICOST_RECORDER_OUTPUT_DIR", tempDir)
-	t.Setenv("PULUMICOST_RECORDER_MOCK_RESPONSE", "true")
+	t.Setenv("FINFOCUS_RECORDER_OUTPUT_DIR", tempDir)
+	t.Setenv("FINFOCUS_RECORDER_MOCK_RESPONSE", "true")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

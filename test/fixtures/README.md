@@ -1,6 +1,6 @@
 # Test Fixtures
 
-This directory contains test data files used throughout the PulumiCost test suite.
+This directory contains test data files used throughout the FinFocus test suite.
 
 ## Directory Structure
 

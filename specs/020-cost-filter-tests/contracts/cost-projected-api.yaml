@@ -1,14 +1,14 @@
 # CLI Contract: cost projected Command
 
 **Version**: 1.0.0
-**Command**: `pulumicost cost projected`
+**Command**: `finfocus cost projected`
 **Purpose**: Calculate projected costs with optional resource filtering
 
 ## Interface
 
 ### Command Signature
 ```bash
-pulumicost cost projected [flags]
+finfocus cost projected [flags]
 ```
 
 ### Flags

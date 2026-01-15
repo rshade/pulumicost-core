@@ -17,7 +17,7 @@ As a Cloud Infrastructure Engineer, I want to see the estimated cost impact of m
 
 **Acceptance Scenarios**:
 
-1. **Given** a Pulumi project with `pulumicost` analyzer configured and installed, **When** I run `pulumi preview` adding a costly resource (e.g., AWS RDS), **Then** I see an INFO diagnostic message in the CLI output stating the "Estimated Monthly Cost".
+1. **Given** a Pulumi project with `finfocus` analyzer configured and installed, **When** I run `pulumi preview` adding a costly resource (e.g., AWS RDS), **Then** I see an INFO diagnostic message in the CLI output stating the "Estimated Monthly Cost".
 2. **Given** a valid project, **When** I run `pulumi preview` with no resource changes, **Then** the analyzer runs successfully and reports the current stack cost (or delta $0).
 3. **Given** the analyzer is running, **When** it calculates costs, **Then** it does not block or crash the main Pulumi engine even if calculation takes a moment.
 
@@ -53,7 +53,7 @@ As a User, I want the preview to complete successfully even if cost estimation f
 
 ### Edge Cases
 
-- **Large Stacks**: For stacks with 1000+ resources, the plugin uses configurable timeout limits with optimized heuristics. No hard-coded maximum; timeouts are user-configurable via `~/.pulumicost/config.yaml`. A warning is logged if analysis exceeds the configured threshold.
+- **Large Stacks**: For stacks with 1000+ resources, the plugin uses configurable timeout limits with optimized heuristics. No hard-coded maximum; timeouts are user-configurable via `~/.finfocus/config.yaml`. A warning is logged if analysis exceeds the configured threshold.
 - **Concurrency**: What happens if multiple previews run simultaneously? The random port selection must avoid collisions.
 - **Logging**: Since `stdout` is used for the handshake, any other logs (debug/info) written to `stdout` during startup will break the integration. They must go to `stderr` or a log file.
 
@@ -70,15 +70,15 @@ As a User, I want the preview to complete successfully even if cost estimation f
 
 ### Session 2025-12-05
 
-- Q: How does `pulumicost-core` discover, load, and manage these individual cost calculation plugins (e.g., for AWS, Azure, GCP)? → A: Config-Registered
-- Q: For this MVP, should the `pulumicost-core` analyzer provide a configuration option to fail the `pulumi preview` or `pulumi up` if cost increases exceed a defined threshold, or should all cost diagnostics strictly remain informational (INFO/WARN) without blocking deployment? → A: Strictly Informational (MVP)
-- Q: What is the preferred mechanism for `pulumicost-core` to pass the `PluginConfig` for a specific child cost plugin to that child plugin? → A: Environment Variables
+- Q: How does `finfocus-core` discover, load, and manage these individual cost calculation plugins (e.g., for AWS, Azure, GCP)? → A: Config-Registered
+- Q: For this MVP, should the `finfocus-core` analyzer provide a configuration option to fail the `pulumi preview` or `pulumi up` if cost increases exceed a defined threshold, or should all cost diagnostics strictly remain informational (INFO/WARN) without blocking deployment? → A: Strictly Informational (MVP)
+- Q: What is the preferred mechanism for `finfocus-core` to pass the `PluginConfig` for a specific child cost plugin to that child plugin? → A: Environment Variables
 - Q: How should resource mapping be implemented? → A: New Separate Mapper (mapping down to the existing interface)
 - Q: Which approach is preferred for invoking the analyzer mode? → A: Distinct Subcommand (non-hidden)
-- Q: How should a child cost plugin communicate pricing data retrieval errors or other failures back to `pulumicost-core` to enable appropriate `AnalyzeDiagnostic` messages? → A: Via `ErrorDetail` in gRPC response
-- Q: Where should the analyzer's cost plugin configuration be stored? → A: Existing `~/.pulumicost/config.yaml` with new `analyzer` section
+- Q: How should a child cost plugin communicate pricing data retrieval errors or other failures back to `finfocus-core` to enable appropriate `AnalyzeDiagnostic` messages? → A: Via `ErrorDetail` in gRPC response
+- Q: Where should the analyzer's cost plugin configuration be stored? → A: Existing `~/.finfocus/config.yaml` with new `analyzer` section
 - Q: What is the acceptable maximum latency for analyzing a large stack (1000+ resources)? → A: No hard limit; configurable timeouts with optimized heuristics, log warning if exceeded
-- Q: How should the analyzer plugin configuration in `~/.pulumicost/config.yaml` be structured? → A: Map of objects (key=name, value={path, env, enabled})
+- Q: How should the analyzer plugin configuration in `~/.finfocus/config.yaml` be structured? → A: Map of objects (key=name, value={path, env, enabled})
 - Q: Should cost diagnostics be reported per-resource or as a stack-wide summary? → A: Both (per-resource details + stack summary)
 - Q: What is the default logging destination? → A: Use existing Zerolog configuration
 
@@ -88,10 +88,10 @@ As a User, I want the preview to complete successfully even if cost estimation f
 
 - **FR-001**: System MUST implement the `pulumirpc.Analyzer` gRPC server interface.
 - **FR-002**: System MUST implement the `AnalyzeStack` method to receive and process the full list of resources from the Pulumi engine.
-- **FR-003**: System MUST create a new mapper for `pulumirpc.Resource` protobuf messages to the internal `pulumicost.ResourceDescriptor` format.
+- **FR-003**: System MUST create a new mapper for `pulumirpc.Resource` protobuf messages to the internal `finfocus.ResourceDescriptor` format.
 - **FR-004**: System MUST utilize the existing `internal/engine` package to calculate projected costs, reusing the existing `Engine` and `SpecLoader` implementations.
 - **FR-005**: System MUST return cost estimates as `AnalyzeDiagnostic` messages with `INFO` or `WARNING` severity; it MUST NOT return `ERROR` severity for cost overruns in this MVP to prevent blocking deployments. Cost estimates MUST be reported as both a stack-level summary and as individual per-resource diagnostics.
-- **FR-006**: System MUST expose the analyzer mode via a distinct subcommand (e.g., `pulumicost analyzer serve`).
+- **FR-006**: System MUST expose the analyzer mode via a distinct subcommand (e.g., `finfocus analyzer serve`).
 - **FR-007**: When starting in serve mode, System MUST listen on a random available TCP port and print *only* the port number to `stdout` as the first line.
 - **FR-008**: System MUST utilize the existing `internal/logging` subsystem for all application logs. It MUST ensure that application logs do not corrupt the `stdout` handshake.
 - **FR-009**: System MUST utilize the existing `internal/registry` and `internal/config` packages to discover, load, and configure cost plugins.

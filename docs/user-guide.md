@@ -1,6 +1,6 @@
-# PulumiCost User Guide
+# FinFocus User Guide
 
-Complete guide to using PulumiCost Core for cloud infrastructure cost analysis.
+Complete guide to using FinFocus Core for cloud infrastructure cost analysis.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ Complete guide to using PulumiCost Core for cloud infrastructure cost analysis.
 
 ## Overview
 
-PulumiCost Core analyzes your Pulumi infrastructure definitions to provide:
+FinFocus Core analyzes your Pulumi infrastructure definitions to provide:
 
 - **Projected Costs**: Estimates based on resource specifications
 - **Actual Costs**: Historical spending data from cloud providers
@@ -43,14 +43,14 @@ pulumi stack export > current-state.json
 
 ### 2. Analyze Costs
 
-Use the generated JSON file with PulumiCost commands:
+Use the generated JSON file with FinFocus commands:
 
 ```bash
 # Quick projected cost estimate
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Historical cost analysis
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01
 ```
 
 ## Projected Cost Analysis
@@ -61,10 +61,10 @@ Projected costs estimate monthly spending based on resource specifications and p
 
 ```bash
 # Default table output
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Specify output format
-pulumicost cost projected --pulumi-json plan.json --output json
+finfocus cost projected --pulumi-json plan.json --output json
 ```
 
 ### Resource Filtering
@@ -73,10 +73,10 @@ Filter resources to focus on specific components:
 
 ```bash
 # Filter by resource type
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
 
 # Filter by multiple criteria (comma-separated)
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance,aws:rds/instance"
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance,aws:rds/instance"
 ```
 
 ### Using Custom Specs
@@ -85,10 +85,10 @@ Override default pricing with custom specifications:
 
 ```bash
 # Use custom spec directory
-pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-pricing
+finfocus cost projected --pulumi-json plan.json --spec-dir ./custom-pricing
 
 # Use specific plugin only
-pulumicost cost projected --pulumi-json plan.json --adapter aws-pricing-plugin
+finfocus cost projected --pulumi-json plan.json --adapter aws-pricing-plugin
 ```
 
 ### Sample Output
@@ -110,18 +110,18 @@ Actual costs retrieve historical spending data from cloud provider APIs through 
 
 ```bash
 # Last 7 days (to defaults to now)
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+finfocus cost actual --pulumi-json plan.json --from 2025-01-07
 
 # Specific date range
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 
 # Use specific plugin
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
 ```
 
 ### Date Format Support
 
-PulumiCost supports multiple date formats:
+FinFocus supports multiple date formats:
 
 ```bash
 # Simple date format (YYYY-MM-DD)
@@ -140,16 +140,16 @@ Group costs by different dimensions:
 
 ```bash
 # Group by resource
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by resource
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by resource
 
 # Group by resource type
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
 
 # Group by cloud provider
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by provider
 
 # Group by date (time series)
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by date
 ```
 
 ### Tag-Based Filtering
@@ -158,10 +158,10 @@ Filter costs by resource tags:
 
 ```bash
 # Filter by specific tag value
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod"
 
 # Filter by team
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Team=backend"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Team=backend"
 ```
 
 ### Sample Output
@@ -207,8 +207,8 @@ Compare costs across different periods:
 
 ```bash
 # Q4 2024 vs Q1 2025
-pulumicost cost actual --pulumi-json plan.json --from 2024-10-01 --to 2024-12-31 > q4-2024.json
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-03-31 > q1-2025.json
+finfocus cost actual --pulumi-json plan.json --from 2024-10-01 --to 2024-12-31 > q4-2024.json
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-03-31 > q1-2025.json
 ```
 
 ### Complex Filtering
@@ -217,11 +217,11 @@ Combine multiple filter types:
 
 ```bash
 # EC2 instances in production environment
-pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance" | \
+finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance" | \
   jq '.resources[] | select(.notes | contains("prod"))'
 
 # Resources with specific tags and types
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod" | \
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Environment=prod" | \
   jq '.resources[] | select(.resourceType | contains("ec2"))'
 ```
 
@@ -234,7 +234,7 @@ Process multiple Pulumi projects:
 for project in project-a project-b project-c; do
   echo "Analyzing $project..."
   pulumi -C $project preview --json > $project-plan.json
-  pulumicost cost projected --pulumi-json $project-plan.json --output json > $project-costs.json
+  finfocus cost projected --pulumi-json $project-plan.json --output json > $project-costs.json
 done
 ```
 
@@ -245,7 +245,7 @@ done
 Human-readable output with aligned columns:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output table
+finfocus cost projected --pulumi-json plan.json --output table
 ```
 
 Best for: Interactive use, quick overviews
@@ -255,7 +255,7 @@ Best for: Interactive use, quick overviews
 Structured data for programmatic use:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output json
+finfocus cost projected --pulumi-json plan.json --output json
 ```
 
 Best for: API integration, detailed analysis, reporting
@@ -265,7 +265,7 @@ Best for: API integration, detailed analysis, reporting
 Newline-delimited JSON for streaming:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --output ndjson
+finfocus cost projected --pulumi-json plan.json --output ndjson
 ```
 
 Best for: Pipeline processing, log analysis, time series data
@@ -274,17 +274,17 @@ Best for: Pipeline processing, log analysis, time series data
 
 ### Directory Structure
 
-PulumiCost uses the following directory structure:
+FinFocus uses the following directory structure:
 
 ```text
-~/.pulumicost/
+~/.finfocus/
 ├── plugins/                     # Plugin binaries
 │   ├── kubecost/
 │   │   └── 1.0.0/
-│   │       └── pulumicost-kubecost
+│   │       └── finfocus-kubecost
 │   └── aws-plugin/
 │       └── 0.1.0/
-│           └── pulumicost-aws
+│           └── finfocus-aws
 └── specs/                       # Local pricing specs
     ├── aws-ec2-t3-micro.yaml
     ├── aws-s3-standard.yaml
@@ -296,7 +296,7 @@ PulumiCost uses the following directory structure:
 Create YAML files for custom pricing:
 
 ```yaml
-# ~/.pulumicost/specs/aws-ec2-t3-micro.yaml
+# ~/.finfocus/specs/aws-ec2-t3-micro.yaml
 provider: aws
 service: ec2
 sku: t3.micro
@@ -323,16 +323,16 @@ export KUBECOST_API_URL="http://kubecost.example.com:9090"
 export AWS_PRICING_API_KEY="your-api-key"
 
 # Run with plugin configuration
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
 ```
 
 ## Running as Pulumi Plugin
 
-PulumiCost can be installed as a Pulumi Tool Plugin, integrating directly into the Pulumi CLI workflow.
+FinFocus can be installed as a Pulumi Tool Plugin, integrating directly into the Pulumi CLI workflow.
 
 ### Overview
 
-When running as a Pulumi tool plugin, PulumiCost:
+When running as a Pulumi tool plugin, FinFocus:
 
 - Automatically detects plugin mode via binary name or environment variable
 - Adjusts help text and usage examples to show `pulumi plugin run tool cost` syntax
@@ -340,11 +340,11 @@ When running as a Pulumi tool plugin, PulumiCost:
 
 ### Installation as Plugin
 
-Install PulumiCost as a Pulumi tool plugin:
+Install FinFocus as a Pulumi tool plugin:
 
 ```bash
 # Build the plugin binary with the correct name
-go build -o pulumi-tool-cost ./cmd/pulumicost
+go build -o pulumi-tool-cost ./cmd/finfocus
 
 # Install into Pulumi plugins directory
 mkdir -p ~/.pulumi/plugins/tool-cost-v0.1.0/
@@ -356,14 +356,14 @@ pulumi plugin ls
 
 ### Plugin Mode Detection
 
-PulumiCost detects plugin mode via two mechanisms:
+FinFocus detects plugin mode via two mechanisms:
 
 1. **Binary Name**: If the executable name matches `pulumi-tool-cost` (case-insensitive)
-2. **Environment Variable**: If `PULUMICOST_PLUGIN_MODE=true` or `PULUMICOST_PLUGIN_MODE=1`
+2. **Environment Variable**: If `FINFOCUS_PLUGIN_MODE=true` or `FINFOCUS_PLUGIN_MODE=1`
 
 ### Using the Plugin
 
-Run PulumiCost commands through the Pulumi CLI:
+Run FinFocus commands through the Pulumi CLI:
 
 ```bash
 # Show help
@@ -387,25 +387,25 @@ pulumi plugin run tool cost -- config set output.default_format json
 When running as a Pulumi plugin, configuration is stored under `$PULUMI_HOME`:
 
 ```text
-$PULUMI_HOME/pulumicost/
+$PULUMI_HOME/finfocus/
 ├── config.yaml           # Main configuration
 ├── plugins/              # Cost plugins
 └── logs/                 # Log files
 ```
 
-If `PULUMI_HOME` is not set, PulumiCost falls back to `~/.pulumicost/`.
+If `PULUMI_HOME` is not set, FinFocus falls back to `~/.finfocus/`.
 
 ### Environment Variables
 
-| Variable                  | Description                                           |
-| ------------------------- | ----------------------------------------------------- |
-| `PULUMICOST_PLUGIN_MODE`  | Force plugin mode (`true` or `1`)                     |
-| `PULUMI_HOME`             | Pulumi configuration directory (plugin respects this) |
-| `PULUMICOST_LOG_LEVEL`    | Logging verbosity (debug, info, warn, error)          |
+| Variable               | Description                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `FINFOCUS_PLUGIN_MODE` | Force plugin mode (`true` or `1`)                     |
+| `PULUMI_HOME`          | Pulumi configuration directory (plugin respects this) |
+| `FINFOCUS_LOG_LEVEL`   | Logging verbosity (debug, info, warn, error)          |
 
 ### Exit Codes
 
-PulumiCost follows standard exit code conventions:
+FinFocus follows standard exit code conventions:
 
 - `0`: Success
 - `1`: General error (configuration, API, logic errors)
@@ -425,28 +425,28 @@ Implement consistent tagging for better cost attribution:
 
 ```typescript
 // Pulumi TypeScript example
-const webServer = new aws.ec2.Instance("web-server", {
-    // ... other properties
-    tags: {
-        Environment: "production",
-        Team: "backend",
-        Project: "web-app",
-        CostCenter: "engineering"
-    }
+const webServer = new aws.ec2.Instance('web-server', {
+  // ... other properties
+  tags: {
+    Environment: 'production',
+    Team: 'backend',
+    Project: 'web-app',
+    CostCenter: 'engineering',
+  },
 });
 ```
 
 ### Automation
 
-Integrate PulumiCost into your CI/CD pipeline:
+Integrate FinFocus into your CI/CD pipeline:
 
 ```yaml
 # GitHub Actions example
 - name: Cost Analysis
   run: |
     pulumi preview --json > plan.json
-    pulumicost cost projected --pulumi-json plan.json --output json > projected-costs.json
-    
+    finfocus cost projected --pulumi-json plan.json --output json > projected-costs.json
+
     # Set cost threshold
     if [ $(jq '.summary.totalMonthly' projected-costs.json) -gt 1000 ]; then
       echo "Cost threshold exceeded!"
@@ -457,7 +457,7 @@ Integrate PulumiCost into your CI/CD pipeline:
 ### Performance Tips
 
 - Use `--adapter` to restrict to specific plugins for faster queries
-- Filter resources early with `--filter` to reduce processing time  
+- Filter resources early with `--filter` to reduce processing time
 - Use NDJSON output for large datasets
 - Cache plugin responses when possible
 
@@ -469,11 +469,11 @@ Compare different instance types:
 
 ```bash
 # Current plan with t3.micro
-pulumicost cost projected --pulumi-json current-plan.json > current-costs.txt
+finfocus cost projected --pulumi-json current-plan.json > current-costs.txt
 
-# Modified plan with t3.small  
+# Modified plan with t3.small
 sed 's/t3.micro/t3.small/g' current-plan.json > optimized-plan.json
-pulumicost cost projected --pulumi-json optimized-plan.json > optimized-costs.txt
+finfocus cost projected --pulumi-json optimized-plan.json > optimized-costs.txt
 
 # Compare results
 diff current-costs.txt optimized-costs.txt
@@ -487,7 +487,7 @@ Track costs across environments:
 #!/bin/bash
 for env in dev staging prod; do
   echo "=== $env Environment ==="
-  pulumicost cost actual \
+  finfocus cost actual \
     --pulumi-json plans/$env-plan.json \
     --from 2025-01-01 \
     --group-by "tag:Environment=$env" \
@@ -501,11 +501,11 @@ Generate detailed cost attribution:
 
 ```bash
 # By team
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Team=backend" --output json | \
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Team=backend" --output json | \
   jq '.summary.byService'
 
-# By project  
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Project=web-app" --output json | \
+# By project
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by "tag:Project=web-app" --output json | \
   jq '.resources[] | {type: .resourceType, cost: .totalCost}'
 ```
 
@@ -515,7 +515,7 @@ Track cost trends over time:
 
 ```bash
 # Generate daily cost data
-pulumicost cost actual \
+finfocus cost actual \
   --pulumi-json plan.json \
   --from 2025-01-01 \
   --to 2025-01-31 \
@@ -527,7 +527,7 @@ pulumicost cost actual \
 ## Next Steps
 
 - [Installation Guide](installation.md) - Detailed setup instructions
-- [Cost Calculations](cost-calculations.md) - Deep dive into cost methodologies  
+- [Cost Calculations](cost-calculations.md) - Deep dive into cost methodologies
 - [Plugin System](plugin-system.md) - Plugin development and management
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 

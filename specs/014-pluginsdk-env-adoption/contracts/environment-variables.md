@@ -2,11 +2,11 @@
 
 **Version**: 1.0.0  
 **Date**: 2025-12-10  
-**Purpose**: Defines the standardized environment variables for PulumiCost plugin communication
+**Purpose**: Defines the standardized environment variables for FinFocus plugin communication
 
 ## Overview
 
-This contract specifies the environment variables that must be set by the PulumiCost core when launching plugins, and how plugins should read these variables.
+This contract specifies the environment variables that must be set by the FinFocus core when launching plugins, and how plugins should read these variables.
 
 ## Required Environment Variables
 
@@ -14,16 +14,16 @@ This contract specifies the environment variables that must be set by the Pulumi
 
 | Variable                 | Type    | Required                | Description                                     |
 | ------------------------ | ------- | ----------------------- | ----------------------------------------------- |
-| `PULUMICOST_PLUGIN_PORT` | integer | Yes                     | Primary port for plugin gRPC server binding     |
+| `FINFOCUS_PLUGIN_PORT` | integer | Yes                     | Primary port for plugin gRPC server binding     |
 | `PORT`                   | integer | Yes (for compatibility) | Fallback port variable for legacy compatibility |
 
 ### Plugin Configuration
 
 | Variable                | Type   | Required | Description                                 |
 | ----------------------- | ------ | -------- | ------------------------------------------- |
-| `PULUMICOST_LOG_LEVEL`  | string | No       | Logging verbosity: DEBUG, INFO, WARN, ERROR |
-| `PULUMICOST_LOG_FORMAT` | string | No       | Log output format: json, console            |
-| `PULUMICOST_TRACE_ID`   | string | No       | External trace ID for distributed tracing   |
+| `FINFOCUS_LOG_LEVEL`  | string | No       | Logging verbosity: DEBUG, INFO, WARN, ERROR |
+| `FINFOCUS_LOG_FORMAT` | string | No       | Log output format: json, console            |
+| `FINFOCUS_TRACE_ID`   | string | No       | External trace ID for distributed tracing   |
 
 ## Contract Rules
 
@@ -38,7 +38,7 @@ This contract specifies the environment variables that must be set by the Pulumi
 
 1. **Plugins MUST use pluginsdk functions** for environment variable access
 2. **Plugins MUST call GetPort()** for port determination
-3. **GetPort() prioritizes PULUMICOST_PLUGIN_PORT** over PORT
+3. **GetPort() prioritizes FINFOCUS_PLUGIN_PORT** over PORT
 4. **Plugins MUST handle missing variables gracefully**
 
 ## Implementation Contract
@@ -46,7 +46,7 @@ This contract specifies the environment variables that must be set by the Pulumi
 ### Core Implementation
 
 ```go
-import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+import "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 
 // Correct implementation
 cmd.Env = append(os.Environ(),
@@ -56,7 +56,7 @@ cmd.Env = append(os.Environ(),
 
 // INCORRECT - hardcoded strings not allowed
 cmd.Env = append(os.Environ(),
-    fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+    fmt.Sprintf("FINFOCUS_PLUGIN_PORT=%d", port),
     fmt.Sprintf("PORT=%d", port),
 )
 ```
@@ -64,7 +64,7 @@ cmd.Env = append(os.Environ(),
 ### Plugin Implementation
 
 ```go
-import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+import "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 
 // Correct implementation
 func startServer() error {
@@ -98,7 +98,7 @@ func startServer() error {
 
 ## Breaking Changes
 
-None. This contract maintains backward compatibility by setting both PORT and PULUMICOST_PLUGIN_PORT.
+None. This contract maintains backward compatibility by setting both PORT and FINFOCUS_PLUGIN_PORT.
 
 ## Future Evolution
 

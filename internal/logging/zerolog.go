@@ -11,7 +11,7 @@ import (
 
 	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 // traceIDKey is a private type for context keys to avoid collisions.
@@ -217,7 +217,7 @@ func GenerateTraceID() string {
 }
 
 // GetOrGenerateTraceID returns a trace ID from environment, context, or generates a new one.
-// Priority: PULUMICOST_TRACE_ID env var > context > generate new.
+// Priority: FINFOCUS_TRACE_ID env var > context > generate new.
 func GetOrGenerateTraceID(ctx context.Context) string {
 	// 1. Check environment variable (external injection) using pluginsdk constant
 	if envTraceID := os.Getenv(pluginsdk.EnvTraceID); envTraceID != "" {

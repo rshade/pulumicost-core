@@ -5,12 +5,12 @@
 
 ## Overview
 
-The Recorder plugin implements the `CostSourceService` gRPC interface from pulumicost-spec. This document specifies the exact contract the recorder fulfills.
+The Recorder plugin implements the `CostSourceService` gRPC interface from finfocus-spec. This document specifies the exact contract the recorder fulfills.
 
 ## Service Definition
 
 ```protobuf
-// From pulumicost-spec/proto/pulumicost/v1/cost_source.proto
+// From finfocus-spec/proto/finfocus/v1/cost_source.proto
 service CostSourceService {
   rpc Name(NameRequest) returns (NameResponse);
   rpc GetProjectedCost(GetProjectedCostRequest) returns (GetProjectedCostResponse);
@@ -205,14 +205,14 @@ All requests are recorded regardless of mock mode setting.
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `PULUMICOST_RECORDER_OUTPUT_DIR` | string | `./recorded_data` | Directory for recorded files |
-| `PULUMICOST_RECORDER_MOCK_RESPONSE` | bool | `false` | Enable mock response generation |
+| `FINFOCUS_RECORDER_OUTPUT_DIR` | string | `./recorded_data` | Directory for recorded files |
+| `FINFOCUS_RECORDER_MOCK_RESPONSE` | bool | `false` | Enable mock response generation |
 
 ## Plugin Discovery
 
-**Binary Name**: `pulumicost-plugin-recorder`
+**Binary Name**: `finfocus-plugin-recorder`
 
-**Installation Path**: `~/.pulumicost/plugins/recorder/<version>/pulumicost-plugin-recorder`
+**Installation Path**: `~/.finfocus/plugins/recorder/<version>/finfocus-plugin-recorder`
 
 **Manifest** (`plugin.manifest.json`):
 
@@ -221,13 +221,13 @@ All requests are recorded regardless of mock mode setting.
   "name": "recorder",
   "version": "0.1.0",
   "description": "Reference plugin that records all gRPC requests and optionally returns mock responses",
-  "author": "PulumiCost Team",
+  "author": "FinFocus Team",
   "supported_providers": ["*"],
   "protocols": ["grpc"],
-  "binary": "pulumicost-plugin-recorder",
+  "binary": "finfocus-plugin-recorder",
   "metadata": {
-    "repository": "https://github.com/rshade/pulumicost-core",
-    "docs": "https://github.com/rshade/pulumicost-core/tree/main/plugins/recorder",
+    "repository": "https://github.com/rshade/finfocus",
+    "docs": "https://github.com/rshade/finfocus/tree/main/plugins/recorder",
     "reference_implementation": true
   }
 }
@@ -243,4 +243,4 @@ The recorder plugin MUST:
 4. Handle graceful shutdown on SIGINT/SIGTERM
 5. Support both TCP (--port) and stdio (--stdio) modes
 6. Use pluginsdk v0.4.6+ validation helpers
-7. Pass `pulumicost plugin validate` checks
+7. Pass `finfocus plugin validate` checks

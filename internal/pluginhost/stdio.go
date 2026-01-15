@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

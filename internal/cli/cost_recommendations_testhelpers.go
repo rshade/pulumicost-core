@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 // TestableRecommendation is a test-friendly version of engine.Recommendation.

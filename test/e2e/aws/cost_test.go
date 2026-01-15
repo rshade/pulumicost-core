@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/test/e2e"
+	"github.com/rshade/finfocus/test/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,11 +41,11 @@ func TestAWSCostValidation(t *testing.T) {
 	err := tc.SetupProject(ctx, projectPath)
 	require.NoError(t, err, "Failed to set up EC2 project")
 
-	// Run pulumicost to get actual cost
-	actualCost, err := tc.RunPulumicost(ctx)
-	require.NoError(t, err, "Failed to run pulumicost")
+	// Run finfocus to get actual cost
+	actualCost, err := tc.RunFinFocus(ctx)
+	require.NoError(t, err, "Failed to run finfocus")
 
-	t.Logf("Actual cost from pulumicost: %.4f", actualCost)
+	t.Logf("Actual cost from finfocus: %.4f", actualCost)
 
 	// Validate cost for t3.micro instance
 	ValidateCost(t, "t3.micro", actualCost, expectedCosts["t3.micro"], config.Tolerance)

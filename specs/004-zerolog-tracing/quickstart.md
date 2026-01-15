@@ -10,7 +10,7 @@
 Use the `--debug` flag on any command to enable verbose logging:
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json --debug
+finfocus cost projected --pulumi-json plan.json --debug
 ```
 
 Output will show the complete decision flow:
@@ -29,18 +29,18 @@ Output will show the complete decision flow:
 
 ```bash
 # Set log level
-export PULUMICOST_LOG_LEVEL=debug
+export FINFOCUS_LOG_LEVEL=debug
 
 # Set output format (json for log aggregation, console for development)
-export PULUMICOST_LOG_FORMAT=json
+export FINFOCUS_LOG_FORMAT=json
 
 # Inject external trace ID (for pipeline integration)
-export PULUMICOST_TRACE_ID=external-pipeline-trace-12345
+export FINFOCUS_TRACE_ID=external-pipeline-trace-12345
 ```
 
 ### Configure via Config File
 
-Edit `~/.pulumicost/config.yaml`:
+Edit `~/.finfocus/config.yaml`:
 
 ```yaml
 logging:
@@ -59,7 +59,7 @@ logging:
 1. **Import the logging package:**
 
 ```go
-import "github.com/rshade/pulumicost-core/internal/logging"
+import "github.com/rshade/finfocus/internal/logging"
 ```
 
 2. **Get logger from context:**
@@ -183,10 +183,10 @@ All logs from a single command share the same trace_id. Use it to filter:
 
 ```bash
 # With jq
-pulumicost cost projected --pulumi-json plan.json 2>&1 | jq 'select(.trace_id == "01JDP8K2M3N4P5Q6R7S8T9V0W1")'
+finfocus cost projected --pulumi-json plan.json 2>&1 | jq 'select(.trace_id == "01JDP8K2M3N4P5Q6R7S8T9V0W1")'
 
 # In log aggregation tools (Loki example)
-{app="pulumicost"} | json | trace_id="01JDP8K2M3N4P5Q6R7S8T9V0W1"
+{app="finfocus"} | json | trace_id="01JDP8K2M3N4P5Q6R7S8T9V0W1"
 ```
 
 ### Pipeline Integration
@@ -195,12 +195,12 @@ Inject your pipeline's trace ID to correlate with broader observability:
 
 ```bash
 # GitHub Actions example
-export PULUMICOST_TRACE_ID="gh-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-pulumicost cost projected --pulumi-json plan.json
+export FINFOCUS_TRACE_ID="gh-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+finfocus cost projected --pulumi-json plan.json
 
 # Jenkins example
-export PULUMICOST_TRACE_ID="jenkins-$BUILD_ID"
-pulumicost cost projected --pulumi-json plan.json
+export FINFOCUS_TRACE_ID="jenkins-$BUILD_ID"
+finfocus cost projected --pulumi-json plan.json
 ```
 
 ### Plugin Correlation
@@ -212,7 +212,7 @@ for end-to-end tracing:
 // In plugin code
 func (s *server) GetProjectedCost(ctx context.Context, req *pb.Request) (*pb.Response, error) {
     md, _ := metadata.FromIncomingContext(ctx)
-    traceID := md.Get("x-pulumicost-trace-id")
+    traceID := md.Get("x-finfocus-trace-id")
 
     s.logger.Info().
         Str("trace_id", traceID[0]).

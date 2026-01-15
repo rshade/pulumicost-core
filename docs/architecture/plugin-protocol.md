@@ -1,22 +1,22 @@
 ---
 layout: default
 title: Plugin Protocol Specification
-description: Complete gRPC protocol specification for PulumiCost cost source plugins
+description: Complete gRPC protocol specification for FinFocus cost source plugins
 ---
 
 This document specifies the gRPC protocol that cost source plugins must
-implement to integrate with PulumiCost. The protocol is defined in protocol
-buffers in the `pulumicost-spec` repository.
+implement to integrate with FinFocus. The protocol is defined in protocol
+buffers in the `finfocus-spec` repository.
 
 ## Protocol Version
 
 **Current Version:** v0.1.0 (frozen and integrated)
 
 **Protocol Definition:**
-`github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
+`github.com/rshade/finfocus-spec/proto/finfocus/v1/costsource.proto`
 
 **Generated SDK:**
-`github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
+`github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1`
 
 ## Service Definitions
 
@@ -418,13 +418,13 @@ func main() {
 
 ### Configuration
 
-Plugins read configuration from `~/.pulumicost/config.yaml`:
+Plugins read configuration from `~/.finfocus/config.yaml`:
 
 ```yaml
 integrations:
   my-plugin:
-    api_key: "secret_key"
-    endpoint: "https://api.example.com"
+    api_key: 'secret_key'
+    endpoint: 'https://api.example.com'
 ```
 
 ### Manifest File
@@ -508,7 +508,7 @@ message HealthCheckResponse {
 
 ```bash
 grpcurl -plaintext localhost:50051 \
-  pulumicost.v1.ObservabilityService/HealthCheck
+  finfocus.v1.ObservabilityService/HealthCheck
 ```
 
 ## Testing Plugins
@@ -521,7 +521,7 @@ grpcurl -plaintext localhost:50051 \
 
 # Test Name RPC
 grpcurl -plaintext localhost:50051 \
-  pulumicost.v1.CostSourceService/Name
+  finfocus.v1.CostSourceService/Name
 
 # Test Supports RPC
 grpcurl -plaintext -d '{
@@ -531,21 +531,21 @@ grpcurl -plaintext -d '{
     "sku": "t3.micro"
   }
 }' localhost:50051 \
-  pulumicost.v1.CostSourceService/Supports
+  finfocus.v1.CostSourceService/Supports
 ```
 
 ### Integration Testing
 
-Use PulumiCost CLI to test end-to-end:
+Use FinFocus CLI to test end-to-end:
 
 ```bash
 # Install plugin
-mkdir -p ~/.pulumicost/plugins/my-plugin/1.0.0
-cp my-plugin ~/.pulumicost/plugins/my-plugin/1.0.0/
+mkdir -p ~/.finfocus/plugins/my-plugin/1.0.0
+cp my-plugin ~/.finfocus/plugins/my-plugin/1.0.0/
 
-# Test with PulumiCost
-pulumicost plugin list
-pulumicost cost projected --pulumi-json plan.json
+# Test with FinFocus
+finfocus plugin list
+finfocus cost projected --pulumi-json plan.json
 ```
 
 ---

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/pluginhost"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -370,6 +370,42 @@ func TestRegistry_Open(t *testing.T) {
 	}
 }
 
+func TestFindBinary_Legacy(t *testing.T) {
+	t.Run("pulumicost-plugin- prefix supported when enabled", func(t *testing.T) {
+		t.Setenv("FINFOCUS_LOG_LEGACY", "1")
+		dir := t.TempDir()
+		// Create a directory named after the plugin version parent
+		pluginDir := filepath.Join(dir, "myplugin", "v1.0.0")
+		require.NoError(t, os.MkdirAll(pluginDir, 0755))
+
+		binPath := filepath.Join(pluginDir, "pulumicost-plugin-myplugin")
+		if runtime.GOOS == "windows" {
+			binPath += ".exe"
+		}
+		require.NoError(t, os.WriteFile(binPath, []byte("binary"), 0755))
+
+		reg := &Registry{root: "", launcher: pluginhost.NewProcessLauncher()}
+		found := reg.findBinary(pluginDir)
+		assert.Equal(t, binPath, found)
+	})
+
+	t.Run("finfocus-plugin- prefix takes precedence", func(t *testing.T) {
+		t.Setenv("FINFOCUS_LOG_LEGACY", "1")
+		dir := t.TempDir()
+		pluginDir := filepath.Join(dir, "myplugin", "v1.0.0")
+		require.NoError(t, os.MkdirAll(pluginDir, 0755))
+
+		legacyBin := filepath.Join(pluginDir, "pulumicost-plugin-myplugin")
+		newBin := filepath.Join(pluginDir, "finfocus-plugin-myplugin")
+		require.NoError(t, os.WriteFile(legacyBin, []byte("old"), 0755))
+		require.NoError(t, os.WriteFile(newBin, []byte("new"), 0755))
+
+		reg := &Registry{root: "", launcher: pluginhost.NewProcessLauncher()}
+		found := reg.findBinary(pluginDir)
+		assert.Equal(t, newBin, found)
+	})
+}
+
 // Helper functions to reduce cognitive complexity
 
 func createSinglePluginDir(t *testing.T, name, version string) string {
@@ -501,7 +537,7 @@ func TestNewDefault(t *testing.T) {
 	}
 
 	// Verify the root path structure
-	expectedSuffix := filepath.Join(".pulumicost", "plugins")
+	expectedSuffix := filepath.Join(".finfocus", "plugins")
 	if !filepath.IsAbs(reg.root) {
 		t.Error("registry root is not absolute path")
 	}

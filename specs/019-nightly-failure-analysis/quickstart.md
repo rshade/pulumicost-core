@@ -11,7 +11,7 @@ You can manually trigger the analysis logic by simulating a failure issue.
 
 1.  **Create a Dummy Issue**:
     ```bash
-    gh issue create --title "Test Nightly Failure" --body "## Nightly Test Failure\n\n**Run URL:** https://github.com/rshade/pulumicost-core/actions/runs/YOUR_FAILED_RUN_ID" --label "nightly-failure"
+    gh issue create --title "Test Nightly Failure" --body "## Nightly Test Failure\n\n**Run URL:** https://github.com/rshade/finfocus/actions/runs/YOUR_FAILED_RUN_ID" --label "nightly-failure"
     ```
     *Replace `YOUR_FAILED_RUN_ID` with a real ID of a failed run (or a recent run).*
 

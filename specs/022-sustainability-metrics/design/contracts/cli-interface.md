@@ -13,7 +13,7 @@
 ### Usage
 
 ```bash
-pulumicost --utilization 0.75
+finfocus --utilization 0.75
 ```
 
 ## Outputs

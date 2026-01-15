@@ -33,7 +33,7 @@ resource tables, detail views, and loading states.
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: This is orchestration/display layer, not a
       plugin. Cost data comes from existing plugin system. ✓

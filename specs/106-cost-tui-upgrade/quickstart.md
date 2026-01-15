@@ -2,7 +2,7 @@
 
 **Feature Branch**: `106-cost-tui-upgrade`
 
-This guide covers the enhanced terminal UI for PulumiCost cost commands.
+This guide covers the enhanced terminal UI for FinFocus cost commands.
 
 ## Overview
 
@@ -19,20 +19,20 @@ The cost commands (`cost projected`, `cost actual`) now feature:
 
 ```bash
 # Basic usage - styled output in TTY, plain text otherwise
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Force JSON output (no TUI styling)
-pulumicost cost projected --pulumi-json plan.json --output json
+finfocus cost projected --pulumi-json plan.json --output json
 ```
 
 ### View Actual Costs
 
 ```bash
 # Historical costs with styled output
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01
 
 # Daily breakdown with cross-provider table
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by daily
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by daily
 ```
 
 ## Interactive Mode
@@ -83,10 +83,10 @@ The TUI automatically detects your terminal and selects the best mode:
 
 ```bash
 # Disable styling explicitly
-pulumicost cost projected --pulumi-json plan.json --output table
+finfocus cost projected --pulumi-json plan.json --output table
 
 # Or set NO_COLOR environment variable
-NO_COLOR=1 pulumicost cost projected --pulumi-json plan.json
+NO_COLOR=1 finfocus cost projected --pulumi-json plan.json
 ```
 
 ## Cost Deltas
@@ -127,10 +127,10 @@ Ensure stdout is a TTY:
 
 ```bash
 # This works (TTY)
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # This falls back to plain (piped)
-pulumicost cost projected --pulumi-json plan.json | less
+finfocus cost projected --pulumi-json plan.json | less
 ```
 
 ### Narrow Terminal Issues

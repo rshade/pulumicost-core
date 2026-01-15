@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestListPlugins_EmptyDirectory(t *testing.T) {
 func TestListPlugins_NonExistentDirectory(t *testing.T) {
 	homeDir := t.TempDir()
 	setupTestHome(t, homeDir)
-	// Don't create .pulumicost/plugins directory
+	// Don't create .finfocus/plugins directory
 
 	reg := registry.NewDefault()
 	plugins, err := reg.ListPlugins()
@@ -265,13 +265,13 @@ func TestListPlugins_SymlinksHandled(t *testing.T) {
 
 // Helper functions for creating test plugin structures
 
-// createTestHome creates a temporary HOME directory with .pulumicost/plugins structure.
+// createTestHome creates a temporary HOME directory with .finfocus/plugins structure.
 // Returns: (homeDir, pluginDir).
 func createTestHome(t *testing.T) (string, string) {
 	t.Helper()
 
 	homeDir := t.TempDir()
-	pluginDir := filepath.Join(homeDir, ".pulumicost", "plugins")
+	pluginDir := filepath.Join(homeDir, ".finfocus", "plugins")
 	err := os.MkdirAll(pluginDir, 0755)
 	require.NoError(t, err)
 

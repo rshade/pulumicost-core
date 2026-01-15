@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewRootCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		args        []string
@@ -26,7 +26,7 @@ func TestNewRootCmd(t *testing.T) {
 				assert.Contains(
 					t,
 					output,
-					"PulumiCost: Calculate projected and actual cloud costs via plugins",
+					"FinFocus: Calculate projected and actual cloud costs via plugins",
 				)
 				assert.Contains(t, output, "Available Commands:")
 				assert.Contains(t, output, "cost")
@@ -38,7 +38,7 @@ func TestNewRootCmd(t *testing.T) {
 			args:        []string{"--version"},
 			expectError: false,
 			checkOutput: func(t *testing.T, output string) {
-				assert.Contains(t, output, "pulumicost version")
+				assert.Contains(t, output, "finfocus version")
 			},
 		},
 		{
@@ -46,7 +46,7 @@ func TestNewRootCmd(t *testing.T) {
 			args:        []string{"--debug", "--help"},
 			expectError: false,
 			checkOutput: func(t *testing.T, output string) {
-				assert.Contains(t, output, "PulumiCost")
+				assert.Contains(t, output, "FinFocus")
 			},
 		},
 		{
@@ -100,20 +100,20 @@ func TestNewRootCmd(t *testing.T) {
 
 func TestRootCmdExamples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
-	assert.Contains(t, cmd.Example, "pulumicost cost projected")
-	assert.Contains(t, cmd.Example, "pulumicost cost actual")
-	assert.Contains(t, cmd.Example, "pulumicost plugin list")
-	assert.Contains(t, cmd.Example, "pulumicost plugin validate")
+	assert.Contains(t, cmd.Example, "finfocus cost projected")
+	assert.Contains(t, cmd.Example, "finfocus cost actual")
+	assert.Contains(t, cmd.Example, "finfocus plugin list")
+	assert.Contains(t, cmd.Example, "finfocus plugin validate")
 }
 
 func TestRootCmdStructure(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check that main subcommands exist
@@ -146,7 +146,7 @@ func TestRootCmdStructure(t *testing.T) {
 
 func TestRootCmdFlags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewRootCmd("test-version")
 
 	// Check persistent flags
@@ -167,7 +167,7 @@ func TestRootCmdFlags(t *testing.T) {
 // TestRootCmdPluginMode tests that the root command correctly detects plugin mode
 // and adjusts its Use and Example strings accordingly.
 func TestRootCmdPluginMode(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name           string
@@ -179,10 +179,10 @@ func TestRootCmdPluginMode(t *testing.T) {
 	}{
 		{
 			name:           "standard mode - regular binary name",
-			args:           []string{"/usr/bin/pulumicost"},
+			args:           []string{"/usr/bin/finfocus"},
 			env:            map[string]string{},
-			expectedUse:    "pulumicost",
-			exampleContain: "pulumicost cost projected",
+			expectedUse:    "finfocus",
+			exampleContain: "finfocus cost projected",
 			exampleNotHave: "pulumi plugin run tool cost",
 		},
 		{
@@ -203,32 +203,32 @@ func TestRootCmdPluginMode(t *testing.T) {
 		},
 		{
 			name:           "plugin mode - env var override true",
-			args:           []string{"/usr/bin/pulumicost"},
-			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "true"},
+			args:           []string{"/usr/bin/finfocus"},
+			env:            map[string]string{"FINFOCUS_PLUGIN_MODE": "true"},
 			expectedUse:    "pulumi plugin run tool cost",
 			exampleContain: "pulumi plugin run tool cost",
 			exampleNotHave: "",
 		},
 		{
 			name:           "plugin mode - env var override 1",
-			args:           []string{"/usr/bin/pulumicost"},
-			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "1"},
+			args:           []string{"/usr/bin/finfocus"},
+			env:            map[string]string{"FINFOCUS_PLUGIN_MODE": "1"},
 			expectedUse:    "pulumi plugin run tool cost",
 			exampleContain: "pulumi plugin run tool cost",
 			exampleNotHave: "",
 		},
 		{
 			name:           "standard mode - env var set to false",
-			args:           []string{"/usr/bin/pulumicost"},
-			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
-			expectedUse:    "pulumicost",
-			exampleContain: "pulumicost cost projected",
+			args:           []string{"/usr/bin/finfocus"},
+			env:            map[string]string{"FINFOCUS_PLUGIN_MODE": "false"},
+			expectedUse:    "finfocus",
+			exampleContain: "finfocus cost projected",
 			exampleNotHave: "pulumi plugin run tool cost",
 		},
 		{
 			name:           "plugin mode - binary name takes precedence over false env",
 			args:           []string{"/usr/bin/pulumi-tool-cost"},
-			env:            map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
+			env:            map[string]string{"FINFOCUS_PLUGIN_MODE": "false"},
 			expectedUse:    "pulumi plugin run tool cost",
 			exampleContain: "pulumi plugin run tool cost",
 			exampleNotHave: "",
@@ -255,17 +255,17 @@ func TestRootCmdPluginMode(t *testing.T) {
 
 // TestRootCmdPluginModeHelpOutput verifies the help output in plugin mode.
 func TestRootCmdPluginModeHelpOutput(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	lookupEnv := func(key string) (string, bool) {
-		if key == "PULUMICOST_PLUGIN_MODE" {
+		if key == "FINFOCUS_PLUGIN_MODE" {
 			return "true", true
 		}
 		return "", false
 	}
 
 	var buf bytes.Buffer
-	cmd := cli.NewRootCmdWithArgs("test-version", []string{"/usr/bin/pulumicost"}, lookupEnv)
+	cmd := cli.NewRootCmdWithArgs("test-version", []string{"/usr/bin/finfocus"}, lookupEnv)
 	cmd.SetOut(&buf)
 	cmd.SetErr(&buf)
 	cmd.SetArgs([]string{"--help"})
@@ -284,7 +284,7 @@ func TestRootCmdPluginModeHelpOutput(t *testing.T) {
 // Note: This tests the Execute() error return, not os.Exit() directly.
 // The main() function converts non-nil errors to os.Exit(1).
 func TestExitCodeBehavior(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name        string

@@ -33,4 +33,4 @@
 
 - All items pass validation
 - Specification is ready for `/speckit.clarify` or `/speckit.plan`
-- Target repository is pulumicost-spec (not pulumicost-core) - this spec documents cross-repo work
+- Target repository is finfocus-spec (not finfocus-core) - this spec documents cross-repo work
