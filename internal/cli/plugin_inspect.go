@@ -1,0 +1,190 @@
+package cli
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/Masterminds/semver/v3"
+	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/spf13/cobra"
+)
+
+// NewPluginInspectCmd creates the plugin inspect command.
+func NewPluginInspectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "inspect <plugin-name> <resource-type>",
+		Short: "Inspect a plugin's capabilities and field mappings",
+		Long: `Inspect a plugin to discover how it maps Pulumi resource properties to pricing inputs.
+This command performs a dry-run against the plugin to retrieve field mappings for a specific resource type.`,
+		Example: `  # Inspect field mappings for AWS EC2 Instance
+  pulumicost plugin inspect aws-public aws:ec2/instance:Instance
+
+  # Inspect specific version
+  pulumicost plugin inspect aws-public aws:ec2/instance:Instance --version v0.1.0
+
+  # Output as JSON
+  pulumicost plugin inspect aws-public aws:ec2/instance:Instance --json`,
+		Args: cobra.ExactArgs(2), //nolint:mnd // Command requires exactly 2 arguments
+		RunE: runPluginInspect,
+	}
+
+	cmd.Flags().Bool("json", false, "Output in JSON format")
+	cmd.Flags().String("version", "", "Specify plugin version to inspect")
+
+	return cmd
+}
+
+func runPluginInspect(cmd *cobra.Command, args []string) error {
+	pluginName := args[0]
+	resourceType := args[1]
+	jsonOutput, err := cmd.Flags().GetBool("json")
+	if err != nil {
+		return fmt.Errorf("failed to get json flag: %w", err)
+	}
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return fmt.Errorf("failed to get version flag: %w", err)
+	}
+	ctx := cmd.Context()
+
+	path, err := findPluginPath(pluginName, version)
+	if err != nil {
+		return fmt.Errorf("plugin not found: %w", err)
+	}
+
+	// 2. Launch plugin
+	launcher := pluginhost.NewProcessLauncher()
+	client, err := pluginhost.NewClient(ctx, launcher, path)
+	if err != nil {
+		return fmt.Errorf("failed to launch plugin: %w", err)
+	}
+	defer func() { _ = client.Close() }()
+
+	// 3. Call DryRun
+	const dryRunTimeout = 10 * time.Second
+	dryRunCtx, cancel := context.WithTimeout(ctx, dryRunTimeout)
+	defer cancel()
+
+	req := &pbc.DryRunRequest{
+		Resource: &pbc.ResourceDescriptor{
+			ResourceType: resourceType,
+		},
+	}
+
+	resp, err := client.API.DryRun(dryRunCtx, req)
+	if err != nil {
+		if pluginhost.IsUnimplementedError(err) {
+			return fmt.Errorf("plugin '%s' does not support inspection (capability discovery not implemented)",
+				pluginName)
+		}
+		return fmt.Errorf("dry-run failed: %w", err)
+	}
+
+	// 4. Render output
+	if jsonOutput {
+		return renderJSON(resp, cmd.OutOrStdout())
+	}
+	renderTable(resp, cmd.OutOrStdout())
+	return nil
+}
+
+// findPluginPath locates the plugin binary.
+func findPluginPath(name, version string) (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	pluginDir := filepath.Join(home, ".pulumicost", "plugins", name)
+
+	if version == "" {
+		v, vErr := findLatestVersion(pluginDir, name)
+		if vErr != nil {
+			return "", vErr
+		}
+		version = v
+	}
+
+	binPath := filepath.Join(pluginDir, version, name)
+	if _, statErr := os.Stat(binPath); statErr != nil {
+		// Windows extension check
+		if _, statErrExe := os.Stat(binPath + ".exe"); statErrExe == nil {
+			return binPath + ".exe", nil
+		}
+		return "", fmt.Errorf("plugin binary not found at %s", binPath)
+	}
+	return binPath, nil
+}
+
+func findLatestVersion(pluginDir, name string) (string, error) {
+	entries, dirErr := os.ReadDir(pluginDir)
+	if dirErr != nil {
+		return "", fmt.Errorf("plugin '%s' not installed (checked %s)", name, pluginDir)
+	}
+	var latest string
+	var latestVer *semver.Version
+	for _, e := range entries {
+		if e.IsDir() && strings.HasPrefix(e.Name(), "v") {
+			verStr := strings.TrimPrefix(e.Name(), "v")
+			ver, err := semver.NewVersion(verStr)
+			if err != nil {
+				continue // Skip entries that fail to parse as semver
+			}
+			if latestVer == nil || ver.Compare(latestVer) > 0 {
+				latestVer = ver
+				latest = e.Name()
+			}
+		}
+	}
+	if latest == "" {
+		return "", fmt.Errorf("no valid semver versions found for plugin '%s'", name)
+	}
+	return latest, nil
+}
+
+func renderJSON(resp *pbc.DryRunResponse, w io.Writer) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(resp)
+}
+
+func renderTable(resp *pbc.DryRunResponse, w io.Writer) {
+	const (
+		colWidthField  = 20
+		colWidthStatus = 10
+	)
+
+	// Build format string using column widths for consistency
+	rowFormat := fmt.Sprintf("%%-%ds %%-%ds %%s\n", colWidthField, colWidthStatus)
+
+	fmt.Fprintf(w, "Field Mappings:\n")
+	fmt.Fprintf(w, rowFormat, "FIELD", "STATUS", "CONDITION")
+	fmt.Fprintf(w, "%s %s %s\n",
+		strings.Repeat("-", colWidthField),
+		strings.Repeat("-", colWidthStatus),
+		strings.Repeat("-", colWidthStatus)) // CONDITION column has variable width
+
+	for _, m := range resp.GetFieldMappings() {
+		status := "UNKNOWN"
+		switch m.GetSupportStatus() {
+		case pbc.FieldSupportStatus_FIELD_SUPPORT_STATUS_SUPPORTED:
+			status = "SUPPORTED"
+		case pbc.FieldSupportStatus_FIELD_SUPPORT_STATUS_UNSUPPORTED:
+			status = "UNSUPPORTED"
+		case pbc.FieldSupportStatus_FIELD_SUPPORT_STATUS_CONDITIONAL:
+			status = "CONDITIONAL"
+		case pbc.FieldSupportStatus_FIELD_SUPPORT_STATUS_DYNAMIC:
+			status = "DYNAMIC"
+		case pbc.FieldSupportStatus_FIELD_SUPPORT_STATUS_UNSPECIFIED:
+			status = "UNKNOWN"
+		}
+
+		fmt.Fprintf(w, rowFormat, m.GetFieldName(), status, m.GetConditionDescription())
+	}
+}

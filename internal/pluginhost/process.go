@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -17,6 +18,8 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+const EnvAnalyzerMode = "PULUMICOST_ANALYZER_MODE"
 
 const (
 	defaultTimeout      = 10 * time.Second
@@ -38,6 +41,7 @@ const (
 // getPluginBindTimeout returns the timeout for plugin binding, with increased timeout in CI environments.
 func getPluginBindTimeout() time.Duration {
 	// Increase timeout in CI environments where resources may be constrained
+	//nolint:goconst // "true" is used in multiple contexts, not worth a constant
 	if os.Getenv("CI") == "true" {
 		return ciPluginBindTimeout
 	}
@@ -391,7 +395,19 @@ func (p *ProcessLauncher) startPlugin(
 		fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
 	)
 	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+
+	// In analyzer mode, suppress plugin stderr to prevent verbose logs from cluttering Pulumi preview output
+	// This addresses issue #401 where plugin JSON messages appear in user-facing output
+	if os.Getenv(EnvAnalyzerMode) == "true" {
+		log.Debug().
+			Ctx(ctx).
+			Str("component", "pluginhost").
+			Str("plugin_path", path).
+			Msg("suppressing plugin stderr output in analyzer mode")
+		cmd.Stderr = io.Discard
+	} else {
+		cmd.Stderr = os.Stderr
+	}
 	// Set WaitDelay before Start to avoid race condition with watchCtx goroutine
 	cmd.WaitDelay = processWaitDelay
 

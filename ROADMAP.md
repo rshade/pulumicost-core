@@ -61,7 +61,10 @@ guardrails in `CONTEXT.md`.
 - [ ] **Plugin Ecosystem Maturity**
   - [ ] Implement GetPluginInfo consumer-side requirements
         ([#376](https://github.com/rshade/pulumicost-core/issues/376))
-        *Blocked on: pulumicost-spec #029 release*
+        *Status: Unblocked (Spec v0.4.12+)*
+  - [ ] Implement DryRun discovery for plugin field mappings
+        ([#381](https://github.com/rshade/pulumicost-core/issues/381))
+        *Cross-Repo: Consumes DryRun RPC from spec 032*
   - [ ] Update Plugin Generator Templates (includes gRPC reflection)
         ([#248](https://github.com/rshade/pulumicost-core/issues/248))
 - [ ] **Developer Experience & Tooling**
@@ -96,14 +99,19 @@ guardrails in `CONTEXT.md`.
       ([#364](https://github.com/rshade/pulumicost-core/issues/364))
   - [ ] Projection Math Engine (Linear/Exponential extrapolation)
   - [ ] TUI: ASCII Line Chart visualization for 6-12 month forecasts
-  - *Cross-Repo:* Requires `GrowthType`/`GrowthRate` in
-    [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+  - *Status: Spec primitives available (GrowthType/GrowthRate)*
 - [ ] **Governance Overrides ("YOLO Mode")**
       ([#365](https://github.com/rshade/pulumicost-core/issues/365))
   - [ ] CLI: Implement `--yolo` / `--force` flag to bypass budget gates
   - [ ] UX: "Warning Mode" UI styles for bypassed runs
   - *Cross-Repo:* Requires `BypassReason` in
     [pulumicost-spec](https://github.com/rshade/pulumicost-spec)
+- [ ] **Interoperability & Data Exchange**
+  - [ ] Implement JSON-LD export for FOCUS cost records
+        ([#382](https://github.com/rshade/pulumicost-core/issues/382))
+        *Cross-Repo: Uses sdk/go/jsonld from spec 032*
+  - [ ] OpenCost Compatibility Mapping
+        ([#383](https://github.com/rshade/pulumicost-core/issues/383))
 - [ ] **Contextual Profiles ("Dev Mode")**
       ([#368](https://github.com/rshade/pulumicost-core/issues/368))
   - [ ] CLI: Implement `--profile` flag (e.g., `dev`, `prod`) to pass hints
@@ -138,6 +146,11 @@ guardrails in `CONTEXT.md`.
 - [ ] **CI/CD & Automation**
   - [ ] Harden Nightly Analysis Workflow
         ([#325](https://github.com/rshade/pulumicost-core/issues/325))
+- [ ] **Plugin SDK Hardening**
+  - [ ] Implement configurable CORS & Security headers for plugin servers
+        ([#384](https://github.com/rshade/pulumicost-core/issues/384))
+  - [ ] Adopt enhanced ARN provider type safety
+        ([#385](https://github.com/rshade/pulumicost-core/issues/385))
 - [ ] **Code Quality Refactoring**
   - [ ] Extract shared applyFilters helper
         ([#337](https://github.com/rshade/pulumicost-core/issues/337))
@@ -246,17 +259,6 @@ guardrails in `CONTEXT.md`.
   - *Success Criteria*: The TUI refreshes a resource's price after an
     in-memory property change by receiving and displaying a new `CostResult`
     from the plugin.
-- [ ] **OpenCost Compatibility Mapping**
-  - *Objective*: Integrate `pulumicost` with the broader FinOps ecosystem by
-    supporting standardized data exchange formats.
-  - *Technical Approach*: Create a transformation layer that maps the
-    `pulumicost.CostResult` struct to the JSON schema defined by the
-    [OpenCost Specification](https://www.opencost.io/).
-  - *Anti-Guess Boundary*: The core MUST NOT attempt to synthesize missing
-    OpenCost fields (e.g., Kubernetes metadata); if the data is not present
-    in the resource descriptor, the field must remain null.
-  - *Success Criteria*: Generated JSON output passes the official OpenCost
-    schema validation.
 - [ ] **Stateless Cost-Policy Linting**
   - *Objective*: Prevent accidental cost overruns by flagging resources that
     exceed organizational informational thresholds.

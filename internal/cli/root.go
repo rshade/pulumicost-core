@@ -52,6 +52,7 @@ func NewRootCmdWithArgs(ver string, args []string, lookupEnv func(string) (strin
 	}
 
 	cmd.PersistentFlags().Bool("debug", false, "enable debug logging")
+	cmd.PersistentFlags().Bool("skip-version-check", false, "skip plugin spec version compatibility check")
 	cmd.AddCommand(newCostCmd(), newPluginCmd(), newConfigCmd(), NewAnalyzerCmd())
 
 	return cmd
@@ -113,7 +114,7 @@ func newPluginCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewPluginValidateCmd(), NewPluginListCmd(), NewPluginInitCmd(),
 		NewPluginInstallCmd(), NewPluginUpdateCmd(), NewPluginRemoveCmd(),
-		NewPluginConformanceCmd(), NewPluginCertifyCmd(),
+		NewPluginConformanceCmd(), NewPluginCertifyCmd(), NewPluginInspectCmd(),
 	)
 	return cmd
 }

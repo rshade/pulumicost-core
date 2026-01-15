@@ -1,8 +1,9 @@
 # pulumicost-core Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-11-22
+Auto-generated from all feature plans. Last updated: 2026-01-12
 
 ## Active Technologies
+
 - Markdown, Go 1.25.5 (for code verification) + Jekyll (for docs site), GitHub Pages (010-sync-docs-codebase)
 - Git repository (docs folder) (010-sync-docs-codebase)
 - Pulumi Analyzer integration (pulumicost analyzer serve)
@@ -14,6 +15,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-22
 - Pure Go (no external dependencies for filter logic) (023-add-cli-filter-flag)
 - Go 1.25.5 + `github.com/Masterminds/semver/v3` (001-latest-plugin-version)
 - Filesystem (`~/.pulumicost/plugins/`) (001-latest-plugin-version)
+- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.14, github.com/Masterminds/semver/v3 (112-plugin-info-discovery)
+- Database: N/A (Stateless CLI) (112-plugin-info-discovery)
 
 - Local Pulumi state (ephemeral), no persistent DB. (008-e2e-cost-testing)
 - N/A (Stateless operation) (009-analyzer-plugin)
@@ -150,9 +153,10 @@ Configuration validation with >85% coverage:
 - **Property Extraction**: Core (`adapter.go`) relies on populated `Inputs` to extract SKU and Region. If `Inputs` are empty (due to ingest issues), pricing lookup fails.
 
 ## Recent Changes
+
+- 112-plugin-info-discovery: Added Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.14, github.com/Masterminds/semver/v3
 - 001-latest-plugin-version: Added Go 1.25.5 + `github.com/Masterminds/semver/v3`
 - 023-add-cli-filter-flag: Added Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/pflag`
-- 021-plugin-integration-tests: Added Go 1.25.5 + `github.com/stretchr/testify` (assertions), `net/http/httptest` (mocking)
 
   plus Jekyll (for docs site), GitHub Pages
   plan JSON.

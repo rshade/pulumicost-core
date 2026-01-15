@@ -1,0 +1,135 @@
+package pluginhost
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestCompareSpecVersions(t *testing.T) {
+	tests := []struct {
+		name          string
+		coreVersion   string
+		pluginVersion string
+		wantResult    CompatibilityResult
+		wantErr       bool
+	}{
+		{
+			name:          "Same version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Compatible minor update",
+			coreVersion:   "0.4.14",
+			pluginVersion: "0.4.15",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Minor difference returns Compatible",
+			coreVersion:   "0.4.14",
+			pluginVersion: "0.5.0",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Core newer minor (backward compatible)",
+			coreVersion:   "0.4.14",
+			pluginVersion: "0.4.10",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Major mismatch (plugin newer)",
+			coreVersion:   "0.4.14",
+			pluginVersion: "1.0.0",
+			wantResult:    MajorMismatch,
+			wantErr:       false,
+		},
+		{
+			name:          "Major mismatch (core newer)",
+			coreVersion:   "1.0.0",
+			pluginVersion: "0.4.14",
+			wantResult:    MajorMismatch,
+			wantErr:       false,
+		},
+		{
+			name:          "Invalid core version",
+			coreVersion:   "invalid",
+			pluginVersion: "0.4.14",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "Invalid plugin version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "invalid",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "Empty core version",
+			coreVersion:   "",
+			pluginVersion: "0.4.14",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "Empty plugin version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "",
+			wantResult:    Invalid,
+			wantErr:       true,
+		},
+		{
+			name:          "V-prefixed versions (both)",
+			coreVersion:   "v0.4.14",
+			pluginVersion: "v0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "V-prefixed core version",
+			coreVersion:   "v0.4.14",
+			pluginVersion: "0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "V-prefixed plugin version",
+			coreVersion:   "0.4.14",
+			pluginVersion: "v0.4.14",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Pre-release core version",
+			coreVersion:   "0.5.0-alpha.1",
+			pluginVersion: "0.5.0",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+		{
+			name:          "Pre-release plugin version",
+			coreVersion:   "0.5.0",
+			pluginVersion: "0.5.0-alpha.1",
+			wantResult:    Compatible,
+			wantErr:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := CompareSpecVersions(tt.coreVersion, tt.pluginVersion)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.wantResult, got)
+		})
+	}
+}

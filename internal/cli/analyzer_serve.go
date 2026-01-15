@@ -20,6 +20,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const EnvAnalyzerMode = "PULUMICOST_ANALYZER_MODE"
+
 // getAnalyzerLogLevel reads the PULUMICOST_LOG_LEVEL environment variable and returns
 // the corresponding zerolog level. If the environment variable is unset or cannot be
 // parsed, it returns zerolog.InfoLevel.
@@ -85,6 +87,13 @@ func RunAnalyzerServe(cmd *cobra.Command) error {
 		Str("component", "analyzer").
 		Timestamp().
 		Logger()
+
+	// Set environment variable to indicate analyzer mode for plugin suppression
+	// This prevents plugins from outputting verbose logs that clutter Pulumi preview
+	if err := os.Setenv(EnvAnalyzerMode, "true"); err != nil {
+		// os.Setenv rarely fails, but if it does, log and continue
+		stderrLogger.Warn().Err(err).Msg("failed to set analyzer mode environment variable")
+	}
 
 	stderrLogger.Debug().Msg("starting analyzer server")
 
