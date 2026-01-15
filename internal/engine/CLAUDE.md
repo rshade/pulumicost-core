@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Engine Package Overview
 
-The `internal/engine` package is the core orchestration layer for PulumiCost, responsible for coordinating cost calculations between plugins and local pricing specifications, then rendering results in multiple output formats.
+The `internal/engine` package is the core orchestration layer for FinFocus, responsible for coordinating cost calculations between plugins and local pricing specifications, then rendering results in multiple output formats.
 
 **Key Capabilities:**
 - **Multi-Provider Cost Calculation**: Orchestrates cost queries across AWS, Azure, GCP, and other cloud providers
@@ -58,12 +58,12 @@ go test ./internal/engine/...
 go test ./internal/cli/... -run TestCLIIntegration
 
 # Run engine functionality through example commands
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
-./bin/pulumicost cost actual --pulumi-json examples/plans/aws-simple-plan.json --from 2025-01-01
+./bin/finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/finfocus cost actual --pulumi-json examples/plans/aws-simple-plan.json --from 2025-01-01
 
 # Test cross-provider aggregation features
-./bin/pulumicost cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
-./bin/pulumicost cost actual --group-by monthly --from 2024-01-01
+./bin/finfocus cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
+./bin/finfocus cost actual --group-by monthly --from 2024-01-01
 ```
 
 ## Cost Calculation Strategy
@@ -243,7 +243,7 @@ var (
 
 ### Proto Integration
 
-- Uses real protobuf definitions from pulumicost-spec
+- Uses real protobuf definitions from finfocus-spec
 - `GetProjectedCostRequest`/`GetActualCostRequest` messages
 - Automatic property conversion from `interface{}` to `string`
 
@@ -520,13 +520,13 @@ aggregations, err := CreateCrossProviderAggregation(results, GroupByMonthly)
 
 ```bash
 # Cross-provider daily aggregation
-./bin/pulumicost cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
+./bin/finfocus cost actual --group-by daily --from 2024-01-01 --to 2024-01-31
 
 # Monthly cost trends across providers
-./bin/pulumicost cost actual --group-by monthly --from 2024-01-01 --to 2024-12-31
+./bin/finfocus cost actual --group-by monthly --from 2024-01-01 --to 2024-12-31
 
 # Filter by tag (no time-based aggregation)
-./bin/pulumicost cost actual --group-by "tag:env=prod" --from 2024-01-01
+./bin/finfocus cost actual --group-by "tag:env=prod" --from 2024-01-01
 ```
 
 ### Performance and Best Practices
@@ -546,5 +546,5 @@ aggregations, err := CreateCrossProviderAggregation(results, GroupByMonthly)
 - Use time-based grouping only for cross-provider aggregation
 - Check date ranges before expensive processing
 
-This package acts as the central coordinating layer, making it critical for understanding the overall cost calculation flow in PulumiCost.
+This package acts as the central coordinating layer, making it critical for understanding the overall cost calculation flow in FinFocus.
 

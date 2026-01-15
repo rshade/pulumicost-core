@@ -1,11 +1,11 @@
-# pulumicost-core Project Context & Boundaries
+# finfocus Project Context & Boundaries
 
-This document defines the technical guardrails and architectural scope of the `pulumicost-core` project. It serves as the primary reference for maintaining system integrity and preventing scope creep or architectural hallucinations.
+This document defines the technical guardrails and architectural scope of the `finfocus` project. It serves as the primary reference for maintaining system integrity and preventing scope creep or architectural hallucinations.
 
 ## Core Architectural Identity
 **Stateless CLI Orchestrator for Pulumi Infrastructure Cost Estimation**
 
-`pulumicost-core` is a lightweight, agnostic engine designed to bridge Pulumi infrastructure definitions with pricing data. It functions as a **transformer and aggregator**, not a primary data source. Its primary roles are:
+`finfocus` is a lightweight, agnostic engine designed to bridge Pulumi infrastructure definitions with pricing data. It functions as a **transformer and aggregator**, not a primary data source. Its primary roles are:
 1.  **Ingestion**: Extracting resource metadata from multiple sources:
     *   Planned changes (`pulumi preview --json`).
     *   Current infrastructure state (`pulumi state export` or via `stdin`).
@@ -29,7 +29,7 @@ Accuracy and data ownership are distributed as follows:
     *   **Deployed**: `pulumi state export` (JSON) or direct state inspection.
     *   **Active Analysis**: The Pulumi Analyzer plugin interface.
 *   **Pricing Data**: 
-    *   **External**: Responsibility lies with the gRPC plugins (e.g., `pulumicost-provider-aws`).
+    *   **External**: Responsibility lies with the gRPC plugins (e.g., `finfocus-provider-aws`).
     *   **Local**: Responsibility lies with the YAML files in the `specs/` directory (e.g., `aws-ec2-t3.medium.yaml`).
 *   **Normalization**: The core engine defines the `proto` and `internal/engine` types which serve as the "Contract of Truth" for how cost data must be returned.
 

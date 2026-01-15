@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -14,12 +14,12 @@ func NewConfigInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize configuration file with default values",
-		Long:  "Creates a new configuration file at ~/.pulumicost/config.yaml with default values.",
+		Long:  "Creates a new configuration file at ~/.finfocus/config.yaml with default values.",
 		Example: `  # Create default configuration
-  pulumicost config init
+  finfocus config init
   
   # Create default configuration, overwriting existing
-  pulumicost config init --force`,
+  finfocus config init --force`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfg := config.New()
 
@@ -36,7 +36,7 @@ func NewConfigInitCmd() *cobra.Command {
 			}
 
 			cmd.Printf("Configuration initialized successfully\n")
-			cmd.Printf("Configuration file: ~/.pulumicost/config.yaml\n")
+			cmd.Printf("Configuration file: ~/.finfocus/config.yaml\n")
 
 			return nil
 		},

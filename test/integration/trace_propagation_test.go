@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,14 +24,14 @@ func TestTracePropagation_TraceIDInDebugOutput(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
 	}
 
 	// Run with debug flag to capture trace ID in output
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected", "--debug",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected", "--debug",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -57,14 +57,14 @@ func TestTracePropagation_ConsistentTraceID(t *testing.T) {
 	tempHome := t.TempDir()
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
 	}
 
 	// Run with debug flag and force JSON format for parseable output
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected", "--debug",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected", "--debug",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	cmd.Env = append(os.Environ(), pluginsdk.EnvLogFormat+"=json", "HOME="+tempHome)
 	var stdout, stderr bytes.Buffer
@@ -134,7 +134,7 @@ func TestTracePropagation_ExternalTraceIDFlow(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
@@ -145,11 +145,11 @@ func TestTracePropagation_ExternalTraceIDFlow(t *testing.T) {
 
 	// Run with external trace ID and debug mode
 	// Force JSON format via env var (--debug sets console format, we override with env)
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected", "--debug",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected", "--debug",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	cmd.Env = append(os.Environ(),
-		"PULUMICOST_TRACE_ID="+externalTraceID,
-		"PULUMICOST_LOG_FORMAT=json", // Force JSON format for parsing
+		"FINFOCUS_TRACE_ID="+externalTraceID,
+		"FINFOCUS_LOG_FORMAT=json", // Force JSON format for parsing
 	)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

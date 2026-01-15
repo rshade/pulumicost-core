@@ -9,7 +9,7 @@
 
 ### User Story 1 - Debugging Failed Cost Calculations (Priority: P1)
 
-A DevOps engineer runs `pulumicost cost projected` and gets unexpected results or silent failures.
+A DevOps engineer runs `finfocus cost projected` and gets unexpected results or silent failures.
 They need to understand what happened during the cost calculation process, including which plugins
 were tried, which resources failed to price, and why certain fallbacks were used.
 
@@ -22,7 +22,7 @@ finish.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user runs `pulumicost cost projected --debug`, **When** the command executes,
+1. **Given** a user runs `finfocus cost projected --debug`, **When** the command executes,
    **Then** log output shows: command start, resource ingestion count, plugin lookup attempts for
    each resource, cost calculation results, and command completion with duration.
 
@@ -30,7 +30,7 @@ finish.
    local specs, **Then** the log output clearly indicates the fallback occurred and explains why
    (e.g., "plugin kubecost returned no price for aws:ec2:Instance, falling back to local spec").
 
-3. **Given** a user sets `PULUMICOST_LOG_FORMAT=json`, **When** they run any command, **Then** all
+3. **Given** a user sets `FINFOCUS_LOG_FORMAT=json`, **When** they run any command, **Then** all
    log output is valid JSON that can be piped to tools like `jq` for filtering.
 
 ---
@@ -59,7 +59,7 @@ from both core and plugin, and confirming the same trace ID appears in both log 
 
 ### User Story 3 - Configuring Log Verbosity for Production vs Development (Priority: P3)
 
-An operator wants to run pulumicost in production with minimal log noise (INFO level, JSON format
+An operator wants to run finfocus in production with minimal log noise (INFO level, JSON format
 for aggregation) while developers want verbose console output (DEBUG level, human-readable format).
 
 **Why this priority**: Configuration flexibility is important but the logging must work first.
@@ -76,7 +76,7 @@ CLI flag) and confirming the logger respects the settings hierarchy.
 2. **Given** no configuration changes, **When** a user runs a command with `--debug` flag,
    **Then** DEBUG level logs appear regardless of configuration file settings.
 
-3. **Given** `PULUMICOST_LOG_LEVEL=error` is set, **When** a configuration file sets
+3. **Given** `FINFOCUS_LOG_LEVEL=error` is set, **When** a configuration file sets
    `logging.level: debug`, **Then** the environment variable takes precedence and only ERROR
    logs appear.
 
@@ -84,18 +84,18 @@ CLI flag) and confirming the logger respects the settings hierarchy.
 
 ### User Story 4 - Injecting External Trace IDs (Priority: P4)
 
-An enterprise user running pulumicost as part of a larger orchestration pipeline wants to inject
-their existing trace ID so logs from pulumicost correlate with their broader observability platform.
+An enterprise user running finfocus as part of a larger orchestration pipeline wants to inject
+their existing trace ID so logs from finfocus correlate with their broader observability platform.
 
 **Why this priority**: This is an advanced use case for enterprise users. It builds on the core
 tracing functionality and can be delivered as an enhancement.
 
-**Independent Test**: Can be tested by setting `PULUMICOST_TRACE_ID` environment variable and
+**Independent Test**: Can be tested by setting `FINFOCUS_TRACE_ID` environment variable and
 verifying that value appears in all log entries instead of a generated ID.
 
 **Acceptance Scenarios**:
 
-1. **Given** `PULUMICOST_TRACE_ID=external-trace-12345` is set, **When** a user runs any command,
+1. **Given** `FINFOCUS_TRACE_ID=external-trace-12345` is set, **When** a user runs any command,
    **Then** all log entries use `external-trace-12345` as the trace_id value.
 
 ---

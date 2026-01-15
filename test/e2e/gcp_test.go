@@ -13,7 +13,7 @@ import (
 )
 
 func TestE2E_GCP_ProjectedCost(t *testing.T) {
-	binary := findPulumicostBinary()
+	binary := findFinFocusBinary()
 	require.NotEmpty(t, binary)
 
 	planPath, _ := filepath.Abs("../fixtures/plans/gcp/simple.json")

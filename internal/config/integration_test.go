@@ -65,7 +65,7 @@ func TestEnsureConfigDir(t *testing.T) {
 	err := EnsureConfigDir()
 	require.NoError(t, err)
 
-	configDir := filepath.Join(tmpHome, ".pulumicost")
+	configDir := filepath.Join(tmpHome, ".finfocus")
 	stat, err := os.Stat(configDir)
 	require.NoError(t, err)
 	assert.True(t, stat.IsDir())
@@ -120,7 +120,7 @@ func TestGetConfigDir(t *testing.T) {
 	homeDir, err := os.UserHomeDir()
 	require.NoError(t, err)
 	assert.Contains(t, dir, homeDir)
-	assert.Contains(t, dir, ".pulumicost")
+	assert.Contains(t, dir, ".finfocus")
 }
 
 func TestGetPluginDir(t *testing.T) {

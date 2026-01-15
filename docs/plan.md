@@ -25,9 +25,9 @@
 
 ## Overview
 
-PulumiCost documentation serves four distinct audiences:
+FinFocus documentation serves four distinct audiences:
 
-- **End Users**: Install, configure, and use PulumiCost CLI
+- **End Users**: Install, configure, and use FinFocus CLI
 - **Engineers**: Extend system, build plugins, contribute code
 - **Software Architects**: Design integrations, understand system design, operational concerns
 - **Business Stakeholders (CEO/Product)**: Cost visibility, ROI, competitive advantage, roadmap
@@ -116,7 +116,7 @@ docs/
 │       ├── data-flow.md             # Data flow between components
 │       ├── plugin-lifecycle.md      # Plugin startup/shutdown lifecycle
 │       ├── cost-calculation-flow.md # Cost calculation pipeline
-│       └── integration-example.md   # End-to-end integration (Pulumi → PulumiCost → Vantage)
+│       └── integration-example.md   # End-to-end integration (Pulumi → FinFocus → Vantage)
 │
 ├── plugins/                         # Plugin-focused documentation
 │   ├── README.md                    # Plugins index & overview
@@ -131,7 +131,7 @@ docs/
 │   │   ├── authentication.md        # API key management
 │   │   ├── features.md              # What's supported
 │   │   ├── troubleshooting.md       # Common issues
-│   │   └── cost-mapping.md          # How Vantage costs map to PulumiCost
+│   │   └── cost-mapping.md          # How Vantage costs map to FinFocus
 │   │
 │   ├── kubecost/                    # Kubecost plugin documentation (PLANNED)
 │   │   ├── README.md
@@ -193,7 +193,7 @@ docs/
 
 **Key Workflows:**
 
-1. Install PulumiCost CLI
+1. Install FinFocus CLI
 2. Choose cost provider (Vantage, local pricing, or future Kubecost)
 3. Run command to get costs
 4. Understand output and troubleshoot issues
@@ -216,7 +216,7 @@ docs/
 
 ### Engineers (Plugin Developers)
 
-**Goal:** "How do I build a PulumiCost plugin for our cost service?"
+**Goal:** "How do I build a FinFocus plugin for our cost service?"
 
 **Entry Point:** `plugins/plugin-development.md`
 
@@ -247,7 +247,7 @@ docs/
 
 ### Software Architects
 
-**Goal:** "How does PulumiCost integrate with our infrastructure? What are the design considerations?"
+**Goal:** "How does FinFocus integrate with our infrastructure? What are the design considerations?"
 
 **Entry Point:** `guides/architect-guide.md`
 
@@ -277,7 +277,7 @@ docs/
 
 ### Business Stakeholders (CEO/Product)
 
-**Goal:** "What value does PulumiCost provide? What's our competitive advantage?"
+**Goal:** "What value does FinFocus provide? What's our competitive advantage?"
 
 **Entry Point:** `guides/business-value.md`
 
@@ -456,7 +456,7 @@ All plugins follow a clear status progression:
 - `plugins/vantage/setup.md` - Setup guide
 - `plugins/vantage/authentication.md` - API key management
 - `plugins/vantage/features.md` - Supported features
-- `plugins/vantage/cost-mapping.md` - How costs map to PulumiCost
+- `plugins/vantage/cost-mapping.md` - How costs map to FinFocus
 - `plugins/vantage/troubleshooting.md` - Common issues and fixes
 
 #### 2. **PLANNED** (Kubecost, OpenCost)
@@ -493,7 +493,7 @@ plugins/{plugin-name}/
 ├── setup.md                     # Installation and initial configuration
 ├── authentication.md            # How to authenticate with service
 ├── features.md                  # Detailed feature list
-├── cost-mapping.md              # How service costs map to PulumiCost
+├── cost-mapping.md              # How service costs map to FinFocus
 ├── troubleshooting.md           # Common issues and solutions
 ├── performance.md               # Performance characteristics and limits
 └── api-integration.md           # API endpoints and integration details
@@ -521,9 +521,9 @@ For FinOps services building plugins:
 
 ```yaml
 # Jekyll configuration
-title: PulumiCost Documentation
+title: FinFocus Documentation
 description: Cost visibility for Pulumi infrastructure
-url: "https://docs.pulumicost.com"
+url: 'https://docs.finfocus.com'
 
 # Theme (GitHub pages supports several)
 theme: jekyll-theme-minimal
@@ -572,7 +572,7 @@ docs/
 Create `docs/CNAME` if using custom domain:
 
 ```text
-docs.pulumicost.com
+docs.finfocus.com
 ```
 
 Then configure domain in GitHub repository settings.
@@ -581,8 +581,8 @@ Then configure domain in GitHub repository settings.
 
 - **GitHub Pages:** Enabled in repository settings
 - **Deploy from:** `main` branch, `docs/` folder
-- **URL:** `https://rshade.github.io/pulumicost-core/docs` (default)
-- **Custom Domain:** `https://docs.pulumicost.com` (if configured)
+- **URL:** `https://rshade.github.io/finfocus/docs` (default)
+- **Custom Domain:** `https://docs.finfocus.com` (if configured)
 
 ---
 
@@ -750,14 +750,14 @@ help LLMs understand the documentation structure and content quickly.
 **Use Cases:**
 
 - AI-powered search within documentation
-- Context injection for AI assistants helping with PulumiCost
+- Context injection for AI assistants helping with FinFocus
 - Documentation completeness verification
 - Automatic documentation generation and updates
 
 ### Structure
 
 ```text
-# PulumiCost Documentation Index
+# FinFocus Documentation Index
 
 ## Quick Navigation
 
@@ -826,7 +826,7 @@ help LLMs understand the documentation structure and content quickly.
 - [Setup Guide](docs/plugins/vantage/setup.md) - Installation and configuration
 - [Authentication](docs/plugins/vantage/authentication.md) - API key management
 - [Features](docs/plugins/vantage/features.md) - Supported features
-- [Cost Mapping](docs/plugins/vantage/cost-mapping.md) - How costs map to PulumiCost
+- [Cost Mapping](docs/plugins/vantage/cost-mapping.md) - How costs map to FinFocus
 - [Troubleshooting](docs/plugins/vantage/troubleshooting.md) - Common issues and fixes
 
 #### Kubecost Plugin (PLANNED)
@@ -848,7 +848,7 @@ help LLMs understand the documentation structure and content quickly.
 
 ### Deployment & Operations
 - [Installation Guide](docs/deployment/installation.md) - Detailed install procedures
-- [Configuration Guide](docs/deployment/configuration.md) - How to configure PulumiCost
+- [Configuration Guide](docs/deployment/configuration.md) - How to configure FinFocus
 - [Docker Deployment](docs/deployment/docker.md) - Docker setup
 - [Kubernetes Deployment](docs/deployment/kubernetes.md) - K8s deployment (FUTURE)
 - [CI/CD Integration](docs/deployment/cicd-integration.md) - Pipeline integration examples
@@ -864,7 +864,7 @@ help LLMs understand the documentation structure and content quickly.
 
 ## Key Concepts
 
-### PulumiCost
+### FinFocus
 CLI tool for calculating cloud infrastructure costs from Pulumi definitions.
 
 **Three Cost Types:**
@@ -883,7 +883,7 @@ Representation of cloud infrastructure (e.g., AWS EC2 instance, Azure VM).
 - Actual Cost: actual monthly cost from provider
 
 ### Plugin
-External service that provides cost data to PulumiCost.
+External service that provides cost data to FinFocus.
 
 **Types:**
 - **Cloud-Native** (Vantage, Flexera): Aggregate costs from multiple clouds
@@ -924,7 +924,7 @@ Combining costs from multiple resources and plugins.
 ## How to Use This File
 
 **For AI Assistants:**
-- Use this as context when answering questions about PulumiCost
+- Use this as context when answering questions about FinFocus
 - Reference specific docs by their paths
 - Point users to the most relevant documentation
 
@@ -1026,7 +1026,7 @@ done > docs/llms.txt
 **Deliverables:**
 
 - [ ] Complete docs/ directory structure
-- [ ] Jekyll _config.yml and theme selection
+- [ ] Jekyll \_config.yml and theme selection
 - [ ] .markdownlintrc.json, .prettierrc.yaml configured
 - [ ] plan.md created (COMPLETE)
 - [ ] GitHub Pages enabled
@@ -1159,15 +1159,15 @@ Documentation will be considered successful when:
 
 ### Directory Purpose Quick Guide
 
-| Directory | Purpose | Audience |
-|-----------|---------|----------|
-| `guides/` | Audience-specific complete guides | All |
-| `getting-started/` | Quick onboarding | End Users |
-| `architecture/` | System design deep dive | Architects |
-| `plugins/` | Plugin-specific documentation | Engineers |
-| `reference/` | API and CLI reference | Engineers, Architects |
-| `deployment/` | Installation and operations | End Users, Architects |
-| `support/` | Help and community | Everyone |
+| Directory          | Purpose                           | Audience              |
+| ------------------ | --------------------------------- | --------------------- |
+| `guides/`          | Audience-specific complete guides | All                   |
+| `getting-started/` | Quick onboarding                  | End Users             |
+| `architecture/`    | System design deep dive           | Architects            |
+| `plugins/`         | Plugin-specific documentation     | Engineers             |
+| `reference/`       | API and CLI reference             | Engineers, Architects |
+| `deployment/`      | Installation and operations       | End Users, Architects |
+| `support/`         | Help and community                | Everyone              |
 
 ### Key Files to Create First
 

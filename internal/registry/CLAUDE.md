@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Registry Package Overview
 
-The `internal/registry` package implements plugin discovery and lifecycle management for PulumiCost. It scans the local filesystem for installed plugins, validates their structure, and provides clients with connections to active plugin processes.
+The `internal/registry` package implements plugin discovery and lifecycle management for FinFocus. It scans the local filesystem for installed plugins, validates their structure, and provides clients with connections to active plugin processes.
 
 ## Architecture
 
@@ -12,7 +12,7 @@ The `internal/registry` package implements plugin discovery and lifecycle manage
 
 1. **Registry** (`registry.go`)
    - Main plugin discovery and management interface
-   - Scans `~/.pulumicost/plugins/<name>/<version>/` directory structure
+   - Scans `~/.finfocus/plugins/<name>/<version>/` directory structure
    - Creates and manages plugin client connections
    - Implements platform-specific binary detection
 
@@ -24,7 +24,7 @@ The `internal/registry` package implements plugin discovery and lifecycle manage
 ### Plugin Directory Structure
 
 ```text
-~/.pulumicost/plugins/
+~/.finfocus/plugins/
 ├── aws-plugin/
 │   └── v1.0.0/
 │       ├── aws-plugin(.exe)          # Executable binary
@@ -48,8 +48,8 @@ go test ./internal/registry/...
 go test -v ./internal/registry/...
 
 # Test registry functionality via CLI commands
-./bin/pulumicost plugin list
-./bin/pulumicost plugin validate
+./bin/finfocus plugin list
+./bin/finfocus plugin validate
 
 # Test with specific setup scenarios
 go test ./internal/registry/... -run TestListPlugins
@@ -60,7 +60,7 @@ go test ./internal/registry/... -run TestFindBinary
 
 ### ListPlugins Process
 
-1. **Check Root Directory**: Return empty list if `~/.pulumicost/plugins` doesn't exist
+1. **Check Root Directory**: Return empty list if `~/.finfocus/plugins` doesn't exist
 2. **Scan Plugin Names**: Iterate through subdirectories (plugin names)
 3. **Scan Versions**: For each plugin, iterate through version subdirectories
 4. **Find Binaries**: Search for executable files in version directories
@@ -94,7 +94,7 @@ go test ./internal/registry/... -run TestFindBinary
   "name": "aws-plugin",
   "version": "v1.0.0", 
   "description": "AWS cost calculation plugin",
-  "author": "PulumiCost Team",
+  "author": "FinFocus Team",
   "providers": ["aws"],
   "metadata": {
     "supportedRegions": "us-east-1,us-west-2"
@@ -153,7 +153,7 @@ Tests use helper functions to create realistic plugin directory structures:
 ### Config Package
 
 - `config.New().PluginDir` provides default plugin directory path
-- Typically resolves to `~/.pulumicost/plugins`
+- Typically resolves to `~/.finfocus/plugins`
 
 ### PluginHost Package  
 

@@ -7,7 +7,7 @@
 
 ### 1. Analyzer Architecture
 - **Source**: `internal/cli/analyzer_serve.go`, `internal/analyzer/`
-- **Command**: `pulumicost analyzer serve`
+- **Command**: `finfocus analyzer serve`
 - **Protocol**: gRPC (Pulumi Analyzer Protocol)
 - **Configuration**: `analyzer` section in `config.yaml`
   - `timeout`: `per_resource`, `total`, `warn_threshold`
@@ -26,15 +26,15 @@
 
 ### 3. Configuration Schema
 - **Source**: `internal/config/config.go`
-- **Location**: `~/.pulumicost/config.yaml`
+- **Location**: `~/.finfocus/config.yaml`
 - **Environment Variable Overrides**:
-  - `PULUMICOST_OUTPUT_FORMAT` -> `output.default_format`
-  - `PULUMICOST_OUTPUT_PRECISION` -> `output.precision`
-  - `PULUMICOST_LOG_LEVEL` -> `logging.level`
-  - `PULUMICOST_LOG_FORMAT` -> `logging.format`
-  - `PULUMICOST_LOG_FILE` -> `logging.file`
-  - `PULUMICOST_PLUGIN_<NAME>_<KEY>` -> `plugins.<name>.<key>`
-  - `PULUMICOST_CONFIG_STRICT`: Enforce strict config parsing
+  - `FINFOCUS_OUTPUT_FORMAT` -> `output.default_format`
+  - `FINFOCUS_OUTPUT_PRECISION` -> `output.precision`
+  - `FINFOCUS_LOG_LEVEL` -> `logging.level`
+  - `FINFOCUS_LOG_FORMAT` -> `logging.format`
+  - `FINFOCUS_LOG_FILE` -> `logging.file`
+  - `FINFOCUS_PLUGIN_<NAME>_<KEY>` -> `plugins.<name>.<key>`
+  - `FINFOCUS_CONFIG_STRICT`: Enforce strict config parsing
 
 ### 4. Error Codes
 - **Engine Errors** (`internal/engine/types.go`, `internal/engine/engine.go`):
@@ -48,14 +48,14 @@
   - `ErrConfigCorrupted`: "configuration file appears corrupted"
 
 ### 5. Environment Variables
-- `PULUMICOST_LOG_LEVEL`
-- `PULUMICOST_LOG_FORMAT`
-- `PULUMICOST_LOG_FILE`
-- `PULUMICOST_TRACE_ID`
-- `PULUMICOST_OUTPUT_FORMAT`
-- `PULUMICOST_OUTPUT_PRECISION`
-- `PULUMICOST_CONFIG_STRICT`
-- `PULUMICOST_PLUGIN_*`
+- `FINFOCUS_LOG_LEVEL`
+- `FINFOCUS_LOG_FORMAT`
+- `FINFOCUS_LOG_FILE`
+- `FINFOCUS_TRACE_ID`
+- `FINFOCUS_OUTPUT_FORMAT`
+- `FINFOCUS_OUTPUT_PRECISION`
+- `FINFOCUS_CONFIG_STRICT`
+- `FINFOCUS_PLUGIN_*`
 
 ## Decisions
 
@@ -66,4 +66,4 @@
 ## Rationale
 
 - **Why exhaustive research?**: The documentation was flagged as significantly out of sync. verifying the exact exported symbols and config keys ensures the new docs are accurate 1:1 with the code.
-- **Why strict mode?**: Discovered `PULUMICOST_CONFIG_STRICT` during research, which is a critical feature for CI/CD pipelines and must be documented.
+- **Why strict mode?**: Discovered `FINFOCUS_CONFIG_STRICT` during research, which is a critical feature for CI/CD pipelines and must be documented.

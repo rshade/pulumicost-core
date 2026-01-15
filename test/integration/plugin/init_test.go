@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 )
 
 // TestPluginInit_Basic verifies that plugin init creates correct project scaffolding [US1][T009].

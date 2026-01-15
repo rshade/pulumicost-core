@@ -1,13 +1,13 @@
 # GetRecommendations Feature Research & Design
 
 > This document captures research, design decisions, and implementation
-> details for the recommendations feature across pulumicost-spec and
-> pulumicost-core.
+> details for the recommendations feature across finfocus-spec and
+> finfocus-core.
 
 ## Related Issues
 
-- **pulumicost-spec#122**: GetRecommendations RPC, proto definitions, pluginsdk interface
-- **pulumicost-core#216**: CLI command, output rendering, filtering, aggregation
+- **finfocus-spec#122**: GetRecommendations RPC, proto definitions, pluginsdk interface
+- **finfocus-core#216**: CLI command, output rendering, filtering, aggregation
 
 ## Cross-Provider Research Summary
 
@@ -131,7 +131,7 @@ message Recommendation {
 ### FOCUS Specification
 
 **Finding**: FOCUS does not define recommendation formats. It focuses solely
-on billing data standardization. PulumiCost needs its own recommendation
+on billing data standardization. FinFocus needs its own recommendation
 schema.
 
 ## Proto Schema Design
@@ -320,20 +320,20 @@ message RecommendationSummary {
 
 ```bash
 # Basic usage (--pulumi-json required)
-pulumicost cost recommendations --pulumi-json plan.json
+finfocus cost recommendations --pulumi-json plan.json
 
 # With filters
-pulumicost cost recommendations --pulumi-json plan.json --filter "category=cost"
-pulumicost cost recommendations --pulumi-json plan.json --filter "action=rightsize"
-pulumicost cost recommendations --pulumi-json plan.json --filter "priority=high"
-pulumicost cost recommendations --pulumi-json plan.json --filter "savings>100"
+finfocus cost recommendations --pulumi-json plan.json --filter "category=cost"
+finfocus cost recommendations --pulumi-json plan.json --filter "action=rightsize"
+finfocus cost recommendations --pulumi-json plan.json --filter "priority=high"
+finfocus cost recommendations --pulumi-json plan.json --filter "savings>100"
 
 # Verbose mode
-pulumicost cost recommendations --pulumi-json plan.json --verbose
+finfocus cost recommendations --pulumi-json plan.json --verbose
 
 # Output formats
-pulumicost cost recommendations --pulumi-json plan.json --output json
-pulumicost cost recommendations --pulumi-json plan.json --output ndjson
+finfocus cost recommendations --pulumi-json plan.json --output json
+finfocus cost recommendations --pulumi-json plan.json --output ndjson
 ```
 
 ### Default Table Output (Summary Mode)
@@ -435,17 +435,17 @@ ALL RECOMMENDATIONS
 ### Technical Decisions
 
 - **PluginSDK**: `RecommendationsProvider` as optional interface
-- **Aggregation**: pulumicost-core aggregates from all plugins
+- **Aggregation**: finfocus-core aggregates from all plugins
 - **Sorting**: By savings descending for display
 - **Currency**: Use existing `sdk/go/currency` package for validation
 - **Mixed currencies**: Warning in output, no aggregation of totals
 
 ## Implementation File Structure
 
-### pulumicost-spec
+### finfocus-spec
 
 ```text
-proto/pulumicost/v1/
+proto/finfocus/v1/
 ├── costsource.proto          # Add GetRecommendations RPC
 └── recommendations.proto     # New file for recommendation messages (optional)
 
@@ -457,7 +457,7 @@ sdk/go/
     └── mock_plugin.go       # Add GetRecommendations mock implementation
 ```
 
-### pulumicost-core
+### finfocus-core
 
 ```text
 internal/cli/

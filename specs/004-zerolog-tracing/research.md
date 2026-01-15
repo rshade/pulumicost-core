@@ -6,7 +6,7 @@
 ## Research Summary
 
 This document captures research findings for implementing structured logging with zerolog and
-distributed tracing throughout pulumicost-core.
+distributed tracing throughout finfocus-core.
 
 ---
 
@@ -104,7 +104,7 @@ func GenerateTraceID() string {
 
 func GetOrGenerateTraceID(ctx context.Context) string {
     // Check for external trace ID first
-    if envTraceID := os.Getenv("PULUMICOST_TRACE_ID"); envTraceID != "" {
+    if envTraceID := os.Getenv("FINFOCUS_TRACE_ID"); envTraceID != "" {
         return envTraceID
     }
     // Check context
@@ -123,7 +123,7 @@ func GetOrGenerateTraceID(ctx context.Context) string {
 ### Decision
 
 Use gRPC client unary interceptor to inject trace ID into outgoing metadata with key
-`x-pulumicost-trace-id`.
+`x-finfocus-trace-id`.
 
 ### Rationale
 
@@ -148,7 +148,7 @@ import (
     "google.golang.org/grpc/metadata"
 )
 
-const TraceIDMetadataKey = "x-pulumicost-trace-id"
+const TraceIDMetadataKey = "x-finfocus-trace-id"
 
 // UnaryClientInterceptor injects trace_id into outgoing gRPC metadata
 func TraceInterceptor() grpc.UnaryClientInterceptor {
@@ -279,7 +279,7 @@ func resolveLogLevel(flagValue string) string {
         return flagValue
     }
     // 2. Environment variable
-    if envLevel := os.Getenv("PULUMICOST_LOG_LEVEL"); envLevel != "" {
+    if envLevel := os.Getenv("FINFOCUS_LOG_LEVEL"); envLevel != "" {
         return envLevel
     }
     // 3. Config file (already loaded into cfg)

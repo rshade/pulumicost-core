@@ -27,7 +27,7 @@
 //
 // The analyzer is invoked via the CLI:
 //
-//	pulumicost analyzer serve
+//	finfocus analyzer serve
 //
 // And configured in Pulumi.yaml:
 //
@@ -36,7 +36,7 @@
 //
 // # Configuration
 //
-// Analyzer settings are read from ~/.pulumicost/config.yaml:
+// Analyzer settings are read from ~/.finfocus/config.yaml:
 //
 //	analyzer:
 //	  timeout:

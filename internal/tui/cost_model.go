@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 // Terminal and layout constants.

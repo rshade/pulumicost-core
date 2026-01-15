@@ -12,12 +12,12 @@ The conformance suite is invoked via CLI and programmatic Go API.
 
 ## CLI Interface
 
-### Command: `pulumicost plugin conformance`
+### Command: `finfocus plugin conformance`
 
 Run conformance tests against a plugin binary.
 
 ```bash
-pulumicost plugin conformance [flags] <plugin-path>
+finfocus plugin conformance [flags] <plugin-path>
 ```
 
 **Arguments**:
@@ -42,19 +42,19 @@ pulumicost plugin conformance [flags] <plugin-path>
 
 ```bash
 # Basic conformance check
-pulumicost plugin conformance ./plugins/aws-cost
+finfocus plugin conformance ./plugins/aws-cost
 
 # Verbose output with JSON
-pulumicost plugin conformance --verbosity verbose --output json ./plugins/aws-cost
+finfocus plugin conformance --verbosity verbose --output json ./plugins/aws-cost
 
 # Filter to protocol tests only
-pulumicost plugin conformance --category protocol ./plugins/aws-cost
+finfocus plugin conformance --category protocol ./plugins/aws-cost
 
 # JUnit XML for CI
-pulumicost plugin conformance --output junit --output-file report.xml ./plugins/aws-cost
+finfocus plugin conformance --output junit --output-file report.xml ./plugins/aws-cost
 
 # Use stdio mode
-pulumicost plugin conformance --mode stdio ./plugins/aws-cost
+finfocus plugin conformance --mode stdio ./plugins/aws-cost
 ```
 
 **Exit Codes**:
@@ -156,7 +156,7 @@ import (
     "os"
     "time"
 
-    "github.com/rshade/pulumicost-core/internal/conformance"
+    "github.com/rshade/finfocus/internal/conformance"
 )
 
 func main() {
@@ -257,7 +257,7 @@ Total: 20 | Passed: 18 | Failed: 1 | Skipped: 1 | Duration: 4.5s
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="pulumicost-conformance" tests="20" failures="1"
+<testsuites name="finfocus-conformance" tests="20" failures="1"
             skipped="1" time="4.5">
   <testsuite name="conformance" tests="20" failures="1" skipped="1"
              time="4.5" timestamp="2025-12-02T10:30:00Z">

@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 )
 
 func TestPluginRemoveCmd_Help(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stdout bytes.Buffer
@@ -40,7 +40,7 @@ func TestPluginRemoveCmd_Help(t *testing.T) {
 
 func TestPluginRemoveCmd_NoArgs(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	var stderr bytes.Buffer
@@ -60,7 +60,7 @@ func TestPluginRemoveCmd_NoArgs(t *testing.T) {
 
 func TestPluginRemoveCmd_NotInstalled(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	// Set HOME to temp directory
@@ -79,7 +79,7 @@ func TestPluginRemoveCmd_NotInstalled(t *testing.T) {
 
 func TestPluginRemoveCmd_Flags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	// Get the remove command to check flags
@@ -99,7 +99,7 @@ func TestPluginRemoveCmd_Flags(t *testing.T) {
 
 func TestPluginRemoveCmd_Aliases(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	rootCmd := cli.NewRootCmd("test")
 
 	// Test that "uninstall" alias works

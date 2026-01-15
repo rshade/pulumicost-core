@@ -15,7 +15,7 @@
 
 ### User Story 1 - View Projected Costs with Styled Summary (Priority: P1)
 
-A developer runs `pulumicost cost projected --pulumi-json plan.json` and sees a beautifully styled cost summary with provider breakdowns, total costs, and a resource table - all with consistent color coding that makes high-cost resources immediately visible.
+A developer runs `finfocus cost projected --pulumi-json plan.json` and sees a beautifully styled cost summary with provider breakdowns, total costs, and a resource table - all with consistent color coding that makes high-cost resources immediately visible.
 
 **Why this priority**: This is the most common use case and provides immediate visual improvement over plain tabwriter output. It demonstrates the value of the TUI upgrade with minimal complexity.
 
@@ -53,7 +53,7 @@ A platform engineer views cost results and navigates through a scrollable resour
 
 ### User Story 3 - View Actual Historical Costs with TUI (Priority: P2)
 
-A FinOps analyst runs `pulumicost cost actual --pulumi-json plan.json --from 2025-01-01` and sees styled historical cost data with the same visual consistency as projected costs, including time-based grouping tables for daily/monthly views.
+A FinOps analyst runs `finfocus cost actual --pulumi-json plan.json --from 2025-01-01` and sees styled historical cost data with the same visual consistency as projected costs, including time-based grouping tables for daily/monthly views.
 
 **Why this priority**: Actual costs are critical for FinOps workflows and should have visual parity with projected costs. Time-based aggregations particularly benefit from styled presentation.
 

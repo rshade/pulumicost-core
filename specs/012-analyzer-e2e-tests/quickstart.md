@@ -4,7 +4,7 @@
 
 1. **Go 1.25.5+** installed
 2. **Pulumi CLI** installed (`pulumi version` should work)
-3. **pulumicost binary** built (`make build`)
+3. **finfocus binary** built (`make build`)
 4. **AWS credentials** configured (via environment or AWS CLI)
 
 ```bash
@@ -44,7 +44,7 @@ go test -v -tags e2e -run "TestAnalyzer" -timeout 30m
 
 ```bash
 # Verify binary exists
-ls -la bin/pulumicost
+ls -la bin/finfocus
 
 # Verify Pulumi CLI
 pulumi version
@@ -70,7 +70,7 @@ go test -v -tags e2e -run "TestAnalyzer" -short
 | `AWS_ACCESS_KEY_ID`        | (required)             | AWS access key             |
 | `AWS_SECRET_ACCESS_KEY`    | (required)             | AWS secret key             |
 | `AWS_REGION`               | `us-east-1`            | AWS region for tests       |
-| `PULUMICOST_BINARY`        | `../../bin/pulumicost` | Path to pulumicost binary  |
+| `FINFOCUS_BINARY`        | `../../bin/finfocus` | Path to finfocus binary  |
 | `PULUMI_CONFIG_PASSPHRASE` | `e2e-test`             | Passphrase for local state |
 | `E2E_TIMEOUT_MINS`         | `30`                   | Test timeout in minutes    |
 
@@ -84,7 +84,7 @@ Install Pulumi:
 curl -fsSL https://get.pulumi.com | sh
 ```
 
-### "pulumicost binary not found"
+### "finfocus binary not found"
 
 Build the binary:
 
@@ -97,8 +97,8 @@ make build
 Check binary permissions and path:
 
 ```bash
-chmod +x bin/pulumicost
-./bin/pulumicost analyzer serve  # Should print port number
+chmod +x bin/finfocus
+./bin/finfocus analyzer serve  # Should print port number
 ```
 
 ### "test timeout exceeded"

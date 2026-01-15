@@ -105,7 +105,7 @@ func TestParsePluginSpecifier(t *testing.T) {
 		},
 		{
 			name:        "github url",
-			spec:        "github.com/owner/pulumicost-plugin-test",
+			spec:        "github.com/owner/finfocus-plugin-test",
 			wantName:    "test",
 			wantVersion: "",
 			wantIsURL:   true,

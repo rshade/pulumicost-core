@@ -1,4 +1,4 @@
-# Getting Started with PulumiCost
+# Getting Started with FinFocus
 
 Quick onboarding for new users.
 

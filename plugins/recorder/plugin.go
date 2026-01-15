@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
-	"github.com/rshade/pulumicost-core/internal/analyzer"
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/analyzer"
+	"github.com/rshade/finfocus/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -99,7 +99,7 @@ func TestAnalyzer_FullStackFlow(t *testing.T) {
 	infoResp, err := server.GetAnalyzerInfo(ctx, &emptypb.Empty{})
 	require.NoError(t, err)
 	require.NotNil(t, infoResp)
-	assert.Equal(t, "pulumicost", infoResp.GetName())
+	assert.Equal(t, "finfocus", infoResp.GetName())
 	assert.Equal(t, "1.0.0-test", infoResp.GetVersion())
 	assert.Len(t, infoResp.GetPolicies(), 2)
 

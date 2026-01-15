@@ -15,7 +15,7 @@ func TestDetectPluginMode(t *testing.T) {
 	}{
 		{
 			name: "Standard binary name, no env",
-			args: []string{"/usr/bin/pulumicost"},
+			args: []string{"/usr/bin/finfocus"},
 			env:  map[string]string{},
 			want: false,
 		},
@@ -39,20 +39,20 @@ func TestDetectPluginMode(t *testing.T) {
 		},
 		{
 			name: "Env var set to true",
-			args: []string{"/usr/bin/pulumicost"},
-			env:  map[string]string{"PULUMICOST_PLUGIN_MODE": "true"},
+			args: []string{"/usr/bin/finfocus"},
+			env:  map[string]string{"FINFOCUS_PLUGIN_MODE": "true"},
 			want: true,
 		},
 		{
 			name: "Env var set to 1",
-			args: []string{"/usr/bin/pulumicost"},
-			env:  map[string]string{"PULUMICOST_PLUGIN_MODE": "1"},
+			args: []string{"/usr/bin/finfocus"},
+			env:  map[string]string{"FINFOCUS_PLUGIN_MODE": "1"},
 			want: true,
 		},
 		{
 			name: "Env var set to false",
-			args: []string{"/usr/bin/pulumicost"},
-			env:  map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
+			args: []string{"/usr/bin/finfocus"},
+			env:  map[string]string{"FINFOCUS_PLUGIN_MODE": "false"},
 			want: false,
 		},
 		{
@@ -60,7 +60,7 @@ func TestDetectPluginMode(t *testing.T) {
 			// Spec uses OR logic: "Detect via EITHER binary name OR env var".
 			name: "Both binary name and env set",
 			args: []string{"/usr/bin/pulumi-tool-cost"},
-			env:  map[string]string{"PULUMICOST_PLUGIN_MODE": "false"},
+			env:  map[string]string{"FINFOCUS_PLUGIN_MODE": "false"},
 			want: true,
 		},
 	}
@@ -80,7 +80,7 @@ func TestDetectPluginMode(t *testing.T) {
 func TestDetectPluginMode_EdgeCases(t *testing.T) {
 	t.Run("nil lookupEnv does not panic", func(t *testing.T) {
 		// Should not panic when lookupEnv is nil - just skip env var detection
-		got := DetectPluginMode([]string{"/usr/bin/pulumicost"}, nil)
+		got := DetectPluginMode([]string{"/usr/bin/finfocus"}, nil)
 		assert.False(t, got)
 	})
 

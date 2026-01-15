@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/internal/proto"
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/proto"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

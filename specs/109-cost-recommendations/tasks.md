@@ -66,7 +66,7 @@
 
 **Goal**: Default command shows summary with top 5 recommendations sorted by savings
 
-**Independent Test**: Run `pulumicost cost recommendations --pulumi-json plan.json` and verify summary section + top 5 recommendations sorted by savings descending
+**Independent Test**: Run `finfocus cost recommendations --pulumi-json plan.json` and verify summary section + top 5 recommendations sorted by savings descending
 
 ### Tests for User Story 1 (MANDATORY - TDD Required) ⚠️
 
@@ -91,7 +91,7 @@
 
 **Goal**: `--verbose` flag shows all recommendations with full details
 
-**Independent Test**: Run `pulumicost cost recommendations --pulumi-json plan.json --verbose` and verify all recommendations display with full descriptions
+**Independent Test**: Run `finfocus cost recommendations --pulumi-json plan.json --verbose` and verify all recommendations display with full descriptions
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
@@ -113,7 +113,7 @@
 
 **Goal**: Verify existing `--filter "action=TYPE"` works correctly with new summary/verbose modes
 
-**Independent Test**: Run `pulumicost cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE"` and verify only RIGHTSIZE recommendations appear
+**Independent Test**: Run `finfocus cost recommendations --pulumi-json plan.json --filter "action=RIGHTSIZE"` and verify only RIGHTSIZE recommendations appear
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
@@ -134,7 +134,7 @@
 
 **Goal**: JSON output includes summary object with breakdowns
 
-**Independent Test**: Run `pulumicost cost recommendations --pulumi-json plan.json --output json` and validate JSON structure includes summary
+**Independent Test**: Run `finfocus cost recommendations --pulumi-json plan.json --output json` and validate JSON structure includes summary
 
 ### Tests for User Story 5 (MANDATORY - TDD Required) ⚠️
 
@@ -299,7 +299,7 @@ Task: "Create RenderRecommendationDetail()"
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational
 3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Run `pulumicost cost recommendations --pulumi-json plan.json` - should show summary + top 5
+4. **STOP and VALIDATE**: Run `finfocus cost recommendations --pulumi-json plan.json` - should show summary + top 5
 5. Deploy/demo if ready
 
 ### Incremental Delivery

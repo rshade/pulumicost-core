@@ -24,7 +24,7 @@ The output file is a plain text file optimized for LLM consumption:
 ```text
 # NIGHTLY FAILURE CONTEXT
 Run ID: 123456789
-Repo: rshade/pulumicost-core
+Repo: rshade/finfocus
 
 ## FAILED JOB: Integration Tests (Linux)
 Step: Run Tests

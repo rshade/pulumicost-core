@@ -50,9 +50,9 @@ type FieldMapping struct {
 
 ## CLI Commands
 
-### pulumicost plugin inspect
+### finfocus plugin inspect
 
-**Usage**: `pulumicost plugin inspect <plugin-name> <resource-type> [flags]`
+**Usage**: `finfocus plugin inspect <plugin-name> <resource-type> [flags]`
 
 **Arguments**:
 - `plugin-name`: Name of the installed plugin (e.g., `aws-public`).
@@ -62,7 +62,7 @@ type FieldMapping struct {
 - `--json`: Output in JSON format.
 - `--version <v>`: Specific version of the plugin if multiple are installed.
 
-### pulumicost plugin list
+### finfocus plugin list
 
 **Updated Output**:
 Will include `VERSION` and `SPEC` columns.

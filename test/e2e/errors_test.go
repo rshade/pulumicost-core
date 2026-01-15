@@ -20,7 +20,7 @@ func TestE2E_Errors_MissingFile(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultE2ETimeout)
 	defer cancel()
 
-	binary := findPulumicostBinary()
+	binary := findFinFocusBinary()
 	require.NotEmpty(t, binary)
 
 	// Run with non-existent file
@@ -42,7 +42,7 @@ func TestE2E_Errors_InvalidFormat(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultE2ETimeout)
 	defer cancel()
 
-	binary := findPulumicostBinary()
+	binary := findFinFocusBinary()
 	require.NotEmpty(t, binary)
 
 	// Run with invalid format

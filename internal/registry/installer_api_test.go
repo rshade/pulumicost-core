@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 )
 
 func TestInstall_FromRegistry(t *testing.T) {
@@ -21,7 +21,7 @@ func TestInstall_FromRegistry(t *testing.T) {
 	config.ResetGlobalConfigForTest()
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
-	configDir := filepath.Join(tmpHome, ".pulumicost")
+	configDir := filepath.Join(tmpHome, ".finfocus")
 	_ = os.MkdirAll(configDir, 0755)
 
 	// Initialize global config (needed for AddInstalledPlugin).
@@ -29,7 +29,7 @@ func TestInstall_FromRegistry(t *testing.T) {
 
 	// Mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/repos/rshade/pulumicost-plugin-aws-public/releases/latest" {
+		if r.URL.Path == "/repos/rshade/finfocus-plugin-aws-public/releases/latest" {
 			// Return release info
 			ext := ".tar.gz"
 			if runtime.GOOS == "windows" {

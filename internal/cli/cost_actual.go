@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/ingest"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/ingest"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -75,31 +75,31 @@ When using --pulumi-state, costs are estimated based on resource runtime calcula
 from the Created timestamp. The --from date is auto-detected from the earliest
 timestamp if not provided.`,
 		Example: `  # Get costs for the last 7 days (to defaults to now)
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-07
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-07
 
   # Get costs for a specific date range
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-31
 
   # Estimate costs from Pulumi state (--from auto-detected from timestamps)
-  pulumicost cost actual --pulumi-state state.json
+  finfocus cost actual --pulumi-state state.json
 
   # Estimate costs from state with explicit date range
-  pulumicost cost actual --pulumi-state state.json --from 2025-01-01 --to 2025-01-31
+  finfocus cost actual --pulumi-state state.json --from 2025-01-01 --to 2025-01-31
 
   # Group costs by resource type
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --group-by type
 
   # Daily cross-provider aggregation table
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-07 --group-by daily
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-01-07 --group-by daily
 
   # Monthly cross-provider aggregation table
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-03-31 --group-by monthly
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --to 2025-03-31 --group-by monthly
 
   # Output as JSON with grouping by provider
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json --group-by provider
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --output json --group-by provider
 
   # Use RFC3339 timestamps
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-01T00:00:00Z --to 2025-01-31T23:59:59Z`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return executeCostActual(cmd, params)
 		},

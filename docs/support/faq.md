@@ -1,20 +1,20 @@
 ---
 layout: default
 title: Frequently Asked Questions
-description: Common questions and answers about PulumiCost
+description: Common questions and answers about FinFocus
 ---
 
 ## Installation & Setup
 
-**Q: How do I install PulumiCost?**
+**Q: How do I install FinFocus?**
 
 A: See the [Installation Guide](../getting-started/installation.md).
 
-**Q: Does PulumiCost require a specific version of Pulumi?**
+**Q: Does FinFocus require a specific version of Pulumi?**
 
-A: PulumiCost works with Pulumi 3.0+. We recommend the latest version.
+A: FinFocus works with Pulumi 3.0+. We recommend the latest version.
 
-**Q: Can I use PulumiCost with my cloud provider?**
+**Q: Can I use FinFocus with my cloud provider?**
 
 A: For projected costs, yes - works with all Pulumi-supported clouds.
 For actual costs, it depends on available plugins (currently Vantage).
@@ -74,11 +74,11 @@ A: Some resources don't have pricing. Check:
 
 **Q: How do I reset configuration?**
 
-A: Delete config directory: `rm -rf ~/.pulumicost`
+A: Delete config directory: `rm -rf ~/.finfocus`
 
 ## Data & Privacy
 
-**Q: Does PulumiCost send my data anywhere?**
+**Q: Does FinFocus send my data anywhere?**
 
 A: Only to plugins you configure (e.g., Vantage).
 Local specs don't send any data.
@@ -86,7 +86,7 @@ Local specs don't send any data.
 **Q: Is my infrastructure data secure?**
 
 A: Pulumi JSON contains resource details - treat as sensitive.
-PulumiCost is a local CLI tool - data stays on your machine.
+FinFocus is a local CLI tool - data stays on your machine.
 
 ## Performance
 
@@ -95,7 +95,7 @@ PulumiCost is a local CLI tool - data stays on your machine.
 A: <1 second for local specs
 1-5 seconds with plugins (depends on API response)
 
-**Q: Can I use PulumiCost with large infrastructure (1000+ resources)?**
+**Q: Can I use FinFocus with large infrastructure (1000+ resources)?**
 
 A: Yes. Use `--output ndjson` for streaming.
 
@@ -106,12 +106,12 @@ A: Yes. Use `--output ndjson` for streaming.
 A: See these resources:
 
 - [Troubleshooting Guide](troubleshooting.md)
-- [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
-- [GitHub Discussions](https://github.com/rshade/pulumicost-core/discussions)
+- [GitHub Issues](https://github.com/rshade/finfocus/issues)
+- [GitHub Discussions](https://github.com/rshade/finfocus/discussions)
 
 **Q: How do I report a bug?**
 
-A: [Open a GitHub Issue](https://github.com/rshade/pulumicost-core/issues/new)
+A: [Open a GitHub Issue](https://github.com/rshade/finfocus/issues/new)
 
 **Q: Can I contribute?**
 

@@ -6,16 +6,16 @@
 //   - Demonstrates pluginsdk v0.4.6 patterns and best practices
 //
 // Configuration via environment variables:
-//   - PULUMICOST_RECORDER_OUTPUT_DIR: Directory for recorded files (default: ./recorded_data)
-//   - PULUMICOST_RECORDER_MOCK_RESPONSE: Enable mock responses (default: false)
+//   - FINFOCUS_RECORDER_OUTPUT_DIR: Directory for recorded files (default: ./recorded_data)
+//   - FINFOCUS_RECORDER_MOCK_RESPONSE: Enable mock responses (default: false)
 //
 // Usage:
 //
 //	# Start with TCP mode (default)
-//	./pulumicost-plugin-recorder
+//	./finfocus-plugin-recorder
 //
 //	# Start with specific port
-//	PULUMICOST_PLUGIN_PORT=50051 ./pulumicost-plugin-recorder
+//	FINFOCUS_PLUGIN_PORT=50051 ./finfocus-plugin-recorder
 package main
 
 import (
@@ -25,8 +25,8 @@ import (
 	"syscall"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/plugins/recorder"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/plugins/recorder"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func run() int {
 		Logger()
 
 	// Set log level based on environment
-	if os.Getenv("PULUMICOST_LOG_LEVEL") == "debug" {
+	if os.Getenv("FINFOCUS_LOG_LEVEL") == "debug" {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -73,7 +73,7 @@ func run() int {
 	// Configure and start the gRPC server
 	serveConfig := pluginsdk.ServeConfig{
 		Plugin: plugin,
-		Port:   0, // Use PULUMICOST_PLUGIN_PORT env var or random port
+		Port:   0, // Use FINFOCUS_PLUGIN_PORT env var or random port
 		Logger: &logger,
 	}
 

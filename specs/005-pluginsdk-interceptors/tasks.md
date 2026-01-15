@@ -2,7 +2,7 @@
 
 **Input**: Design documents from `/specs/005-pluginsdk-interceptors/`
 **Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md
-**Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
+**Target Repository**: finfocus-spec (sdk/go/pluginsdk)
 
 **Tests**: Per Constitution Principle II (Test-Driven Development), tests are
 MANDATORY and must be written BEFORE implementation. All code changes must
@@ -19,7 +19,7 @@ implementation and testing of each story.
 
 ## Path Conventions
 
-Target repository: `pulumicost-spec/sdk/go/pluginsdk/`
+Target repository: `finfocus-spec/sdk/go/pluginsdk/`
 
 ```text
 sdk/go/pluginsdk/
@@ -35,7 +35,7 @@ sdk/go/pluginsdk/
 
 **Purpose**: Project initialization and basic structure
 
-This feature requires no setup tasks. The pulumicost-spec repository and
+This feature requires no setup tasks. The finfocus-spec repository and
 pluginsdk package already exist with proper structure, dependencies, and
 tooling configured.
 
@@ -139,7 +139,7 @@ Go's zero-value semantics (nil slice).
 
 **Purpose**: Documentation, cleanup, and final validation
 
-- [x] T016 [P] Update pulumicost-spec CHANGELOG.md with new feature
+- [x] T016 [P] Update finfocus-spec CHANGELOG.md with new feature
 - [x] T017 [P] Run complete test suite with race detection (-race flag)
 - [x] T018 [P] Run golangci-lint with project configuration
 - [x] T019 Validate quickstart.md examples compile and work correctly

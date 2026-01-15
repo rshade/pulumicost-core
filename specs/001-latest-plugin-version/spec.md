@@ -93,7 +93,7 @@ When a user wants to see all installed plugins, they can list all installed vers
 
 - The project already uses semver v3 library for version comparisons
 - Users may have multiple plugin versions installed due to testing or migration purposes
-- The plugin directory structure follows the established pattern: `~/.pulumicost/plugins/<plugin-name>/<version>/`
+- The plugin directory structure follows the established pattern: `~/.finfocus/plugins/<plugin-name>/<version>/`
 - Plugin names are case-sensitive identifiers
 - Users primarily care about cost analysis accuracy, not the technical details of version selection
 

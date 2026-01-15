@@ -13,7 +13,7 @@ import (
 )
 
 // TestProjectedCost_EC2_WithoutPlugin validates CLI parsing works correctly without plugins.
-// This test verifies that pulumicost correctly parses the preview JSON and returns $0.00
+// This test verifies that finfocus correctly parses the preview JSON and returns $0.00
 // when no pricing plugin is installed. This is important to ensure the CLI works even
 // without plugins installed.
 //
@@ -34,23 +34,23 @@ func TestProjectedCost_EC2_WithoutPlugin(t *testing.T) {
 	require.NoError(t, err, "Failed to setup project")
 	defer tc.Teardown(ctx)
 
-	// Run pulumicost CLI to get the calculated cost (should be $0.00 without plugin)
-	calculatedCost, err := tc.RunPulumicost(ctx)
-	require.NoError(t, err, "pulumicost CLI failed - ensure binary is built with 'make build'")
+	// Run finfocus CLI to get the calculated cost (should be $0.00 without plugin)
+	calculatedCost, err := tc.RunFinFocus(ctx)
+	require.NoError(t, err, "finfocus CLI failed - ensure binary is built with 'make build'")
 
 	t.Logf("Calculated cost without plugin: $%.4f/month (expected ~$0.00)", calculatedCost)
 
 	// Without plugin, we expect $0.00 or very low cost
 	// This validates the CLI parsing works correctly
 	assert.True(t, calculatedCost < 1.0, "Expected cost to be $0.00 or very low without plugin, got $%.2f", calculatedCost)
-	t.Log("CLI parsing validation passed - pulumicost correctly parses preview JSON without plugin")
+	t.Log("CLI parsing validation passed - finfocus correctly parses preview JSON without plugin")
 }
 
 // TestProjectedCost_EC2_WithPlugin validates the full cost calculation chain with aws-public plugin.
 // This test:
 // 1. Installs the aws-public plugin
 // 2. Deploys real AWS infrastructure (t3.micro EC2)
-// 3. Runs pulumicost cost projected
+// 3. Runs finfocus cost projected
 // 4. Validates cost is within ±5% of expected AWS pricing (~$7.59/month)
 //
 // This is the primary E2E test for validating actual cost accuracy.
@@ -82,10 +82,10 @@ func TestProjectedCost_EC2_WithPlugin(t *testing.T) {
 	expectedCost, ok := GetExpectedCost("t3.micro")
 	require.True(t, ok, "Missing pricing reference for t3.micro")
 
-	// Run pulumicost CLI to get the actual calculated cost
-	// This is the REAL test - we're calling the actual pulumicost binary WITH the plugin
-	calculatedCost, err := tc.RunPulumicost(ctx)
-	require.NoError(t, err, "pulumicost CLI failed - ensure binary is built with 'make build'")
+	// Run finfocus CLI to get the actual calculated cost
+	// This is the REAL test - we're calling the actual finfocus binary WITH the plugin
+	calculatedCost, err := tc.RunFinFocus(ctx)
+	require.NoError(t, err, "finfocus CLI failed - ensure binary is built with 'make build'")
 
 	t.Logf("Expected cost: $%.4f/month, Calculated cost: $%.4f/month", expectedCost, calculatedCost)
 
@@ -118,10 +118,10 @@ func TestProjectedCost_EC2(t *testing.T) {
 	expectedCost, ok := GetExpectedCost("t3.micro")
 	require.True(t, ok, "Missing pricing reference for t3.micro")
 
-	// Run pulumicost CLI to get the actual calculated cost
-	// This is the REAL test - we're calling the actual pulumicost binary
-	calculatedCost, err := tc.RunPulumicost(ctx)
-	require.NoError(t, err, "pulumicost CLI failed - ensure binary is built with 'make build'")
+	// Run finfocus CLI to get the actual calculated cost
+	// This is the REAL test - we're calling the actual finfocus binary
+	calculatedCost, err := tc.RunFinFocus(ctx)
+	require.NoError(t, err, "finfocus CLI failed - ensure binary is built with 'make build'")
 
 	t.Logf("Expected cost: $%.4f/month, Calculated cost: $%.4f/month", expectedCost, calculatedCost)
 
@@ -141,7 +141,7 @@ func TestProjectedCost_EC2(t *testing.T) {
 	} else {
 		// Without plugin, just log the result
 		t.Logf("No aws-public plugin installed - cost validation skipped (got $%.2f)", calculatedCost)
-		t.Log("To run full cost validation, install plugin with: pulumicost plugin install aws-public")
+		t.Log("To run full cost validation, install plugin with: finfocus plugin install aws-public")
 	}
 }
 
@@ -162,8 +162,8 @@ func TestProjectedCost_EBS(t *testing.T) {
 	expectedCost, ok := GetExpectedCost("gp3")
 	require.True(t, ok, "Missing pricing reference for gp3")
 
-	calculatedCost, err := tc.RunPulumicost(ctx)
-	require.NoError(t, err, "pulumicost CLI failed")
+	calculatedCost, err := tc.RunFinFocus(ctx)
+	require.NoError(t, err, "finfocus CLI failed")
 
 	validator := NewDefaultCostValidator(5.0)
 	err = validator.ValidateProjected(calculatedCost, expectedCost)

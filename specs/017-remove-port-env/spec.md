@@ -9,7 +9,7 @@
 
 ### User Story 1 - Plugin Developer Using Standard Port Flag (Priority: P1)
 
-A plugin developer creates a PulumiCost plugin that reads the port from the `--port` command-line flag. When the core launches the plugin, it receives the port correctly via the flag without any environment variable interference.
+A plugin developer creates a FinFocus plugin that reads the port from the `--port` command-line flag. When the core launches the plugin, it receives the port correctly via the flag without any environment variable interference.
 
 **Why this priority**: This is the primary use case - plugins should reliably receive their assigned port through a well-defined, non-conflicting mechanism (command-line flag).
 
@@ -23,17 +23,17 @@ A plugin developer creates a PulumiCost plugin that reads the port from the `--p
 
 ---
 
-### User Story 2 - Plugin Developer Using PULUMICOST_PLUGIN_PORT Fallback (Priority: P2)
+### User Story 2 - Plugin Developer Using FINFOCUS_PLUGIN_PORT Fallback (Priority: P2)
 
-A plugin developer prefers to read the port from an environment variable for debugging or tooling integration. The plugin can read `PULUMICOST_PLUGIN_PORT` as a fallback/documentation mechanism while `--port` remains authoritative.
+A plugin developer prefers to read the port from an environment variable for debugging or tooling integration. The plugin can read `FINFOCUS_PLUGIN_PORT` as a fallback/documentation mechanism while `--port` remains authoritative.
 
 **Why this priority**: Backward compatibility and debugging use cases are important but secondary to the primary `--port` flag mechanism.
 
-**Independent Test**: Can be tested by launching a plugin and verifying `PULUMICOST_PLUGIN_PORT` is set in the environment while `PORT` is not.
+**Independent Test**: Can be tested by launching a plugin and verifying `FINFOCUS_PLUGIN_PORT` is set in the environment while `PORT` is not.
 
 **Acceptance Scenarios**:
 
-1. **Given** a plugin that reads `PULUMICOST_PLUGIN_PORT` env var, **When** core launches the plugin, **Then** the environment variable matches the `--port` flag value
+1. **Given** a plugin that reads `FINFOCUS_PLUGIN_PORT` env var, **When** core launches the plugin, **Then** the environment variable matches the `--port` flag value
 2. **Given** a plugin expecting the legacy `PORT` env var, **When** core launches the plugin, **Then** `PORT` is NOT set by core (plugin should migrate to `--port` flag)
 
 ---
@@ -56,7 +56,7 @@ An operator runs a cost calculation that requires multiple plugins simultaneousl
 ### Edge Cases
 
 - What happens when the user's shell has `PORT` set? The plugin should NOT see this value; port comes exclusively from `--port` flag.
-- How does the system handle plugins that haven't migrated from `PORT` to `--port`? Core detects the timeout and logs guidance suggesting the plugin may need an update to support the `--port` flag. Migration to `--port` is required after pulumicost-spec#129 is completed.
+- How does the system handle plugins that haven't migrated from `PORT` to `--port`? Core detects the timeout and logs guidance suggesting the plugin may need an update to support the `--port` flag. Migration to `--port` is required after finfocus-spec#129 is completed.
 - What if `--port` flag parsing fails in the plugin? The plugin will fail to bind, and core will timeout waiting for the plugin (existing behavior).
 
 ## Requirements
@@ -65,7 +65,7 @@ An operator runs a cost calculation that requires multiple plugins simultaneousl
 
 - **FR-001**: Core MUST pass `--port=XXXXX` flag to all launched plugins as the authoritative port communication mechanism
 - **FR-002**: Core MUST NOT set the `PORT` environment variable when launching plugins
-- **FR-003**: Core MUST continue to set `PULUMICOST_PLUGIN_PORT` environment variable for backward compatibility and debugging
+- **FR-003**: Core MUST continue to set `FINFOCUS_PLUGIN_PORT` environment variable for backward compatibility and debugging
 - **FR-004**: Core MUST ensure each plugin receives a unique port value when multiple plugins run simultaneously
 - **FR-005**: Core MUST NOT allow inherited environment variables (like user's `PORT`) to interfere with plugin port communication
 - **FR-006**: Existing test suite MUST be updated to verify `PORT` is no longer set
@@ -74,13 +74,13 @@ An operator runs a cost calculation that requires multiple plugins simultaneousl
 
 ### Dependencies
 
-- **External Dependency**: This change is blocked by pulumicost-spec#129 (Add --port flag parsing to pluginsdk.Serve()). Plugins MUST support `--port` flag before core removes `PORT` env var.
+- **External Dependency**: This change is blocked by finfocus-spec#129 (Add --port flag parsing to pluginsdk.Serve()). Plugins MUST support `--port` flag before core removes `PORT` env var.
 
 ### Assumptions
 
-- Plugin SDK (pluginsdk) in pulumicost-spec has been updated to support `--port` flag with highest priority (pulumicost-spec#129 complete)
+- Plugin SDK (pluginsdk) in finfocus-spec has been updated to support `--port` flag with highest priority (finfocus-spec#129 complete)
 - All actively maintained plugins have been or will be updated to use `pluginsdk.Serve()` with `--port` support
-- The `PULUMICOST_PLUGIN_PORT` environment variable serves documentation/debugging purposes only; `--port` flag is authoritative
+- The `FINFOCUS_PLUGIN_PORT` environment variable serves documentation/debugging purposes only; `--port` flag is authoritative
 
 ## Clarifications
 

@@ -6,7 +6,7 @@ import (
 )
 
 // DetectPluginMode determines if the application should run in Pulumi plugin mode.
-// It checks the binary name and the PULUMICOST_PLUGIN_MODE environment variable.
+// It checks the binary name and the FINFOCUS_PLUGIN_MODE environment variable.
 // This is a pure function with no side effects and is safe to call multiple times.
 //
 // args: usually os.Args (nil or empty is handled gracefully).
@@ -16,7 +16,7 @@ import (
 func DetectPluginMode(args []string, lookupEnv func(string) (string, bool)) bool {
 	// 1. Check Env Var (skip if lookupEnv is nil)
 	if lookupEnv != nil {
-		if val, ok := lookupEnv("PULUMICOST_PLUGIN_MODE"); ok {
+		if val, ok := lookupEnv("FINFOCUS_PLUGIN_MODE"); ok {
 			val = strings.ToLower(val)
 			if val == "true" || val == "1" {
 				return true
@@ -50,5 +50,5 @@ func isPluginBinary(name string) bool {
 	if strings.HasSuffix(strings.ToLower(base), ".exe") {
 		base = base[:len(base)-4]
 	}
-	return strings.EqualFold(base, "pulumi-tool-cost")
+	return strings.EqualFold(base, "pulumi-tool-finfocus")
 }

@@ -6,12 +6,12 @@
 
 ## Executive Summary
 
-The research phase for this feature is brief because the core dependencies (Protobuf definitions and Plugin capabilities) are already verified. The primary work is integration within the `pulumicost-core` codebase.
+The research phase for this feature is brief because the core dependencies (Protobuf definitions and Plugin capabilities) are already verified. The primary work is integration within the `finfocus-core` codebase.
 
 ## Technical Decisions
 
 ### 1. Protobuf Integration
-**Decision**: Use existing `ImpactMetrics` field in `pulumicost-spec` (v0.4.10+).
+**Decision**: Use existing `ImpactMetrics` field in `finfocus-spec` (v0.4.10+).
 **Rationale**: The definitions already exist in the proto files:
 ```protobuf
 message ImpactMetric {

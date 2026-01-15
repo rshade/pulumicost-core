@@ -16,11 +16,11 @@ Standardized environment variables for plugin communication and configuration.
 
 | Field                  | Type         | Description                                | Validation                          | Example        |
 | ---------------------- | ------------ | ------------------------------------------ | ----------------------------------- | -------------- |
-| PULUMICOST_PLUGIN_PORT | string (int) | Primary port for plugin gRPC communication | Must be valid port number (1-65535) | "8080"         |
+| FINFOCUS_PLUGIN_PORT | string (int) | Primary port for plugin gRPC communication | Must be valid port number (1-65535) | "8080"         |
 | PORT                   | string (int) | Fallback port variable for compatibility   | Must be valid port number (1-65535) | "8080"         |
-| PULUMICOST_LOG_LEVEL   | string       | Logging verbosity level                    | One of: DEBUG, INFO, WARN, ERROR    | "INFO"         |
-| PULUMICOST_LOG_FORMAT  | string       | Log output format                          | One of: json, console               | "json"         |
-| PULUMICOST_TRACE_ID    | string       | External trace ID for distributed tracing  | Valid trace ID format               | "abc123def456" |
+| FINFOCUS_LOG_LEVEL   | string       | Logging verbosity level                    | One of: DEBUG, INFO, WARN, ERROR    | "INFO"         |
+| FINFOCUS_LOG_FORMAT  | string       | Log output format                          | One of: json, console               | "json"         |
+| FINFOCUS_TRACE_ID    | string       | External trace ID for distributed tracing  | Valid trace ID format               | "abc123def456" |
 
 ### Plugin Process
 
@@ -41,9 +41,9 @@ Core Application
     │       ├── Sets Environment Variables (from pluginsdk constants)
     │       └── Plugin reads via pluginsdk.GetPort()
     └── Plugin Process
-        ├── Binds to port from PULUMICOST_PLUGIN_PORT or PORT
-        ├── Configures logging from PULUMICOST_LOG_*
-        └── Injects trace ID from PULUMICOST_TRACE_ID
+        ├── Binds to port from FINFOCUS_PLUGIN_PORT or PORT
+        ├── Configures logging from FINFOCUS_LOG_*
+        └── Injects trace ID from FINFOCUS_TRACE_ID
 ```
 
 ## State Transitions
@@ -51,7 +51,7 @@ Core Application
 ### Plugin Launch Sequence
 
 1. **Pre-launch**: Core validates port availability
-2. **Environment Setup**: Core sets PULUMICOST_PLUGIN_PORT and PORT
+2. **Environment Setup**: Core sets FINFOCUS_PLUGIN_PORT and PORT
 3. **Process Start**: Plugin process begins execution
 4. **Port Binding**: Plugin reads port via pluginsdk.GetPort() and binds
 5. **Ready**: Plugin signals readiness via gRPC health check
@@ -85,7 +85,7 @@ Core Application
 ```go
 cmd.Env = append(os.Environ(),
     fmt.Sprintf("PORT=%d", port),
-    fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+    fmt.Sprintf("FINFOCUS_PLUGIN_PORT=%d", port),
 )
 ```
 

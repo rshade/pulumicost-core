@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -1,6 +1,6 @@
 # Cost Calculations Guide
 
-Deep dive into how PulumiCost Core calculates projected and actual infrastructure costs.
+Deep dive into how FinFocus Core calculates projected and actual infrastructure costs.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Deep dive into how PulumiCost Core calculates projected and actual infrastructur
 
 ## Overview
 
-PulumiCost Core provides two types of cost analysis:
+FinFocus Core provides two types of cost analysis:
 
 - **Projected Costs**: Estimates based on resource specifications and pricing data
 - **Actual Costs**: Historical spending retrieved from cloud provider APIs
@@ -57,7 +57,7 @@ Resources are classified by type and provider:
 ### Pricing Sources (Priority Order)
 
 1. **Plugin Data**: Live pricing from cloud provider APIs
-2. **Local Specs**: YAML/JSON pricing specifications  
+2. **Local Specs**: YAML/JSON pricing specifications
 3. **Fallback Estimates**: Default values by resource category
 
 ### Monthly Calculation Formula
@@ -80,7 +80,7 @@ Monthly Cost = Hourly Rate × Hours Per Month (730)
 # Pricing spec
 pricing:
   onDemandHourly: 0.0104
-  
+
 # Calculation
 Monthly Cost = 0.0104 × 730 = $7.59
 ```
@@ -118,7 +118,7 @@ When specific pricing is unavailable, default estimates are used:
 ```go
 const (
     defaultDatabaseMonthlyCost = 50.0   // Database resources
-    defaultStorageMonthlyCost = 5.0     // Storage resources  
+    defaultStorageMonthlyCost = 5.0     // Storage resources
     defaultComputeMonthlyCost = 20.0    // Compute resources
 )
 ```
@@ -190,8 +190,8 @@ Resources from Pulumi plans are matched to cost data using:
 ```json
 {
   "summary": {
-    "byProvider": {"aws": 156.78},
-    "byService": {"ec2": 89.45, "s3": 23.12, "rds": 44.21}
+    "byProvider": { "aws": 156.78 },
+    "byService": { "ec2": 89.45, "s3": 23.12, "rds": 44.21 }
   }
 }
 ```
@@ -200,13 +200,13 @@ Resources from Pulumi plans are matched to cost data using:
 
 ### Projected vs Actual Cost Differences
 
-| Aspect | Projected Costs | Actual Costs |
-|--------|----------------|--------------|
-| **Data Source** | Pricing specifications | Billing APIs |
-| **Timing** | Pre-deployment | Post-deployment |
-| **Accuracy** | Estimates | Actual spending |
-| **Variability** | Static pricing | Usage-based fluctuations |
-| **Scope** | Resource configurations | Realized consumption |
+| Aspect          | Projected Costs         | Actual Costs             |
+| --------------- | ----------------------- | ------------------------ |
+| **Data Source** | Pricing specifications  | Billing APIs             |
+| **Timing**      | Pre-deployment          | Post-deployment          |
+| **Accuracy**    | Estimates               | Actual spending          |
+| **Variability** | Static pricing          | Usage-based fluctuations |
+| **Scope**       | Resource configurations | Realized consumption     |
 
 ### Common Discrepancies
 
@@ -290,7 +290,7 @@ metadata:
 
 #### Spec Discovery
 
-1. Check `~/.pulumicost/specs/` directory
+1. Check `~/.finfocus/specs/` directory
 2. Match by provider, service, and SKU
 3. Fallback to generic service pricing
 4. Use default estimates if no match found
@@ -313,7 +313,7 @@ metadata:
 
 ```json
 {
-  "groupKey": "aws:ec2/instance:Instance", 
+  "groupKey": "aws:ec2/instance:Instance",
   "totalCost": 134.56,
   "resourceCount": 3
 }
@@ -344,7 +344,7 @@ metadata:
 ```json
 {
   "tagKey": "Environment",
-  "tagValue": "production", 
+  "tagValue": "production",
   "totalCost": 234.56,
   "matchedResources": 12
 }
@@ -360,9 +360,9 @@ metadata:
     "totalMonthly": 456.78,
     "totalHourly": 0.626,
     "currency": "USD",
-    "byProvider": {"aws": 456.78},
-    "byService": {"ec2": 234.56, "s3": 78.90, "rds": 143.32},
-    "byAdapter": {"kubecost": 234.56, "aws-spec": 222.22}
+    "byProvider": { "aws": 456.78 },
+    "byService": { "ec2": 234.56, "s3": 78.9, "rds": 143.32 },
+    "byAdapter": { "kubecost": 234.56, "aws-spec": 222.22 }
   }
 }
 ```
@@ -447,16 +447,16 @@ Implement consistent tagging for accurate cost attribution:
 
 ```typescript
 // Example Pulumi resource with comprehensive tags
-const webServer = new aws.ec2.Instance("web-server", {
-    instanceType: "t3.micro",
-    tags: {
-        Environment: "production",
-        Team: "backend", 
-        Project: "web-app",
-        CostCenter: "engineering",
-        Application: "api-server",
-        Owner: "team@company.com"
-    }
+const webServer = new aws.ec2.Instance('web-server', {
+  instanceType: 't3.micro',
+  tags: {
+    Environment: 'production',
+    Team: 'backend',
+    Project: 'web-app',
+    CostCenter: 'engineering',
+    Application: 'api-server',
+    Owner: 'team@company.com',
+  },
 });
 ```
 
@@ -464,10 +464,10 @@ const webServer = new aws.ec2.Instance("web-server", {
 
 ```bash
 # Monthly cost validation workflow
-pulumicost cost projected --pulumi-json plan.json --output json > projected.json
-pulumicost cost actual --pulumi-json plan.json --from $(date -d '1 month ago' +%Y-%m-01) --output json > actual.json
+finfocus cost projected --pulumi-json plan.json --output json > projected.json
+finfocus cost actual --pulumi-json plan.json --from $(date -d '1 month ago' +%Y-%m-01) --output json > actual.json
 
-# Compare results  
+# Compare results
 jq -r '.summary.totalMonthly' projected.json
 jq -r '.summary.totalMonthly' actual.json
 ```
@@ -478,7 +478,7 @@ jq -r '.summary.totalMonthly' actual.json
 
 ```bash
 # Find most expensive resources
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json | \
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --output json | \
   jq '.resources | sort_by(.totalCost) | reverse | .[0:5]'
 ```
 
@@ -487,7 +487,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --output json |
 ```bash
 # Generate daily cost trend
 for day in {01..31}; do
-  pulumicost cost actual --pulumi-json plan.json --from 2025-01-$day --to 2025-01-$day --output json | \
+  finfocus cost actual --pulumi-json plan.json --from 2025-01-$day --to 2025-01-$day --output json | \
     jq -r "[\"2025-01-$day\", .summary.totalMonthly] | @csv"
 done > cost-trend.csv
 ```

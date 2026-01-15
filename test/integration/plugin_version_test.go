@@ -13,7 +13,7 @@
 //
 // 1. Build the recorder plugin: `make build-recorder`
 // 2. Or build any plugin that implements GetPluginInfo with a known spec version
-// 3. Set environment variable PULUMICOST_TEST_PLUGIN_PATH to the plugin binary path
+// 3. Set environment variable FINFOCUS_TEST_PLUGIN_PATH to the plugin binary path
 //
 // # Coverage Note
 //
@@ -36,7 +36,7 @@ import (
 // TestPluginInitialization_CompatibleVersion verifies that a plugin with a compatible
 // spec version initializes successfully without warnings.
 //
-// To enable: Set PULUMICOST_TEST_PLUGIN_PATH to a plugin binary with matching spec version.
+// To enable: Set FINFOCUS_TEST_PLUGIN_PATH to a plugin binary with matching spec version.
 func TestPluginInitialization_CompatibleVersion(t *testing.T) {
 	t.Skip("Skipping: requires compiled plugin binary (see package doc for prerequisites)")
 }
@@ -44,7 +44,7 @@ func TestPluginInitialization_CompatibleVersion(t *testing.T) {
 // TestPluginInitialization_IncompatibleVersion_Warning verifies that a plugin with
 // a mismatched major spec version triggers a warning but still initializes.
 //
-// To enable: Set PULUMICOST_TEST_PLUGIN_PATH to a plugin binary with different major version.
+// To enable: Set FINFOCUS_TEST_PLUGIN_PATH to a plugin binary with different major version.
 func TestPluginInitialization_IncompatibleVersion_Warning(t *testing.T) {
 	t.Skip("Skipping: requires compiled plugin binary with incompatible spec version")
 }
@@ -52,7 +52,7 @@ func TestPluginInitialization_IncompatibleVersion_Warning(t *testing.T) {
 // TestPluginInitialization_LegacyPlugin_NoGetPluginInfo verifies that a legacy plugin
 // that doesn't implement GetPluginInfo initializes successfully with a debug log.
 //
-// To enable: Set PULUMICOST_TEST_LEGACY_PLUGIN_PATH to a plugin binary without GetPluginInfo.
+// To enable: Set FINFOCUS_TEST_LEGACY_PLUGIN_PATH to a plugin binary without GetPluginInfo.
 func TestPluginInitialization_LegacyPlugin_NoGetPluginInfo(t *testing.T) {
 	t.Skip("Skipping: requires legacy plugin binary without GetPluginInfo RPC")
 }

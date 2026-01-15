@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/pluginhost"
 )
 
 func TestIntegration_ProcessLauncherWithClient(t *testing.T) {
@@ -215,7 +215,7 @@ func TestIntegration_PluginDirectoryStructure(t *testing.T) {
 	// Test the plugin directory structure requirements
 	tempDir := t.TempDir()
 
-	// Create plugin directory structure: ~/.pulumicost/plugins/<name>/<version>/
+	// Create plugin directory structure: ~/.finfocus/plugins/<name>/<version>/
 	pluginDir := filepath.Join(tempDir, "test-plugin", "v1.0.0")
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatalf("failed to create plugin directory: %v", err)
@@ -321,7 +321,7 @@ if [ "$1" = "--stdio" ]; then
     exit 1
 else
     # Process mode - try to bind to port briefly then exit
-    PORT="${PORT:-${PULUMICOST_PLUGIN_PORT}}"
+    PORT="${PORT:-${FINFOCUS_PLUGIN_PORT}}"
     if [ -n "$PORT" ]; then
         # Try to bind to port for a moment (will fail to serve gRPC)
         timeout 0.1 nc -l 127.0.0.1 "$PORT" 2>/dev/null || true
@@ -333,7 +333,7 @@ fi`
     exit 1
 ) else (
     set PORT=%PORT%
-    if "%PORT%"=="" set PORT=%PULUMICOST_PLUGIN_PORT%
+    if "%PORT%"=="" set PORT=%FINFOCUS_PLUGIN_PORT%
     if defined PORT (
         timeout 1 >nul 2>nul
     )
@@ -355,7 +355,7 @@ if [ "$1" = "--stdio" ]; then
     exit 0
 else
     # Process mode - bind to port and keep listening briefly
-    PORT="${PORT:-${PULUMICOST_PLUGIN_PORT}}"
+    PORT="${PORT:-${FINFOCUS_PLUGIN_PORT}}"
     if [ -n "$PORT" ]; then
         # Bind to port and keep listening for a short time
         timeout 2 nc -l 127.0.0.1 "$PORT" 2>/dev/null || sleep 2
@@ -370,7 +370,7 @@ fi`
     exit 0
 ) else (
     set PORT=%PORT%
-    if "%PORT%"=="" set PORT=%PULUMICOST_PLUGIN_PORT%
+    if "%PORT%"=="" set PORT=%FINFOCUS_PLUGIN_PORT%
     if defined PORT (
         timeout 2 >nul 2>nul
     ) else (

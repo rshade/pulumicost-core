@@ -1,4 +1,4 @@
-name: pulumicost-analyzer-e2e
+name: finfocus-analyzer-e2e
 runtime: yaml
 description: E2E test for analyzer plugin with real AWS resources
 

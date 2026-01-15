@@ -11,7 +11,7 @@
 
 - Q: Version compatibility enforcement strategy? → A: Best effort: Core ignores unknown fields and attempts to operate on a subset of the spec.
 - Q: Mechanism for bypassing compatibility checks? → A: CLI flag (e.g., `--skip-version-check`): Manual override for advanced users.
-- Q: Output format for `pulumicost plugin inspect`? → A: Combined: Table by default, JSON via `--json` flag.
+- Q: Output format for `finfocus plugin inspect`? → A: Combined: Table by default, JSON via `--json` flag.
 - Q: Handling timeout/errors in `plugin list`? → A: Hide the plugin: Only show plugins that successfully respond.
 - Q: Timeout for `DryRun` capability discovery? → A: 10 seconds: Provides a buffer for more complex capability discovery.
 
@@ -52,7 +52,7 @@ As an operator, I want to see detailed information (name, version, spec version)
 
 **Why this priority**: Provides inventory visibility and helps in troubleshooting environment-specific issues.
 
-**Independent Test**: Can be tested by running `pulumicost plugin list` and verifying all metadata fields from `GetPluginInfo` are displayed in the output.
+**Independent Test**: Can be tested by running `finfocus plugin list` and verifying all metadata fields from `GetPluginInfo` are displayed in the output.
 
 **Acceptance Scenarios**:
 
@@ -70,7 +70,7 @@ As an operator, I want to see detailed information (name, version, spec version)
 
 - **FR-001**: Core system MUST call `GetPluginInfo` during plugin initialization with a 5-second timeout.
 - **FR-002**: Core system MUST validate that `name`, `version`, and `spec_version` are present in the `GetPluginInfo` response.
-- **FR-003**: System MUST provide a CLI command (e.g., `pulumicost plugin inspect`) that utilizes the `DryRun` RPC to display field mappings, supporting both human-readable table output and machine-readable JSON via a `--json` flag.
+- **FR-003**: System MUST provide a CLI command (e.g., `finfocus plugin inspect`) that utilizes the `DryRun` RPC to display field mappings, supporting both human-readable table output and machine-readable JSON via a `--json` flag.
 - **FR-004**: System MUST handle "Unimplemented" errors for `GetPluginInfo` and `DryRun` gracefully for legacy plugins.
 - **FR-005**: System MUST log a warning if a plugin's `spec_version` is different from the core's supported version, but continue operation using a "best-effort" approach for known fields.
 - **FR-006**: System MUST provide a `--skip-version-check` global flag to bypass initialization compatibility warnings and allow execution with unknown spec versions.

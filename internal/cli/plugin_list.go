@@ -7,9 +7,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -28,13 +28,13 @@ func NewPluginListCmd() *cobra.Command {
 		Short: "List installed plugins",
 		Long:  "List all installed plugins with their versions and paths",
 		Example: `  # List all installed plugins
-  pulumicost plugin list
+  finfocus plugin list
 
   # List plugins with detailed information
-  pulumicost plugin list --verbose
+  finfocus plugin list --verbose
 
   # List available plugins from registry
-  pulumicost plugin list --available`,
+  finfocus plugin list --available`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if available {
 				return runPluginListAvailable(cmd)

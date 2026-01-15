@@ -22,7 +22,7 @@ func TestAuditLogging_CostProjected(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
@@ -45,10 +45,10 @@ func TestAuditLogging_CostProjected(t *testing.T) {
 	require.NoError(t, err, "failed to write config file")
 
 	// Run cost projected command
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	cmd.Env = append(os.Environ(),
-		"PULUMICOST_CONFIG="+configPath,
+		"FINFOCUS_CONFIG="+configPath,
 		"HOME="+tmpDir,
 	)
 	var stdout, stderr bytes.Buffer
@@ -112,7 +112,7 @@ func TestAuditLogging_CostActual(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
@@ -135,12 +135,12 @@ func TestAuditLogging_CostActual(t *testing.T) {
 	require.NoError(t, err, "failed to write config file")
 
 	// Run cost actual command with required date parameters
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "actual",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "actual",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json",
 		"--from", "2024-01-01",
 		"--to", "2024-01-31")
 	cmd.Env = append(os.Environ(),
-		"PULUMICOST_CONFIG="+configPath,
+		"FINFOCUS_CONFIG="+configPath,
 		"HOME="+tmpDir,
 	)
 	var stdout, stderr bytes.Buffer
@@ -204,7 +204,7 @@ func TestAuditLogging_Disabled(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
@@ -227,10 +227,10 @@ func TestAuditLogging_Disabled(t *testing.T) {
 	require.NoError(t, err, "failed to write config file")
 
 	// Run cost projected command
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	cmd.Env = append(os.Environ(),
-		"PULUMICOST_CONFIG="+configPath,
+		"FINFOCUS_CONFIG="+configPath,
 		"HOME="+tmpDir,
 	)
 
@@ -248,7 +248,7 @@ func TestAuditLogging_SensitiveDataRedaction(t *testing.T) {
 	}
 
 	// Build the CLI binary
-	cmd := exec.Command("go", "build", "-o", "../../bin/pulumicost-test", "../../cmd/pulumicost")
+	cmd := exec.Command("go", "build", "-o", "../../bin/finfocus-test", "../../cmd/finfocus")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Skipf("failed to build CLI: %v\n%s", err, output)
@@ -271,10 +271,10 @@ func TestAuditLogging_SensitiveDataRedaction(t *testing.T) {
 	require.NoError(t, err, "failed to write config file")
 
 	// Run a command
-	cmd = exec.Command("../../bin/pulumicost-test", "cost", "projected",
+	cmd = exec.Command("../../bin/finfocus-test", "cost", "projected",
 		"--pulumi-json", "../../examples/plans/aws-simple-plan.json")
 	cmd.Env = append(os.Environ(),
-		"PULUMICOST_CONFIG="+configPath,
+		"FINFOCUS_CONFIG="+configPath,
 		"HOME="+tmpDir,
 	)
 

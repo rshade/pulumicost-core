@@ -6,9 +6,9 @@ import (
 	"io"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/tui"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/tui"
 	"github.com/spf13/cobra"
 )
 

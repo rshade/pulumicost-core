@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,19 +24,19 @@ func TestGetConfigDir(t *testing.T) {
 			name:     "default config directory",
 			envVar:   "",
 			envValue: "",
-			expected: ".pulumicost",
+			expected: ".finfocus",
 		},
 		{
 			name:     "custom config directory via HOME",
 			envVar:   "HOME",
 			envValue: "/custom/home",
-			expected: "/custom/home/.pulumicost",
+			expected: "/custom/home/.finfocus",
 		},
 		{
 			name:     "custom config directory via USERPROFILE",
 			envVar:   "USERPROFILE",
 			envValue: "/custom/user",
-			expected: "/custom/user/.pulumicost",
+			expected: "/custom/user/.finfocus",
 		},
 	}
 
@@ -67,7 +67,7 @@ func TestGetPluginDir(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, pluginDir)
-		assert.Contains(t, pluginDir, ".pulumicost")
+		assert.Contains(t, pluginDir, ".finfocus")
 		assert.Contains(t, pluginDir, "plugins")
 	})
 }
@@ -79,7 +79,7 @@ func TestGetSpecDir(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, specDir)
-		assert.Contains(t, specDir, ".pulumicost")
+		assert.Contains(t, specDir, ".finfocus")
 		assert.Contains(t, specDir, "specs")
 	})
 }
@@ -89,7 +89,7 @@ func TestEnsureConfigDir(t *testing.T) {
 	t.Run("creates config directory if it doesn't exist", func(t *testing.T) {
 		// Create a temporary directory for testing
 		tempDir := t.TempDir()
-		configDir := filepath.Join(tempDir, ".pulumicost")
+		configDir := filepath.Join(tempDir, ".finfocus")
 
 		// Override the config dir for testing
 		t.Setenv("HOME", tempDir)
@@ -111,7 +111,7 @@ func TestEnsureConfigDir(t *testing.T) {
 	t.Run("handles existing config directory", func(t *testing.T) {
 		// Create a temporary directory for testing
 		tempDir := t.TempDir()
-		configDir := filepath.Join(tempDir, ".pulumicost")
+		configDir := filepath.Join(tempDir, ".finfocus")
 
 		// Create the directory first
 		err := os.MkdirAll(configDir, 0755)
@@ -144,8 +144,8 @@ func TestEnsureSubDirs(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that subdirectories were created
-		pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
-		specDir := filepath.Join(tempDir, ".pulumicost", "specs")
+		pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
+		specDir := filepath.Join(tempDir, ".finfocus", "specs")
 
 		pluginInfo, err := os.Stat(pluginDir)
 		require.NoError(t, err)
@@ -173,8 +173,8 @@ func TestConfigPaths(t *testing.T) {
 		assert.NotEmpty(t, specDir)
 
 		// Plugin and spec dirs should be under config dir
-		assert.Contains(t, pluginDir, ".pulumicost")
-		assert.Contains(t, specDir, ".pulumicost")
+		assert.Contains(t, pluginDir, ".finfocus")
+		assert.Contains(t, specDir, ".finfocus")
 
 		// Paths should be absolute or relative
 		assert.True(t, filepath.IsAbs(configDir) || !filepath.IsAbs(configDir))
@@ -197,9 +197,9 @@ func TestConfigPermissions(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check permissions on created directories
-		configDir := filepath.Join(tempDir, ".pulumicost")
-		pluginDir := filepath.Join(tempDir, ".pulumicost", "plugins")
-		specDir := filepath.Join(tempDir, ".pulumicost", "specs")
+		configDir := filepath.Join(tempDir, ".finfocus")
+		pluginDir := filepath.Join(tempDir, ".finfocus", "plugins")
+		specDir := filepath.Join(tempDir, ".finfocus", "specs")
 
 		for _, dir := range []string{configDir, pluginDir, specDir} {
 			info, statErr := os.Stat(dir)

@@ -1,4 +1,4 @@
-// Package engine provides the core cost calculation logic for PulumiCost.
+// Package engine provides the core cost calculation logic for FinFocus.
 //
 // The engine orchestrates between plugins and local pricing specifications to
 // calculate both projected and actual infrastructure costs.

@@ -1,6 +1,6 @@
 # Quickstart: Running E2E Cost Tests
 
-This guide explains how to run the End-to-End (E2E) cost validation tests for PulumiCost.
+This guide explains how to run the End-to-End (E2E) cost validation tests for FinFocus.
 
 ## Prerequisites
 

@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // TraceIDMetadataKey is the gRPC metadata key for trace ID propagation.
-const TraceIDMetadataKey = "x-pulumicost-trace-id"
+const TraceIDMetadataKey = "x-finfocus-trace-id"
 
 // TraceInterceptor returns a gRPC unary client interceptor that propagates trace IDs.
 // The interceptor extracts the trace ID from the context and injects it into gRPC metadata,

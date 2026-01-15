@@ -4,8 +4,8 @@
 **Created**: 2025-11-28
 **Status**: Draft
 **Input**: User description: "feat(pluginsdk): Add UnaryInterceptors support to ServeConfig"
-**GitHub Issue**: [#188](https://github.com/rshade/pulumicost-core/issues/188)
-**Target Repository**: pulumicost-spec (sdk/go/pluginsdk)
+**GitHub Issue**: [#188](https://github.com/rshade/finfocus/issues/188)
+**Target Repository**: finfocus-spec (sdk/go/pluginsdk)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -13,7 +13,7 @@
 
 As a plugin developer, I want to register the `TracingUnaryServerInterceptor()` provided by the pluginsdk so that my plugin automatically propagates trace IDs from incoming requests without manually extracting them in each handler.
 
-**Why this priority**: This is the primary use case driving this feature. Trace propagation is essential for distributed debugging across the pulumicost-core host and plugins. Without this, plugin developers must duplicate tracing logic in every gRPC handler.
+**Why this priority**: This is the primary use case driving this feature. Trace propagation is essential for distributed debugging across the finfocus-core host and plugins. Without this, plugin developers must duplicate tracing logic in every gRPC handler.
 
 **Independent Test**: Can be fully tested by creating a plugin that registers the tracing interceptor and verifying that trace IDs from incoming gRPC metadata are automatically injected into the context.
 
@@ -21,7 +21,7 @@ As a plugin developer, I want to register the `TracingUnaryServerInterceptor()` 
 
 1. **Given** a plugin developer creating a new plugin, **When** they configure `ServeConfig` with `TracingUnaryServerInterceptor()` in the `UnaryInterceptors` field, **Then** the interceptor is applied to all incoming gRPC requests.
 
-2. **Given** a request from pulumicost-core with a `trace_id` in gRPC metadata, **When** the plugin receives the request with the tracing interceptor registered, **Then** the trace ID is available in the request context without manual extraction.
+2. **Given** a request from finfocus-core with a `trace_id` in gRPC metadata, **When** the plugin receives the request with the tracing interceptor registered, **Then** the trace ID is available in the request context without manual extraction.
 
 3. **Given** a plugin with the tracing interceptor registered, **When** the plugin logs messages using the context, **Then** all log entries include the propagated trace ID.
 
@@ -93,7 +93,7 @@ As a plugin developer, I want my existing plugins to continue working without ch
 
 ## Assumptions
 
-- The `TracingUnaryServerInterceptor()` is already implemented and tested in `pulumicost-spec/sdk/go/pluginsdk/logging.go`.
+- The `TracingUnaryServerInterceptor()` is already implemented and tested in `finfocus-spec/sdk/go/pluginsdk/logging.go`.
 - Standard gRPC `ChainUnaryInterceptor` semantics apply (order-preserved, left-to-right execution).
 - No streaming interceptors are needed at this time (only unary RPC calls are used in the plugin protocol).
 - Panic recovery and error handling follow standard gRPC interceptor conventions.

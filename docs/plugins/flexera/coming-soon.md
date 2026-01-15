@@ -19,7 +19,7 @@ Flexera integration would provide:
 
 Interest in Flexera integration? Let us know:
 
-- Open a [GitHub Discussion](https://github.com/rshade/pulumicost-core/discussions)
+- Open a [GitHub Discussion](https://github.com/rshade/finfocus/discussions)
 - Contact us for partnership opportunities
 - Join our [Discord community](coming-soon)
 

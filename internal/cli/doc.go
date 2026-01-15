@@ -1,4 +1,4 @@
-// Package cli implements the Cobra-based command-line interface for PulumiCost.
+// Package cli implements the Cobra-based command-line interface for FinFocus.
 //
 // The CLI provides the primary user interface with subcommands for:
 //   - cost projected: Calculate projected costs from Pulumi preview JSON
@@ -14,5 +14,5 @@
 // # Configuration
 //
 // CLI flags take precedence over environment variables and config file settings.
-// Debug output can be enabled with --debug flag or PULUMICOST_LOG_LEVEL=debug.
+// Debug output can be enabled with --debug flag or FINFOCUS_LOG_LEVEL=debug.
 package cli

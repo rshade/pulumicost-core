@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 )
 
 // Logger is the global zerolog logger instance.
@@ -16,7 +16,7 @@ var Logger zerolog.Logger
 
 // InitLogger initializes the package-level Logger with the specified log level and optional file output.
 // It sets the global Logger, configures console output, and—when logToFile is true—ensures the log directory
-// exists and opens the configured log file (falling back to "/tmp/pulumicost.log" if none is set).
+// exists and opens the configured log file (falling back to "/tmp/finfocus.log" if none is set).
 //
 // level is parsed into a zerolog level and defaults to InfoLevel on parse error.
 // logToFile enables writing logs to the configured file in addition to the console.
@@ -48,7 +48,7 @@ func InitLogger(level string, logToFile bool) error {
 		cfg := GetGlobalConfig()
 		logPath := cfg.Logging.File
 		if logPath == "" {
-			logPath = "/tmp/pulumicost.log"
+			logPath = "/tmp/finfocus.log"
 		}
 
 		logFile, fileErr := os.OpenFile(

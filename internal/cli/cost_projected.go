@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/spec"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/spec"
 	"github.com/spf13/cobra"
 )
 
@@ -70,19 +70,19 @@ func NewCostProjectedCmd() *cobra.Command {
 }
 
 const costProjectedExample = `  # Basic usage
-  pulumicost cost projected --pulumi-json plan.json
+  finfocus cost projected --pulumi-json plan.json
 
   # Filter resources by type
-  pulumicost cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
+  finfocus cost projected --pulumi-json plan.json --filter "type=aws:ec2/instance"
 
   # Output as JSON
-  pulumicost cost projected --pulumi-json plan.json --output json
+  finfocus cost projected --pulumi-json plan.json --output json
 
   # Use a specific adapter plugin
-  pulumicost cost projected --pulumi-json plan.json --adapter aws-plugin
+  finfocus cost projected --pulumi-json plan.json --adapter aws-plugin
 
   # Use custom spec directory
-  pulumicost cost projected --pulumi-json plan.json --spec-dir ./custom-specs`
+  finfocus cost projected --pulumi-json plan.json --spec-dir ./custom-specs`
 
 // executeCostProjected runs the projected cost workflow for a Pulumi plan.
 // It validates and injects the utilization into the context, loads and maps resources

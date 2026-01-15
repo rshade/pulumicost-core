@@ -1,23 +1,23 @@
 ---
 layout: default
 title: API Reference
-description: Complete gRPC API reference for PulumiCost plugin protocol
+description: Complete gRPC API reference for FinFocus plugin protocol
 ---
 
-Complete API reference for the PulumiCost plugin protocol defined in
-`pulumicost-spec` repository.
+Complete API reference for the FinFocus plugin protocol defined in
+`finfocus-spec` repository.
 
 ## Protocol Information
 
-**Package:** `pulumicost.v1`
+**Package:** `finfocus.v1`
 
 **Protocol Version:** v0.1.0
 
 **Go Package:**
-`github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
+`github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1`
 
 **Proto Definition:**
-`github.com/rshade/pulumicost-spec/proto/pulumicost/v1/costsource.proto`
+`github.com/rshade/finfocus-spec/proto/finfocus/v1/costsource.proto`
 
 ## Services
 
@@ -88,7 +88,7 @@ message NameResponse {
 ```bash
 # Request
 grpcurl -plaintext localhost:50051 \
-  pulumicost.v1.CostSourceService/Name
+  finfocus.v1.CostSourceService/Name
 
 # Response
 {
@@ -154,7 +154,7 @@ grpcurl -plaintext -d '{
     "region": "us-east-1"
   }
 }' localhost:50051 \
-  pulumicost.v1.CostSourceService/Supports
+  finfocus.v1.CostSourceService/Supports
 
 # Response (Supported)
 {
@@ -243,7 +243,7 @@ grpcurl -plaintext -d '{
     "region": "us-east-1"
   }
 }' localhost:50051 \
-  pulumicost.v1.CostSourceService/GetProjectedCost
+  finfocus.v1.CostSourceService/GetProjectedCost
 
 # Response
 {
@@ -337,7 +337,7 @@ grpcurl -plaintext -d '{
     "env": "prod"
   }
 }' localhost:50051 \
-  pulumicost.v1.CostSourceService/GetActualCost
+  finfocus.v1.CostSourceService/GetActualCost
 
 # Response
 {
@@ -465,7 +465,7 @@ grpcurl -plaintext -d '{
     "region": "us-east-1"
   }
 }' localhost:50051 \
-  pulumicost.v1.CostSourceService/GetPricingSpec
+  finfocus.v1.CostSourceService/GetPricingSpec
 
 # Response
 {
@@ -530,7 +530,7 @@ message HealthCheckResponse {
 ```bash
 # Request
 grpcurl -plaintext localhost:50051 \
-  pulumicost.v1.ObservabilityService/HealthCheck
+  finfocus.v1.ObservabilityService/HealthCheck
 
 # Response
 {
@@ -632,7 +632,7 @@ import (
     "log"
     "time"
 
-    pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+    pb "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
     "google.golang.org/grpc"
     "google.golang.org/grpc/credentials/insecure"
     "google.golang.org/protobuf/types/known/timestamppb"

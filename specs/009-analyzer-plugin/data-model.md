@@ -6,13 +6,13 @@
 
 ## Overview
 
-This document defines the data structures and transformations required to implement the Pulumi Analyzer plugin. The core challenge is mapping between Pulumi's protocol buffer types and PulumiCost's internal types.
+This document defines the data structures and transformations required to implement the Pulumi Analyzer plugin. The core challenge is mapping between Pulumi's protocol buffer types and FinFocus's internal types.
 
 ## Entities
 
 ### 1. Analyzer Server
 
-The main gRPC service implementation that bridges Pulumi and PulumiCost.
+The main gRPC service implementation that bridges Pulumi and FinFocus.
 
 ```go
 // internal/analyzer/server.go
@@ -23,7 +23,7 @@ import (
     "sync"
 
     "github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
     "github.com/rs/zerolog"
     "google.golang.org/protobuf/types/known/emptypb"
 )
@@ -72,7 +72,7 @@ func NewServer(e *engine.Engine, logger zerolog.Logger, version string) *Server 
 
 ### 2. Resource Mapping
 
-Transformation from Pulumi's protocol buffer types to PulumiCost internal types.
+Transformation from Pulumi's protocol buffer types to FinFocus internal types.
 
 **Source Type**: `pulumirpc.AnalyzerResource`
 
@@ -111,7 +111,7 @@ import (
     "strings"
 
     "github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
     "google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -235,11 +235,11 @@ import (
     "fmt"
 
     "github.com/pulumi/pulumi/sdk/v3/proto/go/pulumirpc"
-    "github.com/rshade/pulumicost-core/internal/engine"
+    "github.com/rshade/finfocus/internal/engine"
 )
 
 const (
-    policyPackName = "pulumicost"
+    policyPackName = "finfocus"
     policyNameCost = "cost-estimate"
     policyNameSum  = "stack-cost-summary"
 )
@@ -340,7 +340,7 @@ type AnalyzerPlugin struct {
 **Example Configuration**:
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 analyzer:
   timeout:
     per_resource: 5s
@@ -348,7 +348,7 @@ analyzer:
     warn_threshold: 30s
   plugins:
     vantage:
-      path: ~/.pulumicost/plugins/vantage/v1.0.0/pulumicost-plugin-vantage
+      path: ~/.finfocus/plugins/vantage/v1.0.0/finfocus-plugin-vantage
       enabled: true
       env:
         VANTAGE_API_KEY: "${VANTAGE_API_KEY}"
@@ -456,7 +456,7 @@ From `internal/engine/types.go`:
 |-------|------------|-------------|
 | `EnforcementLevel` | Must be ADVISORY | MVP requirement (FR-005) |
 | `Message` | Non-empty | Always includes cost or error message |
-| `PolicyPackName` | Constant | "pulumicost" |
+| `PolicyPackName` | Constant | "finfocus" |
 
 ## Error Handling
 

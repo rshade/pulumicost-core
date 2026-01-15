@@ -42,7 +42,7 @@ As a user, I need to verify that the `plugin install` command correctly download
 
 **Acceptance Scenarios**:
 
-1. **Given** a mock registry, **When** I run `plugin install kubecost`, **Then** the plugin artifact is downloaded and extracted to the correct plugin directory (`~/.pulumicost/plugins/kubecost`).
+1. **Given** a mock registry, **When** I run `plugin install kubecost`, **Then** the plugin artifact is downloaded and extracted to the correct plugin directory (`~/.finfocus/plugins/kubecost`).
 2. **Given** a specific version request, **When** I run `plugin install kubecost@v1.0.0`, **Then** that specific version is installed.
 3. **Given** a GitHub URL, **When** I run `plugin install github.com/user/repo`, **Then** the tool logs a security warning and proceeds with installation automatically.
 4. **Given** an installed plugin, **When** I run `plugin install` with `--force`, **Then** the plugin is reinstalled.

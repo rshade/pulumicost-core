@@ -7,7 +7,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/rshade/pulumicost-core/internal/spec"
+	"github.com/rshade/finfocus/internal/spec"
 )
 
 // Validation constants for ResourceDescriptor.

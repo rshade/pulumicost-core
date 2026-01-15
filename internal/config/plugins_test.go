@@ -58,7 +58,7 @@ func TestLoadInstalledPluginsWithFile(t *testing.T) {
 	t.Setenv("HOME", tmpDir)
 
 	// Create config directory and file
-	configDir := filepath.Join(tmpDir, ".pulumicost")
+	configDir := filepath.Join(tmpDir, ".finfocus")
 	if err := os.MkdirAll(configDir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func TestSaveInstalledPlugins(t *testing.T) {
 	}
 
 	// Verify file was created
-	configPath := filepath.Join(tmpDir, ".pulumicost", "config.yaml")
+	configPath := filepath.Join(tmpDir, ".finfocus", "config.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Error("config.yaml was not created")
 	}
@@ -257,7 +257,7 @@ func TestGetMissingPlugins(t *testing.T) {
 	t.Setenv("HOME", tmpDir)
 
 	// Create plugins directory
-	pluginsDir := filepath.Join(tmpDir, ".pulumicost", "plugins")
+	pluginsDir := filepath.Join(tmpDir, ".finfocus", "plugins")
 	if err := os.MkdirAll(pluginsDir, 0750); err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +295,7 @@ func TestLoadInstalledPluginsInvalidYAML(t *testing.T) {
 	t.Setenv("HOME", tmpDir)
 
 	// Create config with invalid YAML
-	configDir := filepath.Join(tmpDir, ".pulumicost")
+	configDir := filepath.Join(tmpDir, ".finfocus")
 	if err := os.MkdirAll(configDir, 0700); err != nil {
 		t.Fatal(err)
 	}

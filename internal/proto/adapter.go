@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk/mapping"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk/mapping"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -417,7 +417,7 @@ type RecommendationImpact struct {
 	SavingsPercentage float64
 }
 
-// CostSourceClient wraps the generated gRPC client from pulumicost-spec.
+// CostSourceClient wraps the generated gRPC client from finfocus-spec.
 //
 //nolint:dupl // Mock implementation in adapter_test.go intentionally mirrors this interface.
 type CostSourceClient interface {

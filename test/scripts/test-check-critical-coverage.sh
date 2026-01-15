@@ -21,36 +21,36 @@ test_all_critical_paths_pass() {
     # Create mock coverage file with high coverage for critical packages
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:18.1,20.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:22.1,24.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:26.1,28.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:30.1,32.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:34.1,36.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:38.1,40.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:42.1,44.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:46.1,48.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:18.1,20.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:22.1,24.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:26.1,28.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:30.1,32.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:34.1,36.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:38.1,40.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:42.1,44.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:46.1,48.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:18.1,20.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:22.1,24.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:26.1,28.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:30.1,32.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:34.1,36.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:38.1,40.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:42.1,44.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:46.1,48.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:18.1,20.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:22.1,24.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:26.1,28.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:30.1,32.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:34.1,36.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:38.1,40.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:42.1,44.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:46.1,48.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:18.1,20.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:22.1,24.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:26.1,28.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:30.1,32.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:34.1,36.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:38.1,40.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:42.1,44.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:46.1,48.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:18.1,20.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:22.1,24.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:26.1,28.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:30.1,32.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:34.1,36.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:38.1,40.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:42.1,44.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:46.1,48.2 1 1
 EOF
 
     # Run check-critical-coverage.sh with 50% threshold (all packages have 100% coverage)
@@ -75,20 +75,20 @@ test_cli_below_threshold() {
     # Create mock coverage file with low CLI coverage
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:18.1,20.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:22.1,24.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:26.1,28.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:30.1,32.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:34.1,36.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:38.1,40.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:42.1,44.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:46.1,48.2 1 0
-github.com/rshade/pulumicost-core/internal/engine/engine.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:18.1,20.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:22.1,24.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:26.1,28.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:30.1,32.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:34.1,36.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:38.1,40.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:42.1,44.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:46.1,48.2 1 0
+github.com/rshade/finfocus/internal/engine/engine.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:14.1,16.2 1 1
 EOF
 
     # Run check-critical-coverage.sh with 50% threshold (CLI has 20% coverage)
@@ -113,15 +113,15 @@ test_engine_below_threshold() {
     # Create mock coverage file with low engine coverage
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:14.1,16.2 1 0
-github.com/rshade/pulumicost-core/internal/engine/engine.go:18.1,20.2 1 0
-github.com/rshade/pulumicost-core/internal/engine/engine.go:22.1,24.2 1 0
-github.com/rshade/pulumicost-core/internal/engine/engine.go:26.1,28.2 1 0
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:14.1,16.2 1 0
+github.com/rshade/finfocus/internal/engine/engine.go:18.1,20.2 1 0
+github.com/rshade/finfocus/internal/engine/engine.go:22.1,24.2 1 0
+github.com/rshade/finfocus/internal/engine/engine.go:26.1,28.2 1 0
+github.com/rshade/finfocus/internal/pluginhost/host.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:14.1,16.2 1 1
 EOF
 
     # Run check-critical-coverage.sh with 50% threshold (engine has 20% coverage)
@@ -146,15 +146,15 @@ test_pluginhost_below_threshold() {
     # Create mock coverage file with low pluginhost coverage
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/engine/engine.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:14.1,16.2 1 0
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:18.1,20.2 1 0
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:22.1,24.2 1 0
-github.com/rshade/pulumicost-core/internal/pluginhost/host.go:26.1,28.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/engine/engine.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/pluginhost/host.go:14.1,16.2 1 0
+github.com/rshade/finfocus/internal/pluginhost/host.go:18.1,20.2 1 0
+github.com/rshade/finfocus/internal/pluginhost/host.go:22.1,24.2 1 0
+github.com/rshade/finfocus/internal/pluginhost/host.go:26.1,28.2 1 0
 EOF
 
     # Run check-critical-coverage.sh with 50% threshold (pluginhost has 20% coverage)
@@ -179,8 +179,8 @@ test_missing_critical_package() {
     # Create mock coverage file without any critical packages
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/config/config.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/spec/loader.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/config/config.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/spec/loader.go:10.1,12.2 1 1
 EOF
 
     # Run check-critical-coverage.sh - should warn about missing packages

@@ -3,7 +3,7 @@ package conformance_test
 import (
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/conformance"
+	"github.com/rshade/finfocus/internal/conformance"
 	"github.com/stretchr/testify/assert"
 )
 

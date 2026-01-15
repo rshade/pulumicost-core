@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/pluginhost"
 )
 
 func TestNewClient_LauncherError(t *testing.T) {

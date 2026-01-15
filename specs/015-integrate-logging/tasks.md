@@ -67,7 +67,7 @@ This is an existing Go CLI project with structure:
 - [x] T010 [US1] Implement ToLoggingConfig() bridge function in internal/config/logging.go
 - [x] T011 [US1] Update root.go PersistentPreRunE to use config bridge in internal/cli/root.go
 - [x] T012 [US1] Ensure --debug flag overrides config file level in internal/cli/root.go
-- [x] T013 [US1] Ensure PULUMICOST_LOG_LEVEL env var overrides config in internal/cli/root.go
+- [x] T013 [US1] Ensure FINFOCUS_LOG_LEVEL env var overrides config in internal/cli/root.go
 - [x] T014 [US1] Add invalid log level fallback with warning in internal/logging/zerolog.go
 
 **Checkpoint**: User Story 1 complete - logging can be configured via config file, env vars, or CLI flags

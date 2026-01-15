@@ -3,7 +3,7 @@
   "diagnostics": [
     {
       "policyName": "cost-estimate",
-      "policyPackName": "pulumicost",
+      "policyPackName": "finfocus",
       "urn": "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::webserver",
       "enforcementLevel": "ADVISORY",
       "severity": "LOW",
@@ -11,7 +11,7 @@
     },
     {
       "policyName": "cost-estimate",
-      "policyPackName": "pulumicost",
+      "policyPackName": "finfocus",
       "urn": "urn:pulumi:dev::myapp::aws:rds/instance:Instance::database",
       "enforcementLevel": "ADVISORY",
       "severity": "LOW",
@@ -19,7 +19,7 @@
     },
     {
       "policyName": "cost-estimate",
-      "policyPackName": "pulumicost",
+      "policyPackName": "finfocus",
       "urn": "urn:pulumi:dev::myapp::aws:s3/bucket:Bucket::assets",
       "enforcementLevel": "ADVISORY",
       "severity": "LOW",
@@ -27,7 +27,7 @@
     },
     {
       "policyName": "cost-estimate",
-      "policyPackName": "pulumicost",
+      "policyPackName": "finfocus",
       "urn": "urn:pulumi:prod::api::azure:compute/virtualMachine:VirtualMachine::apiserver",
       "enforcementLevel": "ADVISORY",
       "severity": "LOW",
@@ -35,7 +35,7 @@
     },
     {
       "policyName": "stack-cost-summary",
-      "policyPackName": "pulumicost",
+      "policyPackName": "finfocus",
       "urn": "",
       "enforcementLevel": "ADVISORY",
       "severity": "LOW",

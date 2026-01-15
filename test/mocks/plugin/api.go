@@ -1,4 +1,4 @@
-// Package plugin provides a configurable mock plugin for testing PulumiCost's plugin communication.
+// Package plugin provides a configurable mock plugin for testing FinFocus's plugin communication.
 // The mock plugin implements the CostSourceService gRPC interface with support for:
 // - Configurable responses for different resource types
 // - Error injection for testing failure scenarios
@@ -10,7 +10,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/finfocus/internal/proto"
 )
 
 // MockConfig defines configuration for mock plugin behavior.

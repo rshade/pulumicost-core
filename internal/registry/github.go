@@ -162,7 +162,7 @@ func FindPlatformAsset(release *GitHubRelease, projectName string) (*ReleaseAsse
 // AssetNamingHints provides hints for matching assets with non-standard naming conventions.
 type AssetNamingHints struct {
 	// AssetPrefix is the project name prefix used in asset filenames
-	// (e.g., "pulumicost-plugin-aws-public" instead of just "aws-public")
+	// (e.g., "finfocus-plugin-aws-public" instead of just "aws-public")
 	AssetPrefix string
 	// Region specifies a region suffix to match (e.g., "us-east-1")
 	Region string

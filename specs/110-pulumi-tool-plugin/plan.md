@@ -13,7 +13,7 @@
 
 ### Architecture Components
 
-- **CLI Entrypoint (`internal/cli/root.go`)**: Needs modification to detect invocation name (`os.Args[0]`) and environment variables (`PULUMICOST_PLUGIN_MODE`).
+- **CLI Entrypoint (`internal/cli/root.go`)**: Needs modification to detect invocation name (`os.Args[0]`) and environment variables (`FINFOCUS_PLUGIN_MODE`).
 - **Configuration Loader (`internal/config/loader.go`)**: Needs update to respect `PULUMI_HOME` when in plugin mode.
 - **Help/Usage Generator (`cobra` integration)**: Needs to dynamically adjust `Use` string and examples based on mode.
 - **Build System (`Makefile` / `.goreleaser.yaml`)**: Needs to support building the binary as `pulumi-tool-cost`.
@@ -68,7 +68,7 @@
 
 **Summary of Decisions**:
 1.  **Exit Codes**: Adopt standard POSIX (0/1). No special Pulumi codes required for tools.
-2.  **Config Path**: `PULUMI_HOME/pulumicost/` takes precedence if `PULUMI_HOME` is set. Fallback to XDG or Home directory otherwise.
+2.  **Config Path**: `PULUMI_HOME/finfocus/` takes precedence if `PULUMI_HOME` is set. Fallback to XDG or Home directory otherwise.
 
 ## Phase 1: Design Artifacts
 
@@ -91,9 +91,9 @@
 ### 2. Core Logic (TDD)
 - [ ] **feat**: Implement `DetectPluginMode()` in `internal/cli/util.go` (or similar) with unit tests for:
     - Binary name matching (`pulumi-tool-cost`, case-insensitive).
-    - Env var `PULUMICOST_PLUGIN_MODE`.
+    - Env var `FINFOCUS_PLUGIN_MODE`.
 - [ ] **feat**: Update `internal/config` loader to check `PULUMI_HOME` env var.
-    - Test: If `PULUMI_HOME` set, config path is `$PULUMI_HOME/pulumicost/`.
+    - Test: If `PULUMI_HOME` set, config path is `$PULUMI_HOME/finfocus/`.
     - Test: If unset, fallback to default.
 
 ### 3. CLI Integration

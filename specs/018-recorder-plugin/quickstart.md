@@ -2,29 +2,29 @@
 
 **Time to complete**: ~10 minutes
 
-This guide shows how to build, install, and use the Recorder plugin to inspect gRPC requests from PulumiCost Core.
+This guide shows how to build, install, and use the Recorder plugin to inspect gRPC requests from FinFocus Core.
 
 ## Prerequisites
 
 - Go 1.25.5+
-- pulumicost-core built (`make build`)
+- finfocus-core built (`make build`)
 - A Pulumi plan JSON file (optional, for testing)
 
 ## Build and Install the Plugin
 
 ```bash
-# From pulumicost-core repository root
+# From finfocus-core repository root
 make install-recorder
 
 # Verify installation
-./bin/pulumicost plugin list
+./bin/finfocus plugin list
 ```
 
 Expected output:
 
 ```text
 PLUGIN     VERSION  PATH
-recorder   0.1.0    ~/.pulumicost/plugins/recorder/0.1.0/pulumicost-plugin-recorder
+recorder   0.1.0    ~/.finfocus/plugins/recorder/0.1.0/finfocus-plugin-recorder
 ```
 
 ## Basic Usage
@@ -35,10 +35,10 @@ Run with a sample Pulumi plan to capture requests:
 
 ```bash
 # Set output directory (optional, defaults to ./recorded_data)
-export PULUMICOST_RECORDER_OUTPUT_DIR=./my-recordings
+export FINFOCUS_RECORDER_OUTPUT_DIR=./my-recordings
 
 # Run cost calculation
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+./bin/finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 
 # View recorded requests
 ls -la ./my-recordings/
@@ -51,10 +51,10 @@ For testing Core's aggregation logic without real costs:
 
 ```bash
 # Enable mock mode
-export PULUMICOST_RECORDER_MOCK_RESPONSE=true
+export FINFOCUS_RECORDER_MOCK_RESPONSE=true
 
 # Run cost calculation (will show randomized costs)
-./bin/pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json --output json
+./bin/finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json --output json
 ```
 
 Example output with mock mode:
@@ -77,8 +77,8 @@ Example output with mock mode:
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `PULUMICOST_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for JSON files |
-| `PULUMICOST_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized responses |
+| `FINFOCUS_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for JSON files |
+| `FINFOCUS_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized responses |
 
 ## Recorded Request Format
 
@@ -119,7 +119,7 @@ Example file content:
 See exactly what data Core sends to plugins:
 
 ```bash
-PULUMICOST_RECORDER_OUTPUT_DIR=./debug ./bin/pulumicost cost projected --pulumi-json my-plan.json
+FINFOCUS_RECORDER_OUTPUT_DIR=./debug ./bin/finfocus cost projected --pulumi-json my-plan.json
 cat ./debug/*.json | jq '.request.resource'
 ```
 
@@ -128,7 +128,7 @@ cat ./debug/*.json | jq '.request.resource'
 Generate mock data to test output formatting:
 
 ```bash
-PULUMICOST_RECORDER_MOCK_RESPONSE=true ./bin/pulumicost cost projected \
+FINFOCUS_RECORDER_MOCK_RESPONSE=true ./bin/finfocus cost projected \
   --pulumi-json examples/plans/aws-simple-plan.json \
   --output table
 ```
@@ -139,8 +139,8 @@ Use as a reference plugin in integration tests:
 
 ```bash
 # In test setup
-export PULUMICOST_RECORDER_OUTPUT_DIR=/tmp/test-recordings
-export PULUMICOST_RECORDER_MOCK_RESPONSE=true
+export FINFOCUS_RECORDER_OUTPUT_DIR=/tmp/test-recordings
+export FINFOCUS_RECORDER_MOCK_RESPONSE=true
 
 # Run tests
 go test ./test/integration/... -v
@@ -152,31 +152,31 @@ go test ./test/integration/... -v
 
 ```bash
 # Check plugin directory structure
-ls -la ~/.pulumicost/plugins/recorder/
+ls -la ~/.finfocus/plugins/recorder/
 
 # Verify binary is executable
-chmod +x ~/.pulumicost/plugins/recorder/0.1.0/pulumicost-plugin-recorder
+chmod +x ~/.finfocus/plugins/recorder/0.1.0/finfocus-plugin-recorder
 ```
 
 ### No Files Being Recorded
 
 ```bash
 # Check output directory exists and is writable
-mkdir -p "$PULUMICOST_RECORDER_OUTPUT_DIR"
-touch "$PULUMICOST_RECORDER_OUTPUT_DIR/test.txt" && rm "$PULUMICOST_RECORDER_OUTPUT_DIR/test.txt"
+mkdir -p "$FINFOCUS_RECORDER_OUTPUT_DIR"
+touch "$FINFOCUS_RECORDER_OUTPUT_DIR/test.txt" && rm "$FINFOCUS_RECORDER_OUTPUT_DIR/test.txt"
 
 # Check plugin is being used (not falling back to specs)
-./bin/pulumicost cost projected --debug --pulumi-json plan.json 2>&1 | grep recorder
+./bin/finfocus cost projected --debug --pulumi-json plan.json 2>&1 | grep recorder
 ```
 
 ### Mock Responses Not Working
 
 ```bash
 # Verify environment variable is set correctly
-echo $PULUMICOST_RECORDER_MOCK_RESPONSE  # Should be "true"
+echo $FINFOCUS_RECORDER_MOCK_RESPONSE  # Should be "true"
 
 # Check for typos (case-insensitive)
-export PULUMICOST_RECORDER_MOCK_RESPONSE=TRUE  # Also works
+export FINFOCUS_RECORDER_MOCK_RESPONSE=TRUE  # Also works
 ```
 
 ## Next Steps

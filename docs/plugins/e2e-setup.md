@@ -7,7 +7,7 @@ This guide explains how to set up your environment for running End-to-End
 
 - Active Cloud Provider Account (AWS, Azure, or GCP)
 - Pulumi CLI installed
-- `pulumicost` binary built (`make build`)
+- `finfocus` binary built (`make build`)
 
 ## AWS Setup
 
@@ -22,9 +22,9 @@ This guide explains how to set up your environment for running End-to-End
 2. **Configuration**:
 
    ```bash
-   export PULUMICOST_E2E_AWS_REGION=us-west-2
-   export PULUMICOST_E2E_TOLERANCE=0.05  # 5% tolerance
-   export PULUMICOST_E2E_TIMEOUT=15m
+   export FINFOCUS_E2E_AWS_REGION=us-west-2
+   export FINFOCUS_E2E_TOLERANCE=0.05  # 5% tolerance
+   export FINFOCUS_E2E_TIMEOUT=15m
    ```
 
 3. **Running Tests**:
@@ -39,4 +39,4 @@ This guide explains how to set up your environment for running End-to-End
 
 - **Skipped Tests**: If tests are skipped with "missing credentials",
   check your environment variables.
-- **Timeouts**: Increase `PULUMICOST_E2E_TIMEOUT` for complex stacks.
+- **Timeouts**: Increase `FINFOCUS_E2E_TIMEOUT` for complex stacks.

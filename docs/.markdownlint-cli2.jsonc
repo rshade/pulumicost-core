@@ -2,27 +2,27 @@
   "config": {
     "default": true,
     "MD003": {
-      "style": "atx"
+      "style": "atx",
     },
     "MD004": {
-      "style": "dash"
+      "style": "dash",
     },
     "MD013": {
       "line_length": 120,
       "code_blocks": false,
       "tables": false,
-      "headings": false
+      "headings": false,
     },
     "MD022": {
       "lines_above": 1,
-      "lines_below": 1
+      "lines_below": 1,
     },
     "MD024": {
-      "siblings_only": true
+      "siblings_only": true,
     },
     "MD025": {
       "level": 1,
-      "front_matter_title": "^\\s*title\\s*[:=]"
+      "front_matter_title": "^\\s*title\\s*[:=]",
     },
     "MD031": true,
     "MD032": true,
@@ -45,23 +45,21 @@
         "th",
         "td",
         "details",
-        "summary"
-      ]
+        "summary",
+      ],
     },
     "MD034": false,
     "MD036": false,
     "MD040": {
       "allowed_languages": [],
-      "language_only": false
+      "language_only": false,
     },
     "MD041": false,
     "MD046": {
-      "style": "fenced"
+      "style": "fenced",
     },
-    "MD047": true
+    "MD047": true,
+    "MD060": false,
   },
-  "ignores": [
-    "node_modules",
-    "_site"
-  ]
+  "ignores": ["node_modules", "_site"],
 }

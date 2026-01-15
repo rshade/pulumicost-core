@@ -9,15 +9,15 @@
 
 ### User Story 1 - Clear Error Messages Before Plugin Calls (Priority: P1)
 
-As a developer using pulumicost to estimate infrastructure costs, I want to receive clear, actionable error messages when my resource definitions are incomplete, so that I can fix issues before waiting for plugin timeouts or cryptic gRPC errors.
+As a developer using finfocus to estimate infrastructure costs, I want to receive clear, actionable error messages when my resource definitions are incomplete, so that I can fix issues before waiting for plugin timeouts or cryptic gRPC errors.
 
 **Why this priority**: This directly addresses the core user pain point - generic "InvalidArgument" errors from plugins provide no guidance on what's wrong. Pre-flight validation with actionable messages ("SKU empty - use mapping.ExtractAWSSKU()") helps developers fix issues quickly.
 
-**Independent Test**: Can be fully tested by running `pulumicost cost projected` with an incomplete Pulumi plan (missing instance type) and verifying the error message includes specific guidance.
+**Independent Test**: Can be fully tested by running `finfocus cost projected` with an incomplete Pulumi plan (missing instance type) and verifying the error message includes specific guidance.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Pulumi plan with an EC2 instance missing the `instanceType` property, **When** the user runs `pulumicost cost projected --pulumi-json plan.json`, **Then** the output shows a warning with guidance about the missing SKU and the resource is marked with $0.00 cost and an explanatory note.
+1. **Given** a Pulumi plan with an EC2 instance missing the `instanceType` property, **When** the user runs `finfocus cost projected --pulumi-json plan.json`, **Then** the output shows a warning with guidance about the missing SKU and the resource is marked with $0.00 cost and an explanatory note.
 
 2. **Given** a Pulumi plan with resources from multiple providers where some are valid and some are missing region, **When** the user runs projected cost calculation, **Then** valid resources return costs while invalid ones show validation errors with specific missing fields.
 
@@ -104,6 +104,6 @@ As an operator troubleshooting cost calculation issues, I want validation failur
 
 ## Out of Scope
 
-- Changing the pluginsdk validation logic itself (that's in pulumicost-spec).
+- Changing the pluginsdk validation logic itself (that's in finfocus-spec).
 - Adding validation for GetRecommendations requests (future enhancement if needed).
 - Retry logic for validation failures (validation failures are deterministic, not transient).

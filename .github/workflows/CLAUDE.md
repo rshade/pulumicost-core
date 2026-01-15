@@ -22,7 +22,7 @@ This directory contains GitHub Actions workflows for CI/CD, automated code revie
 
 - Builds for Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 - Automatic changelog generation, SHA256 checksums, GitHub Release creation
-- Binary naming: `pulumicost-v{version}-{os}-{arch}`
+- Binary naming: `finfocus-v{version}-{os}-{arch}`
 
 ### OpenCode Integration Workflows
 

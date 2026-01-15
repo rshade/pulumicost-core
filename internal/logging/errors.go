@@ -133,7 +133,7 @@ func InvalidArgumentError(arg string, cause error) *CategorizedError {
 func MissingConfigError(configKey string, cause error) *CategorizedError {
 	return UserError(
 		fmt.Sprintf("Missing configuration: %s", configKey),
-		"Run 'pulumicost config init' to create default configuration, then set the required value with 'pulumicost config set'",
+		"Run 'finfocus config init' to create default configuration, then set the required value with 'finfocus config set'",
 		cause,
 	).WithContext("config_key", configKey)
 }
@@ -152,7 +152,7 @@ func PluginNotFoundError(pluginName string, cause error) *CategorizedError {
 	return UserError(
 		fmt.Sprintf("Plugin not found: %s", pluginName),
 		fmt.Sprintf(
-			"Install the plugin to ~/.pulumicost/plugins/%s/<version>/ or check available plugins with 'pulumicost plugin list'",
+			"Install the plugin to ~/.finfocus/plugins/%s/<version>/ or check available plugins with 'finfocus plugin list'",
 			pluginName,
 		),
 		cause,

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 type InstallOptions struct {
 	Force     bool   // Reinstall even if version exists
 	NoSave    bool   // Don't add to config file
-	PluginDir string // Custom plugin directory (default: ~/.pulumicost/plugins)
+	PluginDir string // Custom plugin directory (default: ~/.finfocus/plugins)
 }
 
 // InstallResult contains the result of a plugin installation.
@@ -52,10 +52,10 @@ func convertToAssetNamingHints(hints *RegistryAssetHints) *AssetNamingHints {
 }
 
 // NewInstaller creates a new Installer configured to install plugins into pluginDir.
-// If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the home
-// directory cannot be determined, the default is "./.pulumicost/plugins" relative to
+// If pluginDir is empty, it defaults to "$HOME/.finfocus/plugins"; if the home
+// directory cannot be determined, the default is "./.finfocus/plugins" relative to
 // NewInstaller creates an Installer configured to install plugins into pluginDir.
-// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; when the user
+// If pluginDir is empty, it defaults to $HOME/.finfocus/plugins; when the user
 // home directory cannot be determined it falls back to the current directory.
 // The returned Installer contains an initialized GitHub client.
 func NewInstaller(pluginDir string) *Installer {
@@ -65,7 +65,7 @@ func NewInstaller(pluginDir string) *Installer {
 			// Fallback to current directory if home cannot be determined
 			homeDir = "."
 		}
-		pluginDir = filepath.Join(homeDir, ".pulumicost", "plugins")
+		pluginDir = filepath.Join(homeDir, ".finfocus", "plugins")
 	}
 	return &Installer{
 		client:    NewGitHubClient(),
@@ -74,13 +74,13 @@ func NewInstaller(pluginDir string) *Installer {
 }
 
 // NewInstallerWithClient creates a new Installer using the provided GitHub client.
-// If pluginDir is empty, it defaults to $HOME/.pulumicost/plugins; if the home
+// If pluginDir is empty, it defaults to $HOME/.finfocus/plugins; if the home
 // directory cannot be determined it falls back to the current directory.
 // NewInstallerWithClient creates an Installer that uses the provided GitHub client and a resolved plugin directory.
-// If pluginDir is empty, it defaults to "$HOME/.pulumicost/plugins"; if the user home directory cannot be determined
-// it falls back to the current directory ("./") and uses "./.pulumicost/plugins".
+// If pluginDir is empty, it defaults to "$HOME/.finfocus/plugins"; if the user home directory cannot be determined
+// it falls back to the current directory ("./") and uses "./.finfocus/plugins".
 // NewInstallerWithClient creates an Installer that uses the provided GitHub client and plugin directory.
-// If pluginDir is empty, it is resolved to $HOME/.pulumicost/plugins; if the user's home directory
+// If pluginDir is empty, it is resolved to $HOME/.finfocus/plugins; if the user's home directory
 // cannot be determined, it falls back to the current working directory.
 // The returned Installer's client field is set to the provided client and its pluginDir field to the
 // resolved path.
@@ -91,7 +91,7 @@ func NewInstallerWithClient(client *GitHubClient, pluginDir string) *Installer {
 			// Fallback to current directory if home cannot be determined
 			homeDir = "."
 		}
-		pluginDir = filepath.Join(homeDir, ".pulumicost", "plugins")
+		pluginDir = filepath.Join(homeDir, ".finfocus", "plugins")
 	}
 	return &Installer{
 		client:    client,
@@ -369,7 +369,7 @@ func (i *Installer) installRelease(
 	}
 
 	// Determine extension for temp file
-	pattern := "pulumicost-plugin-*"
+	pattern := "finfocus-plugin-*"
 	switch {
 	case strings.HasSuffix(asset.Name, extZip):
 		pattern += extZip
@@ -471,7 +471,7 @@ func parseOwnerRepo(repo string) (string, string, error) {
 
 // findPluginBinary searches dir for an executable plugin binary matching name.
 // It first checks common filename patterns (e.g. name, name.exe,
-// pulumicost-plugin-name, pulumicost-plugin-name.exe). If none match, it
+// finfocus-plugin-name, finfocus-plugin-name.exe). If none match, it
 // scans the directory for any executable file (on Windows files must end with
 // .exe; on other systems the file must have an executable bit). It returns the
 // full path to the first matching file, or an empty string if no binary is
@@ -481,8 +481,8 @@ func findPluginBinary(dir, name string) string {
 	patterns := []string{
 		name,
 		name + ".exe",
-		"pulumicost-plugin-" + name,
-		"pulumicost-plugin-" + name + ".exe",
+		"finfocus-plugin-" + name,
+		"finfocus-plugin-" + name + ".exe",
 	}
 
 	for _, pattern := range patterns {

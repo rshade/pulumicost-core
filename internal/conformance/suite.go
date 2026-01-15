@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 // Suite is the main conformance test suite orchestrator.

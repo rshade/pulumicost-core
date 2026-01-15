@@ -25,7 +25,7 @@
 - [x] T001 Create internal/tui/ directory structure
 - [x] T002 [P] Add Bubble Tea and Lip Gloss dependencies to go.mod
 - [x] T003 [P] Configure Go module and import paths
-- [x] T004 [P] Bump pulumicost-spec dependency to v0.4.4
+- [x] T004 [P] Bump finfocus-spec dependency to v0.4.4
 - [x] T005 [P] Define color constants in internal/tui/colors.go
 - [x] T006 [P] Define icon constants in internal/tui/components.go
 - [x] T007 [P] Define OutputMode type and constants in internal/tui/detect.go

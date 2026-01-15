@@ -10,10 +10,10 @@
 Implement the Pulumi Analyzer plugin interface (`pulumirpc.Analyzer`) to enable zero-click cost estimation directly within `pulumi preview` output. The plugin will:
 
 1. Implement the gRPC `Analyzer` service interface from Pulumi's protocol
-2. Map `pulumirpc.AnalyzerResource` messages to the existing `pulumicost.ResourceDescriptor` format
+2. Map `pulumirpc.AnalyzerResource` messages to the existing `finfocus.ResourceDescriptor` format
 3. Leverage the existing `internal/engine` for cost calculations
 4. Return costs as `AnalyzeDiagnostic` messages with `INFO`/`WARNING` severity (never `ERROR` in MVP)
-5. Expose the analyzer via a new `pulumicost analyzer serve` subcommand
+5. Expose the analyzer via a new `finfocus analyzer serve` subcommand
 6. Handle the Pulumi plugin handshake (random TCP port printed to stdout)
 
 ## Technical Context
@@ -23,11 +23,11 @@ Implement the Pulumi Analyzer plugin interface (`pulumirpc.Analyzer`) to enable 
 
 - `google.golang.org/grpc v1.77.0` - gRPC server implementation
 - `github.com/pulumi/pulumi/sdk/v3/proto/go` - Pulumi Analyzer protocol buffers
-- `github.com/rshade/pulumicost-spec v0.4.3` - PulumiCost cost source protocol
+- `github.com/rshade/finfocus-spec v0.4.3` - FinFocus cost source protocol
 - `github.com/spf13/cobra v1.10.1` - CLI framework
 - `github.com/rs/zerolog v1.34.0` - Structured logging
 
-**Storage**: `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure)
+**Storage**: `~/.finfocus/config.yaml` for plugin configuration (existing infrastructure)
 **Testing**: Go stdlib `testing` package + `github.com/stretchr/testify v1.11.1`
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 **Project Type**: Single project (Go monorepo with `internal/` packages)
@@ -39,15 +39,15 @@ Implement the Pulumi Analyzer plugin interface (`pulumirpc.Analyzer`) to enable 
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: The analyzer IS the plugin host, orchestrating existing cost source plugins. No direct provider integration in core.
 - [x] **Test-Driven Development**: Tests planned before implementation (see Phase 1 contracts). Target 80% coverage, 95% for critical paths (analyzer server, resource mapping).
 - [x] **Cross-Platform Compatibility**: Using Go's cross-compilation. No platform-specific code required. Random port selection uses `net.Listen("tcp", ":0")`.
 - [x] **Documentation as Code**: Quickstart guide, developer integration guide, and CLI reference planned.
-- [x] **Protocol Stability**: Implementing Pulumi's stable `pulumirpc.Analyzer` interface. No breaking changes to pulumicost-spec required.
+- [x] **Protocol Stability**: Implementing Pulumi's stable `pulumirpc.Analyzer` interface. No breaking changes to finfocus-spec required.
 - [x] **Quality Gates**: CI checks in place (tests, lint, security). Will add analyzer-specific integration tests.
-- [x] **Multi-Repo Coordination**: No pulumicost-spec changes required. Using existing `CostSourceService` protocol.
+- [x] **Multi-Repo Coordination**: No finfocus-spec changes required. Using existing `CostSourceService` protocol.
 
 **Violations Requiring Justification**: None - all principles satisfied.
 

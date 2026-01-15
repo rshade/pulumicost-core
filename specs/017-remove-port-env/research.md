@@ -19,7 +19,7 @@
 
 **Alternatives Considered**:
 - Keep both PORT and --port: Rejected - creates maintenance burden and collision risk
-- Remove both and use only PULUMICOST_PLUGIN_PORT: Rejected - command-line flag is more explicit and debuggable
+- Remove both and use only FINFOCUS_PLUGIN_PORT: Rejected - command-line flag is more explicit and debuggable
 
 ### 2. Test Impact Analysis
 
@@ -88,16 +88,16 @@ if portEnv := os.Getenv("PORT"); portEnv != "" {
 
 ### 6. External Dependency Verification
 
-**Decision**: Verify pulumicost-spec#129 status before implementation
+**Decision**: Verify finfocus-spec#129 status before implementation
 
 **Findings**:
-- This feature is blocked by pulumicost-spec#129 (Add --port flag to pluginsdk.Serve())
+- This feature is blocked by finfocus-spec#129 (Add --port flag to pluginsdk.Serve())
 - Plugin SDK must support `--port` flag parsing before core removes PORT
 - Status check required before merging this PR
 
 **Verification Steps**:
-1. Check pulumicost-spec#129 is merged
-2. Update pulumicost-spec dependency if needed
+1. Check finfocus-spec#129 is merged
+2. Update finfocus-spec dependency if needed
 3. Verify pluginsdk.Serve() handles --port flag
 
 ## Summary

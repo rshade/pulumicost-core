@@ -56,7 +56,7 @@
   - **Rejected**: Less flexible for complex scenarios, harder to configure dynamically
   - Best for unit testing interfaces, not full gRPC services
 - **grpc-mock library**: Generic gRPC mocking framework
-  - **Rejected**: Adds dependency, less control over PulumiCost-specific behavior
+  - **Rejected**: Adds dependency, less control over FinFocus-specific behavior
 - **Test doubles as separate binaries**: Launch real plugin binaries configured for testing
   - **Rejected**: Slower test execution, harder to debug, more complex setup
 

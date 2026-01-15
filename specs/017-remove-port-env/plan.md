@@ -5,25 +5,25 @@
 
 ## Summary
 
-Remove the legacy `PORT` environment variable from plugin process spawning in `internal/pluginhost/process.go`. The `--port` flag (already implemented) becomes the sole authoritative port communication mechanism. `PULUMICOST_PLUGIN_PORT` is retained for debugging/backward compatibility. Add guidance logging when plugins fail to bind, and DEBUG-level logging when `PORT` is detected in user's environment.
+Remove the legacy `PORT` environment variable from plugin process spawning in `internal/pluginhost/process.go`. The `--port` flag (already implemented) becomes the sole authoritative port communication mechanism. `FINFOCUS_PLUGIN_PORT` is retained for debugging/backward compatibility. Add guidance logging when plugins fail to bind, and DEBUG-level logging when `PORT` is detected in user's environment.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0
+**Primary Dependencies**: github.com/rshade/finfocus-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0
 **Storage**: N/A
 **Testing**: go test (stdlib), github.com/stretchr/testify
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 **Project Type**: Single CLI project
 **Performance Goals**: No change to existing performance characteristics
-**Constraints**: External dependency on pulumicost-spec#129 (Plugin SDK must support --port flag first)
+**Constraints**: External dependency on finfocus-spec#129 (Plugin SDK must support --port flag first)
 **Scale/Scope**: Focused refactoring - ~20 lines of production code, ~100 lines of test updates
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic in core (ProcessLauncher) - compliant
 - [x] **Test-Driven Development**: Tests exist and will be updated; coverage target maintained
@@ -31,7 +31,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: CLAUDE.md will be updated to reflect new behavior
 - [x] **Protocol Stability**: No protocol buffer changes; this is internal orchestration
 - [x] **Quality Gates**: `make lint` and `make test` will be run before completion
-- [x] **Multi-Repo Coordination**: Dependency on pulumicost-spec#129 documented
+- [x] **Multi-Repo Coordination**: Dependency on finfocus-spec#129 documented
 
 **Violations Requiring Justification**: None - all principles satisfied
 

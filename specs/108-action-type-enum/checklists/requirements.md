@@ -32,6 +32,6 @@
 ## Notes
 
 - Dependency on `cost recommendations` CLI command is documented in Assumptions section
-- This feature extends existing proto enum support (already in pulumicost-spec v0.4.11)
+- This feature extends existing proto enum support (already in finfocus-spec v0.4.11)
 - No clarifications needed - the upstream spec clearly defines all 11 action types
 - Feature is well-bounded: filter parsing + TUI display + JSON output + CLI help

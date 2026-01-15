@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## CLI Package Overview
 
-The `internal/cli` package implements the Cobra-based command-line interface for PulumiCost. It follows a hierarchical command structure with two main command groups: `cost` (for cost calculations) and `plugin` (for plugin management).
+The `internal/cli` package implements the Cobra-based command-line interface for FinFocus. It follows a hierarchical command structure with two main command groups: `cost` (for cost calculations) and `plugin` (for plugin management).
 
 ## Command Architecture
 
 ### Command Hierarchy
 
 ```text
-pulumicost
+finfocus
 ├── cost
 │   ├── projected  # Calculate estimated costs from Pulumi plan
 │   └── actual     # Fetch historical costs from cloud providers
@@ -24,7 +24,7 @@ pulumicost
 │   ├── validate   # Validate plugin installations
 │   └── certify    # Run certification tests for a plugin
 └── analyzer
-    └── serve      # Starts the PulumiCost analyzer gRPC server (usually run by Pulumi CLI)
+    └── serve      # Starts the FinFocus analyzer gRPC server (usually run by Pulumi CLI)
 ```
 
 ### Command Implementation Pattern
@@ -39,7 +39,7 @@ Each command follows this consistent pattern:
 
 ### `analyzer serve` Integration Pattern
 
-The `pulumicost analyzer serve` command is unique as it's primarily designed for integration with the Pulumi CLI, not for direct user execution.
+The `finfocus analyzer serve` command is unique as it's primarily designed for integration with the Pulumi CLI, not for direct user execution.
 
 1.  **Launched by Pulumi**: The Pulumi CLI launches this command as a gRPC server process, typically configured in `Pulumi.yaml`.
 2.  **Port Handshake**: The server prints its dynamically assigned listening port to stdout for the Pulumi CLI to connect.
@@ -178,8 +178,8 @@ This dual display ensures users see both individual resource failures and overal
 
 ## Integration Points
 
-- **Config Package**: Uses `config.New()` for default paths (~/.pulumicost/specs, ~/.pulumicost/plugins)
+- **Config Package**: Uses `config.New()` for default paths (~/.finfocus/specs, ~/.finfocus/plugins)
 - **Registry Package**: `registry.NewDefault()` creates standard plugin registry
 - **Engine Package**: Handles both projected and actual cost calculations
-- **Proto Adapter**: Real protobuf definitions from pulumicost-spec repository
+- **Proto Adapter**: Real protobuf definitions from finfocus-spec repository
 

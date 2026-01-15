@@ -32,7 +32,7 @@ than refactoring.
 - `config.LoggingConfig` struct exists with Level, Format, File, Outputs fields
 - `config.GetLogLevel()` and `config.GetLogFile()` helper methods exist
 - CLI currently creates logging config manually in `root.go` PersistentPreRunE
-- Environment variable override already implemented (PULUMICOST_LOG_LEVEL, PULUMICOST_LOG_FORMAT)
+- Environment variable override already implemented (FINFOCUS_LOG_LEVEL, FINFOCUS_LOG_FORMAT)
 
 **Decision**: Create bridge function in config package to convert `config.LoggingConfig` to
 `logging.Config`.

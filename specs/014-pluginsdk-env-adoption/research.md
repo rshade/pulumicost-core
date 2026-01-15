@@ -8,21 +8,21 @@
 
 ### Q1: What constants and functions will be available in pluginsdk/env.go?
 
-**Decision**: Use the standardized constants and functions from pulumicost-spec#127
+**Decision**: Use the standardized constants and functions from finfocus-spec#127
 
 **Rationale**: The GitHub issue provides the exact API that will be implemented, ensuring consistency across the ecosystem.
 
 **Findings**:
 
 - **Constants Available**:
-  - `EnvPort = "PULUMICOST_PLUGIN_PORT"` (canonical port variable)
+  - `EnvPort = "FINFOCUS_PLUGIN_PORT"` (canonical port variable)
   - `EnvPortFallback = "PORT"` (legacy compatibility)
-  - `EnvLogLevel = "PULUMICOST_LOG_LEVEL"`
-  - `EnvLogFormat = "PULUMICOST_LOG_FORMAT"`
-  - `EnvTraceID = "PULUMICOST_TRACE_ID"`
+  - `EnvLogLevel = "FINFOCUS_LOG_LEVEL"`
+  - `EnvLogFormat = "FINFOCUS_LOG_FORMAT"`
+  - `EnvTraceID = "FINFOCUS_TRACE_ID"`
 
 - **Functions Available**:
-  - `GetPort() int` - Returns port from PULUMICOST_PLUGIN_PORT first, falls back to PORT
+  - `GetPort() int` - Returns port from FINFOCUS_PLUGIN_PORT first, falls back to PORT
   - `GetLogLevel() string` - Returns log level from environment
   - `GetLogFormat() string` - Returns log format from environment
   - `GetTraceID() string` - Returns trace ID from environment
@@ -34,19 +34,19 @@
 
 ### Q2: How should the core set environment variables for plugins?
 
-**Decision**: Set both PULUMICOST_PLUGIN_PORT and PORT for backward compatibility
+**Decision**: Set both FINFOCUS_PLUGIN_PORT and PORT for backward compatibility
 
-**Rationale**: The GetPort() function in pluginsdk checks PULUMICOST_PLUGIN_PORT first, then falls back to PORT. Setting both ensures compatibility with plugins that may not be updated yet.
+**Rationale**: The GetPort() function in pluginsdk checks FINFOCUS_PLUGIN_PORT first, then falls back to PORT. Setting both ensures compatibility with plugins that may not be updated yet.
 
 **Findings**:
 
-- Core should set: `PULUMICOST_PLUGIN_PORT=<port>` and `PORT=<port>`
+- Core should set: `FINFOCUS_PLUGIN_PORT=<port>` and `PORT=<port>`
 - This matches the current temporary fix but uses constants instead of hardcoded strings
 - Future cleanup can remove PORT once all plugins are migrated
 
 **Alternatives Considered**:
 
-- Set only PULUMICOST_PLUGIN_PORT - Rejected because it breaks existing plugins
+- Set only FINFOCUS_PLUGIN_PORT - Rejected because it breaks existing plugins
 - Set only PORT - Rejected because it doesn't follow the new standard
 
 ### Q3: Does a code generator exist for plugins (cmd/gen)?
@@ -74,9 +74,9 @@
 
 **Findings**:
 
-- Priority: Plugin port communication (PULUMICOST_PLUGIN_PORT/PORT)
-- Secondary: Logging configuration (PULUMICOST_LOG_LEVEL, PULUMICOST_LOG_FORMAT)
-- Tertiary: Trace injection (PULUMICOST_TRACE_ID)
+- Priority: Plugin port communication (FINFOCUS_PLUGIN_PORT/PORT)
+- Secondary: Logging configuration (FINFOCUS_LOG_LEVEL, FINFOCUS_LOG_FORMAT)
+- Tertiary: Trace injection (FINFOCUS_TRACE_ID)
 
 **Alternatives Considered**:
 
@@ -85,7 +85,7 @@
 
 ### Q5: How to handle missing pluginsdk/env.go dependency?
 
-**Decision**: This is blocked by pulumicost-spec#127 implementation
+**Decision**: This is blocked by finfocus-spec#127 implementation
 
 **Rationale**: The feature cannot proceed until the dependency is available.
 
@@ -104,7 +104,7 @@
 
 ### Implementation Strategy
 
-1. **Update go.mod**: Add/update pulumicost-spec dependency to version with env.go
+1. **Update go.mod**: Add/update finfocus-spec dependency to version with env.go
 2. **Migrate internal/pluginhost/process.go**: Replace hardcoded strings with pluginsdk constants
 3. **Search and migrate**: Find other hardcoded environment variables and replace with constants
 4. **Update tests**: Modify any tests that mock environment variable names

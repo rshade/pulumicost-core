@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document captures research findings for enhancing the `pulumicost cost recommendations` command with summary/verbose modes, interactive TUI, and improved output formatting.
+This document captures research findings for enhancing the `finfocus cost recommendations` command with summary/verbose modes, interactive TUI, and improved output formatting.
 
 ## Existing Implementation Analysis
 

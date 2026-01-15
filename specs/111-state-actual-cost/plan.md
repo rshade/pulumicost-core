@@ -21,7 +21,7 @@ reliability (AWS region scoping, deterministic output, test timeouts).
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: cobra v1.10.1, pulumicost-spec v0.4.11 (pluginsdk),
+**Primary Dependencies**: cobra v1.10.1, finfocus-spec v0.4.11 (pluginsdk),
 zerolog v1.34.0, Bubble Tea/Lip Gloss (TUI)
 **Storage**: N/A (stateless CLI tool; reads Pulumi state JSON files)
 **Testing**: Go testing stdlib + testify v1.11.1, table-driven tests
@@ -36,7 +36,7 @@ zerolog v1.34.0, Bubble Tea/Lip Gloss (TUI)
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution
+Verify compliance with FinFocus Core Constitution
 (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration logic in core, not
@@ -53,7 +53,7 @@ Verify compliance with PulumiCost Core Constitution
   TODOs or stubs.
 - [x] **Quality Gates**: `make lint` and `make test` required before completion.
 - [x] **Multi-Repo Coordination**: No cross-repo dependencies. Uses existing
-  pluginsdk from pulumicost-spec.
+  pluginsdk from finfocus-spec.
 
 **Violations Requiring Justification**: None
 

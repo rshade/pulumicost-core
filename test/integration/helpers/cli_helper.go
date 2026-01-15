@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -179,7 +179,7 @@ func (h *CLIHelper) WithEnv(env map[string]string, fn func()) {
 func (h *CLIHelper) CreateTempFile(content string) string {
 	h.t.Helper()
 
-	tmpFile, err := os.CreateTemp("", "pulumicost-test-*.json")
+	tmpFile, err := os.CreateTemp("", "finfocus-test-*.json")
 	require.NoError(h.t, err, "Failed to create temp file")
 
 	_, err = io.WriteString(tmpFile, content)
@@ -200,7 +200,7 @@ func (h *CLIHelper) CreateTempFile(content string) string {
 func (h *CLIHelper) CreateTempDir() string {
 	h.t.Helper()
 
-	tmpDir, err := os.MkdirTemp("", "pulumicost-test-*")
+	tmpDir, err := os.MkdirTemp("", "finfocus-test-*")
 	require.NoError(h.t, err, "Failed to create temp directory")
 
 	h.t.Cleanup(func() {

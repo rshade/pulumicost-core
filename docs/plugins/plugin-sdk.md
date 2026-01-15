@@ -1,10 +1,10 @@
 ---
 layout: default
 title: Plugin SDK Reference
-description: Complete API reference for the PulumiCost Plugin SDK
+description: Complete API reference for the FinFocus Plugin SDK
 ---
 
-This document provides complete API reference for the PulumiCost Plugin SDK
+This document provides complete API reference for the FinFocus Plugin SDK
 (`pkg/pluginsdk`). The SDK simplifies plugin development by providing
 interfaces, helper functions, and utilities for building cost source plugins.
 
@@ -23,7 +23,7 @@ interfaces, helper functions, and utilities for building cost source plugins.
 
 ### Plugin Interface
 
-The `Plugin` interface defines the contract for all PulumiCost plugins.
+The `Plugin` interface defines the contract for all FinFocus plugins.
 
 ```go
 type Plugin interface {
@@ -504,8 +504,8 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/rshade/pulumicost-core/pkg/pluginsdk"
-    pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+    "github.com/rshade/finfocus/pkg/pluginsdk"
+    pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 type MinimalPlugin struct {

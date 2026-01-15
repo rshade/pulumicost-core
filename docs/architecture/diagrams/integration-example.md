@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Integration Example Diagram
-description: End-to-end example showing Pulumi to PulumiCost to Vantage API integration
+description: End-to-end example showing Pulumi to FinFocus to Vantage API integration
 ---
 
 This diagram shows a complete end-to-end integration example using the
@@ -11,7 +11,7 @@ Vantage cost source plugin to retrieve actual AWS costs.
 sequenceDiagram
     actor User
     participant Pulumi as Pulumi CLI
-    participant PC as PulumiCost CLI
+    participant PC as FinFocus CLI
     participant Engine as Engine
     participant Ingest as Ingest
     participant Registry as Registry
@@ -31,7 +31,7 @@ sequenceDiagram
 
     Note over User,AWS: Step 2: Calculate Projected Costs
 
-    User->>PC: pulumicost cost projected<br/>--pulumi-json plan.json
+    User->>PC: finfocus cost projected<br/>--pulumi-json plan.json
     activate PC
     PC->>Engine: CalculateProjectedCost("plan.json")
     activate Engine
@@ -44,7 +44,7 @@ sequenceDiagram
 
     Engine->>Registry: DiscoverPlugins()
     activate Registry
-    Registry->>Registry: Scan ~/.pulumicost/plugins/
+    Registry->>Registry: Scan ~/.finfocus/plugins/
     Registry-->>Engine: [vantage/1.0.0]
     deactivate Registry
 
@@ -76,7 +76,7 @@ sequenceDiagram
 
     Note over User,AWS: Step 3: Query Actual Historical Costs
 
-    User->>PC: pulumicost cost actual<br/>--start 2024-01-01
+    User->>PC: finfocus cost actual<br/>--start 2024-01-01
     activate PC
     PC->>Engine: GetActualCostWithOptions<br/>(start, end, filters)
     activate Engine
@@ -95,7 +95,7 @@ sequenceDiagram
     AWS-->>VantageAPI: Daily cost breakdown
     deactivate AWS
 
-    VantageAPI->>VantageAPI: Transform to PulumiCost format
+    VantageAPI->>VantageAPI: Transform to FinFocus format
     VantageAPI-->>Vantage: 31 daily cost entries
     deactivate VantageAPI
 
@@ -130,12 +130,12 @@ sequenceDiagram
 
 ### Step 2: Projected Cost Calculation
 
-**User Action:** Runs `pulumicost cost projected --pulumi-json plan.json`
+**User Action:** Runs `finfocus cost projected --pulumi-json plan.json`
 
-**PulumiCost Processing:**
+**FinFocus Processing:**
 
 1. **Ingest:** Parses plan.json and extracts ResourceDescriptors
-2. **Registry:** Discovers Vantage plugin in `~/.pulumicost/plugins/`
+2. **Registry:** Discovers Vantage plugin in `~/.finfocus/plugins/`
 3. **Plugin Host:** Launches and connects to Vantage plugin via gRPC
 4. **Cost Query:** For each resource, calls `GetProjectedCost()`
 5. **Vantage Plugin:** Queries Vantage API for AWS EC2 pricing
@@ -148,9 +148,9 @@ sequenceDiagram
 
 ### Step 3: Actual Historical Cost Query
 
-**User Action:** Runs `pulumicost cost actual` with date range and filters
+**User Action:** Runs `finfocus cost actual` with date range and filters
 
-**PulumiCost Processing:**
+**FinFocus Processing:**
 
 1. **Engine:** Builds ActualCostRequest with time range and tag filters
 2. **Plugin Connection:** Reuses existing Vantage plugin connection
@@ -158,7 +158,7 @@ sequenceDiagram
 4. **Vantage Plugin:** Queries Vantage API for historical costs
 5. **Vantage API:** Calls AWS Cost Explorer API to retrieve actual spend
 6. **AWS Response:** Returns daily cost breakdown for January 2024
-7. **Transformation:** Vantage formats data to PulumiCost proto format
+7. **Transformation:** Vantage formats data to FinFocus proto format
 8. **Aggregation:** Engine sums 31 daily costs
 9. **Output:** Formatted JSON with total and daily breakdown
 
@@ -180,7 +180,7 @@ Cloud Provider → External API → Plugin → Engine → CLI → User
 
 ### Plugin Communication
 
-**Protocol:** gRPC using protocol buffers from pulumicost-spec
+**Protocol:** gRPC using protocol buffers from finfocus-spec
 
 **Transport:** TCP sockets (default) or stdio pipes
 
@@ -194,11 +194,11 @@ overhead
 Vantage plugin requires API credentials:
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 integrations:
   vantage:
-    api_key: "vantage_api_key_here"
-    endpoint: "https://api.vantage.sh"
+    api_key: 'vantage_api_key_here'
+    endpoint: 'https://api.vantage.sh'
 ```
 
 ### API Endpoints Used
@@ -234,14 +234,14 @@ cd my-pulumi-project
 pulumi preview --json > plan.json
 
 # 2. Estimate costs before deployment
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 # Output: $75.90/month
 
 # 3. Deploy infrastructure
 pulumi up
 
 # 4. After 30 days, check actual costs
-pulumicost cost actual \
+finfocus cost actual \
   --start-date 2024-01-01 \
   --end-date 2024-01-31 \
   --filter "tag:project=my-pulumi-project" \
@@ -256,7 +256,7 @@ cat actual-costs.json | jq '.total_cost'
 
 1. **Estimate** projected costs using Pulumi plans
 2. **Deploy** infrastructure
-3. **Monitor** actual costs via PulumiCost
+3. **Monitor** actual costs via FinFocus
 4. **Analyze** variance between projected and actual
 5. **Optimize** infrastructure based on insights
 6. **Repeat** the cycle

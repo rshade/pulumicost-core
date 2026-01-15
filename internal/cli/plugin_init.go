@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -28,11 +28,11 @@ const (
 
 const pluginReadmeTemplate = `# {{NAME}}
 
-PulumiCost plugin for {{NAME}} cost calculation.
+FinFocus plugin for {{NAME}} cost calculation.
 
 ## Overview
 
-This plugin provides cost calculation capabilities for {{PROVIDERS}} resources in PulumiCost. It implements both projected cost estimation and actual cost retrieval functionality.
+This plugin provides cost calculation capabilities for {{PROVIDERS}} resources in FinFocus. It implements both projected cost estimation and actual cost retrieval functionality.
 
 **Supported Providers:** {{PROVIDERS}}
 
@@ -62,20 +62,20 @@ The plugin may require cloud provider credentials to function properly. See the 
 
 ## Usage
 
-Once installed, the plugin will be automatically discovered by PulumiCost:
+Once installed, the plugin will be automatically discovered by FinFocus:
 
 {{BASH_BLOCK_START}}
 # List installed plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Validate plugin installation
-pulumicost plugin validate
+finfocus plugin validate
 
 # Calculate projected costs
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Get actual costs
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01
 {{CODE_BLOCK_END}}
 
 ## Development
@@ -83,7 +83,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01
 ### Prerequisites
 
 - Go 1.21+
-- PulumiCost Core development environment
+- FinFocus Core development environment
 - Cloud provider credentials (for actual cost retrieval)
 
 ### Building
@@ -145,7 +145,7 @@ func (c *Client) GetResourceCost(ctx context.Context, resourceID string, startTi
 
 ### Testing
 
-The project includes testing utilities from the PulumiCost SDK:
+The project includes testing utilities from the FinFocus SDK:
 
 {{GO_BLOCK_START}}
 func TestPluginName(t *testing.T) {
@@ -305,7 +305,7 @@ Configure continuous integration and deployment for the plugin.
 # .github/workflows/ci.yml
 - Lint (golangci-lint)
 - Unit tests with coverage
-- Conformance tests (pulumicost plugin conformance)
+- Conformance tests (finfocus plugin conformance)
 - Build verification
 
 # .github/workflows/e2e.yml (scheduled)
@@ -473,13 +473,13 @@ This command creates a new directory structure for plugin development including:
 - Example tests`,
 		Args: cobra.ExactArgs(1),
 		Example: `  # Initialize an AWS plugin
-  pulumicost plugin init aws-plugin --author "Your Name" --providers aws
+  finfocus plugin init aws-plugin --author "Your Name" --providers aws
 
   # Initialize a multi-provider plugin
-  pulumicost plugin init cloud-plugin --author "Your Name" --providers aws,azure,gcp
+  finfocus plugin init cloud-plugin --author "Your Name" --providers aws,azure,gcp
 
   # Initialize in a specific directory
-  pulumicost plugin init my-plugin --author "Your Name" --providers aws --output-dir /path/to/plugins`,
+  finfocus plugin init my-plugin --author "Your Name" --providers aws --output-dir /path/to/plugins`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Name = args[0]
 			return RunPluginInit(cmd, &opts)
@@ -612,7 +612,7 @@ func (g *projectGenerator) generateGoMod() error {
 go 1.25.5
 
 require (
-	github.com/rshade/pulumicost-spec v0.4.1
+	github.com/rshade/finfocus-spec v0.4.1
 	google.golang.org/grpc v1.77.0
 )
 `, g.name)
@@ -626,10 +626,10 @@ func (g *projectGenerator) generateManifest() error {
 		Metadata: &pbc.PluginMetadata{
 			Name:        g.name,
 			Version:     "0.1.0",
-			Description: fmt.Sprintf("PulumiCost plugin for %s", g.name),
+			Description: fmt.Sprintf("FinFocus plugin for %s", g.name),
 			Author:      g.author,
 			License:     "Apache-2.0",
-			Keywords:    append([]string{"pulumicost", "cost", "plugin"}, g.providers...),
+			Keywords:    append([]string{"finfocus", "cost", "plugin"}, g.providers...),
 		},
 		Specification: &pbc.PluginSpecification{
 			SpecVersion:        "1.0",
@@ -657,7 +657,7 @@ import (
 	"syscall"
 
 	"github.com/example/%s/internal/pricing"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func main() {
@@ -700,11 +700,11 @@ func (g *projectGenerator) generatePlugin() error {
 import (
 	"context"
 
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
-// Calculator implements the PulumiCost plugin interface for %s.
+// Calculator implements the FinFocus plugin interface for %s.
 type Calculator struct {
 	*pluginsdk.BasePlugin
 }
@@ -951,7 +951,7 @@ func (g *projectGenerator) generateMakefile() error {
 
 # Variables
 PLUGIN_NAME = %s
-BINARY_NAME = pulumicost-plugin-$(PLUGIN_NAME)
+BINARY_NAME = finfocus-plugin-$(PLUGIN_NAME)
 BUILD_DIR = bin
 CMD_DIR = cmd/plugin
 
@@ -1000,10 +1000,10 @@ lint:
 # Install plugin to local registry
 install: build
 	@echo "Installing plugin to local registry..."
-	@mkdir -p ~/.pulumicost/plugins/$(PLUGIN_NAME)/1.0.0
-	@cp $(BUILD_DIR)/$(BINARY_NAME) ~/.pulumicost/plugins/$(PLUGIN_NAME)/1.0.0/
-	@cp manifest.yaml ~/.pulumicost/plugins/$(PLUGIN_NAME)/1.0.0/plugin.manifest.json
-	@echo "✅ Plugin installed to ~/.pulumicost/plugins/$(PLUGIN_NAME)/1.0.0/"
+	@mkdir -p ~/.finfocus/plugins/$(PLUGIN_NAME)/1.0.0
+	@cp $(BUILD_DIR)/$(BINARY_NAME) ~/.finfocus/plugins/$(PLUGIN_NAME)/1.0.0/
+	@cp manifest.yaml ~/.finfocus/plugins/$(PLUGIN_NAME)/1.0.0/plugin.manifest.json
+	@echo "✅ Plugin installed to ~/.finfocus/plugins/$(PLUGIN_NAME)/1.0.0/"
 
 # Development build with debug info
 build-debug:
@@ -1046,8 +1046,8 @@ func (g *projectGenerator) generateTests() error {
 import (
 	"testing"
 
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func TestCalculatorName(t *testing.T) {

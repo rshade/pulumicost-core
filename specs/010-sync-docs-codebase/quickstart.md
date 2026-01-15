@@ -2,12 +2,12 @@
 
 ## Zero-Click Cost Estimation
 
-PulumiCost integrates directly with the Pulumi CLI as an analyzer, providing cost estimates automatically during `pulumi preview`.
+FinFocus integrates directly with the Pulumi CLI as an analyzer, providing cost estimates automatically during `pulumi preview`.
 
 ### Prerequisites
 
 - Pulumi CLI installed
-- `pulumicost` installed and in your PATH
+- `finfocus` installed and in your PATH
 
 ### Configuration
 
@@ -18,7 +18,7 @@ name: my-project
 runtime: go
 description: A Go Pulumi program
 plugins:
-  - path: pulumicost
+  - path: finfocus
     args: ["analyzer", "serve"]
 ```
 
@@ -34,7 +34,7 @@ pulumi preview
 
 ```text
 Diagnostics:
-  pulumicost:
+  finfocus:
     Type: aws:ec2/instance:Instance
     ID:   web-server
     Cost: $7.59/month (est.)
@@ -46,13 +46,13 @@ If you don't see cost estimates:
 
 1. **Check Logs**: Run with debug logging enabled:
    ```bash
-   PULUMICOST_LOG_LEVEL=debug pulumi preview
+   FINFOCUS_LOG_LEVEL=debug pulumi preview
    ```
-   Check `~/.pulumicost/logs/pulumicost.log`.
+   Check `~/.finfocus/logs/finfocus.log`.
 
 2. **Verify Port**: The analyzer runs on a dynamic port. Ensure no firewalls are blocking localhost traffic.
 
 3. **Strict Mode**: If config issues are suspected, enable strict mode:
    ```bash
-   PULUMICOST_CONFIG_STRICT=true pulumi preview
+   FINFOCUS_CONFIG_STRICT=true pulumi preview
    ```

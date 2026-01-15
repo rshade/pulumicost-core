@@ -9,7 +9,7 @@ through output rendering.
 
 ```mermaid
 flowchart TD
-    Start([User runs pulumicost]) --> InputType{Cost Type?}
+    Start([User runs finfocus]) --> InputType{Cost Type?}
 
     InputType -->|Projected| LoadPlan[Load Pulumi Plan JSON]
     InputType -->|Actual| GetParams[Get Time Range & Filters]
@@ -136,7 +136,7 @@ flowchart TD
 
 ### 2. Plugin Discovery
 
-The Registry scans `~/.pulumicost/plugins/` to discover available cost
+The Registry scans `~/.finfocus/plugins/` to discover available cost
 source plugins. If no plugins are found, the system falls back to local
 YAML pricing specifications.
 
@@ -265,7 +265,7 @@ For each grouping dimension (provider, type, date):
 
 When plugins fail or don't support a resource type:
 
-1. **Try local YAML spec:** Load from `~/.pulumicost/specs/`
+1. **Try local YAML spec:** Load from `~/.finfocus/specs/`
 2. **Use spec pricing:** Calculate cost using spec rate_per_unit
 3. **Placeholder:** If no spec, return $0.00 with "unknown" source
 

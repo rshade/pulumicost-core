@@ -14,9 +14,9 @@ THRESHOLD="${2:-60}"
 
 # Define critical packages
 CRITICAL_PACKAGES=(
-    "github.com/rshade/pulumicost-core/internal/cli"
-    "github.com/rshade/pulumicost-core/internal/engine"
-    "github.com/rshade/pulumicost-core/internal/pluginhost"
+    "github.com/rshade/finfocus/internal/cli"
+    "github.com/rshade/finfocus/internal/engine"
+    "github.com/rshade/finfocus/internal/pluginhost"
 )
 
 # Validate inputs

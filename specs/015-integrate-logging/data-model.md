@@ -7,7 +7,7 @@
 
 ### 1. LoggingConfig (Existing - config package)
 
-Configuration for logging behavior read from `~/.pulumicost/config.yaml`.
+Configuration for logging behavior read from `~/.finfocus/config.yaml`.
 
 ```go
 // LoggingConfig defines logging preferences (existing in config/config.go)
@@ -128,7 +128,7 @@ Load config.yaml
 Check --debug flag ──────────────────────┐
     │                                     │
     ▼                                     │
-Check PULUMICOST_LOG_LEVEL env ──────────┤
+Check FINFOCUS_LOG_LEVEL env ──────────┤
     │                                     │
     ▼                                     │
 Apply config.LoggingConfig ◄─────────────┘
@@ -229,7 +229,7 @@ Command returns
 ## Configuration File Schema
 
 ```yaml
-# ~/.pulumicost/config.yaml
+# ~/.finfocus/config.yaml
 logging:
   level: info          # trace, debug, info, warn, error
   format: json         # json, console, text

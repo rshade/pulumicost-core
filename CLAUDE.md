@@ -12,12 +12,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PulumiCost Core is a CLI tool and plugin host system for calculating cloud infrastructure costs from Pulumi infrastructure definitions. It provides both projected cost estimates and actual historical cost analysis through a plugin-based architecture.
+FinFocus Core is a CLI tool and plugin host system for calculating cloud infrastructure costs from Pulumi infrastructure definitions. It provides both projected cost estimates and actual historical cost analysis through a plugin-based architecture.
 
 ## Build Commands
 
 ```bash
-make build         # Build binary to bin/pulumicost
+make build         # Build binary to bin/finfocus
 make test          # Run unit tests (default, fast)
 make test-race     # Run with race detector
 make test-integration  # Integration tests (slower)
@@ -41,8 +41,8 @@ go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out        # View in browser
 
 # Plugin management
-./bin/pulumicost plugin list
-./bin/pulumicost plugin validate
+./bin/finfocus plugin list
+./bin/finfocus plugin validate
 ```
 
 ### Test Requirements
@@ -154,7 +154,7 @@ See `.specify/memory/constitution.md` for non-negotiable principles:
    - Always call `cmd.Wait()` after `Kill()` to prevent zombies
 
 4. **Registry** (`internal/registry/`) - Plugin discovery:
-   - Scans `~/.pulumicost/plugins/<name>/<version>/`
+   - Scans `~/.finfocus/plugins/<name>/<version>/`
    - Optional `plugin.manifest.json` validation
 
 5. **Ingestion** (`internal/ingest/`) - Pulumi plan parsing:
@@ -183,7 +183,7 @@ Pulumi JSON → Ingestion → Resource Descriptors → Engine
 
 ### Plugin Communication
 
-Plugins communicate via gRPC using protocol buffers from `pulumicost-spec`:
+Plugins communicate via gRPC using protocol buffers from `finfocus-spec`:
 
 - `Name()` - Plugin identification
 - `GetProjectedCost()` - Estimated costs for resources
@@ -213,7 +213,7 @@ All documentation lives in `docs/` with GitHub Pages deployment.
 ```bash
 make docs-lint     # Lint markdown
 make docs-build    # Build Jekyll site
-make docs-serve    # Serve at http://localhost:4000/pulumicost-core/
+make docs-serve    # Serve at http://localhost:4000/finfocus/
 make docs-validate # Validate structure
 ```
 
@@ -291,25 +291,25 @@ if err := pluginsdk.ValidateProjectedCostRequest(protoReq); err != nil {
 
 ### Logging (Zerolog)
 
-PulumiCost uses zerolog for structured logging with distributed tracing support.
+FinFocus uses zerolog for structured logging with distributed tracing support.
 
 #### Enabling Debug Output
 
 ```bash
 # CLI flag
-pulumicost cost projected --debug --pulumi-json plan.json
+finfocus cost projected --debug --pulumi-json plan.json
 
 # Environment variable
-export PULUMICOST_LOG_LEVEL=debug
-export PULUMICOST_LOG_FORMAT=json    # json or console
-export PULUMICOST_TRACE_ID=external-trace-123  # inject external trace ID
+export FINFOCUS_LOG_LEVEL=debug
+export FINFOCUS_LOG_FORMAT=json    # json or console
+export FINFOCUS_TRACE_ID=external-trace-123  # inject external trace ID
 ```
 
 #### Configuration Precedence
 
 1. CLI flags (`--debug`)
-2. Environment variables (`PULUMICOST_LOG_LEVEL`)
-3. Config file (`~/.pulumicost/config.yaml`)
+2. Environment variables (`FINFOCUS_LOG_LEVEL`)
+3. Config file (`~/.finfocus/config.yaml`)
 4. Default (info level, console format)
 
 #### Logging Patterns for Developers
@@ -410,7 +410,7 @@ Triggered on version tags (v\*):
 - Linux: amd64, arm64
 - macOS: amd64, arm64
 - Windows: amd64
-- Naming convention: `pulumicost-v{version}-{os}-{arch}`
+- Naming convention: `finfocus-v{version}-{os}-{arch}`
 
 **Release Features:**
 
@@ -486,7 +486,7 @@ export PULUMI_CONFIG_PASSPHRASE="e2e-test-passphrase"
 make test-e2e
 ```
 
-**CRITICAL**: E2E tests MUST call actual pulumicost CLI binary.
+**CRITICAL**: E2E tests MUST call actual finfocus CLI binary.
 Never simulate cost values or stub CLI execution.
 
 ### Expected Failure Test Patterns
@@ -600,15 +600,15 @@ func TestFunction_Errors(t *testing.T) {
 
 To debug plugin issues during Core development:
 
-1. Clone the plugin repository (e.g., `pulumicost-plugin-aws-public`)
+1. Clone the plugin repository (e.g., `finfocus-plugin-aws-public`)
 2. Modify the plugin code (add logging, fix type mapping)
 3. Build: `make build-region REGION=us-east-1`
-4. Install: Copy binary to `~/.pulumicost/plugins/<plugin>/<version>/`
+4. Install: Copy binary to `~/.finfocus/plugins/<plugin>/<version>/`
 5. Run Core E2E tests to verify
 
 ## Important Files
 
-- `cmd/pulumicost/main.go` - CLI entry point
+- `cmd/finfocus/main.go` - CLI entry point
 - `internal/engine/engine.go` - Core orchestration
 - `internal/pluginhost/host.go` - Plugin client management
 - `internal/ingest/pulumi_plan.go` - Pulumi plan parsing
@@ -649,11 +649,11 @@ pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
 ## Multi-Repository Ecosystem
 
-PulumiCost operates across three repositories:
+FinFocus operates across three repositories:
 
-- **pulumicost-core** (this repo) - CLI tool, plugin host, orchestration
-- **pulumicost-spec** - Protocol buffer definitions, SDK generation
-- **pulumicost-plugin** - Plugin implementations (Kubecost, Vantage, etc.)
+- **finfocus** (this repo) - CLI tool, plugin host, orchestration
+- **finfocus-spec** - Protocol buffer definitions, SDK generation
+- **finfocus-plugin** - Plugin implementations (Kubecost, Vantage, etc.)
 
 Cross-repo changes follow the protocol in `.specify/memory/constitution.md`.
 
@@ -664,7 +664,7 @@ Key dependencies (see `go.mod` for versions):
 - `github.com/spf13/cobra` - CLI framework
 - `google.golang.org/grpc` - Plugin communication
 - `github.com/rs/zerolog` - Structured logging
-- `github.com/rshade/pulumicost-spec` - Protocol definitions and pluginsdk
+- `github.com/rshade/finfocus-spec` - Protocol definitions and pluginsdk
 - `github.com/pulumi/pulumi/sdk/v3` - Pulumi SDK for Analyzer (v3.210.0+)
 - `github.com/charmbracelet/bubbletea` - TUI framework
 - `github.com/charmbracelet/lipgloss` - TUI styling
@@ -672,24 +672,24 @@ Key dependencies (see `go.mod` for versions):
 
 ## Environment Variable Constants (pluginsdk)
 
-PulumiCost uses standardized environment variable constants from `pluginsdk` for
+FinFocus uses standardized environment variable constants from `pluginsdk` for
 consistency between core and plugins.
 
 ### Available Constants
 
 ```go
-import "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+import "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 
 // Plugin communication
-pluginsdk.EnvPort        // "PULUMICOST_PLUGIN_PORT" - Primary port for gRPC (Note: "PORT" is NOT set)
+pluginsdk.EnvPort        // "FINFOCUS_PLUGIN_PORT" - Primary port for gRPC (Note: "PORT" is NOT set)
 
 // Logging configuration
-pluginsdk.EnvLogLevel    // "PULUMICOST_LOG_LEVEL" - Log verbosity
-pluginsdk.EnvLogFormat   // "PULUMICOST_LOG_FORMAT" - Log format (json/text)
-pluginsdk.EnvLogFile     // "PULUMICOST_LOG_FILE" - Log file path
+pluginsdk.EnvLogLevel    // "FINFOCUS_LOG_LEVEL" - Log verbosity
+pluginsdk.EnvLogFormat   // "FINFOCUS_LOG_FORMAT" - Log format (json/text)
+pluginsdk.EnvLogFile     // "FINFOCUS_LOG_FILE" - Log file path
 
 // Distributed tracing
-pluginsdk.EnvTraceID     // "PULUMICOST_TRACE_ID" - Trace ID for request correlation
+pluginsdk.EnvTraceID     // "FINFOCUS_TRACE_ID" - Trace ID for request correlation
 ```
 
 ### Usage Patterns
@@ -710,8 +710,8 @@ os.Setenv(pluginsdk.EnvLogLevel, "debug")
 defer os.Unsetenv(pluginsdk.EnvLogLevel)
 ```
 
-**Note**: Config-specific variables like `PULUMICOST_OUTPUT_FORMAT` and
-`PULUMICOST_CONFIG_STRICT` are NOT in pluginsdk as they are core-specific.
+**Note**: Config-specific variables like `FINFOCUS_OUTPUT_FORMAT` and
+`FINFOCUS_CONFIG_STRICT` are NOT in pluginsdk as they are core-specific.
 
 ## Package-Specific Documentation
 
@@ -770,7 +770,7 @@ The pluginhost package manages plugin communication via gRPC:
 
 The registry package handles plugin discovery and lifecycle:
 
-- Scans `~/.pulumicost/plugins/<name>/<version>/` structure
+- Scans `~/.finfocus/plugins/<name>/<version>/` structure
 - Optional `plugin.manifest.json` validation
 - Graceful handling of missing directories and invalid binaries
 - Platform-specific executable detection
@@ -795,7 +795,7 @@ The analyzer package implements the Pulumi Analyzer gRPC protocol for zero-click
 
 **CLI Integration**:
 
-- `pulumicost analyzer serve` - Starts gRPC server on random TCP port
+- `finfocus analyzer serve` - Starts gRPC server on random TCP port
 - Prints ONLY port number to stdout (Pulumi handshake protocol)
 - All logging goes to stderr exclusively
 - Graceful shutdown on SIGINT/SIGTERM
@@ -823,7 +823,7 @@ go tool cover -func=coverage.out
 
 ### plugins/recorder (Reference Plugin)
 
-The recorder plugin is a reference implementation demonstrating how to build a PulumiCost plugin using the pluginsdk v0.4.6. It captures all gRPC requests to JSON files and optionally returns mock cost responses.
+The recorder plugin is a reference implementation demonstrating how to build a FinFocus plugin using the pluginsdk v0.4.6. It captures all gRPC requests to JSON files and optionally returns mock cost responses.
 
 **Location**: `plugins/recorder/`
 
@@ -844,28 +844,28 @@ The recorder plugin is a reference implementation demonstrating how to build a P
 **Build Commands**:
 
 ```bash
-make build-recorder    # Build to bin/pulumicost-plugin-recorder
-make install-recorder  # Build and install to ~/.pulumicost/plugins/recorder/0.1.0/
+make build-recorder    # Build to bin/finfocus-plugin-recorder
+make install-recorder  # Build and install to ~/.finfocus/plugins/recorder/0.1.0/
 ```
 
 **Configuration (Environment Variables)**:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PULUMICOST_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
-| `PULUMICOST_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
+| `FINFOCUS_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
+| `FINFOCUS_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
 
 **Usage Examples**:
 
 ```bash
 # Record requests to inspect data shapes
-export PULUMICOST_RECORDER_OUTPUT_DIR=./debug
-./bin/pulumicost cost projected --pulumi-json plan.json
+export FINFOCUS_RECORDER_OUTPUT_DIR=./debug
+./bin/finfocus cost projected --pulumi-json plan.json
 cat ./debug/*.json | jq .
 
 # Enable mock mode for testing
-export PULUMICOST_RECORDER_MOCK_RESPONSE=true
-./bin/pulumicost cost projected --pulumi-json plan.json
+export FINFOCUS_RECORDER_MOCK_RESPONSE=true
+./bin/finfocus cost projected --pulumi-json plan.json
 ```
 
 **Recorded File Format**:
@@ -951,29 +951,29 @@ CodeRabbit now:
 5. **Integrates with existing CI/CD** tools and workflows
 
 ## Active Technologies
-- Go 1.25.5 + pulumicost-spec v0.4.11 (pluginsdk), cobra v1.10.1, (108-action-type-enum)
+- Go 1.25.5 + finfocus-spec v0.4.11 (pluginsdk), cobra v1.10.1, (108-action-type-enum)
 - N/A (stateless enum mapping) (108-action-type-enum)
 - Go 1.25.5 + Cobra v1.10.1, Bubble Tea, Lip Gloss, zerolog v1.34.0 (109-cost-recommendations)
 - N/A (stateless command, data from plugins via gRPC) (109-cost-recommendations)
-- Go 1.25.5 + cobra v1.10.1, pulumicost-spec v0.4.11 (pluginsdk), (111-state-actual-cost)
+- Go 1.25.5 + cobra v1.10.1, finfocus-spec v0.4.11 (pluginsdk), (111-state-actual-cost)
 - N/A (stateless CLI tool; reads Pulumi state JSON files) (111-state-actual-cost)
 
 - Go 1.25.5 + pluginsdk v0.4.11+, zerolog v1.34.0; N/A storage (validation is stateless) (107-preflight-validation)
-- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
+- Go 1.25.5 + github.com/rshade/finfocus-spec v0.4.11 (pluginsdk) (106-analyzer-recommendations)
 - N/A (display-only feature) (106-analyzer-recommendations)
 - N/A (no persistent storage for TUI state) (106-cost-tui-upgrade)
 
-- Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/pulumicost-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
+- Go 1.25.5 + google.golang.org/grpc v1.77.0, github.com/rshade/finfocus-spec v0.4.1, github.com/stretchr/testify v1.11.1 (102-plugin-ecosystem-maturity)
 - N/A (test framework, no persistent storage) (102-plugin-ecosystem-maturity)
-- Go 1.25.5 + github.com/rshade/pulumicost-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (017-remove-port-env)
+- Go 1.25.5 + github.com/rshade/finfocus-spec v0.4.1 (pluginsdk), google.golang.org/grpc v1.77.0 (017-remove-port-env)
 - Local filesystem (`./recorded_data` default, configurable via env var) (018-recorder-plugin)
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify, github.com/oklog/ulid/v2 (012-analyzer-e2e-tests)
 - Local Pulumi state (`file://` backend), temp directories for test fixtures (012-analyzer-e2e-tests)
 - Go 1.25.5 (009-analyzer-plugin)
-- `~/.pulumicost/config.yaml` for plugin configuration (existing infrastructure) (009-analyzer-plugin)
+- `~/.finfocus/config.yaml` for plugin configuration (existing infrastructure) (009-analyzer-plugin)
 - Go 1.25.5 + testing (stdlib), github.com/stretchr/testify (001-engine-test-coverage)
 - Go 1.25.5 + zerolog v1.34.0, cobra v1.10.1, yaml.v3 (007-integrate-logging)
-- File system (`~/.pulumicost/config.yaml`, log files) (007-integrate-logging)
+- File system (`~/.finfocus/config.yaml`, log files) (007-integrate-logging)
 
 ## Recent Changes
 

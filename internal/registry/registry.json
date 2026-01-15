@@ -4,10 +4,10 @@
     "kubecost": {
       "name": "kubecost",
       "description": "Kubernetes cost analysis via Kubecost API",
-      "repository": "rshade/pulumicost-plugin-kubecost",
-      "author": "PulumiCost Team",
+      "repository": "rshade/finfocus-plugin-kubecost",
+      "author": "FinFocus Team",
       "license": "Apache-2.0",
-      "homepage": "https://github.com/rshade/pulumicost-plugin-kubecost",
+      "homepage": "https://github.com/rshade/finfocus-plugin-kubecost",
       "supported_providers": ["kubernetes"],
       "capabilities": ["cost_retrieval", "cost_projection"],
       "security_level": "official",
@@ -16,16 +16,16 @@
     "aws-public": {
       "name": "aws-public",
       "description": "AWS public pricing data",
-      "repository": "rshade/pulumicost-plugin-aws-public",
-      "author": "PulumiCost Team",
+      "repository": "rshade/finfocus-plugin-aws-public",
+      "author": "FinFocus Team",
       "license": "Apache-2.0",
-      "homepage": "https://github.com/rshade/pulumicost-plugin-aws-public",
+      "homepage": "https://github.com/rshade/finfocus-plugin-aws-public",
       "supported_providers": ["aws"],
       "capabilities": ["cost_projection", "pricing_specs", "recommendations"],
       "security_level": "official",
       "min_spec_version": "0.1.0",
       "asset_hints": {
-        "asset_prefix": "pulumicost-plugin-aws-public",
+        "asset_prefix": "finfocus-plugin-aws-public",
         "default_region": "us-east-1",
         "version_prefix": false
       }

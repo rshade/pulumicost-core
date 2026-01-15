@@ -4,7 +4,7 @@ title: Plugin Development Checklist
 description: Complete checklist for plugin implementation and deployment
 ---
 
-This checklist ensures your PulumiCost plugin is complete, tested, and ready
+This checklist ensures your FinFocus plugin is complete, tested, and ready
 for production deployment. Use this as a guide during development and before
 releasing your plugin.
 
@@ -86,7 +86,7 @@ releasing your plugin.
 ### Configuration
 
 - [ ] Configuration loading
-  - [ ] Read from `~/.pulumicost/config.yaml`
+  - [ ] Read from `~/.finfocus/config.yaml`
   - [ ] Extract plugin-specific section
   - [ ] Validate required fields
 
@@ -161,7 +161,7 @@ releasing your plugin.
   - [ ] Test retry logic
 
 - [ ] End-to-end tests
-  - [ ] Test with PulumiCost CLI
+  - [ ] Test with FinFocus CLI
   - [ ] Test cost calculation pipeline
   - [ ] Test output formatting
 
@@ -239,7 +239,7 @@ releasing your plugin.
   - [ ] Cross-compilation tested
 
 - [ ] Binary naming
-  - [ ] Format: `pulumicost-plugin-<name>`
+  - [ ] Format: `finfocus-plugin-<name>`
   - [ ] Platform-specific suffixes (.exe for Windows)
 
 ### Manifest File
@@ -261,7 +261,7 @@ releasing your plugin.
 ### Installation Testing
 
 - [ ] Installation structure
-  - [ ] Creates `~/.pulumicost/plugins/<name>/<version>/`
+  - [ ] Creates `~/.finfocus/plugins/<name>/<version>/`
   - [ ] Binary placed in correct directory
   - [ ] Manifest file placed in correct directory
   - [ ] Binary has execute permissions
@@ -272,19 +272,19 @@ releasing your plugin.
   - [ ] Sets permissions
   - [ ] Verifies installation
 
-### Integration with PulumiCost
+### Integration with FinFocus
 
 - [ ] Plugin discovery
-  - [ ] `pulumicost plugin list` shows plugin
+  - [ ] `finfocus plugin list` shows plugin
   - [ ] Version displayed correctly
 
 - [ ] Plugin validation
-  - [ ] `pulumicost plugin validate` succeeds
+  - [ ] `finfocus plugin validate` succeeds
   - [ ] No connection errors
   - [ ] gRPC communication working
 
 - [ ] Cost calculation
-  - [ ] `pulumicost cost projected` uses plugin
+  - [ ] `finfocus cost projected` uses plugin
   - [ ] Costs calculated correctly
   - [ ] Output format correct
 
@@ -390,7 +390,7 @@ Before releasing your plugin, ensure ALL items are checked:
 - [ ] Plugin implements `Plugin` interface completely
 - [ ] All supported providers and resource types declared
 - [ ] Unit tests pass with >= 80% coverage
-- [ ] Integration tests with PulumiCost CLI succeed
+- [ ] Integration tests with FinFocus CLI succeed
 - [ ] Documentation complete (README, configuration, troubleshooting)
 - [ ] Manifest file valid and complete
 - [ ] No hardcoded credentials or sensitive data

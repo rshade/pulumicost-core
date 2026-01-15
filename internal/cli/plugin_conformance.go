@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/conformance"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/conformance"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -46,23 +46,23 @@ func NewPluginConformanceCmd() *cobra.Command {
 		Short: "Run conformance tests against a plugin binary",
 		Long: `Run conformance tests against a plugin binary to verify protocol compliance.
 
-The conformance suite validates that a plugin correctly implements the PulumiCost
+The conformance suite validates that a plugin correctly implements the FinFocus
 gRPC protocol. It tests protocol compliance, error handling, timeout behavior,
 and context cancellation.`,
 		Example: `  # Basic conformance check
-  pulumicost plugin conformance ./plugins/aws-cost
+  finfocus plugin conformance ./plugins/aws-cost
 
   # Verbose output with JSON
-  pulumicost plugin conformance --verbosity verbose --output json ./plugins/aws-cost
+  finfocus plugin conformance --verbosity verbose --output json ./plugins/aws-cost
 
   # Filter to protocol tests only
-  pulumicost plugin conformance --category protocol ./plugins/aws-cost
+  finfocus plugin conformance --category protocol ./plugins/aws-cost
 
   # JUnit XML for CI
-  pulumicost plugin conformance --output junit --output-file report.xml ./plugins/aws-cost
+  finfocus plugin conformance --output junit --output-file report.xml ./plugins/aws-cost
 
   # Use stdio mode
-  pulumicost plugin conformance --mode stdio ./plugins/aws-cost`,
+  finfocus plugin conformance --mode stdio ./plugins/aws-cost`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPluginConformanceCmd(

@@ -27,7 +27,7 @@ benchmarks to 1K, 10K, 100K resource scales.
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution:
+Verify compliance with FinFocus Core Constitution:
 
 - [x] **Plugin-First Architecture**: N/A - tests are internal to core,
       not a plugin implementation
@@ -41,7 +41,7 @@ Verify compliance with PulumiCost Core Constitution:
       functionality
 - [x] **Quality Gates**: Tests must pass with `-race`, coverage threshold
       enforced, linting required
-- [x] **Multi-Repo Coordination**: N/A - contained within pulumicost-core
+- [x] **Multi-Repo Coordination**: N/A - contained within finfocus-core
 
 **Violations Requiring Justification**:
 

@@ -46,7 +46,7 @@ npx playwright install chromium
 
 ```bash
 # Navigate to local docs and take screenshot
-mcp__playwright__browser_navigate(url: "http://localhost:4000/pulumicost-core/")
+mcp__playwright__browser_navigate(url: "http://localhost:4000/finfocus/")
 mcp__playwright__browser_snapshot()
 mcp__playwright__browser_take_screenshot(filename: "docs-homepage.png")
 ```
@@ -55,7 +55,7 @@ mcp__playwright__browser_take_screenshot(filename: "docs-homepage.png")
 
 ```bash
 # Check deployed documentation
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
+mcp__playwright__browser_navigate(url: "https://rshade.github.io/finfocus/")
 mcp__playwright__browser_snapshot()
 ```
 
@@ -63,7 +63,7 @@ mcp__playwright__browser_snapshot()
 
 ```bash
 # Test documentation navigation
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
+mcp__playwright__browser_navigate(url: "https://rshade.github.io/finfocus/")
 mcp__playwright__browser_click(element: "User Guide link", ref: "a[href='/guides/user-guide']")
 mcp__playwright__browser_snapshot()
 ```
@@ -80,7 +80,7 @@ mcp__playwright__browser_click(element: "Submit button", ref: "button[type='subm
 
 ```bash
 # Monitor API calls in documentation examples
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/examples/")
+mcp__playwright__browser_navigate(url: "https://rshade.github.io/finfocus/examples/")
 mcp__playwright__browser_network_requests()
 ```
 
@@ -109,7 +109,7 @@ mcp__playwright__browser_network_requests()
 4. **Cleanup**: Browser instances are automatically cleaned up due to `--isolated` flag
 5. **Documentation validation workflow**:
    - Start local docs: `make docs-serve`
-   - Navigate: `browser_navigate(url: "http://localhost:4000/pulumicost-core/")`
+   - Navigate: `browser_navigate(url: "http://localhost:4000/finfocus/")`
    - Validate: `browser_snapshot()` and verify content
    - Test links: Click through navigation and verify no 404s
 
@@ -130,7 +130,7 @@ Real-world Playwright MCP usage for testing GitHub Pages:
 
 ```bash
 # Navigate and verify page loads
-mcp__playwright__browser_navigate(url: "https://rshade.github.io/pulumicost-core/")
+mcp__playwright__browser_navigate(url: "https://rshade.github.io/finfocus/")
 
 # Take full page screenshot for visual verification
 mcp__playwright__browser_take_screenshot(filename: "site-screenshot.png", fullPage: true)
@@ -200,5 +200,5 @@ mcp__playwright__browser_network_requests()
 - Fix: Add link tag in `<head>` section:
 
   ```html
-  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}" />
   ```

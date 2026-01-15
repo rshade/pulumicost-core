@@ -12,14 +12,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const EnvAnalyzerMode = "PULUMICOST_ANALYZER_MODE"
+const EnvAnalyzerMode = "FINFOCUS_ANALYZER_MODE"
 
 const (
 	defaultTimeout      = 10 * time.Second
@@ -387,10 +387,10 @@ func (p *ProcessLauncher) startPlugin(
 		ctx,
 		path,
 		append(args, fmt.Sprintf("--port=%d", port))...)
-	// Set PULUMICOST_PLUGIN_PORT environment variable for plugin port communication.
-	// The --port flag is authoritative; PULUMICOST_PLUGIN_PORT is for debugging/tooling.
+	// Set FINFOCUS_PLUGIN_PORT environment variable for plugin port communication.
+	// The --port flag is authoritative; FINFOCUS_PLUGIN_PORT is for debugging/tooling.
 	// Note: PORT is intentionally NOT set (issue #232) - plugins should use --port flag
-	// or pluginsdk.GetPort() which reads PULUMICOST_PLUGIN_PORT.
+	// or pluginsdk.GetPort() which reads FINFOCUS_PLUGIN_PORT.
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("%s=%d", pluginsdk.EnvPort, port),
 	)

@@ -47,7 +47,7 @@ fully implemented. Stub functions, placeholders, and TODO comments are strictly 
 
 **Goal**: Provide actionable validation errors for GetProjectedCost requests before sending to plugins
 
-**Independent Test**: Run `pulumicost cost projected --pulumi-json plan.json` with incomplete
+**Independent Test**: Run `finfocus cost projected --pulumi-json plan.json` with incomplete
 plan and verify VALIDATION: prefix in notes
 
 ### Tests for User Story 1 (MANDATORY - TDD Required) ⚠️

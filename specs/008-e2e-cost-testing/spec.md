@@ -3,7 +3,7 @@
 **Feature Branch**: `008-e2e-cost-testing`
 **Created**: 2025-12-03
 **Status**: Draft
-**Input**: User description: "Implement E2E testing for PulumiCost using Pulumi Automation API with projected and actual cost validation"
+**Input**: User description: "Implement E2E testing for FinFocus using Pulumi Automation API with projected and actual cost validation"
 
 ## Clarifications
 
@@ -16,17 +16,17 @@
 - Q: How should the AWS region be configured for E2E tests? → A: The AWS region will be configurable via Pulumi stack configuration, with a fallback to the `AWS_REGION` environment variable.
 
 ### Session 2025-12-04
-- Q: How should E2E tests generate preview JSON for pulumicost validation? → A: **E2E tests MUST follow the exact user workflow**: create a real Pulumi project directory (Pulumi.yaml), run `pulumi preview --json > preview.json` via CLI, then pass that file to `pulumicost cost projected --pulumi-json preview.json`. This matches how users and GitHub Actions will use the tool. Do NOT use Automation API inline programs (no JSON output available) or state hacking approaches that users cannot replicate.
-- Q: What Pulumi runtime should E2E test projects use? → A: Use **Pulumi YAML** for E2E test projects. YAML projects are much faster (~2.5 min vs 10+ min) because they don't require Go compilation or dependency downloads. The `pulumicost` tool only needs the preview JSON output - it doesn't care what language generated it.
+- Q: How should E2E tests generate preview JSON for finfocus validation? → A: **E2E tests MUST follow the exact user workflow**: create a real Pulumi project directory (Pulumi.yaml), run `pulumi preview --json > preview.json` via CLI, then pass that file to `finfocus cost projected --pulumi-json preview.json`. This matches how users and GitHub Actions will use the tool. Do NOT use Automation API inline programs (no JSON output available) or state hacking approaches that users cannot replicate.
+- Q: What Pulumi runtime should E2E test projects use? → A: Use **Pulumi YAML** for E2E test projects. YAML projects are much faster (~2.5 min vs 10+ min) because they don't require Go compilation or dependency downloads. The `finfocus` tool only needs the preview JSON output - it doesn't care what language generated it.
 - Q: Why not use Go projects for E2E tests? → A: Go projects require downloading ~100MB+ of SDK dependencies and compiling for each test. YAML projects are interpreted directly by Pulumi with no compilation step, making tests significantly faster.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Validate Projected Cost Accuracy (Priority: P1)
 
-A developer runs the E2E test suite to verify that PulumiCost accurately calculates projected costs for AWS resources before deployment. The test creates a Pulumi program programmatically, generates a preview, and validates that the cost calculations match expected AWS pricing.
+A developer runs the E2E test suite to verify that FinFocus accurately calculates projected costs for AWS resources before deployment. The test creates a Pulumi program programmatically, generates a preview, and validates that the cost calculations match expected AWS pricing.
 
-**Why this priority**: Projected cost calculation is the core value proposition of PulumiCost. Without accurate projected costs, users cannot make informed decisions about infrastructure spending before deployment.
+**Why this priority**: Projected cost calculation is the core value proposition of FinFocus. Without accurate projected costs, users cannot make informed decisions about infrastructure spending before deployment.
 
 **Independent Test**: Can be fully tested by running a single projected cost test that deploys a t3.micro EC2 instance and verifies the monthly cost estimate is within ±5% of known AWS pricing ($0.0104/hour = ~$7.59/month for us-east-1).
 
@@ -40,7 +40,7 @@ A developer runs the E2E test suite to verify that PulumiCost accurately calcula
 
 ### User Story 2 - Validate Actual Cost Calculation (Priority: P2)
 
-A developer runs the E2E test suite to verify that PulumiCost can calculate actual costs based on runtime duration. After deploying resources for a known period, the test validates that actual costs are proportional to the deployment duration using the fallback formula (projected_cost × runtime_hours / 730).
+A developer runs the E2E test suite to verify that FinFocus can calculate actual costs based on runtime duration. After deploying resources for a known period, the test validates that actual costs are proportional to the deployment duration using the fallback formula (projected_cost × runtime_hours / 730).
 
 **Why this priority**: Actual cost validation demonstrates the full cost lifecycle - from projection to reality. This validates the fallback calculation mechanism when real billing APIs are not available.
 
@@ -106,10 +106,10 @@ A developer receives detailed cost comparison reports from E2E tests, showing pr
 
 A developer runs E2E tests that validate the complete cost calculation chain including plugin installation, configuration, and cost retrieval. This ensures the entire system works as users would experience it.
 
-**Why this priority**: Testing without the AWS pricing plugin validates CLI parsing but not real cost accuracy. The full chain test with `pulumicost-plugin-aws-public` is required to validate actual cost values against expected AWS pricing.
+**Why this priority**: Testing without the AWS pricing plugin validates CLI parsing but not real cost accuracy. The full chain test with `finfocus-plugin-aws-public` is required to validate actual cost values against expected AWS pricing.
 
 **Independent Test**: Can be tested by:
-1. Installing `aws-public` plugin via `pulumicost plugin install aws-public`
+1. Installing `aws-public` plugin via `finfocus plugin install aws-public`
 2. Running cost calculation with the plugin
 3. Validating cost output matches expected AWS pricing (~$7.59/month for t3.micro)
 
@@ -139,7 +139,7 @@ A developer runs E2E tests that validate the complete cost calculation chain inc
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide an E2E test framework in `test/e2e/` directory that tests PulumiCost cost calculations
+- **FR-001**: System MUST provide an E2E test framework in `test/e2e/` directory that tests FinFocus cost calculations
 - **FR-002**: System MUST use Pulumi Automation API (not shell scripts) for programmatic infrastructure deployment
 - **FR-003**: System MUST support projected cost calculation tests that validate against known AWS pricing (±5% tolerance)
 - **FR-004**: System MUST support actual cost calculation tests using the fallback formula (projected × runtime / 730)
@@ -158,7 +158,7 @@ A developer runs E2E tests that validate the complete cost calculation chain inc
 - **FR-017**: System MUST configure the AWS region via Pulumi stack configuration, falling back to the `AWS_REGION` environment variable if not set.
 - **FR-018**: System MUST support testing without plugins installed to validate CLI parsing and JSON output generation.
 - **FR-019**: System MUST support testing with `aws-public` plugin installed to validate full cost calculation chain.
-- **FR-020**: System MUST install plugins programmatically via CLI command (`pulumicost plugin install aws-public`) during E2E test setup.
+- **FR-020**: System MUST install plugins programmatically via CLI command (`finfocus plugin install aws-public`) during E2E test setup.
 - **FR-021**: System MUST optionally cleanup installed plugins after E2E tests to prevent test pollution.
 
 ### Key Entities
@@ -186,7 +186,7 @@ A developer runs E2E tests that validate the complete cost calculation chain inc
 ## Assumptions
 
 - **A-001**: AWS credentials are available in the test environment (via environment variables or AWS config)
-- **A-002**: The pulumicost-plugin-aws-public plugin v0.0.1+ is installed and accessible
+- **A-002**: The finfocus-plugin-aws-public plugin v0.0.1+ is installed and accessible
 - **A-003**: Pulumi CLI is installed for Automation API to leverage
 - **A-004**: Test resources use smallest possible instances (t3.micro, 8GB EBS) to minimize costs
 - **A-005**: The fallback actual cost formula (projected × runtime / 730) is acceptable for MVP validation
@@ -195,10 +195,10 @@ A developer runs E2E tests that validate the complete cost calculation chain inc
 
 ## Dependencies
 
-- **External**: pulumicost-plugin-aws-public#24 (Fallback GetActualCost implementation)
-- **External**: pulumicost-plugin-aws-public#26 (E2E test support)
+- **External**: finfocus-plugin-aws-public#24 (Fallback GetActualCost implementation)
+- **External**: finfocus-plugin-aws-public#26 (E2E test support)
 - **Blocked By**: None (plugin v0.0.1 already released)
-- **Blocks**: pulumicost-core#180 (CI/CD pipeline for E2E tests)
+- **Blocks**: finfocus-core#180 (CI/CD pipeline for E2E tests)
 
 ## Out of Scope
 

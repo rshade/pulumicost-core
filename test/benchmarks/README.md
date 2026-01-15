@@ -1,6 +1,6 @@
 # Benchmarks
 
-This directory contains performance benchmarks for Pulumicost Core.
+This directory contains performance benchmarks for FinFocus Core.
 
 ## Running Benchmarks
 

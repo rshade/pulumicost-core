@@ -30,10 +30,27 @@ go.work.sum
 
 # env file
 .env
+.env.*
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+
 Github_Development_Prompt.md
 PR_MESSAGE.md
 CodeRabbitPrompt.md
@@ -68,3 +85,7 @@ yarn-error.log*
 context.txt
 analysis.md
 dist/
+<<<<<<< HEAD
+build/
+=======
+>>>>>>> 68d2842 (fix: analyzer verbose logs in pulumi preview)

@@ -5,12 +5,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // NewPluginInstallCmd creates the install command for installing plugins from registry or URL.
 //
-//	--plugin-dir    Custom plugin directory (default: ~/.pulumicost/plugins)
+//	--plugin-dir    Custom plugin directory (default: ~/.finfocus/plugins)
 func NewPluginInstallCmd() *cobra.Command {
 	var (
 		force     bool
@@ -29,22 +29,22 @@ Plugins can be specified in several formats:
   - GitHub URL: github.com/owner/repo
   - GitHub URL with version: github.com/owner/repo@v1.0.0`,
 		Example: `  # Install latest version from registry
-  pulumicost plugin install kubecost
+  finfocus plugin install kubecost
 
   # Install specific version from registry
-  pulumicost plugin install kubecost@v1.0.0
+  finfocus plugin install kubecost@v1.0.0
 
   # Install from GitHub URL
-  pulumicost plugin install github.com/rshade/pulumicost-plugin-aws-public
+  finfocus plugin install github.com/rshade/finfocus-plugin-aws-public
 
   # Install specific version from URL
-  pulumicost plugin install github.com/rshade/pulumicost-plugin-aws-public@v0.1.0
+  finfocus plugin install github.com/rshade/finfocus-plugin-aws-public@v0.1.0
 
   # Force reinstall even if already installed
-  pulumicost plugin install kubecost --force
+  finfocus plugin install kubecost --force
 
   # Install without saving to config
-  pulumicost plugin install kubecost --no-save`,
+  finfocus plugin install kubecost --no-save`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			specifier := args[0]
@@ -57,7 +57,7 @@ Plugins can be specified in several formats:
 
 			if spec.IsURL {
 				cmd.Printf("⚠️  Installing from URL: %s/%s\n", spec.Owner, spec.Repo)
-				cmd.Printf("   URL-based plugins are not verified by the PulumiCost team.\n")
+				cmd.Printf("   URL-based plugins are not verified by the FinFocus team.\n")
 				cmd.Printf("   Only install from sources you trust.\n\n")
 			} else {
 				// Check security level for registry plugins
@@ -100,7 +100,7 @@ Plugins can be specified in several formats:
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Reinstall even if version already exists")
 	cmd.Flags().BoolVar(&noSave, "no-save", false, "Don't add plugin to config file")
 	cmd.Flags().
-		StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.pulumicost/plugins)")
+		StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.finfocus/plugins)")
 
 	return cmd
 }

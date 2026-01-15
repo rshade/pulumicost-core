@@ -1,4 +1,4 @@
-// Package main provides an example AWS cost calculation plugin for PulumiCost.
+// Package main provides an example AWS cost calculation plugin for FinFocus.
 // This demonstrates how to implement a plugin that calculates projected costs for AWS resources
 // including EC2 instances, S3 buckets, and RDS databases with region and engine-specific pricing.
 package main
@@ -11,8 +11,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 const (

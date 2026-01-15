@@ -233,7 +233,7 @@ project or create a mock plugin that returns recommendations.
 
 | Dependency      | Version   | Purpose                                    |
 | --------------- | --------- | ------------------------------------------ |
-| pulumicost-spec | v0.4.10   | `Recommendation` proto types (ref only)    |
+| finfocus-spec | v0.4.10   | `Recommendation` proto types (ref only)    |
 | pulumi/sdk      | v3.210.0+ | Analyzer protocol                          |
 | testify         | v1.11.1   | Unit/E2E test assertions                   |
 

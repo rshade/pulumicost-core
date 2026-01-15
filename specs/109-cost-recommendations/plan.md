@@ -6,7 +6,7 @@
 
 ## Summary
 
-Enhance the existing `pulumicost cost recommendations` command to add summary/verbose display modes, interactive Bubble Tea TUI with table navigation and detail views, and loading spinner feedback. The command currently exists with basic table/JSON/NDJSON output and action type filtering. This plan adds:
+Enhance the existing `finfocus cost recommendations` command to add summary/verbose display modes, interactive Bubble Tea TUI with table navigation and detail views, and loading spinner feedback. The command currently exists with basic table/JSON/NDJSON output and action type filtering. This plan adds:
 
 1. Summary mode (default): Top 5 recommendations by savings with aggregate statistics
 2. Verbose mode (`--verbose`): Full details for all recommendations
@@ -30,7 +30,7 @@ Enhance the existing `pulumicost cost recommendations` command to add summary/ve
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Feature is orchestration logic only; cost data comes from gRPC plugins
 - [x] **Test-Driven Development**: Tests planned before implementation (80% minimum coverage target)

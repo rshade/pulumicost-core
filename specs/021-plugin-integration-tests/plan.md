@@ -23,7 +23,7 @@ Implement a comprehensive integration test suite for the `plugin init`, `install
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: N/A (Core testing feature, but validates plugin management)
 - [x] **Test-Driven Development**: Tests are being planned *before* (or rather, *as*) the feature. Note: The prompt implies code exists but tests are missing; this task fills that gap.

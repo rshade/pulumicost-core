@@ -1,6 +1,6 @@
 # Testing Framework
 
-This directory contains the comprehensive testing framework for the PulumiCost system.
+This directory contains the comprehensive testing framework for the FinFocus system.
 
 ## Test Organization
 

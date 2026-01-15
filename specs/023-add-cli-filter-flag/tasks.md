@@ -17,7 +17,7 @@
 
 **Independent Test**:
 - Integration tests in `test/integration/cli/filter_test.go` pass.
-- `pulumicost cost actual --help` displays the `--filter` flag.
+- `finfocus cost actual --help` displays the `--filter` flag.
 - Manual execution with `--filter` properly filters results.
 
 **Implementation**:
@@ -26,7 +26,7 @@
 - [X] T004 [US1] Register '--filter' flag using 'StringArrayVar' in 'NewCostActualCmd' function in internal/cli/cost_actual.go
 - [X] T005 [US1] Implement iterative application of filters using 'engine.FilterResources' in 'executeCostActual' function in internal/cli/cost_actual.go
 - [X] T006 [US1] Run 'test/integration/cli/filter_test.go' to verify fix
-- [X] T007 [US1] Verify help output includes new flag by running 'pulumicost cost actual --help'
+- [X] T007 [US1] Verify help output includes new flag by running 'finfocus cost actual --help'
 
 ## Phase 3: Polish
 

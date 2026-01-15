@@ -1,7 +1,7 @@
-# PulumiCost Docker Image
+# FinFocus Docker Image
 
 This directory contains the Docker configuration for building and running
-PulumiCost in a containerized environment.
+FinFocus in a containerized environment.
 
 ## Quick Start
 
@@ -9,20 +9,20 @@ PulumiCost in a containerized environment.
 
 ```bash
 # Pull the latest release
-docker pull ghcr.io/rshade/pulumicost-core:latest
+docker pull ghcr.io/rshade/finfocus-core:latest
 
 # Pull a specific version
-docker pull ghcr.io/rshade/pulumicost-core:v1.0.0
+docker pull ghcr.io/rshade/finfocus-core:v1.0.0
 ```
 
 ### Build Locally
 
 ```bash
 # Build the image
-docker build -f docker/Dockerfile -t pulumicost:local .
+docker build -f docker/Dockerfile -t finfocus:local .
 
 # Run the help command
-docker run --rm pulumicost:local --help
+docker run --rm finfocus:local --help
 ```
 
 ## Usage Examples
@@ -31,13 +31,13 @@ docker run --rm pulumicost:local --help
 
 ```bash
 # Show help
-docker run --rm ghcr.io/rshade/pulumicost-core:latest --help
+docker run --rm ghcr.io/rshade/finfocus-core:latest --help
 
 # List plugins
-docker run --rm ghcr.io/rshade/pulumicost-core:latest plugin list
+docker run --rm ghcr.io/rshade/finfocus-core:latest plugin list
 
 # Validate plugins
-docker run --rm ghcr.io/rshade/pulumicost-core:latest plugin validate
+docker run --rm ghcr.io/rshade/finfocus-core:latest plugin validate
 ```
 
 ### Cost Analysis with Volume Mounts
@@ -46,14 +46,14 @@ docker run --rm ghcr.io/rshade/pulumicost-core:latest plugin validate
 # Calculate projected costs from a local Pulumi plan
 docker run --rm \
   -v $(pwd):/workspace \
-  ghcr.io/rshade/pulumicost-core:latest \
+  ghcr.io/rshade/finfocus-core:latest \
   cost projected --pulumi-json /workspace/plan.json
 
 # Get actual costs with configuration
 docker run --rm \
   -v $(pwd):/workspace \
-  -v ~/.pulumicost:/home/pulumicost/.pulumicost \
-  ghcr.io/rshade/pulumicost-core:latest \
+  -v ~/.finfocus:/home/finfocus/.finfocus \
+  ghcr.io/rshade/finfocus-core:latest \
   cost actual --from 2024-01-01 --to 2024-01-31
 ```
 
@@ -62,8 +62,8 @@ docker run --rm \
 ```bash
 # Mount plugin directory to persist plugins
 docker run --rm \
-  -v ~/.pulumicost/plugins:/home/pulumicost/.pulumicost/plugins \
-  ghcr.io/rshade/pulumicost-core:latest \
+  -v ~/.finfocus/plugins:/home/finfocus/.finfocus/plugins \
+  ghcr.io/rshade/finfocus-core:latest \
   plugin list
 ```
 
@@ -71,10 +71,10 @@ docker run --rm \
 
 - **Base Image**: Alpine Linux (latest)
 - **Go Version**: 1.25.5 (golang:1.25.5-alpine)
-- **User**: Non-root user `pulumicost` (UID: 1001, GID: 1001)
-- **Working Directory**: `/home/pulumicost`
-- **Plugin Directory**: `/home/pulumicost/.pulumicost/plugins`
-- **Specs Directory**: `/home/pulumicost/.pulumicost/specs`
+- **User**: Non-root user `finfocus` (UID: 1001, GID: 1001)
+- **Working Directory**: `/home/finfocus`
+- **Plugin Directory**: `/home/finfocus/.finfocus/plugins`
+- **Specs Directory**: `/home/finfocus/.finfocus/specs`
 
 ## Security Features
 
@@ -88,8 +88,8 @@ docker run --rm \
 
 The container respects the following environment variables:
 
-- `HOME`: Set to `/home/pulumicost`
-- `PATH`: Includes `/usr/local/bin` for the pulumicost binary
+- `HOME`: Set to `/home/finfocus`
+- `PATH`: Includes `/usr/local/bin` for the finfocus binary
 
 ## Persistent Data
 
@@ -97,13 +97,13 @@ To persist plugins and configuration between container runs:
 
 ```bash
 # Create local directories
-mkdir -p ~/.pulumicost/{plugins,specs}
+mkdir -p ~/.finfocus/{plugins,specs}
 
 # Run with persistent volumes
 docker run --rm \
-  -v ~/.pulumicost:/home/pulumicost/.pulumicost \
+  -v ~/.finfocus:/home/finfocus/.finfocus \
   -v $(pwd):/workspace \
-  ghcr.io/rshade/pulumicost-core:latest \
+  ghcr.io/rshade/finfocus-core:latest \
   cost projected --pulumi-json /workspace/plan.json
 ```
 
@@ -118,7 +118,7 @@ The Dockerfile supports the following build-time variables:
 
 ### Health Check
 
-The image includes a health check that runs `pulumicost --help`:
+The image includes a health check that runs `finfocus --help`:
 
 ```bash
 # Check container health
@@ -133,10 +133,10 @@ If you encounter permission issues with volume mounts:
 
 ```bash
 # Ensure proper ownership of plugin directories
-sudo chown -R 1001:1001 ~/.pulumicost
+sudo chown -R 1001:1001 ~/.finfocus
 ```
 
 ### Plugin Installation
 
-Currently, plugins must be manually installed in the `~/.pulumicost/plugins`
+Currently, plugins must be manually installed in the `~/.finfocus/plugins`
 directory. Future versions will include automated plugin downloading capabilities.

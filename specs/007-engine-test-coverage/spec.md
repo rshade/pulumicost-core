@@ -9,9 +9,9 @@
 
 ### User Story 1 - Core Calculation Reliability (Priority: P1)
 
-As a developer maintaining the PulumiCost engine, I need confidence that core cost calculation functions work correctly under all conditions so that users receive accurate cost estimates.
+As a developer maintaining the FinFocus engine, I need confidence that core cost calculation functions work correctly under all conditions so that users receive accurate cost estimates.
 
-**Why this priority**: Cost calculation is the fundamental value proposition of PulumiCost. Incorrect calculations directly impact user trust and financial planning decisions.
+**Why this priority**: Cost calculation is the fundamental value proposition of FinFocus. Incorrect calculations directly impact user trust and financial planning decisions.
 
 **Independent Test**: Can be validated by running `go test ./internal/engine/... -coverprofile=coverage.out && go tool cover -func=coverage.out | grep total` and verifying coverage meets 80% threshold with all tests passing.
 
@@ -45,7 +45,7 @@ As a developer, I need comprehensive edge case coverage in the engine so that un
 
 ### User Story 3 - Performance at Scale (Priority: P3)
 
-As a platform engineer using PulumiCost for enterprise deployments, I need the engine to handle large resource sets efficiently so that cost analysis doesn't become a bottleneck.
+As a platform engineer using FinFocus for enterprise deployments, I need the engine to handle large resource sets efficiently so that cost analysis doesn't become a bottleneck.
 
 **Why this priority**: Enterprise users may have thousands of resources. Performance degradation at scale limits adoption in large organizations.
 

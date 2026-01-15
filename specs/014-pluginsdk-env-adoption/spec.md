@@ -16,13 +16,13 @@ number: 230
 
 ## Summary
 
-Migrate `pulumicost-core` to use the standardized `pluginsdk/env.go` module from `pulumicost-spec` for all environment variable handling related to plugin communication. This ensures consistency with plugins and centralizes environment variable definitions.
+Migrate `finfocus-core` to use the standardized `pluginsdk/env.go` module from `finfocus-spec` for all environment variable handling related to plugin communication. This ensures consistency with plugins and centralizes environment variable definitions.
 
 ## Background
 
 During E2E testing, we discovered an environment variable mismatch between core and plugins:
 
-- Core was setting `PULUMICOST_PLUGIN_PORT`
+- Core was setting `FINFOCUS_PLUGIN_PORT`
 - Plugin SDK was reading `PORT`
 
 A temporary fix was applied to set both variables, but the proper solution is to use shared constants from `pluginsdk/env.go`.
@@ -33,7 +33,7 @@ A temporary fix was applied to set both variables, but the proper solution is to
 // TODO: Replace with pluginsdk/env.go constants once available
 cmd.Env = append(os.Environ(),
     fmt.Sprintf("PORT=%d", port),
-    fmt.Sprintf("PULUMICOST_PLUGIN_PORT=%d", port),
+    fmt.Sprintf("FINFOCUS_PLUGIN_PORT=%d", port),
 )
 ```
 
@@ -45,7 +45,7 @@ Update `internal/pluginhost/process.go`:
 
 ```go
 import (
-    "github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+    "github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 // Replace hardcoded strings with constants
@@ -67,8 +67,8 @@ If there's a code generator for plugins (`cmd/gen` or similar), update it to:
 
 Search for and update any other environment variable usage:
 
-- Logging configuration (`PULUMICOST_LOG_LEVEL`, `PULUMICOST_LOG_FORMAT`)
-- Trace ID injection (`PULUMICOST_TRACE_ID`)
+- Logging configuration (`FINFOCUS_LOG_LEVEL`, `FINFOCUS_LOG_FORMAT`)
+- Trace ID injection (`FINFOCUS_TRACE_ID`)
 
 ## Tasks
 
@@ -89,12 +89,12 @@ Search for and update any other environment variable usage:
 
 ## Dependencies
 
-- **Blocked by**: rshade/pulumicost-spec#127 (pluginsdk/env.go implementation)
+- **Blocked by**: rshade/finfocus-spec#127 (pluginsdk/env.go implementation)
 
 ## Related Issues
 
-- rshade/pulumicost-spec#127 - Create pluginsdk/env.go
-- rshade/pulumicost-plugin-aws-public (issue TBD) - Plugin migration
+- rshade/finfocus-spec#127 - Create pluginsdk/env.go
+- rshade/finfocus-plugin-aws-public (issue TBD) - Plugin migration
 
 ## Labels
 
@@ -155,16 +155,16 @@ As a plugin author using the code generator, I want generated code to use plugin
 
 ### Edge Cases
 
-- **Missing pluginsdk dependency**: Feature is blocked until pulumicost-spec#127 is implemented and dependency is available. Implementation should include error handling for missing imports.
+- **Missing pluginsdk dependency**: Feature is blocked until finfocus-spec#127 is implemented and dependency is available. Implementation should include error handling for missing imports.
 - How does the system handle environment variables that are not defined in pluginsdk?
-- What if multiple environment variables serve the same purpose (like PORT and PULUMICOST_PLUGIN_PORT)?
+- What if multiple environment variables serve the same purpose (like PORT and FINFOCUS_PLUGIN_PORT)?
 
 ## Requirements _(mandatory)_
 
 ### Functional Requirements
 
 - **FR-001**: System MUST import pluginsdk/env.go in internal/pluginhost/process.go
-- **FR-002**: System MUST replace hardcoded "PORT" and "PULUMICOST_PLUGIN_PORT" strings with pluginsdk.EnvPort and pluginsdk.EnvPortFallback constants
+- **FR-002**: System MUST replace hardcoded "PORT" and "FINFOCUS_PLUGIN_PORT" strings with pluginsdk.EnvPort and pluginsdk.EnvPortFallback constants
 - **FR-003**: System MUST search codebase for other hardcoded environment variable strings and replace with constants where available
 - **FR-004**: System MUST update code generator (if exists) to import pluginsdk/env.go and use pluginsdk.GetPort() instead of os.Getenv()
 - **FR-005**: System MUST update unit tests that mock environment variable names to use the new constants

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/ingest"
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/ingest"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // auditContext holds common context for audit logging within a cost command.

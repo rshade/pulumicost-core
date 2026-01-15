@@ -4,61 +4,61 @@
 
 ```bash
 # Install from registry (latest version)
-pulumicost plugin install kubecost
+finfocus plugin install kubecost
 
 # Install specific version
-pulumicost plugin install kubecost@v1.0.0
+finfocus plugin install kubecost@v1.0.0
 
 # Install from GitHub URL
-pulumicost plugin install github.com/rshade/pulumicost-plugin-custom
+finfocus plugin install github.com/rshade/finfocus-plugin-custom
 
 # Install without saving to config
-pulumicost plugin install kubecost --no-save
+finfocus plugin install kubecost --no-save
 ```
 
 ## Update Plugins
 
 ```bash
 # Update single plugin to latest
-pulumicost plugin update kubecost
+finfocus plugin update kubecost
 
 # Update to specific version
-pulumicost plugin update kubecost@v2.0.0
+finfocus plugin update kubecost@v2.0.0
 
 # Update all plugins
-pulumicost plugin update --all
+finfocus plugin update --all
 
 # Preview updates without installing
-pulumicost plugin update --all --dry-run
+finfocus plugin update --all --dry-run
 ```
 
 ## Remove Plugins
 
 ```bash
 # Remove plugin
-pulumicost plugin remove kubecost
+finfocus plugin remove kubecost
 
 # Remove all versions
-pulumicost plugin remove kubecost --all-versions
+finfocus plugin remove kubecost --all-versions
 
 # Remove but keep config entry
-pulumicost plugin remove kubecost --keep-config
+finfocus plugin remove kubecost --keep-config
 ```
 
 ## List Installed Plugins
 
 ```bash
-pulumicost plugin list
+finfocus plugin list
 ```
 
 ## Configuration
 
-Installed plugins are saved to `~/.pulumicost/config.yaml`:
+Installed plugins are saved to `~/.finfocus/config.yaml`:
 
 ```yaml
 plugins:
   - name: kubecost
-    url: github.com/rshade/pulumicost-plugin-kubecost
+    url: github.com/rshade/finfocus-plugin-kubecost
     version: v0.0.1
 ```
 

@@ -6,14 +6,14 @@
 ## Overview
 
 This feature adds utility functions for working with the
-`RecommendationActionType` enum from pulumicost-spec. No new entities are
+`RecommendationActionType` enum from finfocus-spec. No new entities are
 created - the proto enum already exists in the dependency.
 
 ## Entities
 
-### RecommendationActionType (from pulumicost-spec)
+### RecommendationActionType (from finfocus-spec)
 
-**Source**: `github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1`
+**Source**: `github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1`
 
 **Type**: Proto3 enum
 

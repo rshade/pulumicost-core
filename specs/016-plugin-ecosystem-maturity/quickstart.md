@@ -5,14 +5,14 @@
 
 ## Overview
 
-This guide shows you how to validate your plugin against the PulumiCost
+This guide shows you how to validate your plugin against the FinFocus
 conformance test suite to ensure it correctly implements the gRPC protocol.
 
 ---
 
 ## Prerequisites
 
-- PulumiCost CLI installed (`pulumicost --version` works)
+- FinFocus CLI installed (`finfocus --version` works)
 - Your plugin binary compiled for the target platform
 - Plugin implements the CostSourceService gRPC interface
 
@@ -31,7 +31,7 @@ ls -la ./my-plugin-binary
 ### Step 2: Run Basic Conformance Check
 
 ```bash
-pulumicost plugin conformance ./my-plugin-binary
+finfocus plugin conformance ./my-plugin-binary
 ```
 
 **Expected output** (all tests pass):
@@ -105,7 +105,7 @@ Error: protocol version mismatch: got 0.9, want 1.0
 ```
 
 **Fix**: Update your plugin to implement protocol version 1.0. See the
-pulumicost-spec repository for the latest protocol definitions.
+finfocus-spec repository for the latest protocol definitions.
 
 ### Missing Name Response
 
@@ -161,7 +161,7 @@ if !s.SupportsResource(resource.Type) {
 When tests fail, use verbose mode to see request/response details:
 
 ```bash
-pulumicost plugin conformance --verbosity verbose ./my-plugin-binary
+finfocus plugin conformance --verbosity verbose ./my-plugin-binary
 ```
 
 **Output includes**:
@@ -187,7 +187,7 @@ pulumicost plugin conformance --verbosity verbose ./my-plugin-binary
 ```yaml
 - name: Run Conformance Tests
   run: |
-    pulumicost plugin conformance \
+    finfocus plugin conformance \
       --output junit \
       --output-file conformance-report.xml \
       ./bin/my-plugin
@@ -202,7 +202,7 @@ pulumicost plugin conformance --verbosity verbose ./my-plugin-binary
 ### JSON Output for Custom Processing
 
 ```bash
-pulumicost plugin conformance --output json ./my-plugin > results.json
+finfocus plugin conformance --output json ./my-plugin > results.json
 jq '.summary.failed' results.json  # Check failure count
 ```
 
@@ -214,13 +214,13 @@ Filter tests by category to focus on specific areas:
 
 ```bash
 # Protocol compliance only
-pulumicost plugin conformance --category protocol ./my-plugin
+finfocus plugin conformance --category protocol ./my-plugin
 
 # Error handling tests
-pulumicost plugin conformance --category error ./my-plugin
+finfocus plugin conformance --category error ./my-plugin
 
 # All categories (default)
-pulumicost plugin conformance ./my-plugin
+finfocus plugin conformance ./my-plugin
 ```
 
 **Categories**:
@@ -239,7 +239,7 @@ pulumicost plugin conformance ./my-plugin
 1. **Fix all failing tests** before releasing your plugin
 2. **Run conformance in CI** to catch regressions
 3. **Test with verbose mode** when debugging issues
-4. **Check pulumicost-spec** for protocol updates
+4. **Check finfocus-spec** for protocol updates
 
 For E2E testing with real cloud providers, see the E2E Testing Guide
 (requires test account setup).

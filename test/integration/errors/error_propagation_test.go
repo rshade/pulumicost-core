@@ -4,8 +4,8 @@ package errors_test
 import (
 	"testing"
 
-	"github.com/rshade/pulumicost-core/test/integration/helpers"
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/test/integration/helpers"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

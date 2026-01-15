@@ -197,29 +197,29 @@ func (tc *TestContext) SetupProject(ctx context.Context, projectPath string) err
 	return nil
 }
 
-// RunPulumicost executes the pulumicost CLI and returns the calculated cost.
-func (tc *TestContext) RunPulumicost(ctx context.Context) (float64, error) {
-	// Find the pulumicost binary
-	binaryPath := findPulumicostBinary()
+// RunFinFocus executes the finfocus CLI and returns the calculated cost.
+func (tc *TestContext) RunFinFocus(ctx context.Context) (float64, error) {
+	// Find the finfocus binary
+	binaryPath := findFinFocusBinary()
 	if binaryPath == "" {
-		return 0, fmt.Errorf("pulumicost binary not found")
+		return 0, fmt.Errorf("finfocus binary not found")
 	}
 
-	tc.T.Logf("Running pulumicost at %s with preview JSON %s", binaryPath, tc.PreviewJSON)
+	tc.T.Logf("Running finfocus at %s with preview JSON %s", binaryPath, tc.PreviewJSON)
 
-	// Run pulumicost cost projected --pulumi-json <preview.json> --output json
+	// Run finfocus cost projected --pulumi-json <preview.json> --output json
 	cmd := exec.CommandContext(ctx, binaryPath, "cost", "projected", "--pulumi-json", tc.PreviewJSON, "--output", "json")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	tc.T.Logf("pulumicost stderr:\n%s", stderr.String())
+	tc.T.Logf("finfocus stderr:\n%s", stderr.String())
 	if err != nil {
-		return 0, fmt.Errorf("pulumicost failed: %w (stderr: %s)", err, stderr.String())
+		return 0, fmt.Errorf("finfocus failed: %w (stderr: %s)", err, stderr.String())
 	}
 
-	tc.T.Logf("pulumicost output: %s", stdout.String())
+	tc.T.Logf("finfocus output: %s", stdout.String())
 
 	// Parse the JSON output to extract total cost
 	var result struct {
@@ -250,7 +250,7 @@ func (tc *TestContext) RunPulumicost(ctx context.Context) (float64, error) {
 		if totalCost > 0 {
 			return totalCost, nil
 		}
-		return 0, fmt.Errorf("failed to parse pulumicost output: %w", err)
+		return 0, fmt.Errorf("failed to parse finfocus output: %w", err)
 	}
 
 	return result.Summary.TotalMonthly, nil

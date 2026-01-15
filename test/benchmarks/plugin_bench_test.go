@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
-	pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus/test/mocks/plugin"
+	pb "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

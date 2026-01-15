@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -71,7 +71,7 @@ func TestFileLogging_PathOutput(t *testing.T) {
 func TestLogPathDisplay(t *testing.T) {
 	t.Run("formats logging to file message correctly", func(t *testing.T) {
 		var buf bytes.Buffer
-		logPath := "/var/log/pulumicost.log"
+		logPath := "/var/log/finfocus.log"
 
 		logging.PrintLogPathMessage(&buf, logPath)
 

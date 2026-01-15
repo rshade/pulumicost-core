@@ -1,19 +1,19 @@
 # Quickstart: Testing Pulumi Tool Plugin
 
-This guide explains how to build and test the `pulumicost` binary as a Pulumi Tool Plugin locally.
+This guide explains how to build and test the `finfocus` binary as a Pulumi Tool Plugin locally.
 
 ## Prerequisites
 
 - Go 1.22+
 - Pulumi CLI installed
-- Existing `pulumicost` config (optional)
+- Existing `finfocus` config (optional)
 
 ## 1. Build the Plugin Binary
 
 Compile the binary with the specific name required by Pulumi:
 
 ```bash
-go build -o pulumi-tool-cost ./cmd/pulumicost
+go build -o pulumi-tool-cost ./cmd/finfocus
 ```
 
 ## 2. Install "Locally" (Simulated)
@@ -50,4 +50,4 @@ The help text should show `Usage: pulumi plugin run tool cost ...`
 
 1. Set `export PULUMI_HOME=/tmp/fake-pulumi`
 2. Run `pulumi plugin run tool cost -- configure ...`
-3. Verify `config.yaml` is created inside `/tmp/fake-pulumi/pulumicost/`.
+3. Verify `config.yaml` is created inside `/tmp/fake-pulumi/finfocus/`.

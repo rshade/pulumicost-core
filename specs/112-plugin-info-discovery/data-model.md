@@ -9,7 +9,7 @@ Represents the metadata returned by a plugin via `GetPluginInfo`.
 |-------|------|-------------|
 | Name | string | Unique name of the plugin |
 | Version | string | Semantic version of the plugin implementation |
-| SpecVersion | string | Semantic version of the PulumiCost spec implemented |
+| SpecVersion | string | Semantic version of the FinFocus spec implemented |
 | SupportedProviders | []string | List of cloud providers the plugin supports |
 | Metadata | map[string]string | Additional provider-specific metadata |
 

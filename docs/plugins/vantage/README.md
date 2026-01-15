@@ -16,7 +16,7 @@ Cost visibility platform integration for multi-cloud cost aggregation.
 
 ## Overview
 
-The Vantage plugin connects PulumiCost to Vantage's cost aggregation API, enabling:
+The Vantage plugin connects FinFocus to Vantage's cost aggregation API, enabling:
 
 - Real-time cost data from multiple cloud providers
 - Unified cost reporting across AWS, Azure, GCP, and more

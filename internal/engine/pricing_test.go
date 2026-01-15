@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
+	"github.com/rshade/finfocus/internal/pluginhost"
 	"github.com/stretchr/testify/assert"
 )
 

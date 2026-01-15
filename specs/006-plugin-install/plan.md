@@ -11,7 +11,7 @@ Implement a comprehensive plugin installation system enabling users to install, 
 
 **Language/Version**: Go 1.25.5
 **Primary Dependencies**: archive/tar, archive/zip, compress/gzip, net/http, github.com/spf13/cobra, gopkg.in/yaml.v3
-**Storage**: File system (~/.pulumicost/plugins/, ~/.pulumicost/config.yaml)
+**Storage**: File system (~/.finfocus/plugins/, ~/.finfocus/config.yaml)
 **Testing**: go test with race detection, 80% minimum coverage
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 **Project Type**: Single CLI application
@@ -23,7 +23,7 @@ Implement a comprehensive plugin installation system enabling users to install, 
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is core orchestration logic for managing plugins, not a plugin itself. Correctly in core.
 - [x] **Test-Driven Development**: Tests planned before implementation with 80% minimum coverage target.
@@ -31,7 +31,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: User guide updates planned for plugin management commands.
 - [x] **Protocol Stability**: No protocol changes required; uses existing plugin manifest format.
 - [x] **Quality Gates**: All CI checks (tests, lint, security) will pass before merge.
-- [x] **Multi-Repo Coordination**: Uses registry.proto from pulumicost-spec; no breaking changes.
+- [x] **Multi-Repo Coordination**: Uses registry.proto from finfocus-spec; no breaking changes.
 
 **Violations Requiring Justification**: None
 
@@ -82,7 +82,7 @@ test/
     └── plugins/               # Mock plugin archives
 ```
 
-**Structure Decision**: Single project structure following existing pulumicost-core patterns. New `internal/registry/` package for plugin management, extending existing `internal/config/` for plugin persistence.
+**Structure Decision**: Single project structure following existing finfocus-core patterns. New `internal/registry/` package for plugin management, extending existing `internal/config/` for plugin persistence.
 
 ## Complexity Tracking
 

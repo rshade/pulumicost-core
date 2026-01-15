@@ -1,4 +1,4 @@
-// Package main provides the pulumicost CLI tool for calculating cloud infrastructure costs.
+// Package main provides the finfocus CLI tool for calculating cloud infrastructure costs.
 // It supports both projected costs from Pulumi infrastructure definitions and actual historical
 // costs from cloud provider APIs via a plugin-based architecture.
 package main
@@ -10,24 +10,24 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/logging"
-	"github.com/rshade/pulumicost-core/pkg/version"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/pkg/version"
 	"github.com/spf13/cobra"
 )
 
-// run executes the main application logic for the pulumicost program.
+// run executes the main application logic for the finfocus program.
 // It either starts the Pulumi analyzer plugin serve path when the executable name
 // indicates an analyzer invocation (supports both legacy policy-pack and direct
 // analyzer names), or it runs the regular CLI root command for normal operation.
 // It returns an error if starting the analyzer serve or executing the root command fails.
 func run() error {
 	// Check if the binary is being run as a Pulumi Analyzer plugin
-	// Supports both legacy policy pack mode (pulumi-analyzer-policy-pulumicost)
-	// and direct analyzer mode (pulumi-analyzer-pulumicost)
+	// Supports both legacy policy pack mode (pulumi-analyzer-policy-finfocus)
+	// and direct analyzer mode (pulumi-analyzer-finfocus)
 	exeName := filepath.Base(os.Args[0])
-	if strings.Contains(exeName, "pulumi-analyzer-policy-pulumicost") ||
-		strings.Contains(exeName, "pulumi-analyzer-pulumicost") {
+	if strings.Contains(exeName, "pulumi-analyzer-policy-finfocus") ||
+		strings.Contains(exeName, "pulumi-analyzer-finfocus") {
 		// If run as an analyzer plugin, execute the analyzer serve logic directly.
 		// Pulumi expects the plugin binary to start a gRPC server and output the port.
 		// RunAnalyzerServe sets up its own stderr logger via getAnalyzerLogLevel(),
@@ -37,7 +37,7 @@ func run() error {
 		return cli.RunAnalyzerServe(dummyCmd)
 	}
 
-	// Original CLI execution for the main pulumicost CLI tool
+	// Original CLI execution for the main finfocus CLI tool
 	// Initialize a minimal startup logger for early error reporting
 	startupCfg := logging.LoggingConfig{
 		Level:  "error",

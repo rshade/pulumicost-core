@@ -13,14 +13,14 @@ A reference implementation plugin that records all gRPC requests to JSON files a
 ## Installation
 
 ```bash
-# From pulumicost-core repository root
+# From finfocus-core repository root
 make install-recorder
 
 # Verify installation
-./bin/pulumicost plugin list
+./bin/finfocus plugin list
 ```
 
-This builds the plugin and installs it to `~/.pulumicost/plugins/recorder/0.1.0/`.
+This builds the plugin and installs it to `~/.finfocus/plugins/recorder/0.1.0/`.
 
 ## Configuration
 
@@ -28,8 +28,8 @@ Configuration is via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PULUMICOST_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
-| `PULUMICOST_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
+| `FINFOCUS_RECORDER_OUTPUT_DIR` | `./recorded_data` | Directory for recorded JSON files |
+| `FINFOCUS_RECORDER_MOCK_RESPONSE` | `false` | Enable randomized mock responses |
 
 ## Usage
 
@@ -37,10 +37,10 @@ Configuration is via environment variables:
 
 ```bash
 # Set output directory (optional)
-export PULUMICOST_RECORDER_OUTPUT_DIR=./my-recordings
+export FINFOCUS_RECORDER_OUTPUT_DIR=./my-recordings
 
 # Run cost calculation - requests will be recorded
-./bin/pulumicost cost projected --pulumi-json plan.json
+./bin/finfocus cost projected --pulumi-json plan.json
 
 # View recorded files
 ls -la ./my-recordings/
@@ -51,10 +51,10 @@ cat ./my-recordings/*.json | jq .
 
 ```bash
 # Enable mock responses
-export PULUMICOST_RECORDER_MOCK_RESPONSE=true
+export FINFOCUS_RECORDER_MOCK_RESPONSE=true
 
 # Run cost calculation - will return randomized costs
-./bin/pulumicost cost projected --pulumi-json plan.json --output json
+./bin/finfocus cost projected --pulumi-json plan.json --output json
 ```
 
 ## Recorded Request Format
@@ -94,7 +94,7 @@ Example: `20251211T143052Z_GetProjectedCost_01JEK7X2J3K4M5N6P7Q8R9S0T1.json`
 See exactly what data Core sends to plugins:
 
 ```bash
-PULUMICOST_RECORDER_OUTPUT_DIR=./debug ./bin/pulumicost cost projected --pulumi-json my-plan.json
+FINFOCUS_RECORDER_OUTPUT_DIR=./debug ./bin/finfocus cost projected --pulumi-json my-plan.json
 cat ./debug/*.json | jq '.request.resource'
 ```
 
@@ -103,7 +103,7 @@ cat ./debug/*.json | jq '.request.resource'
 Generate mock data to test output formatting:
 
 ```bash
-PULUMICOST_RECORDER_MOCK_RESPONSE=true ./bin/pulumicost cost projected \
+FINFOCUS_RECORDER_MOCK_RESPONSE=true ./bin/finfocus cost projected \
   --pulumi-json plan.json \
   --output table
 ```
@@ -114,8 +114,8 @@ Use as a reference plugin in integration tests:
 
 ```bash
 # In test setup
-export PULUMICOST_RECORDER_OUTPUT_DIR=/tmp/test-recordings
-export PULUMICOST_RECORDER_MOCK_RESPONSE=true
+export FINFOCUS_RECORDER_OUTPUT_DIR=/tmp/test-recordings
+export FINFOCUS_RECORDER_MOCK_RESPONSE=true
 
 # Run tests
 go test ./test/integration/... -v
@@ -170,33 +170,33 @@ plugins/recorder/
 
 ```bash
 # Check plugin directory structure
-ls -la ~/.pulumicost/plugins/recorder/
+ls -la ~/.finfocus/plugins/recorder/
 
 # Verify binary is executable
-chmod +x ~/.pulumicost/plugins/recorder/0.1.0/pulumicost-plugin-recorder
+chmod +x ~/.finfocus/plugins/recorder/0.1.0/finfocus-plugin-recorder
 ```
 
 ### No Files Being Recorded
 
 ```bash
 # Check output directory exists and is writable
-mkdir -p "$PULUMICOST_RECORDER_OUTPUT_DIR"
-touch "$PULUMICOST_RECORDER_OUTPUT_DIR/test.txt" && rm "$PULUMICOST_RECORDER_OUTPUT_DIR/test.txt"
+mkdir -p "$FINFOCUS_RECORDER_OUTPUT_DIR"
+touch "$FINFOCUS_RECORDER_OUTPUT_DIR/test.txt" && rm "$FINFOCUS_RECORDER_OUTPUT_DIR/test.txt"
 
 # Check plugin is being used
-./bin/pulumicost cost projected --debug --pulumi-json plan.json 2>&1 | grep recorder
+./bin/finfocus cost projected --debug --pulumi-json plan.json 2>&1 | grep recorder
 ```
 
 ### Mock Responses Not Working
 
 ```bash
 # Verify environment variable is set correctly
-echo $PULUMICOST_RECORDER_MOCK_RESPONSE  # Should be "true"
+echo $FINFOCUS_RECORDER_MOCK_RESPONSE  # Should be "true"
 
 # Case-insensitive values work: true, TRUE, 1, yes, on
-export PULUMICOST_RECORDER_MOCK_RESPONSE=TRUE
+export FINFOCUS_RECORDER_MOCK_RESPONSE=TRUE
 ```
 
 ## License
 
-Part of PulumiCost Core. See repository license for details.
+Part of FinFocus Core. See repository license for details.

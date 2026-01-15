@@ -1,10 +1,10 @@
 # Quickstart: Filtering Actual Costs
 
-This guide demonstrates how to use the `--filter` flag with the `pulumicost cost actual` command.
+This guide demonstrates how to use the `--filter` flag with the `finfocus cost actual` command.
 
 ## Prerequisites
 
--   Pulumicost CLI installed
+-   FinFocus CLI installed
 -   A Pulumi preview JSON file (e.g., `plan.json`)
 -   Configured cloud provider credentials (for fetching actual costs)
 
@@ -15,7 +15,7 @@ This guide demonstrates how to use the `--filter` flag with the `pulumicost cost
 Filter costs to show only resources with a specific tag.
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production"
 ```
 
 ### Filter by Resource Type
@@ -23,7 +23,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:E
 Filter costs to show only a specific resource type.
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "type=aws:s3/bucket"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --filter "type=aws:s3/bucket"
 ```
 
 ### Combine Filter and Grouping
@@ -31,7 +31,7 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "type=
 Filter the dataset first, then group the results. For example, show daily costs for production resources.
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production" --group-by daily
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production" --group-by daily
 ```
 
 ### Multiple Filters
@@ -39,5 +39,5 @@ pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:E
 Combine multiple filters (AND logic).
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production" --filter "type=aws:ec2/instance"
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --filter "tag:Environment=production" --filter "type=aws:ec2/instance"
 ```

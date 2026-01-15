@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	pbc "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -24,13 +24,13 @@ func NewPluginInspectCmd() *cobra.Command {
 		Long: `Inspect a plugin to discover how it maps Pulumi resource properties to pricing inputs.
 This command performs a dry-run against the plugin to retrieve field mappings for a specific resource type.`,
 		Example: `  # Inspect field mappings for AWS EC2 Instance
-  pulumicost plugin inspect aws-public aws:ec2/instance:Instance
+  finfocus plugin inspect aws-public aws:ec2/instance:Instance
 
   # Inspect specific version
-  pulumicost plugin inspect aws-public aws:ec2/instance:Instance --version v0.1.0
+  finfocus plugin inspect aws-public aws:ec2/instance:Instance --version v0.1.0
 
   # Output as JSON
-  pulumicost plugin inspect aws-public aws:ec2/instance:Instance --json`,
+  finfocus plugin inspect aws-public aws:ec2/instance:Instance --json`,
 		Args: cobra.ExactArgs(2), //nolint:mnd // Command requires exactly 2 arguments
 		RunE: runPluginInspect,
 	}
@@ -101,7 +101,7 @@ func findPluginPath(name, version string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	pluginDir := filepath.Join(home, ".pulumicost", "plugins", name)
+	pluginDir := filepath.Join(home, ".finfocus", "plugins", name)
 
 	if version == "" {
 		v, vErr := findLatestVersion(pluginDir, name)
@@ -111,15 +111,25 @@ func findPluginPath(name, version string) (string, error) {
 		version = v
 	}
 
-	binPath := filepath.Join(pluginDir, version, name)
-	if _, statErr := os.Stat(binPath); statErr != nil {
+	// Try standard binary names
+	candidates := []string{
+		"finfocus-plugin-" + name,
+		"pulumicost-plugin-" + name, // Legacy
+		name,                        // Fallback
+	}
+
+	for _, binName := range candidates {
+		binPath := filepath.Join(pluginDir, version, binName)
+		if _, statErr := os.Stat(binPath); statErr == nil {
+			return binPath, nil
+		}
 		// Windows extension check
 		if _, statErrExe := os.Stat(binPath + ".exe"); statErrExe == nil {
 			return binPath + ".exe", nil
 		}
-		return "", fmt.Errorf("plugin binary not found at %s", binPath)
 	}
-	return binPath, nil
+
+	return "", fmt.Errorf("plugin binary not found for %s version %s", name, version)
 }
 
 func findLatestVersion(pluginDir, name string) (string, error) {

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/ingest"
-	"github.com/rshade/pulumicost-core/test/benchmarks/generator"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/ingest"
+	"github.com/rshade/finfocus/test/benchmarks/generator"
 )
 
 // convertToResourceDescriptors converts SyntheticResources to engine.ResourceDescriptor.

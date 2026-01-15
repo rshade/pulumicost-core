@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/test/integration/helpers"
+	"github.com/rshade/finfocus/test/integration/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

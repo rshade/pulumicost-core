@@ -7,7 +7,7 @@
 
 ## Summary
 
-Create a shared internal TUI package at `internal/tui/` providing common Bubble Tea and Lip Gloss components, styles, and utilities for consistent CLI command interfaces across the PulumiCost codebase.
+Create a shared internal TUI package at `internal/tui/` providing common Bubble Tea and Lip Gloss components, styles, and utilities for consistent CLI command interfaces across the FinFocus codebase.
 
 ## Technical Context
 
@@ -25,7 +25,7 @@ Create a shared internal TUI package at `internal/tui/` providing common Bubble 
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This is orchestration/UI logic for the core CLI tool, not a data source plugin (compliant)
 - [x] **Test-Driven Development**: Unit tests planned for all components with 80% minimum coverage (95% for critical paths) (compliant)

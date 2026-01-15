@@ -14,7 +14,7 @@ Extends the existing `TestContext` from `test/e2e/main_test.go` with analyzer-sp
 | T             | *testing.T  | Test instance                        |
 | StackName     | string      | Unique stack name with ULID suffix   |
 | WorkDir       | string      | Temp directory for test project      |
-| BinaryPath    | string      | Path to pulumicost binary            |
+| BinaryPath    | string      | Path to finfocus binary            |
 | PreviewOutput | string      | Captured stdout from pulumi preview  |
 | PreviewStderr | string      | Captured stderr from pulumi preview  |
 
@@ -71,7 +71,7 @@ Complete:  Test passed or failed
 1. Stack summary diagnostic MUST appear exactly once
 2. Per-resource diagnostics MUST appear for each resource in preview
 3. Cost values MUST be parseable as float64
-4. Policy pack name MUST be "pulumicost"
+4. Policy pack name MUST be "finfocus"
 
 ### Output Parsing
 

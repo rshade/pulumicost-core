@@ -1,10 +1,10 @@
 name: aws-example
 version: 1.0.0
-description: Example AWS cost calculation plugin for PulumiCost
-author: PulumiCost Team
+description: Example AWS cost calculation plugin for FinFocus
+author: FinFocus Team
 supported_providers: [aws]
 protocols: [grpc]
-binary: ./bin/pulumicost-plugin-aws-example
+binary: ./bin/finfocus-plugin-aws-example
 metadata:
-  repository: https://github.com/rshade/pulumicost-core
-  docs: https://github.com/rshade/pulumicost-core/tree/main/examples/plugins/aws-example
+  repository: https://github.com/rshade/finfocus
+  docs: https://github.com/rshade/finfocus/tree/main/examples/plugins/aws-example

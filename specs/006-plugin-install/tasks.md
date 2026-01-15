@@ -16,7 +16,7 @@
 ## Path Conventions
 
 - **Project Structure**: `internal/` for Go packages, `registry/` for embedded data, `test/` for tests
-- Based on plan.md: Single CLI application following existing pulumicost-core patterns
+- Based on plan.md: Single CLI application following existing finfocus-core patterns
 
 ---
 
@@ -62,7 +62,7 @@
 
 **Goal**: Users can install well-known plugins by name from the embedded registry
 
-**Independent Test**: Run `pulumicost plugin install kubecost` and verify binary exists at `~/.pulumicost/plugins/kubecost/<version>/`
+**Independent Test**: Run `finfocus plugin install kubecost` and verify binary exists at `~/.finfocus/plugins/kubecost/<version>/`
 
 ### Tests for User Story 1 (MANDATORY - TDD Required) ⚠️
 
@@ -88,7 +88,7 @@
 
 **Goal**: Users can install plugins from any GitHub repository URL
 
-**Independent Test**: Run `pulumicost plugin install github.com/owner/repo` and verify plugin is installed
+**Independent Test**: Run `finfocus plugin install github.com/owner/repo` and verify plugin is installed
 
 ### Tests for User Story 2 (MANDATORY - TDD Required) ⚠️
 
@@ -110,7 +110,7 @@
 
 **Goal**: Installed plugins are saved to config and auto-installed on startup
 
-**Independent Test**: Install plugin, delete binary, run pulumicost and verify auto-install
+**Independent Test**: Install plugin, delete binary, run finfocus and verify auto-install
 
 ### Tests for User Story 3 (MANDATORY - TDD Required) ⚠️
 
@@ -120,7 +120,7 @@
 ### Implementation for User Story 3
 
 - [x] T034 [US3] Implement GetMissingPlugins to compare config vs installed in `internal/config/plugins.go`
-- [x] T035 [US3] Implement auto-install on application startup in `cmd/pulumicost/main.go`
+- [x] T035 [US3] Implement auto-install on application startup in `cmd/finfocus/main.go`
 - [x] T036 [US3] Add startup check for configured plugins in `internal/cli/root.go`
 - [x] T037 [US3] Display auto-install progress messages in `internal/cli/root.go`
 
@@ -270,7 +270,7 @@ Task: "Implement archive extraction (tar.gz/zip) in internal/registry/archive.go
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
 3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test `pulumicost plugin install kubecost`
+4. **STOP and VALIDATE**: Test `finfocus plugin install kubecost`
 5. Deploy/demo if ready
 
 ### Incremental Delivery

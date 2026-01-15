@@ -36,4 +36,4 @@
 - The GitHub issue (#274) provided comprehensive requirements, reducing need for clarification
 - Assumptions section documents reasonable defaults (USD currency, JSON format, env vars for config)
 - Out of Scope section clearly bounds the feature (no replay, no remote storage, no Budget/Recommendation interfaces yet)
-- **Dependency**: pulumicost-spec v0.4.6+ required for request validation helpers (FR-008, FR-015)
+- **Dependency**: finfocus-spec v0.4.6+ required for request validation helpers (FR-008, FR-015)

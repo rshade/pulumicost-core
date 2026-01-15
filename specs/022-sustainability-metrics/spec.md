@@ -13,13 +13,13 @@ As a DevOps engineer or FinOps practitioner, I want to see carbon footprint esti
 
 **Why this priority**: This is the primary user-facing manifestation of the feature, directly addressing the objective of displaying sustainability metrics.
 
-**Independent Test**: Can be tested by running `pulumicost` against a stack using a plugin that returns carbon metrics (e.g., `aws-public`) and verifying the output table.
+**Independent Test**: Can be tested by running `finfocus` against a stack using a plugin that returns carbon metrics (e.g., `aws-public`) and verifying the output table.
 
 **Acceptance Scenarios**:
 
-1. **Given** a stack with resources (e.g., `aws:ec2/instance:Instance`) supported by the plugin, **When** I run `pulumicost`, **Then** the output table includes a "CO₂" column showing values formatted with appropriate units (e.g., "2.76 kg").
-2. **Given** a resource that does not have carbon data, **When** I run `pulumicost`, **Then** the "CO₂" cell for that resource is empty.
-3. **Given** no resources in the stack provide carbon data, **When** I run `pulumicost`, **Then** the "CO₂" column is entirely hidden to avoid clutter.
+1. **Given** a stack with resources (e.g., `aws:ec2/instance:Instance`) supported by the plugin, **When** I run `finfocus`, **Then** the output table includes a "CO₂" column showing values formatted with appropriate units (e.g., "2.76 kg").
+2. **Given** a resource that does not have carbon data, **When** I run `finfocus`, **Then** the "CO₂" cell for that resource is empty.
+3. **Given** no resources in the stack provide carbon data, **When** I run `finfocus`, **Then** the "CO₂" column is entirely hidden to avoid clutter.
 
 ---
 
@@ -29,12 +29,12 @@ As a platform engineer building dashboards, I want to access detailed impact met
 
 **Why this priority**: Essential for integration and automation; ensures data is accessible beyond the TUI.
 
-**Independent Test**: Run `pulumicost --json` and validate the structure of the output using `jq` or similar tools.
+**Independent Test**: Run `finfocus --json` and validate the structure of the output using `jq` or similar tools.
 
 **Acceptance Scenarios**:
 
-1. **Given** a stack with resources having metrics, **When** I run `pulumicost --json`, **Then** the JSON output for each resource includes an `impactMetrics` field containing objects with `kind`, `value`, and `unit`.
-2. **Given** a resource with no metrics, **When** I run `pulumicost --json`, **Then** the `impactMetrics` field is omitted or empty for that resource.
+1. **Given** a stack with resources having metrics, **When** I run `finfocus --json`, **Then** the JSON output for each resource includes an `impactMetrics` field containing objects with `kind`, `value`, and `unit`.
+2. **Given** a resource with no metrics, **When** I run `finfocus --json`, **Then** the `impactMetrics` field is omitted or empty for that resource.
 
 ---
 
@@ -44,12 +44,12 @@ As a user performing "what-if" analysis, I want to specify an assumed utilizatio
 
 **Why this priority**: Carbon emission estimates for cloud resources often depend heavily on utilization assumptions (e.g., CPU load).
 
-**Independent Test**: Run `pulumicost --utilization 0.8` vs `--utilization 0.2` and observe changes in the output metrics.
+**Independent Test**: Run `finfocus --utilization 0.8` vs `--utilization 0.2` and observe changes in the output metrics.
 
 **Acceptance Scenarios**:
 
-1. **Given** I run `pulumicost --utilization 0.8`, **Then** the application uses this utilization rate for its calculations (passing it to plugins or using it in estimation logic).
-2. **Given** I run `pulumicost` without the flag, **Then** the application defaults to a standard utilization rate (e.g., 0.5 or plugin default).
+1. **Given** I run `finfocus --utilization 0.8`, **Then** the application uses this utilization rate for its calculations (passing it to plugins or using it in estimation logic).
+2. **Given** I run `finfocus` without the flag, **Then** the application defaults to a standard utilization rate (e.g., 0.5 or plugin default).
 
 ### Edge Cases
 
@@ -90,4 +90,4 @@ As a user performing "what-if" analysis, I want to specify an assumed utilizatio
 - **SC-001**: Users can view Carbon Footprint (formatted in g/kg/t) for supported resources in the CLI table.
 - **SC-002**: Aggregated totals for Carbon and Energy are accurate (sum of normalized resource values) and displayed in the summary.
 - **SC-003**: JSON output includes valid metric data for resources that provide it.
-- **SC-004**: Running `pulumicost` against a stack with no metric-supporting plugins produces identical visual output to the previous version (no empty columns).
+- **SC-004**: Running `finfocus` against a stack with no metric-supporting plugins produces identical visual output to the previous version (no empty columns).

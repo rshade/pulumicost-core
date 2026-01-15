@@ -73,7 +73,7 @@
 ```yaml
 plugins:
   - name: kubecost
-    url: github.com/rshade/pulumicost-plugin-kubecost
+    url: github.com/rshade/finfocus-plugin-kubecost
     version: v0.0.1
 ```
 
@@ -120,8 +120,8 @@ plugins:
 **Format**: `{projectname}_{version}_{os}_{arch}.{format}`
 
 **Examples**:
-- `pulumicost-plugin-kubecost_v1.0.0_linux_amd64.tar.gz`
-- `pulumicost-plugin-kubecost_v1.0.0_windows_amd64.zip`
+- `finfocus-plugin-kubecost_v1.0.0_linux_amd64.tar.gz`
+- `finfocus-plugin-kubecost_v1.0.0_windows_amd64.zip`
 
 **OS/Arch Mapping**:
 - runtime.GOOS: linux, darwin, windows

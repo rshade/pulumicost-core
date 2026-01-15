@@ -44,11 +44,11 @@ All changes should be TDD-driven, with unit tests for the detection logic and co
 
 *Priority: P2 - Respecting Pulumi ecosystem conventions.*
 
-**Goal**: Configuration is loaded from `$PULUMI_HOME/pulumicost/` if applicable.
+**Goal**: Configuration is loaded from `$PULUMI_HOME/finfocus/` if applicable.
 
 - [x] T011 [US3] [P] Create reproduction test case in `internal/config/config_test.go` asserting `PULUMI_HOME` precedence
 - [x] T012 [US3] Update `internal/config/config.go` (and/or loader logic) to check `PULUMI_HOME` env var (FR-006)
-- [x] T013 [US3] Implement logic to resolve config path: `PULUMI_HOME/pulumicost` > `XDG` > `HOME/.pulumicost`
+- [x] T013 [US3] Implement logic to resolve config path: `PULUMI_HOME/finfocus` > `XDG` > `HOME/.finfocus`
 
 ## Final Phase: Polish
 

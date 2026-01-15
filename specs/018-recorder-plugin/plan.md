@@ -5,16 +5,16 @@
 
 ## Summary
 
-Implement a reference "Recorder" plugin within pulumicost-core that captures all gRPC requests to JSON files and optionally returns mock cost responses. This plugin serves as both a developer tool for inspecting Core-to-plugin data shapes and a canonical reference implementation demonstrating pluginsdk v0.4.6 patterns.
+Implement a reference "Recorder" plugin within finfocus-core that captures all gRPC requests to JSON files and optionally returns mock cost responses. This plugin serves as both a developer tool for inspecting Core-to-plugin data shapes and a canonical reference implementation demonstrating pluginsdk v0.4.6 patterns.
 
-**Technical Approach**: Build as a standalone plugin in `plugins/recorder/` using the pluginsdk from pulumicost-spec v0.4.6+. The plugin will implement CostSourceService, serialize requests to JSON, and generate randomized mock responses when configured.
+**Technical Approach**: Build as a standalone plugin in `plugins/recorder/` using the pluginsdk from finfocus-spec v0.4.6+. The plugin will implement CostSourceService, serialize requests to JSON, and generate randomized mock responses when configured.
 
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
 **Primary Dependencies**:
 
-- `github.com/rshade/pulumicost-spec v0.4.6+` (pluginsdk, protobuf definitions)
+- `github.com/rshade/finfocus-spec v0.4.6+` (pluginsdk, protobuf definitions)
 - `github.com/oklog/ulid/v2` (ULID generation for filenames)
 - `github.com/rs/zerolog` (structured logging)
 - `google.golang.org/grpc` (gRPC server/transport)
@@ -24,22 +24,22 @@ Implement a reference "Recorder" plugin within pulumicost-core that captures all
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 **Project Type**: Single plugin binary within monorepo
 **Performance Goals**: Recording should add <10ms overhead per request (dev tool, not production-critical)
-**Constraints**: Must work with existing plugin discovery in `~/.pulumicost/plugins/`
+**Constraints**: Must work with existing plugin discovery in `~/.finfocus/plugins/`
 **Scale/Scope**: Dev tool; typical usage: dozens to hundreds of requests per session
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: This IS a plugin implementing CostSourceService via gRPC
 - [x] **Test-Driven Development**: Tests planned with 80%+ coverage target, critical paths at 95%
 - [x] **Cross-Platform Compatibility**: Will build on Linux, macOS, Windows (amd64, arm64)
 - [x] **Documentation as Code**: README.md, quickstart.md, and inline code comments planned
-- [x] **Protocol Stability**: Uses existing pulumicost-spec v0.4.6 protocol, no changes required
+- [x] **Protocol Stability**: Uses existing finfocus-spec v0.4.6 protocol, no changes required
 - [x] **Quality Gates**: CI workflow will run tests, lint, security scan, cross-platform builds
-- [x] **Multi-Repo Coordination**: Depends on pulumicost-spec v0.4.6 (already released)
+- [x] **Multi-Repo Coordination**: Depends on finfocus-spec v0.4.6 (already released)
 
 **Violations Requiring Justification**: None - full compliance
 
@@ -76,7 +76,7 @@ plugins/recorder/
 
 # Build output
 bin/
-└── pulumicost-plugin-recorder  # Built binary (cross-platform)
+└── finfocus-plugin-recorder  # Built binary (cross-platform)
 
 # Test integration
 test/
@@ -102,7 +102,7 @@ No violations - complexity tracking not required.
 - [x] **Documentation as Code**: ✅ Confirmed - quickstart.md, contracts/, data-model.md created
 - [x] **Protocol Stability**: ✅ Confirmed - Uses existing v0.4.6 protocol, no changes
 - [x] **Quality Gates**: ✅ Confirmed - Makefile target integrates with CI
-- [x] **Multi-Repo Coordination**: ✅ Confirmed - pulumicost-spec v0.4.6 dependency documented
+- [x] **Multi-Repo Coordination**: ✅ Confirmed - finfocus-spec v0.4.6 dependency documented
 
 **Post-Design Status**: All constitution principles satisfied. Ready for task generation.
 

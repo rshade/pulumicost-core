@@ -39,9 +39,9 @@
 **Decision**: Use `t.TempDir()` for all file system operations.
 
 **Rationale**:
-- Prevents tests from touching the user's actual `~/.pulumicost` directory.
+- Prevents tests from touching the user's actual `~/.finfocus` directory.
 - `registry.NewInstaller` accepts a `pluginDir` argument, which we will populate with `t.TempDir()`.
-- Environment variables (e.g., `PULUMICOST_PLUGIN_DIR`) will also be set to this temp dir for commands that rely on env vars.
+- Environment variables (e.g., `FINFOCUS_PLUGIN_DIR`) will also be set to this temp dir for commands that rely on env vars.
 
 ## 5. Mock Registry Protocol
 

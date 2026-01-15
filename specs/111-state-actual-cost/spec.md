@@ -26,12 +26,12 @@ based on resource runtime.
 **Acceptance Scenarios**:
 
 1. **Given** a Pulumi state file with resources containing `Created` timestamps,
-   **When** I run `pulumicost cost actual --pulumi-state state.json`,
+   **When** I run `finfocus cost actual --pulumi-state state.json`,
    **Then** I see estimated costs calculated as `hourly_rate × runtime_hours` for
    each resource.
 
 2. **Given** a Pulumi state file without specifying `--from` date,
-   **When** I run `pulumicost cost actual --pulumi-state state.json`,
+   **When** I run `finfocus cost actual --pulumi-state state.json`,
    **Then** the command auto-detects `--from` as the earliest `Created` timestamp.
 
 3. **Given** a plugin returns actual billing data for some resources but not others,
@@ -265,6 +265,6 @@ functionality. Users need basic actual cost estimation working first.
 
 - Research Document: `research.md`
 - Existing State Parser: `internal/ingest/state.go`
-- [GitHub Actions Run #20610627111](https://github.com/rshade/pulumicost-core/actions/runs/20610627111)
+- [GitHub Actions Run #20610627111](https://github.com/rshade/finfocus/actions/runs/20610627111)
 - [Pulumi v3.60.0 Release Notes](https://github.com/pulumi/pulumi/discussions/12529)
 - Issues: #380, #333, #378, #324, #323

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
-	"github.com/rshade/pulumicost-core/internal/registry"
+	"github.com/rshade/finfocus/internal/cli"
+	"github.com/rshade/finfocus/internal/registry"
 )
 
 // TestPluginRemove_Basic tests basic plugin removal [US4][T027].
@@ -22,7 +22,7 @@ func TestPluginRemove_Basic(t *testing.T) {
 	// Setup plugin with config
 	pluginName := "remove-basic"
 	version := "v1.0.0"
-	repoURL := "github.com/example/pulumicost-plugin-remove-basic"
+	repoURL := "github.com/example/finfocus-plugin-remove-basic"
 	setupPluginWithConfig(t, pluginDir, homeDir, pluginName, version, repoURL)
 
 	// Verify plugin exists before removal
@@ -63,11 +63,11 @@ func TestPluginRemove_KeepConfig(t *testing.T) {
 
 	pluginName := "remove-keepconfig"
 	version := "v1.0.0"
-	repoURL := "github.com/example/pulumicost-plugin-remove-keepconfig"
+	repoURL := "github.com/example/finfocus-plugin-remove-keepconfig"
 	setupPluginWithConfig(t, pluginDir, homeDir, pluginName, version, repoURL)
 
 	// Verify config exists
-	configPath := filepath.Join(homeDir, ".pulumicost", "config.yaml")
+	configPath := filepath.Join(homeDir, ".finfocus", "config.yaml")
 	configBefore, err := os.ReadFile(configPath)
 	require.NoError(t, err)
 	assert.Contains(t, string(configBefore), pluginName)
@@ -107,7 +107,7 @@ func TestPluginRemove_Aliases(t *testing.T) {
 
 	pluginName := "alias-test"
 	version := "v1.0.0"
-	repoURL := "github.com/example/pulumicost-plugin-alias-test"
+	repoURL := "github.com/example/finfocus-plugin-alias-test"
 	setupPluginWithConfig(t, pluginDir, homeDir, pluginName, version, repoURL)
 
 	// Create a new command instance for execution
@@ -136,9 +136,9 @@ func TestPluginRemove_NonExistent(t *testing.T) {
 	t.Setenv("HOME", homeDir)
 
 	// Create empty config (no plugins installed)
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	require.NoError(t, os.MkdirAll(pulumicostDir, 0755))
-	configPath := filepath.Join(pulumicostDir, "config.yaml")
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	require.NoError(t, os.MkdirAll(finfocusDir, 0755))
+	configPath := filepath.Join(finfocusDir, "config.yaml")
 	require.NoError(t, os.WriteFile(configPath, []byte("# Empty config\n"), 0644))
 
 	installer := registry.NewInstaller(pluginDir)
@@ -161,7 +161,7 @@ func TestPluginRemove_ProgressCallback(t *testing.T) {
 
 	pluginName := "progress-remove"
 	version := "v1.0.0"
-	repoURL := "github.com/example/pulumicost-plugin-progress-remove"
+	repoURL := "github.com/example/finfocus-plugin-progress-remove"
 	setupPluginWithConfig(t, pluginDir, homeDir, pluginName, version, repoURL)
 
 	installer := registry.NewInstaller(pluginDir)
@@ -203,7 +203,7 @@ func TestPluginRemove_ViaCliCommand(t *testing.T) {
 
 	pluginName := "cli-remove"
 	version := "v1.0.0"
-	repoURL := "github.com/example/pulumicost-plugin-cli-remove"
+	repoURL := "github.com/example/finfocus-plugin-cli-remove"
 	setupPluginWithConfig(t, pluginDir, homeDir, pluginName, version, repoURL)
 
 	cmd := cli.NewPluginRemoveCmd()
@@ -242,10 +242,10 @@ func TestPluginRemove_MultipleVersions(t *testing.T) {
 
 	// Setup config pointing to v2.0.0
 	// The config package expects "installed_plugins" key at root level
-	repoURL := "github.com/example/pulumicost-plugin-multi-version"
-	pulumicostDir := filepath.Join(homeDir, ".pulumicost")
-	require.NoError(t, os.MkdirAll(pulumicostDir, 0755))
-	configPath := filepath.Join(pulumicostDir, "config.yaml")
+	repoURL := "github.com/example/finfocus-plugin-multi-version"
+	finfocusDir := filepath.Join(homeDir, ".finfocus")
+	require.NoError(t, os.MkdirAll(finfocusDir, 0755))
+	configPath := filepath.Join(finfocusDir, "config.yaml")
 	configContent := `installed_plugins:
   - name: ` + pluginName + `
     url: ` + repoURL + `

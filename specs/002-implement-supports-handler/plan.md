@@ -10,7 +10,7 @@ This plan outlines the implementation of a `Supports` gRPC handler in the `plugi
 ## Technical Context
 
 **Language/Version**: Go 1.25.5
-**Primary Dependencies**: `github.com/rshade/pulumicost-spec v0.1.0`, `google.golang.org/grpc v1.77.0`
+**Primary Dependencies**: `github.com/rshade/finfocus-spec v0.1.0`, `google.golang.org/grpc v1.77.0`
 **Storage**: N/A
 **Testing**: Go `testing` package with `stretchr/testify`
 **Target Platform**: Cross-platform (Linux, macOS, Windows)
@@ -23,7 +23,7 @@ This plan outlines the implementation of a `Supports` gRPC handler in the `plugi
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: Yes, this feature improves the core orchestration logic that serves plugins.
 - [x] **Test-Driven Development**: Yes, tests will be created to validate both the supported and unsupported scenarios before implementation.
@@ -31,7 +31,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: Yes, this plan and the associated design documents serve as documentation. Code comments will also be updated.
 - [x] **Protocol Stability**: Yes, this change implements an existing, stable part of the v0.1.0 protocol. No protocol changes are being made.
 - [x] **Quality Gates**: N/A during planning, but the implementation will adhere to all CI checks.
-- [x] **Multi-Repo Coordination**: Yes, the plan acknowledges the dependency on the `pulumicost-spec` repository.
+- [x] **Multi-Repo Coordination**: Yes, the plan acknowledges the dependency on the `finfocus-spec` repository.
 
 **Violations Requiring Justification**: None.
 

@@ -5,7 +5,7 @@
 //
 // # Specification Location
 //
-// Specs are stored in ~/.pulumicost/specs/ as YAML files.
+// Specs are stored in ~/.finfocus/specs/ as YAML files.
 //
 // # Specification Format
 //

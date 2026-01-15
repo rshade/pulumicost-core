@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/logging"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -16,7 +16,7 @@ const (
 	defaultVersion = "0.0.0-dev"
 
 	// analyzerDisplayName is the human-readable name for the analyzer.
-	analyzerDisplayName = "PulumiCost Analyzer"
+	analyzerDisplayName = "FinFocus Analyzer"
 
 	// analyzerDescription provides a description of the analyzer's purpose.
 	analyzerDescription = "Provides real-time cost estimation for Pulumi infrastructure resources during preview operations."

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -15,12 +15,12 @@ func NewConfigListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all configuration values",
-		Long:  "Lists all configuration values from ~/.pulumicost/config.yaml in the specified format.",
+		Long:  "Lists all configuration values from ~/.finfocus/config.yaml in the specified format.",
 		Example: `  # List all configuration (default YAML format)
-  pulumicost config list
+  finfocus config list
   
   # List configuration in JSON format
-  pulumicost config list --format json`,
+  finfocus config list --format json`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// config.New() already loads from disk and applies env overrides
 			cfg := config.New()

@@ -165,14 +165,14 @@ InstalledPlugin 1---1 PluginManifest  (installed plugin has one manifest)
 ## File System Layout
 
 ```text
-~/.pulumicost/
+~/.finfocus/
 ├── config.yaml
 │   └── plugins:
 │       - {name, url, version}
 └── plugins/
     └── {plugin-name}/
         └── {version}/
-            ├── pulumicost-plugin-{name}    # Binary (or .exe on Windows)
+            ├── finfocus-plugin-{name}    # Binary (or .exe on Windows)
             └── plugin.manifest.json         # Optional manifest
 ```
 

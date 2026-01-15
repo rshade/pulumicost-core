@@ -29,8 +29,8 @@ type RegistryEntry struct {
 //nolint:revive // name matches JSON field convention in registry.json
 type RegistryAssetHints struct {
 	// AssetPrefix is the project name prefix used in asset filenames
-	// (e.g., "pulumicost-plugin-aws-public" for assets named
-	// "pulumicost-plugin-aws-public_0.0.6_Linux_x86_64.tar.gz")
+	// (e.g., "finfocus-plugin-aws-public" for assets named
+	// "finfocus-plugin-aws-public_0.0.6_Linux_x86_64.tar.gz")
 	AssetPrefix string `json:"asset_prefix,omitempty"`
 	// DefaultRegion is the region suffix to use when downloading (e.g., "us-east-1")
 	DefaultRegion string `json:"default_region,omitempty"`
@@ -105,7 +105,7 @@ func ValidateRegistryEntry(entry RegistryEntry) error {
 // The `spec` parameter is the plugin specifier to parse. If `spec` is empty, the function
 // returns an error. When the input is a GitHub URL, the returned PluginSpecifier has
 // IsURL set to true, Owner and Repo populated from the URL, and Name derived from the
-// repository name with a leading `pulumicost-plugin-` prefix removed (if present).
+// repository name with a leading `finfocus-plugin-` prefix removed (if present).
 // When the input is a registry name, IsURL is false and Name is set to the given name.
 // The Version field is set if a `@version` suffix is provided; otherwise it is empty.
 //
@@ -132,7 +132,7 @@ func ParsePluginSpecifier(spec string) (*PluginSpecifier, error) {
 		}
 		// Derive plugin name from repo name
 		repoName := matches[2]
-		pluginName := strings.TrimPrefix(repoName, "pulumicost-plugin-")
+		pluginName := strings.TrimPrefix(repoName, "finfocus-plugin-")
 
 		return &PluginSpecifier{
 			Name:    pluginName,

@@ -5,7 +5,7 @@
 The `internal/registry` package already contains a `ListLatestPlugins` method in `registry.go` (Lines 82-115).
 
 ### Existing Logic
-- **Discovery**: `ListPlugins` scans `~/.pulumicost/plugins/<name>/<version>/`.
+- **Discovery**: `ListPlugins` scans `~/.finfocus/plugins/<name>/<version>/`.
 - **Selection**: `ListLatestPlugins` iterates over all plugins, uses `semver.NewVersion` to parse versions, and keeps the highest version for each plugin name.
 - **Semver**: Uses `github.com/Masterminds/semver/v3`.
 - **Filtering**: `Open` method (Lines 169-257) uses `ListLatestPlugins` to get the list of plugins to load.
@@ -22,7 +22,7 @@ The `internal/registry` package already contains a `ListLatestPlugins` method in
 
 - **Semver Library**: `github.com/Masterminds/semver/v3` (Already in use).
   - **Rationale**: Industry standard for Go, robust parsing.
-- **Plugin Structure**: `~/.pulumicost/plugins/<name>/<version>/` (Already established).
+- **Plugin Structure**: `~/.finfocus/plugins/<name>/<version>/` (Already established).
   - **Rationale**: Supports side-by-side version installation.
 
 ## Implementation Strategy

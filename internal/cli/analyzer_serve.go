@@ -10,19 +10,19 @@ import (
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"github.com/rs/zerolog"
-	"github.com/rshade/pulumicost-core/internal/analyzer"
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/registry"
-	"github.com/rshade/pulumicost-core/internal/spec"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/analyzer"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/registry"
+	"github.com/rshade/finfocus/internal/spec"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
 
-const EnvAnalyzerMode = "PULUMICOST_ANALYZER_MODE"
+const EnvAnalyzerMode = "FINFOCUS_ANALYZER_MODE"
 
-// getAnalyzerLogLevel reads the PULUMICOST_LOG_LEVEL environment variable and returns
+// getAnalyzerLogLevel reads the FINFOCUS_LOG_LEVEL environment variable and returns
 // the corresponding zerolog level. If the environment variable is unset or cannot be
 // parsed, it returns zerolog.InfoLevel.
 func getAnalyzerLogLevel() zerolog.Level {
@@ -45,7 +45,7 @@ func NewAnalyzerServeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start the Pulumi Analyzer gRPC server",
-		Long: `Starts the PulumiCost Analyzer as a gRPC server for Pulumi integration.
+		Long: `Starts the FinFocus Analyzer as a gRPC server for Pulumi integration.
 
 This command is called automatically by the Pulumi engine when the analyzer
 is configured in a project's Pulumi.yaml file. It:
@@ -58,10 +58,10 @@ is configured in a project's Pulumi.yaml file. It:
 IMPORTANT: stdout is reserved exclusively for the port handshake.
 All logging output goes to stderr.`,
 		Example: `  # Normal usage (called by Pulumi engine)
-  pulumicost analyzer serve
+  finfocus analyzer serve
 
   # With debug logging
-  pulumicost analyzer serve --debug`,
+  finfocus analyzer serve --debug`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return RunAnalyzerServe(cmd)
 		},

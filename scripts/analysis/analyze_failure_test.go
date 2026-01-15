@@ -16,7 +16,7 @@ func TestExtractRunID(t *testing.T) {
 	}{
 		{
 			name:     "valid run id",
-			body:     "Workflow run https://github.com/rshade/pulumicost-core/actions/runs/1234567890 failed",
+			body:     "Workflow run https://github.com/rshade/finfocus/actions/runs/1234567890 failed",
 			expected: "1234567890",
 			wantErr:  false,
 		},
@@ -34,7 +34,7 @@ func TestExtractRunID(t *testing.T) {
 		},
 		{
 			name:     "partial url without run id",
-			body:     "Check https://github.com/rshade/pulumicost-core/actions for details",
+			body:     "Check https://github.com/rshade/finfocus/actions for details",
 			expected: "",
 			wantErr:  true,
 		},

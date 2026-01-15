@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for PulumiCost Core across different platforms and deployment scenarios.
+Complete installation instructions for FinFocus Core across different platforms and deployment scenarios.
 
 ## Table of Contents
 
@@ -38,43 +38,43 @@ Download the latest release for your platform:
 #### Linux (x86_64)
 
 ```bash
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 ```
 
 #### Linux (ARM64)
 
 ```bash
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-arm64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-arm64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 ```
 
 #### macOS (Intel)
 
 ```bash
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-amd64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-amd64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 ```
 
 #### macOS (Apple Silicon)
 
 ```bash
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-arm64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-arm64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 ```
 
 #### Windows (x86_64)
 
 ```powershell
 # Download using PowerShell
-Invoke-WebRequest -Uri "https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-windows-amd64.exe" -OutFile "pulumicost.exe"
+Invoke-WebRequest -Uri "https://github.com/rshade/finfocus/releases/latest/download/finfocus-windows-amd64.exe" -OutFile "finfocus.exe"
 
 # Add to PATH (optional)
-Move-Item pulumicost.exe $env:USERPROFILE\bin\
+Move-Item finfocus.exe $env:USERPROFILE\bin\
 $env:PATH += ";$env:USERPROFILE\bin"
 ```
 
@@ -84,14 +84,14 @@ $env:PATH += ";$env:USERPROFILE\bin"
 
 ```bash
 # Coming soon - not yet available
-brew install pulumicost
+brew install finfocus
 ```
 
 #### Chocolatey (Windows)
 
 ```powershell
 # Coming soon - not yet available
-choco install pulumicost
+choco install finfocus
 ```
 
 #### APT (Ubuntu/Debian)
@@ -99,7 +99,7 @@ choco install pulumicost
 ```bash
 # Coming soon - not yet available
 sudo apt update
-sudo apt install pulumicost
+sudo apt install finfocus
 ```
 
 ## Platform-Specific Instructions
@@ -114,12 +114,12 @@ sudo apt update
 sudo apt install curl
 
 # Download and install
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 #### CentOS/RHEL/Fedora
@@ -129,12 +129,12 @@ pulumicost --version
 sudo yum install curl  # or dnf install curl
 
 # Download and install
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 #### Alpine Linux
@@ -144,12 +144,12 @@ pulumicost --version
 apk add curl
 
 # Download and install
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
-mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
+mv finfocus /usr/local/bin/
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 ### macOS
@@ -159,25 +159,25 @@ pulumicost --version
 ```bash
 # Download for your architecture
 # Intel Macs
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-amd64 -o pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-amd64 -o finfocus
 
 # Apple Silicon Macs
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-darwin-arm64 -o pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-darwin-arm64 -o finfocus
 
 # Install
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 #### Bypass Gatekeeper (if needed)
 
 ```bash
 # If macOS blocks the binary due to security settings
-sudo spctl --add /usr/local/bin/pulumicost
-sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
+sudo spctl --add /usr/local/bin/finfocus
+sudo xattr -dr com.apple.quarantine /usr/local/bin/finfocus
 ```
 
 ### Windows
@@ -189,7 +189,7 @@ sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
 New-Item -ItemType Directory -Force -Path $env:USERPROFILE\bin
 
 # Download binary
-Invoke-WebRequest -Uri "https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-windows-amd64.exe" -OutFile "$env:USERPROFILE\bin\pulumicost.exe"
+Invoke-WebRequest -Uri "https://github.com/rshade/finfocus/releases/latest/download/finfocus-windows-amd64.exe" -OutFile "$env:USERPROFILE\bin\finfocus.exe"
 
 # Add to PATH (persistent)
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";$env:USERPROFILE\bin", [System.EnvironmentVariableTarget]::User)
@@ -198,16 +198,16 @@ Invoke-WebRequest -Uri "https://github.com/rshade/pulumicost-core/releases/lates
 $env:PATH += ";$env:USERPROFILE\bin"
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 #### Windows Subsystem for Linux (WSL)
 
 ```bash
 # Use Linux installation instructions inside WSL
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o pulumicost
-chmod +x pulumicost
-sudo mv pulumicost /usr/local/bin/
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o finfocus
+chmod +x finfocus
+sudo mv finfocus /usr/local/bin/
 ```
 
 ## Docker Installation
@@ -216,14 +216,14 @@ sudo mv pulumicost /usr/local/bin/
 
 ```bash
 # Pull the latest image
-docker pull rshade/pulumicost-core:latest
+docker pull rshade/finfocus:latest
 
 # Run with volume mounts
-docker run --rm -v $(pwd):/workspace rshade/pulumicost-core:latest \
+docker run --rm -v $(pwd):/workspace rshade/finfocus:latest \
   cost projected --pulumi-json /workspace/plan.json
 
 # Create an alias for easier usage
-alias pulumicost='docker run --rm -v $(pwd):/workspace rshade/pulumicost-core:latest'
+alias finfocus='docker run --rm -v $(pwd):/workspace rshade/finfocus:latest'
 ```
 
 ### Docker Compose
@@ -232,12 +232,12 @@ alias pulumicost='docker run --rm -v $(pwd):/workspace rshade/pulumicost-core:la
 # docker-compose.yml
 version: '3.8'
 services:
-  pulumicost:
-    image: rshade/pulumicost-core:latest
+  finfocus:
+    image: rshade/finfocus:latest
     volumes:
       - ./plans:/workspace/plans:ro
       - ./specs:/workspace/specs:ro
-      - ~/.pulumicost:/root/.pulumicost
+      - ~/.finfocus:/root/.finfocus
     command: ['cost', 'projected', '--pulumi-json', '/workspace/plans/plan.json']
 ```
 
@@ -245,14 +245,14 @@ services:
 
 ```bash
 # Clone repository
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 
 # Build image
-docker build -t pulumicost-core .
+docker build -t finfocus .
 
 # Run
-docker run --rm pulumicost-core --version
+docker run --rm finfocus --version
 ```
 
 ## Build from Source
@@ -268,28 +268,28 @@ docker run --rm pulumicost-core --version
 
 ```bash
 # Clone the repository
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 
 # Build using Make (recommended)
 make build
 
 # Or build directly with Go
-go build -o bin/pulumicost ./cmd/pulumicost
+go build -o bin/finfocus ./cmd/finfocus
 
 # Install to system
-sudo cp bin/pulumicost /usr/local/bin/
+sudo cp bin/finfocus /usr/local/bin/
 
 # Verify installation
-pulumicost --version
+finfocus --version
 ```
 
 ### Development Build
 
 ```bash
 # Clone and setup for development
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 
 # Install dependencies
 go mod download
@@ -301,32 +301,32 @@ make test
 make dev
 
 # Or run directly
-go run ./cmd/pulumicost --help
+go run ./cmd/finfocus --help
 ```
 
 ### Cross-compilation
 
 ```bash
 # Build for different platforms
-GOOS=linux GOARCH=amd64 go build -o pulumicost-linux-amd64 ./cmd/pulumicost
-GOOS=darwin GOARCH=arm64 go build -o pulumicost-darwin-arm64 ./cmd/pulumicost
-GOOS=windows GOARCH=amd64 go build -o pulumicost-windows-amd64.exe ./cmd/pulumicost
+GOOS=linux GOARCH=amd64 go build -o finfocus-linux-amd64 ./cmd/finfocus
+GOOS=darwin GOARCH=arm64 go build -o finfocus-darwin-arm64 ./cmd/finfocus
+GOOS=windows GOARCH=amd64 go build -o finfocus-windows-amd64.exe ./cmd/finfocus
 ```
 
 ## Installing as a Pulumi Tool Plugin
 
-PulumiCost can be installed as a Pulumi Tool Plugin, allowing you to run it through the Pulumi CLI.
+FinFocus can be installed as a Pulumi Tool Plugin, allowing you to run it through the Pulumi CLI.
 
 ### Build and Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/rshade/pulumicost-core
-cd pulumicost-core
+git clone https://github.com/rshade/finfocus
+cd finfocus
 
 # Build with the plugin binary name
 make build-plugin
-# Or manually: go build -o pulumi-tool-cost ./cmd/pulumicost
+# Or manually: go build -o pulumi-tool-cost ./cmd/finfocus
 
 # Install into Pulumi plugins directory
 mkdir -p ~/.pulumi/plugins/tool-cost-v0.1.0/
@@ -338,7 +338,7 @@ pulumi plugin ls
 
 ### Usage as Plugin
 
-Once installed, run PulumiCost through the Pulumi CLI:
+Once installed, run FinFocus through the Pulumi CLI:
 
 ```bash
 # Show help
@@ -355,9 +355,9 @@ pulumi plugin run tool cost -- cost actual --pulumi-json plan.json --from 2025-0
 
 When running as a Pulumi plugin:
 
-- Configuration is stored in `$PULUMI_HOME/pulumicost/` instead of `~/.pulumicost/`
+- Configuration is stored in `$PULUMI_HOME/finfocus/` instead of `~/.finfocus/`
 - Help text automatically shows `pulumi plugin run tool cost` syntax
-- The `PULUMICOST_PLUGIN_MODE=true` environment variable can force plugin mode
+- The `FINFOCUS_PLUGIN_MODE=true` environment variable can force plugin mode
 
 ### Testing Plugin Installation
 
@@ -383,10 +383,10 @@ Create the plugin directory structure:
 
 ```bash
 # Create plugin directory
-mkdir -p ~/.pulumicost/plugins
+mkdir -p ~/.finfocus/plugins
 
 # Create specs directory
-mkdir -p ~/.pulumicost/specs
+mkdir -p ~/.finfocus/specs
 ```
 
 ### Installing Plugins
@@ -395,18 +395,18 @@ mkdir -p ~/.pulumicost/specs
 
 ```bash
 # Download plugin binary (example)
-curl -L https://github.com/rshade/pulumicost-plugin-kubecost/releases/latest/download/pulumicost-kubecost-linux-amd64 \
-  -o ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+curl -L https://github.com/rshade/finfocus-plugin-kubecost/releases/latest/download/finfocus-kubecost-linux-amd64 \
+  -o ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 
 # Make executable
-chmod +x ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+chmod +x ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 
 # Create plugin manifest (optional)
-cat > ~/.pulumicost/plugins/kubecost/1.0.0/plugin.manifest.json << EOF
+cat > ~/.finfocus/plugins/kubecost/1.0.0/plugin.manifest.json << EOF
 {
   "name": "kubecost",
   "version": "1.0.0",
-  "binary": "pulumicost-kubecost",
+  "binary": "finfocus-kubecost",
   "supports": ["actual_cost"]
 }
 EOF
@@ -415,17 +415,17 @@ EOF
 #### Plugin Directory Structure
 
 ```text
-~/.pulumicost/plugins/
+~/.finfocus/plugins/
 ├── kubecost/
 │   └── 1.0.0/
-│       ├── pulumicost-kubecost          # Plugin binary
+│       ├── finfocus-kubecost          # Plugin binary
 │       └── plugin.manifest.json        # Optional manifest
 ├── aws-plugin/
 │   └── 0.1.0/
-│       └── pulumicost-aws
+│       └── finfocus-aws
 └── azure-plugin/
     └── 0.2.0/
-        └── pulumicost-azure
+        └── finfocus-azure
 ```
 
 ### Installing Pricing Specs
@@ -434,7 +434,7 @@ Create local pricing specifications:
 
 ```bash
 # Example AWS EC2 pricing spec
-cat > ~/.pulumicost/specs/aws-ec2-t3-micro.yaml << EOF
+cat > ~/.finfocus/specs/aws-ec2-t3-micro.yaml << EOF
 provider: aws
 service: ec2
 sku: t3.micro
@@ -457,31 +457,31 @@ EOF
 
 ```bash
 # Check version
-pulumicost --version
+finfocus --version
 
 # Show help
-pulumicost --help
+finfocus --help
 
 # List available commands
-pulumicost help
+finfocus help
 ```
 
 ### Plugin Verification
 
 ```bash
 # List installed plugins
-pulumicost plugin list
+finfocus plugin list
 
 # Validate plugin installation
-pulumicost plugin validate
+finfocus plugin validate
 ```
 
 ### Test with Example
 
 ```bash
 # Test with provided example
-cd pulumicost-core  # if you cloned the repo
-pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
+cd finfocus  # if you cloned the repo
+finfocus cost projected --pulumi-json examples/plans/aws-simple-plan.json
 
 # Expected output should show resource cost estimates
 ```
@@ -492,7 +492,7 @@ pulumicost cost projected --pulumi-json examples/plans/aws-simple-plan.json
 # Test complete workflow
 cd your-pulumi-project
 pulumi preview --json > plan.json
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 # Should display cost estimates for your resources
 ```
@@ -505,41 +505,41 @@ pulumicost cost projected --pulumi-json plan.json
 
 ```bash
 # Check if binary is in PATH
-which pulumicost
+which finfocus
 
 # If not found, add directory to PATH
 export PATH=$PATH:/usr/local/bin
 
 # Or use full path
-/usr/local/bin/pulumicost --version
+/usr/local/bin/finfocus --version
 ```
 
 #### Permission Denied (Linux/macOS)
 
 ```bash
 # Make binary executable
-chmod +x /usr/local/bin/pulumicost
+chmod +x /usr/local/bin/finfocus
 
 # Check file permissions
-ls -la /usr/local/bin/pulumicost
+ls -la /usr/local/bin/finfocus
 ```
 
 #### macOS Security Warning
 
 ```bash
 # Allow the binary to run
-sudo spctl --add /usr/local/bin/pulumicost
-sudo xattr -dr com.apple.quarantine /usr/local/bin/pulumicost
+sudo spctl --add /usr/local/bin/finfocus
+sudo xattr -dr com.apple.quarantine /usr/local/bin/finfocus
 ```
 
 #### Plugin Not Found
 
 ```bash
 # Check plugin directory structure
-ls -la ~/.pulumicost/plugins/
+ls -la ~/.finfocus/plugins/
 
 # Verify plugin permissions
-chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
+chmod +x ~/.finfocus/plugins/*/*/finfocus-*
 ```
 
 #### Network Issues
@@ -558,11 +558,11 @@ export HTTPS_PROXY=http://proxy.company.com:8080
 If you encounter issues:
 
 1. Check the [Troubleshooting Guide](troubleshooting.md)
-2. Review the [GitHub Issues](https://github.com/rshade/pulumicost-core/issues)
+2. Review the [GitHub Issues](https://github.com/rshade/finfocus/issues)
 3. Join the community discussion
 4. File a bug report with:
    - Operating system and version
-   - PulumiCost version (`pulumicost --version`)
+   - FinFocus version (`finfocus --version`)
    - Complete error message
    - Steps to reproduce
 
@@ -577,28 +577,28 @@ After installation:
 
 ## Version Management
 
-### Updating PulumiCost
+### Updating FinFocus
 
 ```bash
 # Check current version
-pulumicost --version
+finfocus --version
 
 # Download and replace binary with new version
-curl -L https://github.com/rshade/pulumicost-core/releases/latest/download/pulumicost-linux-amd64 -o /tmp/pulumicost
-chmod +x /tmp/pulumicost
-sudo mv /tmp/pulumicost /usr/local/bin/pulumicost
+curl -L https://github.com/rshade/finfocus/releases/latest/download/finfocus-linux-amd64 -o /tmp/finfocus
+chmod +x /tmp/finfocus
+sudo mv /tmp/finfocus /usr/local/bin/finfocus
 
 # Verify update
-pulumicost --version
+finfocus --version
 ```
 
 ### Multiple Versions
 
 ```bash
 # Install specific version
-curl -L https://github.com/rshade/pulumicost-core/releases/download/v0.1.0/pulumicost-linux-amd64 -o pulumicost-v0.1.0
-chmod +x pulumicost-v0.1.0
+curl -L https://github.com/rshade/finfocus/releases/download/v0.1.0/finfocus-linux-amd64 -o finfocus-v0.1.0
+chmod +x finfocus-v0.1.0
 
 # Use specific version
-./pulumicost-v0.1.0 --version
+./finfocus-v0.1.0 --version
 ```

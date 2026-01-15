@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/finfocus/internal/proto"
 )
 
 // Status text constants.

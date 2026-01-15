@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/rshade/pulumicost-core/internal/proto"
+	"github.com/rshade/finfocus/internal/proto"
 )
 
 // ResponseScenario represents a pre-configured response scenario for testing.

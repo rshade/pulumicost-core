@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/engine"
-	"github.com/rshade/pulumicost-core/internal/ingest"
+	"github.com/rshade/finfocus/internal/engine"
+	"github.com/rshade/finfocus/internal/ingest"
 )
 
 // getAWSResourceMappingTestData returns test data for AWS resource mapping integration tests.

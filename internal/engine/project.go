@@ -489,12 +489,13 @@ func formatPeriodDisplay(result CostResult) string {
 }
 
 // renderJSON writes the aggregated results as indented JSON to the provided writer.
-// It encodes the AggregatedResults with two-space indentation.
-// It returns any error encountered during encoding.
 func renderJSON(writer io.Writer, aggregated *AggregatedResults) error {
+	output := map[string]interface{}{
+		"finfocus": aggregated,
+	}
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
-	return encoder.Encode(aggregated)
+	return encoder.Encode(output)
 }
 
 // renderNDJSON writes each CostResult in results as a separate JSON object on its own line to stdout,

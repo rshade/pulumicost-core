@@ -155,7 +155,7 @@ func TestFindPluginBinary(t *testing.T) {
 			name: "finds prefixed name",
 			setupDir: func(t *testing.T) string {
 				dir := t.TempDir()
-				binPath := filepath.Join(dir, "pulumicost-plugin-test")
+				binPath := filepath.Join(dir, "finfocus-plugin-test")
 				if err := os.WriteFile(binPath, []byte("binary"), 0755); err != nil {
 					t.Fatal(err)
 				}

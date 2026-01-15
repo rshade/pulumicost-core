@@ -21,16 +21,16 @@ test_coverage_above_threshold() {
     # Create mock coverage file with 70% coverage
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:18.1,20.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:22.1,24.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:26.1,28.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:30.1,32.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:34.1,36.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:38.1,40.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:42.1,44.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:46.1,48.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:18.1,20.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:22.1,24.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:26.1,28.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:30.1,32.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:34.1,36.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:38.1,40.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:42.1,44.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:46.1,48.2 1 0
 EOF
 
     # Run check-coverage.sh with 50% threshold (should pass with 70%)
@@ -55,16 +55,16 @@ test_coverage_below_threshold() {
     # Create mock coverage file with 30% coverage
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:14.1,16.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:18.1,20.2 1 1
-github.com/rshade/pulumicost-core/internal/cli/root.go:22.1,24.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:26.1,28.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:30.1,32.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:34.1,36.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:38.1,40.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:42.1,44.2 1 0
-github.com/rshade/pulumicost-core/internal/cli/root.go:46.1,48.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:14.1,16.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:18.1,20.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:22.1,24.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:26.1,28.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:30.1,32.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:34.1,36.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:38.1,40.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:42.1,44.2 1 0
+github.com/rshade/finfocus/internal/cli/root.go:46.1,48.2 1 0
 EOF
 
     # Run check-coverage.sh with 50% threshold (should fail with 30%)
@@ -130,7 +130,7 @@ test_invalid_threshold() {
     # Create mock coverage file
     cat > "$TEST_DIR/coverage.out" <<EOF
 mode: atomic
-github.com/rshade/pulumicost-core/internal/cli/root.go:10.1,12.2 1 1
+github.com/rshade/finfocus/internal/cli/root.go:10.1,12.2 1 1
 EOF
 
     # Run check-coverage.sh with invalid threshold

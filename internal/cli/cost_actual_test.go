@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/cli"
+	"github.com/rshade/finfocus/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewCostActualCmd(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name        string
@@ -86,7 +86,7 @@ func TestNewCostActualCmd(t *testing.T) {
 
 func TestCostActualCmdFlags(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewCostActualCmd()
 
 	// Check required flags
@@ -121,7 +121,7 @@ func TestCostActualCmdFlags(t *testing.T) {
 
 func TestCostActualCmdHelp(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	var buf bytes.Buffer
 	cmd := cli.NewCostActualCmd()
 	cmd.SetOut(&buf)
@@ -142,12 +142,12 @@ func TestCostActualCmdHelp(t *testing.T) {
 
 func TestCostActualCmdExamples(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	cmd := cli.NewCostActualCmd()
 
 	// Check that examples are present
 	assert.NotEmpty(t, cmd.Example)
-	assert.Contains(t, cmd.Example, "pulumicost cost actual --pulumi-json plan.json --from")
+	assert.Contains(t, cmd.Example, "finfocus cost actual --pulumi-json plan.json --from")
 	assert.Contains(t, cmd.Example, "to defaults to now")
 	assert.Contains(t, cmd.Example, "--group-by type")
 	assert.Contains(t, cmd.Example, "--group-by provider")
@@ -156,7 +156,7 @@ func TestCostActualCmdExamples(t *testing.T) {
 
 func TestParseTimeRange(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		fromStr     string
@@ -218,7 +218,7 @@ func TestParseTimeRange(t *testing.T) {
 
 // TestCostActualCmdPulumiStateFlag tests the --pulumi-state flag for state-based actual cost.
 func TestCostActualCmdPulumiStateFlag(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	cmd := cli.NewCostActualCmd()
 
@@ -231,7 +231,7 @@ func TestCostActualCmdPulumiStateFlag(t *testing.T) {
 
 // TestCostActualCmdMutuallyExclusiveInputs tests that --pulumi-json and --pulumi-state are mutually exclusive.
 func TestCostActualCmdMutuallyExclusiveInputs(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name        string
@@ -292,7 +292,7 @@ func TestCostActualCmdMutuallyExclusiveInputs(t *testing.T) {
 
 // TestCostActualCmdHelpWithStateFlag tests that help includes --pulumi-state documentation.
 func TestCostActualCmdHelpWithStateFlag(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	var buf bytes.Buffer
 	cmd := cli.NewCostActualCmd()
@@ -309,7 +309,7 @@ func TestCostActualCmdHelpWithStateFlag(t *testing.T) {
 
 // TestCostActualCmdEstimateConfidenceFlag tests the --estimate-confidence flag.
 func TestCostActualCmdEstimateConfidenceFlag(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	cmd := cli.NewCostActualCmd()
 
@@ -322,7 +322,7 @@ func TestCostActualCmdEstimateConfidenceFlag(t *testing.T) {
 
 // TestCostActualCmdHelpWithEstimateConfidence tests that help includes confidence documentation.
 func TestCostActualCmdHelpWithEstimateConfidence(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	var buf bytes.Buffer
 	cmd := cli.NewCostActualCmd()
@@ -339,7 +339,7 @@ func TestCostActualCmdHelpWithEstimateConfidence(t *testing.T) {
 
 // TestCostActualCmdWithEstimateConfidenceFlag tests the flag is accepted without error.
 func TestCostActualCmdWithEstimateConfidenceFlag(t *testing.T) {
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 
 	tests := []struct {
 		name        string
@@ -390,7 +390,7 @@ func TestCostActualCmdWithEstimateConfidenceFlag(t *testing.T) {
 
 func TestParseTime(t *testing.T) {
 	// Set log level to error to avoid cluttering test output with debug logs
-	t.Setenv("PULUMICOST_LOG_LEVEL", "error")
+	t.Setenv("FINFOCUS_LOG_LEVEL", "error")
 	tests := []struct {
 		name        string
 		input       string

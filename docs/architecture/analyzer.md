@@ -1,24 +1,24 @@
 ---
 title: Analyzer Architecture
-description: Architecture of the Pulumicost Analyzer integration
+description: Architecture of the FinFocus Analyzer integration
 layout: default
 ---
 
-Pulumicost integrates with the Pulumi engine via the Analyzer interface.
-This allows Pulumicost to intercept resource changes during `pulumi preview`
+FinFocus integrates with the Pulumi engine via the Analyzer interface.
+This allows FinFocus to intercept resource changes during `pulumi preview`
 and `pulumi up` to provide cost estimates and policy enforcement.
 
 ## Overview
 
 The Analyzer runs as a gRPC service that Pulumi connects to. When you run
 a Pulumi command, if the analyzer is configured, Pulumi sends resource
-definitions to Pulumicost.
+definitions to FinFocus.
 
 ## Protocol
 
-Pulumicost implements the `pulumirpc.Analyzer` service.
+FinFocus implements the `pulumirpc.Analyzer` service.
 
-- **Analyze**: Receives a resource and its properties. Pulumicost calculates
+- **Analyze**: Receives a resource and its properties. FinFocus calculates
   the cost.
 - **AnalyzeStack**: Receives the entire stack state.
 
@@ -28,11 +28,11 @@ The analyzer is configured via `Pulumi.yaml` using the `analyzers` key:
 
 ```yaml
 analyzers:
-  - name: pulumicost
+  - name: finfocus
     version: v1.0.0
 ```
 
 ## Diagnostics
 
-If a resource violates a cost policy (e.g., exceeds budget), Pulumicost
+If a resource violates a cost policy (e.g., exceeds budget), FinFocus
 returns a diagnostic error or warning, which Pulumi displays in the CLI.

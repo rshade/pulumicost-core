@@ -4,7 +4,7 @@ title: Plugin Lifecycle Diagram
 description: State diagram showing plugin discovery, startup, communication, and shutdown phases
 ---
 
-This diagram shows the complete lifecycle of a PulumiCost plugin from
+This diagram shows the complete lifecycle of a FinFocus plugin from
 discovery through shutdown.
 
 ```mermaid
@@ -42,7 +42,7 @@ stateDiagram-v2
 
     note right of Undiscovered
         Plugin binary exists in
-        ~/.pulumicost/plugins/
+        ~/.finfocus/plugins/
         but not yet scanned
     end note
 
@@ -78,7 +78,7 @@ stateDiagram-v2
 Plugin binary exists in the filesystem but has not been detected by the
 Registry. This is the initial state for all plugins.
 
-**Location:** `~/.pulumicost/plugins/<name>/<version>/<binary>`
+**Location:** `~/.finfocus/plugins/<name>/<version>/<binary>`
 
 ### 2. Discovered
 

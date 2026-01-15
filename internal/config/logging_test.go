@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/config"
-	"github.com/rshade/pulumicost-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,12 +38,12 @@ func TestLoggingConfig_ToLoggingConfig(t *testing.T) {
 			input: config.LoggingConfig{
 				Level:  "debug",
 				Format: "console",
-				File:   "/var/log/pulumicost.log",
+				File:   "/var/log/finfocus.log",
 			},
 			expectedLevel:  "debug",
 			expectedFormat: "console",
 			expectedOutput: "file",
-			expectedFile:   "/var/log/pulumicost.log",
+			expectedFile:   "/var/log/finfocus.log",
 		},
 		{
 			name: "handles all log levels",

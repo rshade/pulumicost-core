@@ -15,7 +15,7 @@ and adds audit capabilities.
 
 **Language/Version**: Go 1.25.5
 **Primary Dependencies**: zerolog v1.34.0 (already integrated), cobra v1.10.1, yaml.v3
-**Storage**: File system (`~/.pulumicost/config.yaml`, log files)
+**Storage**: File system (`~/.finfocus/config.yaml`, log files)
 **Testing**: go test with testify, race detection required
 **Target Platform**: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64)
 **Project Type**: Single CLI application
@@ -27,7 +27,7 @@ and adds audit capabilities.
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify compliance with PulumiCost Core Constitution (`.specify/memory/constitution.md`):
+Verify compliance with FinFocus Core Constitution (`.specify/memory/constitution.md`):
 
 - [x] **Plugin-First Architecture**: N/A - This is orchestration/CLI infrastructure, not a cost data source
 - [x] **Test-Driven Development**: Tests planned before implementation (80% minimum coverage)
@@ -35,7 +35,7 @@ Verify compliance with PulumiCost Core Constitution (`.specify/memory/constituti
 - [x] **Documentation as Code**: User guide updates planned for logging configuration
 - [x] **Protocol Stability**: N/A - No protocol changes, internal feature only
 - [x] **Quality Gates**: All CI checks required (tests, lint, security)
-- [x] **Multi-Repo Coordination**: N/A - Changes confined to pulumicost-core
+- [x] **Multi-Repo Coordination**: N/A - Changes confined to finfocus-core
 
 **Violations Requiring Justification**: None
 

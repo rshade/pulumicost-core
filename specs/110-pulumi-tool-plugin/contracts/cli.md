@@ -8,11 +8,11 @@ The CLI behavior changes based on how it is invoked.
 
 **Condition**:
 - Binary Name (base) == `pulumi-tool-cost` (case-insensitive, ignores extension)
-- OR Env `PULUMICOST_PLUGIN_MODE` == `true` (or `1`)
+- OR Env `FINFOCUS_PLUGIN_MODE` == `true` (or `1`)
 
 **Effect**:
 - Root Command `Use`: `pulumi plugin run tool cost`
-- Help Text Examples: Prefix `pulumi plugin run tool cost` instead of `pulumicost`
+- Help Text Examples: Prefix `pulumi plugin run tool cost` instead of `finfocus`
 
 ### 2. Standard Mode
 
@@ -20,15 +20,15 @@ The CLI behavior changes based on how it is invoked.
 - Triggers above are NOT met.
 
 **Effect**:
-- Root Command `Use`: `pulumicost`
-- Help Text Examples: Prefix `pulumicost`
+- Root Command `Use`: `finfocus`
+- Help Text Examples: Prefix `finfocus`
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `PULUMICOST_PLUGIN_MODE` | No | Forces plugin mode if set to `true`. |
-| `PULUMI_HOME` | No | If set, modifies config search path to `$PULUMI_HOME/pulumicost/`. |
+| `FINFOCUS_PLUGIN_MODE` | No | Forces plugin mode if set to `true`. |
+| `PULUMI_HOME` | No | If set, modifies config search path to `$PULUMI_HOME/finfocus/`. |
 
 ## Exit Codes
 

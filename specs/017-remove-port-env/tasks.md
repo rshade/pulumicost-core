@@ -24,8 +24,8 @@
 
 **Purpose**: Verify external dependency and prepare for implementation
 
-- [x] T001 Verify pulumicost-spec#129 is merged (external dependency check)
-- [x] T002 [P] Update pulumicost-spec dependency if needed via `go get github.com/rshade/pulumicost-spec@latest`
+- [x] T001 Verify finfocus-spec#129 is merged (external dependency check)
+- [x] T002 [P] Update finfocus-spec dependency if needed via `go get github.com/rshade/finfocus-spec@latest`
 - [x] T003 [P] Verify pluginsdk.Serve() handles --port flag by checking SDK documentation
 
 ---
@@ -64,21 +64,21 @@
 
 ---
 
-## Phase 4: User Story 2 - PULUMICOST_PLUGIN_PORT Fallback (Priority: P2)
+## Phase 4: User Story 2 - FINFOCUS_PLUGIN_PORT Fallback (Priority: P2)
 
-**Goal**: Verify PULUMICOST_PLUGIN_PORT is still set for backward compatibility/debugging
+**Goal**: Verify FINFOCUS_PLUGIN_PORT is still set for backward compatibility/debugging
 
-**Independent Test**: Launch plugin, verify PULUMICOST_PLUGIN_PORT matches --port value while PORT is not set
+**Independent Test**: Launch plugin, verify FINFOCUS_PLUGIN_PORT matches --port value while PORT is not set
 
-**Note**: T015 extends T005's test changes (from Phase 2) to verify PULUMICOST_PLUGIN_PORT is set alongside the PORT-not-set assertion. This is verification, not duplication.
+**Note**: T015 extends T005's test changes (from Phase 2) to verify FINFOCUS_PLUGIN_PORT is set alongside the PORT-not-set assertion. This is verification, not duplication.
 
 ### Implementation for User Story 2
 
-- [x] T014 [US2] Verify PULUMICOST_PLUGIN_PORT line (line 375) is preserved in `internal/pluginhost/process.go`
-- [x] T015 [US2] Extend test assertions in `TestProcessLauncher_StartPluginEnvironment` to also verify PULUMICOST_PLUGIN_PORT is set in `internal/pluginhost/process_test.go`
+- [x] T014 [US2] Verify FINFOCUS_PLUGIN_PORT line (line 375) is preserved in `internal/pluginhost/process.go`
+- [x] T015 [US2] Extend test assertions in `TestProcessLauncher_StartPluginEnvironment` to also verify FINFOCUS_PLUGIN_PORT is set in `internal/pluginhost/process_test.go`
 - [x] T016 [US2] Run `go test ./internal/pluginhost/...` - verify tests pass
 
-**Checkpoint**: User Story 2 complete - PULUMICOST_PLUGIN_PORT verified
+**Checkpoint**: User Story 2 complete - FINFOCUS_PLUGIN_PORT verified
 
 ---
 
@@ -118,14 +118,14 @@
 - **Setup (Phase 1)**: No dependencies - must complete first (external dependency check)
 - **Foundational (Phase 2)**: Depends on Setup - update tests before implementation (TDD)
 - **User Story 1 (Phase 3)**: Depends on Foundational - core implementation
-- **User Story 2 (Phase 4)**: Depends on User Story 1 - verification of PULUMICOST_PLUGIN_PORT
+- **User Story 2 (Phase 4)**: Depends on User Story 1 - verification of FINFOCUS_PLUGIN_PORT
 - **User Story 3 (Phase 5)**: Depends on User Story 1 - multi-plugin verification
 - **Polish (Phase 6)**: Depends on all user stories
 
 ### User Story Dependencies
 
 - **User Story 1 (P1)**: Core change - all other stories depend on this
-- **User Story 2 (P2)**: Verifies PULUMICOST_PLUGIN_PORT still works after US1
+- **User Story 2 (P2)**: Verifies FINFOCUS_PLUGIN_PORT still works after US1
 - **User Story 3 (P3)**: Verifies multi-plugin works after US1
 
 ### Within Each Phase
@@ -174,7 +174,7 @@ Task: "Add test for guidance logging when plugin fails" (T007)
 ## Notes
 
 - This is a focused refactoring: ~20 lines of production code, ~100 lines of test updates
-- External dependency on pulumicost-spec#129 MUST be verified before starting
+- External dependency on finfocus-spec#129 MUST be verified before starting
 - All changes are in `internal/pluginhost/` package
 - No new files needed - updates to existing files only
 - Commit after each user story for clear git history

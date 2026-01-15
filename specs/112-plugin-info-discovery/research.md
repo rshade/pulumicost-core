@@ -11,8 +11,8 @@
 **Alternatives considered**: Manual string parsing, but SemVer is already a project dependency and more robust.
 
 ## Decision: CLI Command Structure
-**Decision**: Implement `pulumicost plugin inspect <plugin> <resource-type>`.
-**Rationale**: Aligns with `pulumicost plugin install/remove` style. It provides a clear way to trigger the `DryRun` RPC for a specific resource type.
+**Decision**: Implement `finfocus plugin inspect <plugin> <resource-type>`.
+**Rationale**: Aligns with `finfocus plugin install/remove` style. It provides a clear way to trigger the `DryRun` RPC for a specific resource type.
 **Alternatives considered**: Adding it to `plugin list`, but that would be too verbose and slow.
 
 ## Decision: Plugin Initialization Timeout

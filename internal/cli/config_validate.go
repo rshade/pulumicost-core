@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/rshade/pulumicost-core/internal/config"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,12 +13,12 @@ func NewConfigValidateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate configuration file",
-		Long:  "Validates the configuration file at ~/.pulumicost/config.yaml for syntax and semantic correctness.",
+		Long:  "Validates the configuration file at ~/.finfocus/config.yaml for syntax and semantic correctness.",
 		Example: `  # Validate current configuration
-  pulumicost config validate
+  finfocus config validate
 
   # Validate and show detailed information
-  pulumicost config validate --verbose`,
+  finfocus config validate --verbose`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfg := config.New()
 

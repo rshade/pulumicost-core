@@ -1,12 +1,12 @@
 ---
 layout: default
 title: Business Value
-description: Cost visibility, ROI, and competitive advantages of PulumiCost
+description: Cost visibility, ROI, and competitive advantages of FinFocus
 ---
 
 ## Executive Summary
 
-PulumiCost enables cloud cost visibility directly from infrastructure code, reducing cloud spending
+FinFocus enables cloud cost visibility directly from infrastructure code, reducing cloud spending
 by **15-25%** while cutting cost analysis time by **80%**.
 
 ---
@@ -33,7 +33,7 @@ by **15-25%** while cutting cost analysis time by **80%**.
 
 ---
 
-## The Solution: PulumiCost
+## The Solution: FinFocus
 
 ### What Changes
 
@@ -67,10 +67,10 @@ by **15-25%** while cutting cost analysis time by **80%**.
 - Unexpected billing surprises
 - Cannot compare configuration options
 
-**With PulumiCost:**
+**With FinFocus:**
 
 ```bash
-pulumicost cost projected --pulumi-json plan.json
+finfocus cost projected --pulumi-json plan.json
 
 RESOURCE                MONTHLY   CURRENCY
 aws:ec2/instance:t3.micro  $7.50     USD
@@ -87,7 +87,7 @@ TOTAL                     $133.00   USD
 **Time Savings:**
 
 - **Before:** 4-6 hours/week analyzing costs manually
-- **With PulumiCost:** 0.5 hours/week (automated)
+- **With FinFocus:** 0.5 hours/week (automated)
 - **Savings:** 15-20 hours/month per team member
 
 **Cost Savings:**
@@ -104,7 +104,7 @@ TOTAL                     $133.00   USD
 - Emergency cost reduction projects
 - Rushed decisions with technical debt
 
-**With PulumiCost:** Preventive optimization
+**With FinFocus:** Preventive optimization
 
 - Right-size instances before deployment
 - Evaluate cost/performance tradeoffs
@@ -118,23 +118,23 @@ TOTAL                     $133.00   USD
 
 ### 4. Cost Attribution & Chargeback (Governance)
 
-**Without PulumiCost:**
+**Without FinFocus:**
 
 - Cannot track costs by team/project/environment
 - No way to implement chargeback models
 - Finance doesn't understand technical costs
 
-**With PulumiCost:**
+**With FinFocus:**
 
 ```bash
 # Cost by team
-pulumicost cost actual --filter "tag:team=platform"
+finfocus cost actual --filter "tag:team=platform"
 
 # Cost by environment
-pulumicost cost actual --filter "tag:env=prod"
+finfocus cost actual --filter "tag:env=prod"
 
 # Cost by project
-pulumicost cost actual --filter "tag:project=mobile"
+finfocus cost actual --filter "tag:project=mobile"
 ```
 
 **Impact:**
@@ -153,7 +153,7 @@ pulumicost cost actual --filter "tag:project=mobile"
 
 **Solution:**
 
-- PulumiCost + Vantage plugin = unified cost view
+- FinFocus + Vantage plugin = unified cost view
 - Compare costs across clouds automatically
 - Optimize cloud selection based on costs
 
@@ -163,19 +163,19 @@ pulumicost cost actual --filter "tag:project=mobile"
 
 ### Speed to Insight
 
-| Metric | Before | With PulumiCost | Improvement |
-|--------|--------|-----------------|-------------|
-| Time to estimate cost | 30-60 min | < 1 min | **98% faster** |
-| Cost analysis cycle | 4-6 hours/week | 0.5 hours/week | **80% reduction** |
-| Cost decision turnaround | 2-3 days | Same day | **Faster decisions** |
+| Metric                   | Before         | With FinFocus  | Improvement          |
+| :----------------------- | :------------- | :------------- | :------------------- |
+| Time to estimate cost    | 30-60 min      | < 1 min        | **98% faster**       |
+| Cost analysis cycle      | 4-6 hours/week | 0.5 hours/week | **80% reduction**    |
+| Cost decision turnaround | 2-3 days       | Same day       | **Faster decisions** |
 
 ### Cost Savings
 
-| Company Size | Cost Reduction | Annual Savings |
-|--------------|---|---|
-| Startup (10 engineers) | 15% | $30-50K |
-| Mid-size (50 engineers) | 18% | $200-400K |
-| Enterprise (500 engineers) | 20% | $2-5M |
+| Company Size               | Cost Reduction | Annual Savings |
+| :------------------------- | :------------- | :------------- |
+| Startup (10 engineers)     | 15%            | $30-50K        |
+| Mid-size (50 engineers)    | 18%            | $200-400K      |
+| Enterprise (500 engineers) | 20%            | $2-5M          |
 
 ### ROI Timeline
 
@@ -189,37 +189,37 @@ Payback period: 1-2 weeks
 
 ---
 
-## Why Choose PulumiCost
+## Why Choose FinFocus
 
 ### vs. Manual Cost Analysis
 
-| Feature | Manual | PulumiCost |
-|---------|--------|-----------|
-| Cost visibility | Weeks (manual) | Instant |
-| Frequency | Monthly | Every change |
-| Accuracy | 60-80% | 95%+ |
-| Team adoption | Low | High |
+| Feature         | Manual          | FinFocus      |
+| :-------------- | :-------------- | :------------ |
+| Cost visibility | Weeks (manual)  | Instant       |
+| Frequency       | Monthly         | Every change  |
+| Accuracy        | 60-80%          | 95%+          |
+| Team adoption   | Low             | High          |
 | Effort required | 20+ hours/month | <1 hour/month |
 
 ### vs. Cloud Provider Cost Tools
 
-| Feature | AWS/Azure/GCP | PulumiCost |
-|---------|---|---|
-| Estimate before deploy | ❌ | ✅ |
-| Multi-cloud view | ❌ | ✅ (with Vantage) |
-| Infrastructure as code | ❌ | ✅ |
-| Developer workflow | ❌ | ✅ |
-| Cost in PR reviews | ❌ | ✅ |
+| Feature                | AWS/Azure/GCP | FinFocus          |
+| :--------------------- | :------------ | :---------------- |
+| Estimate before deploy | ❌            | ✅                |
+| Multi-cloud view       | ❌            | ✅ (with Vantage) |
+| Infrastructure as code | ❌            | ✅                |
+| Developer workflow     | ❌            | ✅                |
+| Cost in PR reviews     | ❌            | ✅                |
 
 ### vs. Expensive FinOps Tools
 
-| Feature | Expensive Tools | PulumiCost |
-|---------|---|---|
-| Cost visibility | ✅ | ✅ |
-| Cost optimization | ✅ | ✅ |
-| License cost | $50K-500K/year | Open source |
-| Implementation time | 6-12 months | 1-2 weeks |
-| Team adoption | IT/Finance only | Developers included |
+| Feature             | Expensive Tools | FinFocus            |
+| :------------------ | :-------------- | :------------------ |
+| Cost visibility     | ✅              | ✅                  |
+| Cost optimization   | ✅              | ✅                  |
+| License cost        | $50K-500K/year  | Open source         |
+| Implementation time | 6-12 months     | 1-2 weeks           |
+| Team adoption       | IT/Finance only | Developers included |
 
 ---
 
@@ -228,7 +228,7 @@ Payback period: 1-2 weeks
 ### Week 1: Pilot (1 project)
 
 ```text
-Monday: Install PulumiCost
+Monday: Install FinFocus
 Tuesday: Run on first project
 Wednesday: Validate costs
 Thursday: Team review
@@ -259,7 +259,7 @@ Week 4: Cost optimization sprint
 
 **"Will developers slow down?"**
 
-- PulumiCost adds <1 second to cost estimation
+- FinFocus adds <1 second to cost estimation
 - Actually speeds up decision-making
 - No negative performance impact
 
@@ -301,7 +301,7 @@ Week 4: Cost optimization sprint
 
 **Company:** Multi-cloud e-commerce platform
 **Problem:** Cloud costs growing 15% monthly, no visibility into why
-**Solution:** Implemented PulumiCost with Vantage plugin
+**Solution:** Implemented FinFocus with Vantage plugin
 **Results:**
 
 - **Cost reduction:** 18% ($200K/year savings)
@@ -312,7 +312,7 @@ Week 4: Cost optimization sprint
 
 **Company:** Large enterprise with 500+ engineers
 **Problem:** No accountability for cloud costs, departmental budgets exceeded
-**Solution:** Implemented chargeback model with PulumiCost
+**Solution:** Implemented chargeback model with FinFocus
 **Results:**
 
 - **Cost reduction:** 22% ($5M/year savings)

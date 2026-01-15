@@ -23,7 +23,7 @@ The documentation is structured to separate concerns by audience and depth.
 | `output.precision` | int | Decimal places for currency | `2` | `internal/config/config.go` |
 | `logging.level` | string | `trace`, `debug`, `info`, `warn`, `error` | `info` | `internal/config/config.go` |
 | `logging.format` | string | `console`, `json` | `console` | `internal/config/config.go` |
-| `logging.file` | string | Path to log file | `~/.pulumicost/logs/...` | `internal/config/config.go` |
+| `logging.file` | string | Path to log file | `~/.finfocus/logs/...` | `internal/config/config.go` |
 | `logging.outputs` | list | List of output sinks | `[{type: console}]` | `internal/config/config.go` |
 | `analyzer.timeout` | object | Timeout settings | `{total: 60s}` | `internal/config/config.go` |
 | `plugins` | map | Plugin-specific config | `{}` | `internal/config/config.go` |
@@ -43,14 +43,14 @@ The documentation is structured to separate concerns by audience and depth.
 
 | Variable | Scope | Description | Source |
 |----------|-------|-------------|--------|
-| `PULUMICOST_LOG_LEVEL` | Global | Override log level | `internal/cli/root.go` |
-| `PULUMICOST_LOG_FORMAT` | Global | Override log format | `internal/cli/root.go` |
-| `PULUMICOST_LOG_FILE` | Global | Override log file | `internal/config/config.go` |
-| `PULUMICOST_TRACE_ID` | Global | Inject trace ID | `internal/logging/zerolog.go` |
-| `PULUMICOST_OUTPUT_FORMAT` | Global | Override output format | `internal/config/config.go` |
-| `PULUMICOST_OUTPUT_PRECISION` | Global | Override precision | `internal/config/config.go` |
-| `PULUMICOST_CONFIG_STRICT` | Global | Panic on config error | `internal/config/config.go` |
-| `PULUMICOST_PLUGIN_*` | Plugin | Passed to plugins | `internal/pluginhost/` |
+| `FINFOCUS_LOG_LEVEL` | Global | Override log level | `internal/cli/root.go` |
+| `FINFOCUS_LOG_FORMAT` | Global | Override log format | `internal/cli/root.go` |
+| `FINFOCUS_LOG_FILE` | Global | Override log file | `internal/config/config.go` |
+| `FINFOCUS_TRACE_ID` | Global | Inject trace ID | `internal/logging/zerolog.go` |
+| `FINFOCUS_OUTPUT_FORMAT` | Global | Override output format | `internal/config/config.go` |
+| `FINFOCUS_OUTPUT_PRECISION` | Global | Override precision | `internal/config/config.go` |
+| `FINFOCUS_CONFIG_STRICT` | Global | Panic on config error | `internal/config/config.go` |
+| `FINFOCUS_PLUGIN_*` | Plugin | Passed to plugins | `internal/pluginhost/` |
 
 ## Navigation Structure
 

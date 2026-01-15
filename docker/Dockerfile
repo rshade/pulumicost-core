@@ -27,8 +27,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
     BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") && \
     CGO_ENABLED=0 go build \
-        -ldflags "-X github.com/rshade/pulumicost-core/pkg/version.version=${VERSION} -X github.com/rshade/pulumicost-core/pkg/version.gitCommit=${COMMIT} -X github.com/rshade/pulumicost-core/pkg/version.buildDate=${BUILD_DATE}" \
-        -o bin/pulumicost ./cmd/pulumicost
+        -ldflags "-X github.com/rshade/finfocus/pkg/version.version=${VERSION} -X github.com/rshade/finfocus/pkg/version.gitCommit=${COMMIT} -X github.com/rshade/finfocus/pkg/version.buildDate=${BUILD_DATE}" \
+        -o bin/finfocus ./cmd/finfocus
 
 # Runtime stage
 FROM alpine:latest
@@ -37,34 +37,34 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates curl
 
 # Create non-root user
-RUN addgroup -g 1001 -S pulumicost && \
-    adduser -u 1001 -S pulumicost -G pulumicost
+RUN addgroup -g 1001 -S finfocus && \
+    adduser -u 1001 -S finfocus -G finfocus
 
-# Create directories for pulumicost data
-RUN mkdir -p /home/pulumicost/.pulumicost/plugins && \
-    mkdir -p /home/pulumicost/.pulumicost/specs && \
-    chown -R pulumicost:pulumicost /home/pulumicost/.pulumicost
+# Create directories for finfocus data
+RUN mkdir -p /home/finfocus/.finfocus/plugins && \
+    mkdir -p /home/finfocus/.finfocus/specs && \
+    chown -R finfocus:finfocus /home/finfocus/.finfocus
 
 # Copy binary from builder stage
-COPY --from=builder /app/bin/pulumicost /usr/local/bin/pulumicost
+COPY --from=builder /app/bin/finfocus /usr/local/bin/finfocus
 
 # Make binary executable
-RUN chmod +x /usr/local/bin/pulumicost
+RUN chmod +x /usr/local/bin/finfocus
 
 # Switch to non-root user
-USER pulumicost
+USER finfocus
 
 # Set working directory
-WORKDIR /home/pulumicost
+WORKDIR /home/finfocus
 
 # Set environment variables
-ENV HOME=/home/pulumicost
+ENV HOME=/home/finfocus
 ENV PATH=/usr/local/bin:$PATH
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD pulumicost --help || exit 1
+    CMD finfocus --help || exit 1
 
 # Default command
-ENTRYPOINT ["pulumicost"]
+ENTRYPOINT ["finfocus"]
 CMD ["--help"]

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/rshade/pulumicost-core/internal/engine"
+	"github.com/rshade/finfocus/internal/engine"
 )
 
 // Layout constants.

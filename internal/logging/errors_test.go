@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rshade/pulumicost-core/internal/logging"
+	"github.com/rshade/finfocus/internal/logging"
 )
 
 func TestUserError(t *testing.T) {
@@ -129,7 +129,7 @@ func TestPluginNotFoundError(t *testing.T) {
 	if !strings.Contains(errMsg, "aws-plugin") {
 		t.Error("Error should mention the plugin name")
 	}
-	if !strings.Contains(errMsg, ".pulumicost/plugins") {
+	if !strings.Contains(errMsg, ".finfocus/plugins") {
 		t.Error("Error should mention the plugin directory")
 	}
 }

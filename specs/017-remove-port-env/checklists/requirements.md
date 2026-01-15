@@ -32,5 +32,5 @@
 ## Notes
 
 - Specification is complete and ready for `/speckit.clarify` or `/speckit.plan`
-- External dependency on pulumicost-spec#129 is documented
+- External dependency on finfocus-spec#129 is documented
 - This is a focused refactoring task with clear scope boundaries

@@ -1,10 +1,10 @@
 ---
 layout: default
 title: System Architecture Diagram
-description: High-level component architecture of PulumiCost showing all major components and their relationships
+description: High-level component architecture of FinFocus showing all major components and their relationships
 ---
 
-This diagram shows the high-level architecture of PulumiCost, including all
+This diagram shows the high-level architecture of FinFocus, including all
 major components and their relationships.
 
 ```mermaid
@@ -28,7 +28,7 @@ graph TB
 
     subgraph "Fallback System"
         SpecLoader[Spec Loader<br/>internal/spec<br/>YAML Parser]
-        SpecFiles[(Local Pricing Specs<br/>~/.pulumicost/specs/)]
+        SpecFiles[(Local Pricing Specs<br/>~/.finfocus/specs/)]
     end
 
     subgraph "External Systems"
@@ -39,7 +39,7 @@ graph TB
     end
 
     subgraph "Plugin Storage"
-        PluginDir[(Plugin Binaries<br/>~/.pulumicost/plugins/)]
+        PluginDir[(Plugin Binaries<br/>~/.finfocus/plugins/)]
     end
 
     CLI --> Engine

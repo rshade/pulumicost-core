@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/pluginhost"
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/internal/pluginhost"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -155,7 +155,7 @@ func TestEnvironmentVariables_PortPassing(t *testing.T) {
 	defer closeFn()
 
 	// If we get here, the plugin successfully read the environment variable
-	// (createEnvCheckingPlugin creates a plugin that exits if PULUMICOST_PLUGIN_PORT is not set)
+	// (createEnvCheckingPlugin creates a plugin that exits if FINFOCUS_PLUGIN_PORT is not set)
 	assert.NotNil(t, conn, "Connection should be established")
 }
 
@@ -342,8 +342,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rshade/pulumicost-core/internal/proto"
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/internal/proto"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"google.golang.org/grpc"
 )
 
@@ -352,7 +352,7 @@ func main() {
 	flag.Parse()
 
 	if *port == 0 {
-		if envPort := os.Getenv("PULUMICOST_PLUGIN_PORT"); envPort != "" {
+		if envPort := os.Getenv("FINFOCUS_PLUGIN_PORT"); envPort != "" {
 			fmt.Sscanf(envPort, "%%d", port)
 		}
 	}
@@ -442,8 +442,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/rshade/pulumicost-core/internal/proto"
-	"github.com/rshade/pulumicost-core/test/mocks/plugin"
+	"github.com/rshade/finfocus/internal/proto"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"google.golang.org/grpc"
 )
 
@@ -452,9 +452,9 @@ func main() {
 	flag.Parse()
 
 	// Check if environment variable is set
-	envPort := os.Getenv("PULUMICOST_PLUGIN_PORT")
+	envPort := os.Getenv("FINFOCUS_PLUGIN_PORT")
 	if envPort == "" {
-		log.Fatal("PULUMICOST_PLUGIN_PORT environment variable not set")
+		log.Fatal("FINFOCUS_PLUGIN_PORT environment variable not set")
 	}
 
 	if *port == 0 {

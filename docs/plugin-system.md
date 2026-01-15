@@ -1,6 +1,6 @@
 # Plugin System Guide
 
-Comprehensive guide to the PulumiCost plugin architecture, management, and development.
+Comprehensive guide to the FinFocus plugin architecture, management, and development.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ Comprehensive guide to the PulumiCost plugin architecture, management, and devel
 
 ## Overview
 
-PulumiCost Core uses a plugin-based architecture to fetch cost data from various
+FinFocus Core uses a plugin-based architecture to fetch cost data from various
 sources. Plugins are standalone binaries that implement the CostSource gRPC
 service, allowing extensible integration with cloud providers and cost
 management platforms.
@@ -30,13 +30,13 @@ management platforms.
 
 ### Communication Protocol
 
-Plugins communicate with PulumiCost Core via gRPC using the
-[pulumicost-spec](https://github.com/rshade/pulumicost-spec) protocol
+Plugins communicate with FinFocus Core via gRPC using the
+[finfocus-spec](https://github.com/rshade/finfocus-spec) protocol
 definitions.
 
 ```mermaid
 graph TD
-    A[PulumiCost Core] -->|gRPC| B[Plugin Process]
+    A[FinFocus Core] -->|gRPC| B[Plugin Process]
     B -->|CostSource API| C[Cloud Provider]
     B -->|Response| A
 
@@ -47,7 +47,7 @@ graph TD
 
 ### Plugin Lifecycle
 
-1. **Discovery**: Registry scans `~/.pulumicost/plugins/` directory and selects the
+1. **Discovery**: Registry scans `~/.finfocus/plugins/` directory and selects the
    latest version of each plugin (using Semantic Versioning).
 2. **Launch**: Process launcher starts plugin binary
 3. **Connection**: gRPC connection establishment
@@ -58,25 +58,25 @@ graph TD
 ### Directory Structure
 
 ```text
-~/.pulumicost/plugins/
+~/.finfocus/plugins/
 ├── kubecost/
 │   └── 1.0.0/
-│       ├── pulumicost-kubecost          # Plugin binary
+│       ├── finfocus-kubecost          # Plugin binary
 │       └── plugin.manifest.json        # Optional manifest
 ├── aws-plugin/
 │   └── 0.1.0/
-│       ├── pulumicost-aws
+│       ├── finfocus-aws
 │       └── plugin.manifest.json
 └── custom-plugin/
     └── 0.2.0/
-        └── pulumicost-custom
+        └── finfocus-custom
 ```
 
 ## Plugin Management
 
 ### Plugin Versioning
 
-PulumiCost Core supports side-by-side installation of multiple plugin versions.
+FinFocus Core supports side-by-side installation of multiple plugin versions.
 When performing cost analysis or other operations, the system automatically selects
 the **latest version** of each installed plugin based on Semantic Versioning (SemVer)
 rules.
@@ -91,26 +91,26 @@ To use a specific older version, you must currently uninstall newer versions or 
 
 ```bash
 # List all discovered plugins
-pulumicost plugin list
+finfocus plugin list
 ```
 
 **Sample Output:**
 
 ```text
 NAME        VERSION  STATUS    SUPPORTS                    BINARY
-kubecost    1.0.0    ready     projected,actual           pulumicost-kubecost
-aws-plugin  0.1.0    ready     projected                  pulumicost-aws
-azure-cost  0.2.0    error     -                          pulumicost-azure
+kubecost    1.0.0    ready     projected,actual           finfocus-kubecost
+aws-plugin  0.1.0    ready     projected                  finfocus-aws
+azure-cost  0.2.0    error     -                          finfocus-azure
 ```
 
 ### Validate Plugin Installation
 
 ```bash
 # Validate all plugins
-pulumicost plugin validate
+finfocus plugin validate
 
 # Validate specific plugin
-pulumicost plugin validate --adapter kubecost
+finfocus plugin validate --adapter kubecost
 ```
 
 **Validation Checks:**
@@ -126,21 +126,21 @@ pulumicost plugin validate --adapter kubecost
 
 ```bash
 # Create plugin directory
-mkdir -p ~/.pulumicost/plugins/kubecost/1.0.0/
+mkdir -p ~/.finfocus/plugins/kubecost/1.0.0/
 
 # Download and install plugin binary
-curl -L https://github.com/rshade/pulumicost-plugin-kubecost/releases/latest/download/pulumicost-kubecost-linux-amd64 \
-  -o ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+curl -L https://github.com/rshade/finfocus-plugin-kubecost/releases/latest/download/finfocus-kubecost-linux-amd64 \
+  -o ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 
 # Make executable
-chmod +x ~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+chmod +x ~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 
 # Optional: Create manifest
-cat > ~/.pulumicost/plugins/kubecost/1.0.0/plugin.manifest.json << EOF
+cat > ~/.finfocus/plugins/kubecost/1.0.0/plugin.manifest.json << EOF
 {
   "name": "kubecost",
   "version": "1.0.0",
-  "binary": "pulumicost-kubecost",
+  "binary": "finfocus-kubecost",
   "supports": ["projected_cost", "actual_cost"],
   "description": "Kubecost integration for Kubernetes cost analysis"
 }
@@ -151,8 +151,8 @@ EOF
 
 ```bash
 # Coming soon
-pulumicost plugin install kubecost@1.0.0
-pulumicost plugin install aws-plugin@latest
+finfocus plugin install kubecost@1.0.0
+finfocus plugin install aws-plugin@latest
 ```
 
 ### Plugin Configuration
@@ -182,7 +182,7 @@ export AZURE_TENANT_ID="your-tenant-id"
 Some plugins support configuration files:
 
 ```yaml
-# ~/.pulumicost/plugins/kubecost/1.0.0/config.yaml
+# ~/.finfocus/plugins/kubecost/1.0.0/config.yaml
 api_url: 'http://kubecost.example.com:9090'
 api_token: 'your-api-token'
 timeout: 30s
@@ -198,7 +198,7 @@ clusters:
 
 ### Kubecost Plugin
 
-**Repository**: [pulumicost-plugin-kubecost](https://github.com/rshade/pulumicost-plugin-kubecost)
+**Repository**: [finfocus-plugin-kubecost](https://github.com/rshade/finfocus-plugin-kubecost)
 
 **Capabilities:**
 
@@ -217,12 +217,12 @@ export KUBECOST_API_TOKEN="optional-api-token"
 **Usage:**
 
 ```bash
-pulumicost cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
+finfocus cost actual --pulumi-json plan.json --from 2025-01-01 --adapter kubecost
 ```
 
 ### AWS Pricing Plugin
 
-**Repository**: [pulumicost-plugin-aws](https://github.com/rshade/pulumicost-plugin-aws) (planned)
+**Repository**: [finfocus-plugin-aws](https://github.com/rshade/finfocus-plugin-aws) (planned)
 
 **Capabilities:**
 
@@ -241,7 +241,7 @@ export AWS_REGION="us-west-2"
 
 ### Azure Cost Management Plugin
 
-**Repository**: [pulumicost-plugin-azure](https://github.com/rshade/pulumicost-plugin-azure) (planned)
+**Repository**: [finfocus-plugin-azure](https://github.com/rshade/finfocus-plugin-azure) (planned)
 
 **Capabilities:**
 
@@ -252,7 +252,7 @@ export AWS_REGION="us-west-2"
 
 ### GCP Cloud Billing Plugin
 
-**Repository**: [pulumicost-plugin-gcp](https://github.com/rshade/pulumicost-plugin-gcp) (planned)
+**Repository**: [finfocus-plugin-gcp](https://github.com/rshade/finfocus-plugin-gcp) (planned)
 
 **Capabilities:**
 
@@ -269,20 +269,20 @@ export AWS_REGION="us-west-2"
 
 - **Go**: Version 1.25.5 or later
 - **Protocol Buffers**: For gRPC service definitions
-- **pulumicost-spec**: Protocol definitions repository
+- **finfocus-spec**: Protocol definitions repository
 
 #### Project Setup
 
 ```bash
 # Create new plugin project
-mkdir pulumicost-plugin-mycloud
-cd pulumicost-plugin-mycloud
+mkdir finfocus-plugin-mycloud
+cd finfocus-plugin-mycloud
 
 # Initialize Go module
-go mod init github.com/yourusername/pulumicost-plugin-mycloud
+go mod init github.com/yourusername/finfocus-plugin-mycloud
 
-# Add pulumicost-spec dependency
-go get github.com/rshade/pulumicost-spec/sdk/go@latest
+# Add finfocus-spec dependency
+go get github.com/rshade/finfocus-spec/sdk/go@latest
 ```
 
 ### Implementation Guide
@@ -296,7 +296,7 @@ import (
     "context"
     "fmt"
 
-    pb "github.com/rshade/pulumicost-spec/sdk/go/proto/pulumicost/v1"
+    pb "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
     "google.golang.org/grpc"
 )
 
@@ -379,7 +379,7 @@ func main() {
         log.Fatalf("Failed to listen: %v", err)
     }
 
-    // Print the port for PulumiCost Core to connect to
+    // Print the port for FinFocus Core to connect to
     addr := lis.Addr().(*net.TCPAddr)
     fmt.Printf("PLUGIN_PORT=%d\n", addr.Port)
 
@@ -468,17 +468,17 @@ func TestMyCloudPlugin(t *testing.T) {
 
 ```bash
 # Build plugin
-go build -o pulumicost-mycloud
+go build -o finfocus-mycloud
 
-# Test with PulumiCost Core
-mkdir -p ~/.pulumicost/plugins/mycloud/1.0.0/
-cp pulumicost-mycloud ~/.pulumicost/plugins/mycloud/1.0.0/
+# Test with FinFocus Core
+mkdir -p ~/.finfocus/plugins/mycloud/1.0.0/
+cp finfocus-mycloud ~/.finfocus/plugins/mycloud/1.0.0/
 
 # Validate plugin
-pulumicost plugin validate --adapter mycloud
+finfocus plugin validate --adapter mycloud
 
 # Test cost calculation
-pulumicost cost projected --pulumi-json test-plan.json --adapter mycloud
+finfocus cost projected --pulumi-json test-plan.json --adapter mycloud
 ```
 
 ### Building and Distribution
@@ -487,9 +487,9 @@ pulumicost cost projected --pulumi-json test-plan.json --adapter mycloud
 
 ```bash
 # Build for multiple platforms
-GOOS=linux GOARCH=amd64 go build -o pulumicost-mycloud-linux-amd64
-GOOS=darwin GOARCH=amd64 go build -o pulumicost-mycloud-darwin-amd64
-GOOS=windows GOARCH=amd64 go build -o pulumicost-mycloud-windows-amd64.exe
+GOOS=linux GOARCH=amd64 go build -o finfocus-mycloud-linux-amd64
+GOOS=darwin GOARCH=amd64 go build -o finfocus-mycloud-darwin-amd64
+GOOS=windows GOARCH=amd64 go build -o finfocus-mycloud-windows-amd64.exe
 ```
 
 #### GitHub Releases
@@ -511,15 +511,15 @@ jobs:
 
       - name: Build binaries
         run: |
-          GOOS=linux GOARCH=amd64 go build -o pulumicost-mycloud-linux-amd64
-          GOOS=darwin GOARCH=amd64 go build -o pulumicost-mycloud-darwin-amd64
-          GOOS=windows GOARCH=amd64 go build -o pulumicost-mycloud-windows-amd64.exe
+          GOOS=linux GOARCH=amd64 go build -o finfocus-mycloud-linux-amd64
+          GOOS=darwin GOARCH=amd64 go build -o finfocus-mycloud-darwin-amd64
+          GOOS=windows GOARCH=amd64 go build -o finfocus-mycloud-windows-amd64.exe
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            pulumicost-mycloud-*
+            finfocus-mycloud-*
 ```
 
 ## Configuration
@@ -533,10 +533,10 @@ Optional `plugin.manifest.json` file provides metadata:
   "name": "mycloud",
   "version": "1.0.0",
   "description": "MyCloud cost integration plugin",
-  "binary": "pulumicost-mycloud",
+  "binary": "finfocus-mycloud",
   "supports": ["projected_cost", "actual_cost"],
   "author": "Your Name",
-  "homepage": "https://github.com/yourusername/pulumicost-plugin-mycloud",
+  "homepage": "https://github.com/yourusername/finfocus-plugin-mycloud",
   "config": {
     "required_env": ["MYCLOUD_API_KEY"],
     "optional_env": ["MYCLOUD_REGION", "MYCLOUD_TIMEOUT"],
@@ -558,7 +558,7 @@ export MYCLOUD_REGION="us-west-2"
 #### Configuration Files
 
 ```yaml
-# ~/.pulumicost/plugins/mycloud/1.0.0/config.yaml
+# ~/.finfocus/plugins/mycloud/1.0.0/config.yaml
 api:
   key: 'your-api-key'
   secret: 'your-api-secret'
@@ -621,25 +621,25 @@ func (p *FileCredentialProvider) GetCredentials(ctx context.Context) (*Credentia
 
 ```bash
 # Check plugin directory structure
-ls -la ~/.pulumicost/plugins/
+ls -la ~/.finfocus/plugins/
 
 # Verify binary exists and is executable
-ls -la ~/.pulumicost/plugins/*/*/pulumicost-*
-chmod +x ~/.pulumicost/plugins/*/*/pulumicost-*
+ls -la ~/.finfocus/plugins/*/*/finfocus-*
+chmod +x ~/.finfocus/plugins/*/*/finfocus-*
 ```
 
 #### Connection Failures
 
 ```bash
 # Test plugin directly
-~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+~/.finfocus/plugins/kubecost/1.0.0/finfocus-kubecost
 
 # Check network connectivity
 curl -v http://kubecost.example.com:9090/api/v1/costDataModel
 
 # Verify authentication
 export KUBECOST_API_TOKEN="test-token"
-pulumicost plugin validate --adapter kubecost
+finfocus plugin validate --adapter kubecost
 ```
 
 #### Authentication Issues
@@ -652,19 +652,19 @@ env | grep -E "(AWS|AZURE|GCP|KUBECOST)"
 curl -H "Authorization: Bearer $API_TOKEN" https://api.provider.com/test
 
 # Review plugin logs
-pulumicost --debug cost actual --adapter kubecost --from 2025-01-01
+finfocus --debug cost actual --adapter kubecost --from 2025-01-01
 ```
 
 ### Debug Mode
 
 ```bash
 # Enable debug logging
-pulumicost --debug plugin validate
+finfocus --debug plugin validate
 
 # Plugin-specific debugging
 export PLUGIN_DEBUG=1
 export PLUGIN_LOG_LEVEL=debug
-pulumicost cost actual --adapter kubecost --from 2025-01-01
+finfocus cost actual --adapter kubecost --from 2025-01-01
 ```
 
 ### Plugin Development Debugging
@@ -704,11 +704,11 @@ func (p *MyCloudPlugin) GetProjectedCost(ctx context.Context, req *pb.GetProject
 
 ```bash
 # Search available plugins
-pulumicost plugin search aws
+finfocus plugin search aws
 
 # Install from registry
-pulumicost plugin install kubecost@1.0.0
+finfocus plugin install kubecost@1.0.0
 
 # Update plugins
-pulumicost plugin update --all
+finfocus plugin update --all
 ```

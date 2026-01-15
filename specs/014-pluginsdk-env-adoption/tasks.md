@@ -22,7 +22,7 @@
 
 **Purpose**: Project initialization and dependency updates
 
-- [x] T001 Update go.mod to require pulumicost-spec v0.4.5+ for pluginsdk/env.go access
+- [x] T001 Update go.mod to require finfocus-spec v0.4.5+ for pluginsdk/env.go access
 - [x] T002 Run go mod tidy to resolve new dependencies
 
 ---
@@ -60,7 +60,7 @@
 ### Implementation for User Story 1
 
 - [x] T008 [US1] Update internal/pluginhost/process.go to import pluginsdk/env.go
-- [x] T009 [US1] Replace hardcoded "PORT" and "PULUMICOST_PLUGIN_PORT" with pluginsdk.EnvPort and local envPortFallback constant in internal/pluginhost/process.go
+- [x] T009 [US1] Replace hardcoded "PORT" and "FINFOCUS_PLUGIN_PORT" with pluginsdk.EnvPort and local envPortFallback constant in internal/pluginhost/process.go
   - Note: pluginsdk does not define EnvPortFallback, so a local constant `envPortFallback = "PORT"` was added for backward compatibility
 - [x] T010 [US1] Verify plugin communication works with new constants by running existing pluginhost tests and checking no hardcoded strings remain
 
@@ -88,7 +88,7 @@
 - [x] T014 [P] [US2] Update trace ID injection environment variables in relevant files
   - Updated test/integration/trace_propagation_test.go to use pluginsdk.EnvTraceID
 - [x] T015 [P] [US2] Update any other identified hardcoded environment variable strings
-  - Note: Some config-specific env vars (PULUMICOST_CONFIG_STRICT, PULUMICOST_OUTPUT_*) are NOT in pluginsdk and remain as-is
+  - Note: Some config-specific env vars (FINFOCUS_CONFIG_STRICT, FINFOCUS_OUTPUT_*) are NOT in pluginsdk and remain as-is
 - [x] T016 [US2] Verify all environment variable access uses constants by searching codebase with grep for hardcoded env var patterns
   - Verified: Only config-specific variables (not in pluginsdk) remain hardcoded
 - [x] T024 [P] [US2] Update unit tests that mock environment variable names to use constants

@@ -15,10 +15,10 @@ TEMP_FILE=$(mktemp)
 
 # Write header
 cat > "$TEMP_FILE" << 'EOF'
-# PulumiCost Documentation Index (LLM-Friendly)
+# FinFocus Documentation Index (LLM-Friendly)
 
-This file provides a machine-readable index of all PulumiCost documentation.
-Use this as context when answering questions about PulumiCost.
+This file provides a machine-readable index of all FinFocus documentation.
+Use this as context when answering questions about FinFocus.
 
 ## Quick Navigation
 
@@ -71,7 +71,7 @@ cat >> "$TEMP_FILE" << 'EOF'
 
 ## Key Concepts
 
-### PulumiCost
+### FinFocus
 CLI tool for calculating cloud infrastructure costs from Pulumi definitions.
 
 **Three Cost Types:**
@@ -109,7 +109,7 @@ Combining costs from multiple resources and/or plugins.
 ## How to Use This File
 
 ### For AI Assistants
-- Use this as context when answering questions about PulumiCost
+- Use this as context when answering questions about FinFocus
 - Reference specific docs by their file paths
 - Point users to the most relevant documentation
 
