@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/rshade/finfocus/compare/v0.1.4...v0.2.0) (2026-01-15)
+
+
+### Added
+
+* **plugin:** implement info and dry-run discovery ([#398](https://github.com/rshade/finfocus/issues/398)) ([a768d4a](https://github.com/rshade/finfocus/commit/a768d4aa0ac26aa4b10918aedfe2670cd29f1afc)), closes [#401](https://github.com/rshade/finfocus/issues/401)
+
+
+### Chores
+
+* release 0.2.0 ([#416](https://github.com/rshade/finfocus/issues/416)) ([d151885](https://github.com/rshade/finfocus/commit/d1518857008257c1f32af6766ba467896f1ddaa2))
+
 ## [0.1.4](https://github.com/rshade/finfocus/compare/v0.1.3...v0.1.4) (2026-01-10)
 
 
