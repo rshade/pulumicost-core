@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/rshade/finfocus/internal/config"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -18,6 +18,19 @@ const (
 	Invalid
 )
 
+func (r CompatibilityResult) String() string {
+	switch r {
+	case Compatible:
+		return "Compatible"
+	case MajorMismatch:
+		return "MajorMismatch"
+	case Invalid:
+		return "Invalid"
+	default:
+		return fmt.Sprintf("CompatibilityResult(%d)", r)
+	}
+}
+
 // CompareSpecVersions compares the core spec version with the plugin's spec version.
 // It returns a compatibility result and an error if parsing fails.
 func CompareSpecVersions(coreVersion, pluginVersion string) (CompatibilityResult, error) {

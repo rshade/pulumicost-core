@@ -18,10 +18,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-12
 - Go 1.25.5 + `github.com/Masterminds/semver/v3` (001-latest-plugin-version)
 - Filesystem (`~/.finfocus/plugins/`) (001-latest-plugin-version)
 - Go 1.25.5 + github.com/rshade/finfocus-spec v0.4.14, github.com/Masterminds/semver/v3 (112-plugin-info-discovery)
-- Database: N/A (Stateless CLI) (112-plugin-info-discovery)
 
-- Local Pulumi state (ephemeral), no persistent DB. (008-e2e-cost-testing)
-- N/A (Stateless operation) (009-analyzer-plugin)
+- Local Pulumi state (ephemeral), no persistent DB (Stateless operation). (008-e2e-cost-testing, 009-analyzer-plugin, 112-plugin-info-discovery)
 
 - Go 1.25.5
 - `github.com/rshade/finfocus-spec`
@@ -158,7 +156,6 @@ Configuration validation with >85% coverage:
 - 113-rebrand-to-finfocus: Added Go 1.25.5 + `github.com/spf13/cobra` (CLI), `github.com/spf13/viper` (Config), `github.com/rshade/finfocus-spec` (renamed from `finfocus-spec`)
 
 - 112-plugin-info-discovery: Added Go 1.25.5 + github.com/rshade/finfocus-spec v0.4.14, github.com/Masterminds/semver/v3
-- 001-latest-plugin-version: Added Go 1.25.5 + `github.com/Masterminds/semver/v3`
 
   plus Jekyll (for docs site), GitHub Pages
   plan JSON.

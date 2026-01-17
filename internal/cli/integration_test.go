@@ -86,7 +86,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name:    "cost actual basic",
 			command: "cost",
-			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2026-01-01", "--to", "2026-01-31"},
+			args:    []string{"actual", "--pulumi-json", planPath, "--from", "2025-12-01", "--to", "2025-12-31"},
 			checkOutput: func(t *testing.T, _ string, err error) {
 				// Should succeed with explicit date range
 				require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestCLIIntegration(t *testing.T) {
 				"--pulumi-json",
 				planPath,
 				"--from",
-				"2026-01-01",
+				"2025-12-01",
 				"--to",
 				"2026-01-02",
 			},
@@ -118,9 +118,9 @@ func TestCLIIntegration(t *testing.T) {
 				"--pulumi-json",
 				planPath,
 				"--from",
-				"2026-01-01",
+				"2025-12-01",
 				"--to",
-				"2026-01-31",
+				"2025-12-31",
 				"--group-by",
 				"type",
 			},
@@ -414,9 +414,9 @@ func TestOutputFormats(t *testing.T) {
 					"--pulumi-json",
 					planPath,
 					"--from",
-					"2026-01-01",
+					"2025-12-01",
 					"--to",
-					"2026-01-31",
+					"2025-12-31",
 					"--output",
 					format,
 				},
@@ -477,7 +477,7 @@ func TestFlagCombinations(t *testing.T) {
 		cmd.SetArgs([]string{
 			"cost", "actual",
 			"--pulumi-json", planPath,
-			"--from", "2026-01-01",
+			"--from", "2025-12-01",
 			"--to", "2026-01-02",
 			"--output", "json",
 			"--group-by", "type",

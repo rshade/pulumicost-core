@@ -96,7 +96,7 @@ func TestConfigLoading_PrecedenceOrder(t *testing.T) {
 
 	// Set environment variable (should override file)
 	env := map[string]string{
-		"HOME":                     tempHome,
+		"HOME":                   tempHome,
 		"FINFOCUS_OUTPUT_FORMAT": "ndjson",
 	}
 

@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/rshade/finfocus/internal/pluginhost"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/logging"
+	"github.com/rshade/finfocus/internal/pluginhost"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +56,8 @@ func runPluginInspect(cmd *cobra.Command, args []string) error {
 	}
 	ctx := cmd.Context()
 
-	path, err := findPluginPath(pluginName, version)
+	cfg := config.New()
+	path, err := findPluginPath(cfg, pluginName, version)
 	if err != nil {
 		return fmt.Errorf("plugin not found: %w", err)
 	}
@@ -65,7 +68,16 @@ func runPluginInspect(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to launch plugin: %w", err)
 	}
-	defer func() { _ = client.Close() }()
+	defer func() {
+		if closeErr := client.Close(); closeErr != nil {
+			logging.FromContext(ctx).Debug().
+				Ctx(ctx).
+				Str("component", "plugin-client").
+				Str("operation", "close").
+				Err(closeErr).
+				Msg("failed to close plugin client")
+		}
+	}()
 
 	// 3. Call DryRun
 	const dryRunTimeout = 10 * time.Second
@@ -91,17 +103,12 @@ func runPluginInspect(cmd *cobra.Command, args []string) error {
 	if jsonOutput {
 		return renderJSON(resp, cmd.OutOrStdout())
 	}
-	renderTable(resp, cmd.OutOrStdout())
-	return nil
+	return renderTable(resp, cmd.OutOrStdout())
 }
 
 // findPluginPath locates the plugin binary.
-func findPluginPath(name, version string) (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	pluginDir := filepath.Join(home, ".finfocus", "plugins", name)
+func findPluginPath(cfg *config.Config, name, version string) (string, error) {
+	pluginDir := filepath.Join(cfg.PluginDir, name)
 
 	if version == "" {
 		v, vErr := findLatestVersion(pluginDir, name)
@@ -164,21 +171,27 @@ func renderJSON(resp *pbc.DryRunResponse, w io.Writer) error {
 	return enc.Encode(resp)
 }
 
-func renderTable(resp *pbc.DryRunResponse, w io.Writer) {
+func renderTable(resp *pbc.DryRunResponse, w io.Writer) error {
 	const (
 		colWidthField  = 20
 		colWidthStatus = 10
 	)
 
 	// Build format string using column widths for consistency
-	rowFormat := fmt.Sprintf("%%-%ds %%-%ds %%s\n", colWidthField, colWidthStatus)
+	rowFormat := fmt.Sprintf("%%-%ds %%-%ds %%-%ds\n", colWidthField, colWidthStatus, colWidthStatus)
 
-	fmt.Fprintf(w, "Field Mappings:\n")
-	fmt.Fprintf(w, rowFormat, "FIELD", "STATUS", "CONDITION")
-	fmt.Fprintf(w, "%s %s %s\n",
+	if _, err := fmt.Fprintf(w, "Field Mappings:\n"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, rowFormat, "FIELD", "STATUS", "CONDITION"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "%s %s %s\n",
 		strings.Repeat("-", colWidthField),
 		strings.Repeat("-", colWidthStatus),
-		strings.Repeat("-", colWidthStatus)) // CONDITION column has variable width
+		strings.Repeat("-", colWidthStatus)); err != nil { // CONDITION column has variable width
+		return err
+	}
 
 	for _, m := range resp.GetFieldMappings() {
 		status := "UNKNOWN"
@@ -195,6 +208,9 @@ func renderTable(resp *pbc.DryRunResponse, w io.Writer) {
 			status = "UNKNOWN"
 		}
 
-		fmt.Fprintf(w, rowFormat, m.GetFieldName(), status, m.GetConditionDescription())
+		if _, err := fmt.Fprintf(w, rowFormat, m.GetFieldName(), status, m.GetConditionDescription()); err != nil {
+			return err
+		}
 	}
+	return nil
 }

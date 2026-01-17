@@ -142,9 +142,7 @@ func TestDryRun(t *testing.T) {
 		}
 
 		_, err := mockClient.DryRun(context.Background(), &pbc.DryRunRequest{})
-		if err == nil {
-			t.Error("Expected error for unimplemented DryRun")
-		}
+		require.Error(t, err)
 	})
 
 	t.Run("InvalidResource", func(t *testing.T) {
@@ -157,9 +155,7 @@ func TestDryRun(t *testing.T) {
 		_, err := mockClient.DryRun(context.Background(), &pbc.DryRunRequest{
 			Resource: &pbc.ResourceDescriptor{ResourceType: "invalid"},
 		})
-		if err == nil {
-			t.Error("Expected error for invalid resource")
-		}
+		require.Error(t, err)
 	})
 }
 

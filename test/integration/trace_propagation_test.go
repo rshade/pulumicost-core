@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/rshade/finfocus/internal/logging"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

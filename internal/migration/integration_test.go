@@ -10,17 +10,17 @@ import (
 )
 
 func TestMigrationFlow(t *testing.T) {
-	// We can't easily mock os.UserHomeDir() for DetectLegacy without 
-	// changing how it's implemented to accept a home override or 
+	// We can't easily mock os.UserHomeDir() for DetectLegacy without
+	// changing how it's implemented to accept a home override or
 	// using a global variable for testing.
-	
+
 	// Let's create a wrapper that uses a home getter.
-	
+
 	t.Run("detects legacy directory", func(t *testing.T) {
 		tempHome := t.TempDir()
 		legacyPath := filepath.Join(tempHome, ".finfocus")
 		require.NoError(t, os.MkdirAll(legacyPath, 0700))
-		
+
 		// Use a helper that takes home dir
 		path, exists := detectLegacyIn(tempHome)
 		assert.True(t, exists)

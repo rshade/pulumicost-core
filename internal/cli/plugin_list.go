@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/logging"
 	"github.com/rshade/finfocus/internal/pluginhost"
 	"github.com/rshade/finfocus/internal/registry"
 	"github.com/spf13/cobra"
@@ -143,6 +144,11 @@ func runPluginListCmd(cmd *cobra.Command, verbose bool) error {
 		launchCtx, cancel := context.WithTimeout(ctx, launchTimeout)
 		client, launchErr := pluginhost.NewClient(launchCtx, launcher, p.Path)
 		if launchErr != nil {
+			logging.FromContext(ctx).Debug().
+				Ctx(ctx).
+				Str("plugin_path", p.Path).
+				Err(launchErr).
+				Msg("failed to launch plugin during list enumeration")
 			cancel()
 			continue
 		}
