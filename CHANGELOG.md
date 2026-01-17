@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/rshade/finfocus/compare/v0.2.0...v0.2.1) (2026-01-17)
+
+
+### Fixed
+
+* **cli:** resolve plugin mode detection and date validation issues ([#418](https://github.com/rshade/finfocus/issues/418)) ([f3da648](https://github.com/rshade/finfocus/commit/f3da64825ae4dddc881ab2fba817f35da8716e46)), closes [#114](https://github.com/rshade/finfocus/issues/114)
+* **test:** align JSON output tests with finfocus wrapper pattern ([#425](https://github.com/rshade/finfocus/issues/425)) ([9ac9dc2](https://github.com/rshade/finfocus/commit/9ac9dc2b03625e349ffd0405b93c1115530ff870)), closes [#424](https://github.com/rshade/finfocus/issues/424) [#417](https://github.com/rshade/finfocus/issues/417) [#414](https://github.com/rshade/finfocus/issues/414)
+
 ## [0.2.0](https://github.com/rshade/finfocus/compare/v0.1.4...v0.2.0) (2026-01-15)
 
 
