@@ -10,17 +10,16 @@ import (
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"github.com/rs/zerolog"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/rshade/finfocus/internal/analyzer"
 	"github.com/rshade/finfocus/internal/config"
+	"github.com/rshade/finfocus/internal/constants"
 	"github.com/rshade/finfocus/internal/engine"
 	"github.com/rshade/finfocus/internal/registry"
 	"github.com/rshade/finfocus/internal/spec"
-	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
-
-const EnvAnalyzerMode = "FINFOCUS_ANALYZER_MODE"
 
 // getAnalyzerLogLevel reads the FINFOCUS_LOG_LEVEL environment variable and returns
 // the corresponding zerolog level. If the environment variable is unset or cannot be
@@ -90,7 +89,7 @@ func RunAnalyzerServe(cmd *cobra.Command) error {
 
 	// Set environment variable to indicate analyzer mode for plugin suppression
 	// This prevents plugins from outputting verbose logs that clutter Pulumi preview
-	if err := os.Setenv(EnvAnalyzerMode, "true"); err != nil {
+	if err := os.Setenv(constants.EnvAnalyzerMode, "true"); err != nil {
 		// os.Setenv rarely fails, but if it does, log and continue
 		stderrLogger.Warn().Err(err).Msg("failed to set analyzer mode environment variable")
 	}

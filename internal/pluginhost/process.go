@@ -12,14 +12,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rshade/finfocus/internal/logging"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	"github.com/rshade/finfocus/internal/constants"
+	"github.com/rshade/finfocus/internal/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-const EnvAnalyzerMode = "FINFOCUS_ANALYZER_MODE"
 
 const (
 	defaultTimeout      = 10 * time.Second
@@ -398,7 +397,7 @@ func (p *ProcessLauncher) startPlugin(
 
 	// In analyzer mode, suppress plugin stderr to prevent verbose logs from cluttering Pulumi preview output
 	// This addresses issue #401 where plugin JSON messages appear in user-facing output
-	if os.Getenv(EnvAnalyzerMode) == "true" {
+	if os.Getenv(constants.EnvAnalyzerMode) == "true" {
 		log.Debug().
 			Ctx(ctx).
 			Str("component", "pluginhost").

@@ -50,5 +50,5 @@ func isPluginBinary(name string) bool {
 	if strings.HasSuffix(strings.ToLower(base), ".exe") {
 		base = base[:len(base)-4]
 	}
-	return strings.EqualFold(base, "pulumi-tool-finfocus")
+	return strings.EqualFold(base, "pulumi-tool-cost")
 }

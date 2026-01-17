@@ -3,8 +3,8 @@ package proto_test
 import (
 	"testing"
 
-	"github.com/rshade/finfocus/internal/proto"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus/internal/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

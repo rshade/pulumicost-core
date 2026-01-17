@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/finfocus/test/mocks/plugin"
 	pb "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus/test/mocks/plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

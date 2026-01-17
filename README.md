@@ -213,6 +213,42 @@ finfocus plugin list
 finfocus plugin inspect <plugin> <resource-type>
 ```
 
+**Example Output:**
+
+```text
+$ finfocus plugin inspect aws-public aws:ec2/instance:Instance
+
+Field Mappings:
+FIELD                STATUS     CONDITION
+-------------------- ---------- ----------
+instanceType         SUPPORTED  
+region               SUPPORTED  
+tenancy              SUPPORTED  
+ebsOptimized         CONDITIONAL Only if true
+```
+
+**JSON Output:**
+
+```bash
+finfocus plugin inspect aws-public aws:ec2/instance:Instance --json
+```
+
+```json
+{
+  "fieldMappings": [
+    {
+      "fieldName": "instanceType",
+      "status": "SUPPORTED"
+    },
+    {
+      "fieldName": "ebsOptimized",
+      "status": "CONDITIONAL",
+      "condition": "Only if true"
+    }
+  ]
+}
+```
+
 ### Install Plugin
 
 ```bash

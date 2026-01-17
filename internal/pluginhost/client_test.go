@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/finfocus/internal/pluginhost"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
+	"github.com/rshade/finfocus/internal/pluginhost"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -76,7 +76,10 @@ func setupMockServer(_ *testing.T, srv *mockCostSourceServer) (*grpcMockLauncher
 	go func() {
 		if err := s.Serve(listener); err != nil {
 			if !errors.Is(err, grpc.ErrServerStopped) {
+				// Unexpected error during serve
+				panic(err)
 			}
+			// Server stopped gracefully
 		}
 	}()
 

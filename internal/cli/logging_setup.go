@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/rshade/finfocus/internal/config"
 	"github.com/rshade/finfocus/internal/logging"
 	"github.com/rshade/finfocus/internal/pluginhost"
-	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	"github.com/spf13/cobra"
 )
 

@@ -133,3 +133,21 @@ func TestCompareSpecVersions(t *testing.T) {
 		})
 	}
 }
+
+func TestCompatibilityResult_String(t *testing.T) {
+	tests := []struct {
+		name string
+		r    CompatibilityResult
+		want string
+	}{
+		{"Compatible", Compatible, "Compatible"},
+		{"MajorMismatch", MajorMismatch, "MajorMismatch"},
+		{"Invalid", Invalid, "Invalid"},
+		{"Unknown", CompatibilityResult(99), "CompatibilityResult(99)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.r.String())
+		})
+	}
+}

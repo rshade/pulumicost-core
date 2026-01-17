@@ -1,12 +1,17 @@
 package proto
 
+// FieldMappingStatus represents the support status of a resource field in the plugin.
 type FieldMappingStatus string
 
 const (
-	StatusSupported   FieldMappingStatus = "SUPPORTED"
+	// StatusSupported indicates the field is fully supported and mapped.
+	StatusSupported FieldMappingStatus = "SUPPORTED"
+	// StatusUnsupported indicates the field is known but not supported for cost estimation.
 	StatusUnsupported FieldMappingStatus = "UNSUPPORTED"
+	// StatusConditional indicates the field is supported only under certain conditions.
 	StatusConditional FieldMappingStatus = "CONDITIONAL"
-	StatusDynamic     FieldMappingStatus = "DYNAMIC"
+	// StatusDynamic indicates the field's support is determined at runtime.
+	StatusDynamic FieldMappingStatus = "DYNAMIC"
 )
 
 // PluginMetadata contains information about a plugin's version and capabilities.
@@ -20,8 +25,8 @@ type PluginMetadata struct {
 
 // FieldMapping describes how a Pulumi resource property maps to pricing inputs.
 type FieldMapping struct {
-	FieldName    string             `json:"fieldName"    yaml:"fieldName"`
-	Status       FieldMappingStatus `json:"status"       yaml:"status"`
-	Condition    string             `json:"condition"    yaml:"condition"`
-	ExpectedType string             `json:"expectedType" yaml:"expectedType"`
+	FieldName    string             `json:"fieldName"              yaml:"fieldName"`
+	Status       FieldMappingStatus `json:"status"                 yaml:"status"`
+	Condition    string             `json:"condition,omitempty"    yaml:"condition,omitempty"`
+	ExpectedType string             `json:"expectedType,omitempty" yaml:"expectedType,omitempty"`
 }
