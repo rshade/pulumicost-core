@@ -235,10 +235,14 @@ func TestConfigLoading_Integration_FullWorkflow(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err, "Command should execute successfully")
 
-	// Verify JSON output
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// Verify JSON output - renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	assert.NoError(t, err, "Should produce JSON output")
+
+	// Extract the finfocus wrapper
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	// Verify basic structure
 	assert.Contains(t, result, "summary", "JSON output should have summary")

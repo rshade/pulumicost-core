@@ -22,9 +22,13 @@ func TestProjectedCost_FilterByType(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "expected finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok, "expected resources to be an array")
@@ -49,9 +53,13 @@ func TestProjectedCost_FilterByTypeSubstring(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "expected finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok, "expected resources to be an array")
@@ -74,9 +82,13 @@ func TestProjectedCost_FilterByProvider(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "expected finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok, "expected resources to be an array")
@@ -178,9 +190,13 @@ func TestProjectedCost_FilterNoMatch(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "expected finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok, "expected resources to be an array")
@@ -211,9 +227,13 @@ func TestFilter_CaseSensitivity(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "expected finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok)
@@ -237,9 +257,12 @@ func TestFilter_AllOutputFormats(t *testing.T) {
 			assert.NotEmpty(t, output)
 
 			if format == "json" {
-				var result map[string]interface{}
-				err = json.Unmarshal([]byte(output), &result)
+				// renderJSON wraps results in {"finfocus": ...}
+				var wrapper map[string]interface{}
+				err = json.Unmarshal([]byte(output), &wrapper)
 				assert.NoError(t, err)
+				result, ok := wrapper["finfocus"].(map[string]interface{})
+				require.True(t, ok, "expected finfocus wrapper")
 				resources, ok := result["resources"].([]interface{})
 				require.True(t, ok, "expected resources to be an array")
 				assert.NotEmpty(t, resources)

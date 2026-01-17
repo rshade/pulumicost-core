@@ -72,12 +72,15 @@ func TestRenderResults_JSONFormat(t *testing.T) {
 
 	output := buf.String()
 
-	// Verify valid JSON
-	var aggregated engine.AggregatedResults
-	err = json.Unmarshal([]byte(output), &aggregated)
+	// Verify valid JSON - renderJSON wraps results in {"finfocus": ...}
+	var wrapper struct {
+		FinFocus engine.AggregatedResults `json:"finfocus"`
+	}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
 
 	// Verify structure
+	aggregated := wrapper.FinFocus
 	assert.Equal(t, 7.30, aggregated.Summary.TotalMonthly)
 	assert.Equal(t, 0.01, aggregated.Summary.TotalHourly)
 	assert.Equal(t, "USD", aggregated.Summary.Currency)
@@ -206,10 +209,14 @@ func TestRenderResults_WithBreakdown(t *testing.T) {
 
 	output := buf.String()
 
-	var aggregated engine.AggregatedResults
-	err = json.Unmarshal([]byte(output), &aggregated)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper struct {
+		FinFocus engine.AggregatedResults `json:"finfocus"`
+	}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
 
+	aggregated := wrapper.FinFocus
 	assert.Equal(t, 2, len(aggregated.Resources[0].Breakdown))
 	assert.Equal(t, 3.0, aggregated.Resources[0].Breakdown["compute"])
 	assert.Equal(t, 2.0, aggregated.Resources[0].Breakdown["requests"])

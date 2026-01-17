@@ -241,6 +241,14 @@ finfocus plugin inspect aws-public aws:ec2/instance:Instance --json
       "status": "SUPPORTED"
     },
     {
+      "fieldName": "region",
+      "status": "SUPPORTED"
+    },
+    {
+      "fieldName": "tenancy",
+      "status": "SUPPORTED"
+    },
+    {
       "fieldName": "ebsOptimized",
       "status": "CONDITIONAL",
       "condition": "Only if true"

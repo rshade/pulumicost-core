@@ -14,6 +14,12 @@ const (
 	StatusDynamic FieldMappingStatus = "DYNAMIC"
 )
 
+// String returns the string representation of the FieldMappingStatus.
+// It implements the fmt.Stringer interface for human-readable output in logs and debug.
+func (s FieldMappingStatus) String() string {
+	return string(s)
+}
+
 // PluginMetadata contains information about a plugin's version and capabilities.
 type PluginMetadata struct {
 	Name               string            `json:"name"                         yaml:"name"`
