@@ -17,7 +17,11 @@ func testNameReturnsIdentifier(ctx *TestContext) *TestResult {
 		return &TestResult{Status: StatusError, Error: "invalid plugin client type"}
 	}
 
-	resp, err := client.Name(context.Background(), &pbc.NameRequest{})
+	// Use context with timeout from TestContext for suite-level timeout control
+	rpcCtx, cancel := context.WithTimeout(context.Background(), ctx.Timeout)
+	defer cancel()
+
+	resp, err := client.Name(rpcCtx, &pbc.NameRequest{})
 	if err != nil {
 		return &TestResult{Status: StatusFail, Error: fmt.Sprintf("Name() RPC failed: %v", err)}
 	}
@@ -39,10 +43,14 @@ func testNameReturnsProtocolVersion(ctx *TestContext) *TestResult {
 		return &TestResult{Status: StatusError, Error: "invalid plugin client type"}
 	}
 
+	// Use context with timeout from TestContext for suite-level timeout control
+	rpcCtx, cancel := context.WithTimeout(context.Background(), ctx.Timeout)
+	defer cancel()
+
 	// In current proto, NameRequest doesn't return protocol version directly,
 	// but some plugins might include it in metadata or we might have a dedicated Version RPC.
 	// For now, we'll check if Name succeeds and maybe check a version field if added.
-	resp, err := client.Name(context.Background(), &pbc.NameRequest{})
+	resp, err := client.Name(rpcCtx, &pbc.NameRequest{})
 	if err != nil {
 		return &TestResult{Status: StatusFail, Error: fmt.Sprintf("Name() RPC failed: %v", err)}
 	}

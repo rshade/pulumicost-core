@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/rshade/finfocus/internal/cli"
 	"github.com/rshade/finfocus/pkg/version"
@@ -18,17 +20,12 @@ func TestCLIBranding(t *testing.T) {
 		root.SetArgs([]string{"--help"})
 
 		err := root.Execute()
-		if err != nil {
-			t.Fatalf("failed to execute root command: %v", err)
-		}
+		require.NoError(t, err, "failed to execute root command")
 
 		output := buf.String()
-		if !strings.Contains(output, "FinFocus") {
-			t.Errorf("expected output to contain 'FinFocus', got:\n%s", output)
-		}
-		if strings.Contains(strings.ToLower(output), "finfocus") {
-			t.Errorf("expected output NOT to contain 'finfocus', got:\n%s", output)
-		}
+		// Verify proper branding "FinFocus" appears in help (from Long description)
+		assert.Contains(t, output, "FinFocus", "expected FinFocus branding in help output")
+		// Note: The command name "finfocus" will also appear in help, which is expected
 	})
 
 	t.Run("version output contains FinFocus", func(t *testing.T) {
@@ -39,9 +36,7 @@ func TestCLIBranding(t *testing.T) {
 		root.SetArgs([]string{"--version"})
 
 		err := root.Execute()
-		if err != nil {
-			t.Fatalf("failed to execute root command: %v", err)
-		}
+		require.NoError(t, err, "failed to execute root command")
 
 		output := buf.String()
 		// Cobra --version usually just prints the version string from cmd.Version

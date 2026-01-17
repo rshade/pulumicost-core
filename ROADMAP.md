@@ -14,7 +14,7 @@ guardrails in `CONTEXT.md`.
 
 - [Past Milestones](#past-milestones-done)
 - [Immediate Priority](#immediate-priority-bug-fixes)
-- [Current Focus (v0.2.0)](#current-focus-v020---state-based-costs--plugin-maturity)
+- [Current Focus (v0.2.1)](#current-focus-v021---polish--dx-improvements)
 - [Near-Term Vision (v0.3.0)](#near-term-vision-v030---budgeting--intelligence)
 - [Stability & Maintenance](#stability--maintenance)
 - [Documentation](#documentation)
@@ -40,31 +40,31 @@ guardrails in `CONTEXT.md`.
   - [x] Shared TUI package with Bubble Tea (#222, #258)
   - [x] Pagination for large datasets (#225)
   - [x] Plugin installer: remove old versions during install (#237)
+- [x] **v0.2.0: State-Based Costs & Plugin Maturity** *(Released 2026-01-16)*
+  - [x] State-based actual cost estimation for `cost actual` (#380, #382)
+  - [x] Plugin info and dry-run discovery (#398)
+  - [x] Ecosystem rebrand to FinFocus (#415)
 
 ## Immediate Priority (Bug Fixes)
 
 - [ ] **Test Reliability & CI Stability**
-  - [ ] Fix nightly test failure
-        ([#378](https://github.com/rshade/finfocus/issues/378))
+  - [ ] Fix nightly test failures (recurring)
+        ([#417](https://github.com/rshade/finfocus/issues/417),
+        [#414](https://github.com/rshade/finfocus/issues/414))
   - [ ] Fix AWS fallback scope and non-deterministic output
         ([#324](https://github.com/rshade/finfocus/issues/324))
   - [ ] Fix E2E and Conformance test reliability issues
         ([#323](https://github.com/rshade/finfocus/issues/323))
 
-## Current Focus (v0.2.0 - State-Based Costs & Plugin Maturity)
+## Current Focus (v0.2.1 - Polish & DX Improvements)
 
-- [ ] **State-Based Actual Cost Estimation** *(Next Feature)*
-  - [ ] Implement state-based actual cost estimation for `cost actual`
-        ([#380](https://github.com/rshade/finfocus/issues/380))
+- [ ] **Cost Estimation Enhancements**
   - [ ] Add `--estimate-confidence` flag for actual cost transparency
         ([#333](https://github.com/rshade/finfocus/issues/333))
 - [ ] **Plugin Ecosystem Maturity**
   - [ ] Implement GetPluginInfo consumer-side requirements
         ([#376](https://github.com/rshade/finfocus/issues/376))
         *Status: Unblocked (Spec v0.4.12+)*
-  - [ ] Implement DryRun discovery for plugin field mappings
-        ([#381](https://github.com/rshade/finfocus/issues/381))
-        *Cross-Repo: Consumes DryRun RPC from spec 032*
   - [ ] Update Plugin Generator Templates (includes gRPC reflection)
         ([#248](https://github.com/rshade/finfocus/issues/248))
 - [ ] **Developer Experience & Tooling**
@@ -72,9 +72,16 @@ guardrails in `CONTEXT.md`.
         ([#275](https://github.com/rshade/finfocus/issues/275))
   - [ ] Cross-Repository Integration Test Workflow
         ([#236](https://github.com/rshade/finfocus/issues/236))
+  - [ ] Multi-Plugin Routing: Intelligent Feature-Based Plugin Selection
+        ([#410](https://github.com/rshade/finfocus/issues/410))
+  - [ ] Parallel plugin metadata fetching in plugin list command
+        ([#408](https://github.com/rshade/finfocus/issues/408))
 - [ ] **Enhanced Visualization**
   - [ ] Upgrade cost commands to enhanced TUI
         ([#218](https://github.com/rshade/finfocus/issues/218))
+- [ ] **Code Quality**
+  - [ ] Fix CodeRabbit issues from #398
+        ([#412](https://github.com/rshade/finfocus/issues/412))
 
 ## Near-Term Vision (v0.3.0 - Budgeting & Intelligence)
 
@@ -108,10 +115,9 @@ guardrails in `CONTEXT.md`.
     [finfocus-spec](https://github.com/rshade/finfocus-spec)
 - [ ] **Interoperability & Data Exchange**
   - [ ] Implement JSON-LD export for FOCUS cost records
-        ([#382](https://github.com/rshade/finfocus/issues/382))
-        *Cross-Repo: Uses sdk/go/jsonld from spec 032*
+        *(Issue TBD - Cross-Repo: Uses sdk/go/jsonld from spec 032)*
   - [ ] OpenCost Compatibility Mapping
-        ([#383](https://github.com/rshade/finfocus/issues/383))
+        *(Issue TBD)*
 - [ ] **Contextual Profiles ("Dev Mode")**
       ([#368](https://github.com/rshade/finfocus/issues/368))
   - [ ] CLI: Implement `--profile` flag (e.g., `dev`, `prod`) to pass hints
@@ -148,9 +154,9 @@ guardrails in `CONTEXT.md`.
         ([#325](https://github.com/rshade/finfocus/issues/325))
 - [ ] **Plugin SDK Hardening**
   - [ ] Implement configurable CORS & Security headers for plugin servers
-        ([#384](https://github.com/rshade/finfocus/issues/384))
+        *(Issue TBD)*
   - [ ] Adopt enhanced ARN provider type safety
-        ([#385](https://github.com/rshade/finfocus/issues/385))
+        *(Issue TBD)*
 - [ ] **Code Quality Refactoring**
   - [ ] Extract shared applyFilters helper
         ([#337](https://github.com/rshade/finfocus/issues/337))

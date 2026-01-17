@@ -23,10 +23,14 @@ func TestCLIWorkflow_ProjectedCost(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err, "Command should succeed")
 
-	// Parse JSON output
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// Parse JSON output - renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err, "Should return valid JSON")
+
+	// Extract the finfocus wrapper
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	// Verify structure
 	assert.Contains(t, result, "summary", "Should have summary section")
@@ -93,10 +97,14 @@ func TestCLIWorkflow_ProjectedCost_EmptyPlan(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err, "Should handle empty plan gracefully")
 
-	// Parse output
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// Parse output - renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err, "Should return valid JSON")
+
+	// Extract the finfocus wrapper
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	// Verify empty resources
 	resources, ok := result["resources"].([]interface{})

@@ -22,10 +22,14 @@ func TestOutputFormat_JSON(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err, "Command should succeed")
 
-	// Verify valid JSON
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// Verify valid JSON - renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err, "Should produce valid JSON")
+
+	// Extract the finfocus wrapper
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	// Verify structure
 	assert.Contains(t, result, "summary", "JSON should have summary")
@@ -126,9 +130,13 @@ func TestOutputFormat_EmptyResults(t *testing.T) {
 	outputJSON, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err, "JSON output should handle empty results")
 
-	var resultJSON map[string]interface{}
-	err = json.Unmarshal([]byte(outputJSON), &resultJSON)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapperJSON map[string]interface{}
+	err = json.Unmarshal([]byte(outputJSON), &wrapperJSON)
 	require.NoError(t, err, "Should produce valid JSON for empty results")
+
+	resultJSON, ok := wrapperJSON["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	resources, ok := resultJSON["resources"].([]interface{})
 	require.True(t, ok, "Resources should be an array")
@@ -152,9 +160,13 @@ func TestOutputFormat_CurrencyFormatting(t *testing.T) {
 	outputJSON, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err)
 
-	var resultJSON map[string]interface{}
-	err = json.Unmarshal([]byte(outputJSON), &resultJSON)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapperJSON map[string]interface{}
+	err = json.Unmarshal([]byte(outputJSON), &wrapperJSON)
 	require.NoError(t, err)
+
+	resultJSON, ok := wrapperJSON["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	summary := resultJSON["summary"].(map[string]interface{})
 	currency, ok := summary["currency"].(string)
@@ -178,9 +190,13 @@ func TestOutputFormat_CostPrecision(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	// Check that cost values are numbers (not strings)
 	summary := result["summary"].(map[string]interface{})
@@ -201,9 +217,13 @@ func TestOutputFormat_ResourceFields(t *testing.T) {
 	output, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err)
 
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(output), &result)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapper map[string]interface{}
+	err = json.Unmarshal([]byte(output), &wrapper)
 	require.NoError(t, err)
+
+	result, ok := wrapper["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	resources, ok := result["resources"].([]interface{})
 	require.True(t, ok, "Resources should be an array")
@@ -231,9 +251,13 @@ func TestOutputFormat_ConsistencyAcrossFormats(t *testing.T) {
 	outputJSON, err := h.Execute("cost", "projected", "--pulumi-json", planFile, "--output", "json")
 	require.NoError(t, err)
 
-	var resultJSON map[string]interface{}
-	err = json.Unmarshal([]byte(outputJSON), &resultJSON)
+	// renderJSON wraps results in {"finfocus": ...}
+	var wrapperJSON map[string]interface{}
+	err = json.Unmarshal([]byte(outputJSON), &wrapperJSON)
 	require.NoError(t, err)
+
+	resultJSON, ok := wrapperJSON["finfocus"].(map[string]interface{})
+	require.True(t, ok, "Should have finfocus wrapper")
 
 	summaryJSON := resultJSON["summary"].(map[string]interface{})
 	totalMonthlyJSON := summaryJSON["totalMonthly"].(float64)

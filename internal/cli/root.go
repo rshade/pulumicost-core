@@ -56,9 +56,8 @@ func NewRootCmdWithArgs(ver string, args []string, lookupEnv func(string) (strin
 					cmd.PrintErrf("Warning: migration check failed: %v\n", err)
 				}
 
-				// Alias reminder
-				if os.Getenv("FINFOCUS_HIDE_ALIAS_HINT") == "" &&
-					!DetectPluginMode(os.Args, os.LookupEnv) {
+				// Alias reminder - use precomputed pluginMode for consistency with tests
+				if os.Getenv("FINFOCUS_HIDE_ALIAS_HINT") == "" && !pluginMode {
 					msg := "Tip: Add 'alias fin=finfocus' to your shell profile for a shorter command!"
 					cmd.PrintErrln(msg)
 				}
