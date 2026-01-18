@@ -8,14 +8,36 @@ import (
 	"github.com/rshade/finfocus/internal/registry"
 )
 
+// formatBytes formats a byte count into a human-readable string (KB, MB, GB).
+func formatBytes(bytes int64) string {
+	const (
+		kb = 1024
+		mb = kb * 1024
+		gb = mb * 1024
+	)
+
+	switch {
+	case bytes >= gb:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(gb))
+	case bytes >= mb:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(mb))
+	case bytes >= kb:
+		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(kb))
+	default:
+		return fmt.Sprintf("%d bytes", bytes)
+	}
+}
+
 // NewPluginInstallCmd creates the install command for installing plugins from registry or URL.
 //
 //	--plugin-dir    Custom plugin directory (default: ~/.finfocus/plugins)
+//	--clean         Remove other versions after successful install
 func NewPluginInstallCmd() *cobra.Command {
 	var (
 		force     bool
 		noSave    bool
 		pluginDir string
+		clean     bool
 	)
 
 	cmd := &cobra.Command{
@@ -44,7 +66,10 @@ Plugins can be specified in several formats:
   finfocus plugin install kubecost --force
 
   # Install without saving to config
-  finfocus plugin install kubecost --no-save`,
+  finfocus plugin install kubecost --no-save
+
+  # Install and remove all other versions (cleanup disk space)
+  finfocus plugin install kubecost --clean`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			specifier := args[0]
@@ -93,12 +118,34 @@ Plugins can be specified in several formats:
 			cmd.Printf("  Version: %s\n", result.Version)
 			cmd.Printf("  Path:    %s\n", result.Path)
 
+			// Cleanup other versions if --clean flag is set
+			if clean {
+				cleanupResult, cleanErr := installer.RemoveOtherVersions(
+					result.Name,
+					result.Version,
+					pluginDir,
+					progress,
+				)
+				if cleanErr != nil {
+					cmd.Printf("\nWarning: cleanup failed: %v\n", cleanErr)
+				} else if len(cleanupResult.RemovedVersions) > 0 {
+					cmd.Printf("\n✓ Cleaned up %d old version(s)\n", len(cleanupResult.RemovedVersions))
+					for _, v := range cleanupResult.RemovedVersions {
+						cmd.Printf("  Removed: %s\n", v)
+					}
+					if cleanupResult.BytesFreed > 0 {
+						cmd.Printf("  Freed: %s\n", formatBytes(cleanupResult.BytesFreed))
+					}
+				}
+			}
+
 			return nil
 		},
 	}
 
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Reinstall even if version already exists")
 	cmd.Flags().BoolVar(&noSave, "no-save", false, "Don't add plugin to config file")
+	cmd.Flags().BoolVar(&clean, "clean", false, "Remove other versions after successful install")
 	cmd.Flags().
 		StringVar(&pluginDir, "plugin-dir", "", "Custom plugin directory (default: ~/.finfocus/plugins)")
 

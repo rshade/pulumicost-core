@@ -70,6 +70,19 @@ func GetPluginConfiguration(pluginName string) (map[string]interface{}, error) {
 	return cfg.GetPluginConfig(pluginName)
 }
 
+// GetStrictPluginCompatibility returns whether strict plugin compatibility mode is enabled.
+// When true, plugins with incompatible spec versions will fail to load.
+// When false (default), a warning is logged but initialization continues.
+// This can also be enabled via FINFOCUS_STRICT_COMPATIBILITY=true environment variable.
+func GetStrictPluginCompatibility() bool {
+	// Environment variable takes precedence
+	if env := os.Getenv("FINFOCUS_STRICT_COMPATIBILITY"); env == "true" || env == "1" {
+		return true
+	}
+	cfg := GetGlobalConfig()
+	return cfg.PluginHostConfig.StrictCompatibility
+}
+
 // EnsureConfigDir ensures the finfocus configuration directory exists.
 func EnsureConfigDir() error {
 	dir, err := GetConfigDir()
