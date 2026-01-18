@@ -63,13 +63,22 @@ type Config struct {
 	SpecDir   string `yaml:"-" json:"-"`
 
 	// New comprehensive configuration
-	Output   OutputConfig            `yaml:"output"   json:"output"`
-	Plugins  map[string]PluginConfig `yaml:"plugins"  json:"plugins"`
-	Logging  LoggingConfig           `yaml:"logging"  json:"logging"`
-	Analyzer AnalyzerConfig          `yaml:"analyzer" json:"analyzer"`
+	Output            OutputConfig            `yaml:"output"             json:"output"`
+	Plugins           map[string]PluginConfig `yaml:"plugins"            json:"plugins"`
+	Logging           LoggingConfig           `yaml:"logging"            json:"logging"`
+	Analyzer          AnalyzerConfig          `yaml:"analyzer"           json:"analyzer"`
+	PluginHostConfig  PluginHostConfig        `yaml:"plugin_host"        json:"plugin_host"`
 
 	// Internal fields
 	configPath string
+}
+
+// PluginHostConfig defines plugin host behavior settings.
+type PluginHostConfig struct {
+	// StrictCompatibility blocks plugin initialization on spec version mismatch.
+	// When true, plugins with incompatible spec versions will fail to load.
+	// When false (default), a warning is logged but initialization continues.
+	StrictCompatibility bool `yaml:"strict_compatibility" json:"strict_compatibility"`
 }
 
 // OutputConfig defines output formatting preferences.
